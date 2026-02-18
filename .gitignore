@@ -37,3 +37,6 @@ yarn-error.log*
 
 # OS generated files
 thumbs.db
+
+# Project Specific
+apps/api-backend/data.json
