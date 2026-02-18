@@ -1,0 +1,14 @@
+# Usamos una imagen ligera de Node 20
+FROM node:20-alpine
+
+# Instalamos herramientas básicas para el sistema operativo del contenedor
+RUN apk add --no-cache git bash
+
+# Establecemos el directorio de trabajo
+WORKDIR /app
+
+# Exponemos el puerto de Vite (5173) y el de la API (3000 - futuro)
+EXPOSE 5173 3000
+
+# Comando por defecto para mantener el contenedor vivo
+CMD ["tail", "-f", "/dev/null"]

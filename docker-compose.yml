@@ -1,0 +1,30 @@
+services:
+  # --- TU FRONTEND (Ya existente) ---
+  dev-env:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: easy-pay-frontend
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    stdin_open: true # Equivalent to -i
+    tty: true        # Equivalent to -t
+    command: sh -c "npm install && npm run dev:web"
+    depends_on:
+      - backend # Espera a que el backend arranque
+
+  # --- TU NUEVO BACKEND (Python) ---
+  backend:
+    build:
+      context: ./apps/api-backend
+      dockerfile: Dockerfile
+    container_name: easy-pay-backend
+    volumes:
+      # Mapeamos solo la carpeta del backend
+      - ./apps/api-backend:/app
+    ports:
+      - "8000:8000" # Puerto estándar de FastAPI
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

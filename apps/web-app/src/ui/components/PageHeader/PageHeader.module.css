@@ -1,0 +1,170 @@
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    width: 100%;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background-color: rgba(15, 23, 42, 0.8);
+    border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+}
+
+.headerContainer {
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    height: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+}
+
+@media (min-width: 640px) {
+    .headerContainer {
+        height: 5rem;
+    }
+}
+
+.backBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: color 0.2s;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0;
+}
+
+.backBtn:hover {
+    color: white;
+}
+
+.backIcon {
+    transition: transform 0.2s;
+}
+
+.backBtn:hover .backIcon {
+    transform: translateX(-4px);
+}
+
+.backText {
+    display: none;
+}
+
+@media (min-width: 640px) {
+    .backText {
+        display: inline;
+    }
+}
+
+.titleContainer {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+    width: 60%;
+}
+
+.subtitle {
+    display: block;
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.title {
+    font-size: 0.9375rem;
+    font-weight: 800;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    line-height: 1.2;
+}
+
+@media (min-width: 640px) {
+    .title {
+        font-size: 1.125rem;
+    }
+}
+
+.rightActions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.notifBtn {
+    position: relative;
+    padding: 0.5rem;
+    border-radius: 9999px;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notifBtn:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.notifBadge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    background-color: #ef4444;
+    border-radius: 9999px;
+    border: 2px solid #0f172a;
+}
+
+.avatarWrapper {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #2078f3 0%, #60a5fa 100%);
+    padding: 1.5px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 9999px;
+    object-fit: cover;
+    background-color: #1e293b;
+}
+
+.userNameLabel {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    margin-right: 0.5rem;
+}
+
+@media (min-width: 640px) {
+    .userNameLabel {
+        font-size: 0.875rem;
+    }
+}
