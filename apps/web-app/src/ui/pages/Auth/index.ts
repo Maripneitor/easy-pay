@@ -1,1 +1,1 @@
-export * from './AuthPage';
+export * from './Auth';

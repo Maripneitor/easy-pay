@@ -8,6 +8,7 @@ import {
     Check,
     QrCode
 } from 'lucide-react';
+import { GoogleIcon } from '@ui/components/icons/GoogleIcon';
 import styles from './TwoFactorSetup.module.css';
 
 export const TwoFactorSetup = () => {
@@ -42,7 +43,7 @@ export const TwoFactorSetup = () => {
                         </div>
                         <h2 className={styles.title}>Autenticación de dos pasos</h2>
                         <p className={styles.description}>
-                            Añade una capa extra de seguridad a tu cuenta escaneando el código con tu app de autenticación (Google Authenticator/Authy).
+                            Añade una capa extra de seguridad a tu cuenta escaneando el código con tu app de autenticación (<GoogleIcon size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} />Google Authenticator/Authy).
                         </p>
                     </div>
 

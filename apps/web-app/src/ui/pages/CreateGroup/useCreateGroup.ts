@@ -15,6 +15,7 @@ export const useCreateGroup = () => {
     const [groupName, setGroupName] = useState('');
     const [groupDesc, setGroupDesc] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [activeTab, setActiveTab] = useState<'create' | 'join'>('create');
 
     // Mock initial members match the Stitch design
     const [members, setMembers] = useState<Member[]>([
@@ -84,8 +85,8 @@ export const useCreateGroup = () => {
     };
 
     const handleRemoveMember = (id: number) => {
-        if (members.find(m => m.id === id)?.isAdmin) return;
-        setMembers(members.filter(m => m.id !== id));
+        if (members.find((m: Member) => m.id === id)?.isAdmin) return;
+        setMembers(members.filter((m: Member) => m.id !== id));
     };
 
     const goBack = () => navigate(-1);
@@ -101,6 +102,8 @@ export const useCreateGroup = () => {
         handleCreateGroup,
         handleAddMember,
         handleRemoveMember,
-        goBack
+        goBack,
+        activeTab,
+        setActiveTab
     };
 };

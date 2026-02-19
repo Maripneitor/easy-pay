@@ -1,14 +1,15 @@
 .authPage {
     min-height: 100vh;
-    background-color: #0f172a;
-    background-image: radial-gradient(circle at top right, #1e293b, transparent 50%);
+    background-color: var(--bg-body);
+    background-image: radial-gradient(circle at top right, rgba(30, 41, 59, 0.1), transparent 50%);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
     overflow: hidden;
     font-family: 'Inter', sans-serif;
-    color: white;
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .floatingCircle1 {
@@ -17,7 +18,7 @@
     height: 24rem;
     top: 0;
     left: 0;
-    background-color: rgba(25, 118, 210, 0.2);
+    background-color: rgba(33, 150, 243, 0.15);
     border-radius: 50%;
     filter: blur(80px);
     transform: translate(-50%, -50%);
@@ -29,7 +30,7 @@
     height: 30rem;
     bottom: 0;
     right: 0;
-    background-color: rgba(21, 101, 192, 0.2);
+    background-color: rgba(21, 101, 192, 0.15);
     border-radius: 50%;
     filter: blur(80px);
     transform: translate(33%, 33%);
@@ -60,43 +61,43 @@
     justify-content: center;
     margin-bottom: 1rem;
     border: 1px solid rgba(100, 181, 246, 0.2);
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
 }
 
 .logoIcon {
-    color: #64B5F6;
+    color: var(--primary);
 }
 
 .title {
     font-size: 1.875rem;
     font-weight: 700;
     letter-spacing: -0.025em;
-    color: white;
+    color: var(--text-primary);
 }
 
 .subtitle {
-    color: #94a3b8;
+    color: var(--text-secondary);
     margin-top: 0.5rem;
     font-size: 0.875rem;
 }
 
 .glassCard {
-    background: rgba(30, 41, 59, 0.4);
+    background: var(--bg-card);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--border-color);
     border-radius: 1.5rem;
     padding: 2rem;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .tabs {
     display: flex;
-    background-color: rgba(30, 41, 59, 0.5);
+    background-color: var(--bg-body);
     padding: 0.25rem;
     border-radius: 0.75rem;
     margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
 }
 
 .tab {
@@ -107,15 +108,16 @@
     border-radius: 0.5rem;
     border: none;
     background: transparent;
-    color: #94a3b8;
+    color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .tabActive {
-    background-color: #334155;
-    color: white;
+    background-color: var(--bg-card);
+    color: var(--text-primary);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
 }
 
 .form {
@@ -129,6 +131,7 @@
     font-weight: 600;
     text-align: center;
     margin-bottom: 0.5rem;
+    color: var(--text-primary);
 }
 
 .inputGroup {
@@ -140,7 +143,7 @@
 .inputGroup label {
     font-size: 0.875rem;
     font-weight: 500;
-    color: #cbd5e1;
+    color: var(--text-secondary);
 }
 
 .inputWrapper {
@@ -152,23 +155,24 @@
 .inputIcon {
     position: absolute;
     left: 0.75rem;
-    color: #64748b;
+    color: var(--text-secondary);
+    opacity: 0.7;
 }
 
 .inputWrapper input {
     width: 100%;
-    background-color: #1e293b;
-    border: 1px solid #334155;
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
     border-radius: 0.75rem;
     padding: 0.75rem 0.75rem 0.75rem 2.5rem;
-    color: #e2e8f0;
+    color: var(--input-text);
     font-size: 0.875rem;
     transition: all 0.3s;
 }
 
 .inputWrapper input:focus {
     outline: none;
-    border-color: #2196F3;
+    border-color: var(--primary);
     box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
 }
 
@@ -178,29 +182,29 @@
 }
 
 .countrySelect {
-    background-color: #1e293b;
-    border: 1px solid #334155;
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
     border-right: none;
     border-radius: 0.75rem 0 0 0.75rem;
     padding: 0.75rem;
-    color: #cbd5e1;
+    color: var(--input-text);
     font-size: 0.875rem;
     cursor: pointer;
 }
 
 .phoneInput {
     flex: 1;
-    background-color: #1e293b;
-    border: 1px solid #334155;
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
     border-radius: 0 0.75rem 0.75rem 0;
     padding: 0.75rem;
-    color: #e2e8f0;
+    color: var(--input-text);
     font-size: 0.875rem;
 }
 
 .hint {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--text-secondary);
     margin-top: 0.25rem;
 }
 
@@ -220,27 +224,27 @@
 .rememberMe input {
     width: 1rem;
     height: 1rem;
-    accent-color: #2196F3;
+    accent-color: var(--primary);
 }
 
 .rememberMe span {
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
 }
 
 .forgotPass {
     font-size: 0.75rem;
     font-weight: 500;
-    color: #64B5F6;
+    color: var(--sky-blue);
     text-decoration: none;
 }
 
 .forgotPass:hover {
-    color: #42A5F5;
+    color: var(--cool-sky);
 }
 
 .primaryBtn {
-    background: linear-gradient(to right, #2196F3, #1565C0);
+    background: linear-gradient(to right, var(--primary), var(--ocean-deep));
     color: white;
     padding: 0.875rem;
     border: none;
@@ -260,7 +264,7 @@
 .switchBtn {
     background: transparent;
     border: none;
-    color: #64B5F6;
+    color: var(--sky-blue);
     font-size: 0.875rem;
     font-weight: 500;
     display: flex;
@@ -273,7 +277,7 @@
 }
 
 .switchBtn:hover {
-    color: #42A5F5;
+    color: var(--cool-sky);
 }
 
 .divider {
@@ -286,12 +290,12 @@
 .line {
     flex: 1;
     height: 1px;
-    background-color: #334155;
+    background-color: var(--border-color);
 }
 
 .divider span {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--text-secondary);
 }
 
 .socialGrid {
@@ -301,20 +305,21 @@
 }
 
 .socialBtn {
-    background-color: #1e293b;
-    border: 1px solid #334155;
+    background-color: var(--button-bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 0.75rem;
     padding: 0.625rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     cursor: pointer;
     transition: background-color 0.2s;
 }
 
 .socialBtn:hover {
-    background-color: #334155;
+    background-color: var(--button-bg-hover);
+    color: var(--text-primary);
 }
 
 .guestAction {
@@ -324,8 +329,8 @@
 
 .guestBtn {
     background: transparent;
-    border: 1px solid #334155;
-    color: #94a3b8;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     padding: 0.5rem 1.5rem;
     border-radius: 9999px;
     font-size: 0.875rem;
@@ -338,9 +343,34 @@
 }
 
 .guestBtn:hover {
-    border-color: #475569;
-    color: white;
-    background-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
+    background-color: var(--button-bg-secondary);
+}
+
+.themeToggle {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    z-index: 50;
+}
+
+.themeToggle:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+    background: var(--input-bg);
 }
 
 .particles div {
@@ -373,8 +403,9 @@
     height: 0.375rem;
     bottom: 20%;
     left: 25%;
-    background-color: white;
-    opacity: 0.2;
+    background-color: currentColor;
+    color: var(--text-primary);
+    opacity: 0.1;
 }
 
 @keyframes pulse {

@@ -2,9 +2,10 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: #0f172a;
-    color: white;
+    background-color: var(--bg-body);
+    color: var(--text-primary);
     padding-bottom: 5rem;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 @media (min-width: 768px) {
@@ -17,9 +18,9 @@
     position: sticky;
     top: 0;
     z-index: 50;
-    background: rgba(15, 23, 42, 0.4);
+    background: var(--header-bg);
     backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    border-bottom: 1px solid var(--border-color);
     padding: 1rem 1.5rem;
     display: flex;
     justify-content: space-between;
@@ -32,7 +33,7 @@
 }
 
 .overline {
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.75rem;
     font-weight: 500;
     text-transform: uppercase;
@@ -43,6 +44,7 @@
     font-size: 1.5rem;
     font-weight: 700;
     letter-spacing: -0.025em;
+    color: var(--text-primary);
 }
 
 .headerActions {
@@ -57,14 +59,15 @@
     border-radius: 9999px;
     background: none;
     border: none;
-    color: #94a3b8;
+    color: var(--text-tertiary);
     cursor: pointer;
     transition: color 0.2s;
 }
 
 .notifBtn:hover {
-    color: white;
+    color: var(--text-primary);
     background-color: rgba(255, 255, 255, 0.05);
+    /* Consider variable if strictly needed */
 }
 
 .notifBadge {
@@ -86,7 +89,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--border-color);
 }
 
 .profileAvatar {
@@ -152,7 +155,7 @@
 .sectionHeading {
     font-size: 0.875rem;
     font-weight: 700;
-    color: #94a3b8;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.1em;
 }
@@ -183,9 +186,9 @@
 }
 
 .groupCard {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-card);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
     border-radius: 1.25rem;
     padding: 1.25rem;
     cursor: pointer;
@@ -195,8 +198,8 @@
 }
 
 .groupCard:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: var(--bg-card-hover);
+    border-color: var(--border-color);
     transform: translateY(-2px);
 }
 
@@ -243,7 +246,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
@@ -255,7 +258,7 @@
 .groupName {
     font-size: 1.125rem;
     font-weight: 700;
-    color: white;
+    color: var(--text-primary);
     margin-bottom: 0.25rem;
 }
 
@@ -265,7 +268,7 @@
 
 .lastAct {
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     margin-bottom: 0.75rem;
 }
 
@@ -279,23 +282,26 @@
     width: 1.75rem;
     height: 1.75rem;
     border-radius: 9999px;
-    border: 2px solid #1e293b;
+    border: 2px solid var(--text-primary);
+    /* Use text color for border?? or card bg? */
     object-fit: cover;
     margin-left: -0.5rem;
+    border: 2px solid var(--bg-card);
 }
 
 .moreMembers {
     width: 1.75rem;
     height: 1.75rem;
     border-radius: 9999px;
-    background-color: #334155;
-    border: 2px solid #1e293b;
+    background-color: var(--text-secondary);
+    border: 2px solid var(--bg-card);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.625rem;
     font-weight: 500;
     margin-left: -0.5rem;
+    color: white;
 }
 
 .balanceInfo {
@@ -308,14 +314,14 @@
 .totalLabel {
     font-size: 0.75rem;
     font-weight: 500;
-    color: #94a3b8;
+    color: var(--text-tertiary);
     margin-bottom: 0.25rem;
 }
 
 .totalValue {
     font-size: 1rem;
     font-weight: 600;
-    color: white;
+    color: var(--text-primary);
     margin-bottom: 0.5rem;
 }
 
@@ -349,7 +355,13 @@
 }
 
 .creditBadge .balanceLabel {
-    color: #86efac;
+    color: #16a34a;
+    /* Darker green for visibility in light mode? or dynamic */
+}
+
+/* Re-evaluating credit text color */
+:global(.light) .creditBadge .balanceLabel {
+    color: #15803d;
 }
 
 .balanceValue {
@@ -363,6 +375,7 @@
 
 .creditBadge .balanceValue {
     color: #4ade80;
+    /* This is bright green. Might need darkening for light mode */
 }
 
 /* Settled Card Styles */
@@ -382,34 +395,34 @@
     padding: 0.75rem;
     font-size: 0.625rem;
     font-weight: 700;
-    color: #94a3b8;
-    background-color: rgba(51, 65, 85, 0.5);
+    color: var(--text-tertiary);
+    background-color: var(--bg-card-hover);
     border-bottom-left-radius: 0.75rem;
     display: flex;
     align-items: center;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    border-left: 1px solid rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-left: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .groupNameSettled {
     font-size: 1.125rem;
     font-weight: 700;
-    color: #cbd5e1;
+    color: var(--text-secondary);
 }
 
 .totalValueSettled {
     font-size: 1rem;
     font-weight: 600;
-    color: #94a3b8;
+    color: var(--text-tertiary);
 }
 
 .paidBadge {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #94a3b8;
+    color: var(--text-tertiary);
     font-size: 0.875rem;
     font-weight: 500;
 }
@@ -417,9 +430,9 @@
 /* Invitation Section */
 
 .invitationCard {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-card);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
     border-left: 4px solid #3b82f6;
     border-radius: 1.25rem;
     padding: 1.25rem;
@@ -475,11 +488,12 @@
 .invitationTitle {
     font-size: 1rem;
     font-weight: 700;
+    color: var(--text-primary);
 }
 
 .invitationSubtitle {
     font-size: 0.875rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
 }
 
 .invitationActions {
@@ -497,8 +511,8 @@
 .rejectBtn {
     flex: 1;
     background: none;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #94a3b8;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     font-size: 0.875rem;
@@ -508,8 +522,8 @@
 }
 
 .rejectBtn:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    color: white;
+    background-color: var(--bg-card-hover);
+    color: var(--text-primary);
 }
 
 .acceptBtn {
@@ -569,9 +583,9 @@
     position: fixed;
     bottom: 0;
     width: 100%;
-    background: rgba(30, 41, 59, 0.4);
+    background: var(--nav-bg);
     backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(148, 163, 184, 0.1);
+    border-top: 1px solid var(--border-color);
     display: flex;
     height: 4rem;
     z-index: 40;
@@ -589,7 +603,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #94a3b8;
+    color: var(--nav-item-inactive);
     background: none;
     border: none;
     cursor: pointer;
@@ -603,7 +617,7 @@
 }
 
 .activeNavItem {
-    color: #3b82f6;
+    color: var(--nav-item-active);
 }
 
 .desktopNav {
@@ -617,11 +631,11 @@
         left: 50%;
         bottom: 2rem;
         transform: translateX(-50%);
-        background: rgba(30, 41, 59, 0.4);
+        background: var(--nav-bg);
         backdrop-filter: blur(12px);
         padding: 0.75rem 1.5rem;
         border-radius: 9999px;
-        border: 1px solid rgba(148, 163, 184, 0.1);
+        border: 1px solid var(--border-color);
         align-items: center;
         gap: 2rem;
         z-index: 40;
@@ -633,7 +647,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #94a3b8;
+    color: var(--nav-item-inactive);
     background: none;
     border: none;
     cursor: pointer;
@@ -643,8 +657,8 @@
 }
 
 .desktopNavItem:hover {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    background-color: var(--bg-card-hover);
 }
 
 .desktopNavItem span {
@@ -653,8 +667,8 @@
 }
 
 .activeDesktopNavItem {
-    color: #3b82f6;
-    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--nav-item-active);
+    background-color: var(--bg-card-hover);
     font-weight: 700;
 }
 

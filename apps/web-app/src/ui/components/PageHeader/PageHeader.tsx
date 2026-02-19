@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell, Menu } from 'lucide-react';
+import { ArrowLeft, Bell } from 'lucide-react';
+import { ThemeSwitch } from '../ThemeSwitch/ThemeSwitch';
 import styles from './PageHeader.module.css';
 
 const USER_AVATAR_URL = 'https://ui-avatars.com/api/?name=Juan&background=3b82f6&color=fff&bold=true';
@@ -13,8 +14,6 @@ interface PageHeaderProps {
     subtitle?: string;
     /** Called when back arrow is clicked */
     onBack?: () => void;
-    /** Called when menu icon is clicked */
-    onMenuClick?: () => void;
     /** Optional node rendered on the right before the avatar */
     rightSlot?: React.ReactNode;
     /** Show user avatar (default: true) */
@@ -38,7 +37,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     title,
     subtitle,
     onBack,
-    onMenuClick,
     rightSlot,
     showAvatar = true,
     onAvatarClick,
@@ -60,10 +58,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                             <ArrowLeft size={18} className={styles.backIcon} />
                             <span className={styles.backText}>Volver</span>
                         </button>
-                    ) : onMenuClick ? (
-                        <button onClick={onMenuClick} className={styles.backBtn} style={{ border: 'none' }}>
-                            <Menu size={24} className={styles.backIcon} />
-                        </button>
                     ) : null}
                 </div>
 
@@ -81,6 +75,9 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
                 {/* Right – rightSlot + notification + avatar */}
                 <div className={styles.rightActions}>
+                    <div style={{ marginRight: '1rem' }}>
+                        <ThemeSwitch />
+                    </div>
                     {rightSlot}
 
                     {showNotification && (

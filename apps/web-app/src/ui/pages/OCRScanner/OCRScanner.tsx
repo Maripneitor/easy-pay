@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Zap,
     FolderOpen,
@@ -12,12 +13,20 @@ import {
     Users,
     CheckCircle,
 } from 'lucide-react';
-import { cn } from '@infrastructure/utils';
-import { GlassCard } from '../../components/GlassCard';
+import { cn } from '../../../infrastructure/utils';
 import { StatusBadge } from '../../components/StatusBadge';
 import { PageHeader } from '@ui/components/PageHeader';
+import { Sidebar } from '@ui/components/Sidebar/Sidebar';
+import { MobileNavigation } from '@ui/components/MobileNavigation';
 import { useOCRScanner } from './useOCRScanner';
 import styles from './OCRScanner.module.css';
+
+interface OCRItem {
+    id?: string;
+    description: string;
+    amount: number;
+    isUnassigned?: boolean;
+}
 
 /* ─── Viewfinder component ─── */
 
@@ -104,6 +113,7 @@ const ScanToolbar: React.FC<{
 /* ─── Main Page Component ─── */
 
 export const OCRScanner: React.FC = () => {
+    const navigate = useNavigate();
     const {
         scanResult,
         flashOn,
@@ -117,144 +127,151 @@ export const OCRScanner: React.FC = () => {
         formatCurrency,
     } = useOCRScanner();
 
-    const goBack = () => window.history.back();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     return (
-        <div className="bg-[#0f172a] text-slate-200 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white">
-            {/* Unified Header */}
-            <PageHeader
-                title="OCR SCANNER"
-                subtitle="Easy-Pay"
-                onBack={goBack}
-                showAvatar
-                showNotification
-            />
+        <div className="min-h-screen flex flex-col md:flex-row bg-[#0f172a] text-slate-200 antialiased selection:bg-cyan-500 selection:text-white">
+            {/* Sidebar - Persistent on desktop, Drawer on mobile */}
+            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-            <main className="flex-grow flex flex-col items-center justify-start p-4 sm:p-6 lg:p-8 relative w-full max-w-7xl mx-auto gap-6">
-                {/* Decorative glows */}
-                <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-                    <div className="absolute top-[-10%] left-[20%] w-[30%] h-[30%] bg-cyan-500/5 rounded-full blur-[100px]" />
-                    <div className="absolute bottom-[10%] right-[10%] w-[40%] h-[40%] bg-blue-600/5 rounded-full blur-[120px]" />
-                </div>
+            <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
+                {/* Unified Header */}
+                <PageHeader
+                    title="OCR SCANNER"
+                    subtitle="Easy-Pay"
+                    onBack={() => navigate(-1)}
+                    showAvatar
+                    showNotification
+                />
 
-                {/* Camera + Toolbar */}
-                <div className="w-full flex flex-col md:flex-row gap-6 h-auto md:h-[500px]">
-                    <Viewfinder flashOn={flashOn} onFlashToggle={toggleFlash} />
-                    <ScanToolbar onGallery={handleGallery} onCapture={handleCapture} onCrop={handleCrop} />
-                </div>
-
-                {/* Analysis Panel */}
-                <div className={cn(styles.glassPanel, 'w-full rounded-2xl shadow-glass flex flex-col overflow-hidden mt-2')}>
-                    {/* Panel header */}
-                    <div className="p-4 sm:px-6 border-b border-white/5 flex items-center justify-between bg-white/5">
-                        <div className="flex items-center gap-2">
-                            <Sparkles size={20} className="text-cyan-400" />
-                            <h3 className="text-lg font-bold text-white">Análisis del Ticket</h3>
-                        </div>
-                        <StatusBadge label={`OCR Confianza: ${scanResult.confidence}%`} variant="success" />
+                <main className="flex-grow flex flex-col items-center justify-start p-4 sm:p-6 lg:p-8 relative w-full max-w-7xl mx-auto gap-6">
+                    {/* Decorative glows */}
+                    <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+                        <div className="absolute top-[-10%] left-[20%] w-[30%] h-[30%] bg-cyan-500/5 rounded-full blur-[100px]" />
+                        <div className="absolute bottom-[10%] right-[10%] w-[40%] h-[40%] bg-blue-600/5 rounded-full blur-[120px]" />
                     </div>
 
-                    {/* Two-column content */}
-                    <div className="flex flex-col md:flex-row h-full">
-                        {/* Left – Detected (OCR) */}
-                        <div className="w-full md:w-1/2 border-r border-white/5 p-4 sm:p-6 bg-black/20">
-                            <h4 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                <ReceiptText size={16} /> Detectado (OCR)
-                            </h4>
-                            <div className="space-y-3 font-mono text-sm">
-                                {scanResult.detectedItems.map((item) => (
-                                    <div
-                                        key={item.id}
-                                        className={cn(
-                                            'flex justify-between items-center p-2 rounded transition',
-                                            item.isUnassigned
-                                                ? 'bg-amber-500/10 border border-amber-500/30'
-                                                : 'hover:bg-white/5 border-b border-dashed border-slate-700',
-                                        )}
-                                    >
-                                        <span className={item.isUnassigned ? 'text-amber-200' : 'text-slate-300'}>{item.description}</span>
-                                        <span className={cn('font-bold', item.isUnassigned ? 'text-amber-200' : 'text-white')}>
-                                            {formatCurrency(item.amount)}
-                                        </span>
-                                    </div>
-                                ))}
+                    {/* Camera + Toolbar */}
+                    <div className="w-full flex flex-col md:flex-row gap-6 h-auto md:h-[500px]">
+                        <Viewfinder flashOn={flashOn} onFlashToggle={toggleFlash} />
+                        <ScanToolbar onGallery={handleGallery} onCapture={handleCapture} onCrop={handleCrop} />
+                    </div>
+
+                    {/* Analysis Panel */}
+                    <div className={cn(styles.glassPanel, 'w-full rounded-2xl shadow-glass flex flex-col overflow-hidden mt-2')}>
+                        {/* Panel header */}
+                        <div className="p-4 sm:px-6 border-b border-white/5 flex items-center justify-between bg-white/5">
+                            <div className="flex items-center gap-2">
+                                <Sparkles size={20} className="text-cyan-400" />
+                                <h3 className="text-lg font-bold text-white">Análisis del Ticket</h3>
                             </div>
+                            <StatusBadge label={`OCR Confianza: ${scanResult.confidence}%`} variant="success" />
                         </div>
 
-                        {/* Right – App totals + warnings */}
-                        <div className="w-full md:w-1/2 p-4 sm:p-6 bg-slate-800/30 relative">
-                            <h4 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                <Smartphone size={16} /> En la App (Cuenta)
-                            </h4>
-                            <div className="space-y-3 mb-6 opacity-60">
-                                {scanResult.appItems.map((item, idx) => (
-                                    <div key={idx} className="flex justify-between items-center text-sm">
-                                        <span className="text-slate-300">{item.description}</span>
-                                        <span className="text-white">{formatCurrency(item.amount)}</span>
-                                    </div>
-                                ))}
+                        {/* Two-column content */}
+                        <div className="flex flex-col md:flex-row h-full">
+                            {/* Left – Detected (OCR) */}
+                            <div className="w-full md:w-1/2 border-r border-white/5 p-4 sm:p-6 bg-black/20">
+                                <h4 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                    <ReceiptText size={16} /> Detectado (OCR)
+                                </h4>
+                                <div className="space-y-3 font-mono text-sm">
+                                    {scanResult.detectedItems.map((item: OCRItem) => (
+                                        <div
+                                            key={item.id}
+                                            className={cn(
+                                                'flex justify-between items-center p-2 rounded transition',
+                                                item.isUnassigned
+                                                    ? 'bg-amber-500/10 border border-amber-500/30'
+                                                    : 'hover:bg-white/5 border-b border-dashed border-slate-700',
+                                            )}
+                                        >
+                                            <span className={item.isUnassigned ? 'text-amber-200' : 'text-slate-300'}>{item.description}</span>
+                                            <span className={cn('font-bold', item.isUnassigned ? 'text-amber-200' : 'text-white')}>
+                                                {formatCurrency(item.amount)}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
 
-                            {/* Unassigned warnings */}
-                            {scanResult.unassignedItems.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className={cn(styles.glassPanel, 'bg-amber-900/10 border-l-4 border-l-red-500 border-y border-r border-red-500/30 rounded-r-lg p-4 mb-4 shadow-lg animate-pulse-slow')}
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <AlertTriangle size={20} className="text-amber-500 mt-0.5" />
-                                        <div className="flex-grow">
-                                            <h5 className="text-amber-100 font-bold text-sm mb-1">Item no asignado detectado</h5>
-                                            <p className="text-slate-300 text-xs mb-3">
-                                                <span className="text-white font-mono">{item.description} ({formatCurrency(item.amount)})</span> aparece en el ticket pero nadie lo reclamó en la app.
-                                            </p>
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => handleSplitAll(item)}
-                                                    className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded transition"
-                                                >
-                                                    <Users size={14} /> Dividir entre todos
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAssignToMe(item)}
-                                                    className="flex items-center gap-1 bg-amber-600 hover:bg-amber-500 text-white text-xs px-3 py-1.5 rounded transition shadow"
-                                                >
-                                                    <UserPlus size={14} /> Asignar a mí
-                                                </button>
+                            {/* Right – App totals + warnings */}
+                            <div className="w-full md:w-1/2 p-4 sm:p-6 bg-slate-800/30 relative">
+                                <h4 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                    <Smartphone size={16} /> En la App (Cuenta)
+                                </h4>
+                                <div className="space-y-3 mb-6 opacity-60">
+                                    {scanResult.appItems.map((item: OCRItem, idx: number) => (
+                                        <div key={idx} className="flex justify-between items-center text-sm">
+                                            <span className="text-slate-300">{item.description}</span>
+                                            <span className="text-white">{formatCurrency(item.amount)}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Unassigned warnings */}
+                                {scanResult.unassignedItems.map((item: OCRItem) => (
+                                    <div
+                                        key={item.id}
+                                        className={cn(styles.glassPanel, 'bg-amber-900/10 border-l-4 border-l-red-500 border-y border-r border-red-500/30 rounded-r-lg p-4 mb-4 shadow-lg animate-pulse-slow')}
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <AlertTriangle size={20} className="text-amber-500 mt-0.5" />
+                                            <div className="flex-grow">
+                                                <h5 className="text-amber-100 font-bold text-sm mb-1">Item no asignado detectado</h5>
+                                                <p className="text-slate-300 text-xs mb-3">
+                                                    <span className="text-white font-mono">{item.description} ({formatCurrency(item.amount)})</span> aparece en el ticket pero nadie lo reclamó en la app.
+                                                </p>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => handleSplitAll(item)}
+                                                        className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded transition"
+                                                    >
+                                                        <Users size={14} /> Dividir entre todos
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleAssignToMe(item)}
+                                                        className="flex items-center gap-1 bg-amber-600 hover:bg-amber-500 text-white text-xs px-3 py-1.5 rounded transition shadow"
+                                                    >
+                                                        <UserPlus size={14} /> Asignar a mí
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Footer totals */}
+                        <div className="bg-slate-900/80 p-4 sm:px-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-6 w-full sm:w-auto justify-center sm:justify-start">
+                                <div className="text-center sm:text-left">
+                                    <span className="block text-xs text-slate-500 uppercase font-bold">Total Ticket</span>
+                                    <span className="block text-xl font-mono text-white">{formatCurrency(scanResult.ticketTotal)}</span>
                                 </div>
-                            ))}
+                                <div className="h-8 w-px bg-white/10" />
+                                <div className="text-center sm:text-left">
+                                    <span className="block text-xs text-slate-500 uppercase font-bold">Total App</span>
+                                    <span className="block text-xl font-mono text-red-400">{formatCurrency(scanResult.appTotal)}</span>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleConfirmSync}
+                                className="w-full sm:w-auto flex-grow sm:flex-grow-0 py-3 px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-lg shadow-emerald-500/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+                            >
+                                <CheckCircle size={20} /> Confirmar y Sincronizar
+                            </button>
                         </div>
                     </div>
+                </main>
 
-                    {/* Footer totals */}
-                    <div className="bg-slate-900/80 p-4 sm:px-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-6 w-full sm:w-auto justify-center sm:justify-start">
-                            <div className="text-center sm:text-left">
-                                <span className="block text-xs text-slate-500 uppercase font-bold">Total Ticket</span>
-                                <span className="block text-xl font-mono text-white">{formatCurrency(scanResult.ticketTotal)}</span>
-                            </div>
-                            <div className="h-8 w-px bg-white/10" />
-                            <div className="text-center sm:text-left">
-                                <span className="block text-xs text-slate-500 uppercase font-bold">Total App</span>
-                                <span className="block text-xl font-mono text-red-400">{formatCurrency(scanResult.appTotal)}</span>
-                            </div>
-                        </div>
-                        <button
-                            onClick={handleConfirmSync}
-                            className="w-full sm:w-auto flex-grow sm:flex-grow-0 py-3 px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-lg shadow-emerald-500/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
-                        >
-                            <CheckCircle size={20} /> Confirmar y Sincronizar
-                        </button>
-                    </div>
-                </div>
-            </main>
+                <footer className="py-6 text-center text-slate-600 text-sm">
+                    <p>© 2025 Easy-Pay Technology. All rights reserved.</p>
+                </footer>
+            </div>
 
-            <footer className="py-6 text-center text-slate-600 text-sm">
-                <p>© 2025 Easy-Pay Technology. All rights reserved.</p>
-            </footer>
+            <MobileNavigation />
         </div>
     );
 };

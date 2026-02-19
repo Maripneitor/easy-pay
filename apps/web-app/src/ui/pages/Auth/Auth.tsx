@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
-import { Mail, Lock, Smartphone, ArrowRight, Github, Facebook, Ticket } from 'lucide-react';
-import styles from './AuthPage.module.css';
-import { useNavigate } from 'react-router-dom';
+import { Mail, Lock, Smartphone, ArrowRight, Github, Facebook, Ticket, Sun, Moon } from 'lucide-react';
+import { GoogleIcon } from '@ui/components/icons/GoogleIcon';
+import styles from './Auth.module.css';
+import { useAuth } from './useAuth';
+import { useTheme } from '../../context/ThemeContext';
 
-export const AuthPage = () => {
-    const [mode, setMode] = useState<'login' | 'register'>('login');
-    const [loginType, setLoginType] = useState<'email' | 'phone'>('email');
-    const navigate = useNavigate();
+export const Auth = () => {
+    const { mode, setMode, loginType, setLoginType, navigate } = useAuth();
+    const { theme, toggleTheme } = useTheme();
 
     return (
         <div className={styles.authPage}>
+            <button className={styles.themeToggle} onClick={toggleTheme} aria-label="Toggle theme">
+                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
             <div className={styles.floatingCircle1} />
             <div className={styles.floatingCircle2} />
 
@@ -72,7 +75,7 @@ export const AuthPage = () => {
 
                             <button type="button" className={styles.switchBtn} onClick={() => setLoginType('phone')}>
                                 <Smartphone size={18} />
-                                <span>Usar número de teléfono</span>
+                                <span style={{ marginLeft: '0.5rem' }}>Usar número de teléfono</span>
                             </button>
                         </form>
                     )}
@@ -139,6 +142,7 @@ export const AuthPage = () => {
                     </div>
 
                     <div className={styles.socialGrid}>
+                        <button className={styles.socialBtn}><GoogleIcon size={20} /></button>
                         <button className={styles.socialBtn}><Github size={20} /></button>
                         <button className={styles.socialBtn}><Facebook size={20} /></button>
                     </div>

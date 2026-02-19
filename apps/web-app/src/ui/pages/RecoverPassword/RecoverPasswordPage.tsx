@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Mail, ArrowLeft, Ticket } from 'lucide-react';
+import { Mail, ArrowLeft, Ticket, Sun, Moon } from 'lucide-react';
 import styles from './RecoverPassword.module.css';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 
 export const RecoverPasswordPage = () => {
     const navigate = useNavigate();
+    const { theme, toggleTheme } = useTheme();
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
 
@@ -21,6 +23,9 @@ export const RecoverPasswordPage = () => {
 
     return (
         <div className={styles.authPage}>
+            <button className={styles.themeToggle} onClick={toggleTheme} aria-label="Toggle theme">
+                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
             <div className={styles.floatingCircle1} />
             <div className={styles.floatingCircle2} />
 

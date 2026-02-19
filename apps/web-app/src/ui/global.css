@@ -5,6 +5,7 @@
 @tailwind utilities;
 
 :root {
+    /* Brand Colors (Keep existing) */
     --cobalt-blue: #0D47A1;
     --ocean-deep: #1565C0;
     --brilliant-azure: #1E88E5;
@@ -14,17 +15,50 @@
     --cool-sky: #64B5F6;
     --primary: #2196F3;
     --neon-violet: #a855f7;
-    --background-dark: #0f172a;
-    /* Deep dark slate instead of bright blue */
+
+    /* Semantic Colors - Light Mode Default */
+    --bg-body: #E3F2FD;
+    /* Alice Blue */
+    --bg-card: #FFFFFF;
+    --bg-sidebar: #FFFFFF;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --border-color: #BBDEFB;
+    /* Icy Blue */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --header-bg: rgba(255, 255, 255, 0.85);
+
+    /* Input Colors */
+    --input-bg: #FFFFFF;
+    --input-border: #E2E8F0;
+    --input-text: #0F172A;
+}
+
+.dark {
+    /* Semantic Colors - Dark Mode Override */
+    --bg-body: #0f172a;
+    --bg-card: #1e293b;
+    --bg-sidebar: #0f172a;
+    --text-primary: #cbd5e1;
+    --text-secondary: #94a3b8;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(30, 41, 59, 0.7);
+    --header-bg: rgba(15, 23, 42, 0.8);
+
+    /* Input Colors */
+    --input-bg: rgba(15, 23, 42, 0.6);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --input-text: #F8FAFC;
 }
 
 body {
     margin: 0;
     padding: 0;
-    background-color: #0f172a;
+    background-color: var(--bg-body);
     font-family: 'Inter', sans-serif;
-    color: #cbd5e1;
+    color: var(--text-primary);
     overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 @keyframes float1 {
@@ -182,4 +216,48 @@ body {
 .dots-pattern {
     background-image: radial-gradient(rgba(144, 202, 249, 0.1) 1px, transparent 1px);
     background-size: 20px 20px;
+}
+
+/* Page Transitions */
+@keyframes fadeInSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page-enter {
+    animation: fadeInSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Suspense Loader */
+.loader-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    background-color: var(--bg-body);
+    gap: 1rem;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(33, 150, 243, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--primary);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
