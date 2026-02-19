@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Zap,
     FolderOpen,
@@ -12,12 +13,11 @@ import {
     UserPlus,
     Users,
     CheckCircle,
+    Loader2,
 } from 'lucide-react';
 import { cn } from '../../../infrastructure/utils';
 import { StatusBadge } from '../../components/StatusBadge';
 import { PageHeader } from '@ui/components/PageHeader';
-import { Sidebar } from '@ui/components/Sidebar/Sidebar';
-import { MobileNavigation } from '@ui/components/MobileNavigation';
 import { useOCRScanner } from './useOCRScanner';
 import styles from './OCRScanner.module.css';
 
@@ -30,13 +30,15 @@ interface OCRItem {
 
 /* ─── Viewfinder component ─── */
 
-const Viewfinder: React.FC<{ flashOn: boolean; onFlashToggle: () => void }> = ({ flashOn, onFlashToggle }) => (
+const Viewfinder: React.FC<{ flashOn: boolean; onFlashToggle: () => void; isProcessing: boolean }> = ({ flashOn, onFlashToggle, isProcessing }) => (
     <div className={cn(styles.glassPanel, 'relative flex-grow rounded-3xl overflow-hidden shadow-2xl shadow-black/40 border-slate-700/50 flex flex-col')}>
         {/* Top overlay */}
         <div className="absolute top-0 left-0 w-full p-4 z-20 flex justify-between items-start bg-gradient-to-b from-black/60 to-transparent">
             <div className="bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-xs font-mono text-white/90">LIVE FEED</span>
+                <span className={cn("w-2 h-2 rounded-full", isProcessing ? "bg-cyan-400 animate-ping" : "bg-red-500 animate-pulse")} />
+                <span className="text-xs font-mono text-white/90">
+                    {isProcessing ? 'PROCESSING...' : 'LIVE FEED'}
+                </span>
             </div>
             <button
                 onClick={onFlashToggle}
@@ -68,13 +70,42 @@ const Viewfinder: React.FC<{ flashOn: boolean; onFlashToggle: () => void }> = ({
             <div className={cn(styles.cornerBracket, styles.cornerBL)} />
             <div className={cn(styles.cornerBracket, styles.cornerBR)} />
 
-            {/* Scan line */}
-            <div className={cn('absolute left-0 w-full h-1 bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.8)] z-10', styles.scanLine)} />
+            {/* Laser Scan Animation */}
+            {!isProcessing && (
+                <motion.div
+                    initial={{ top: 0, opacity: 0.8 }}
+                    animate={{ top: "100%", opacity: [0.8, 1, 0.8] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+                    className="absolute left-0 w-full h-1 bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.8)] z-10"
+                />
+            )}
+
+            {/* Processing Overlay */}
+            <AnimatePresence>
+                {isProcessing && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm"
+                    >
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                        >
+                            <Loader2 size={48} className="text-cyan-400 mb-4" />
+                        </motion.div>
+                        <p className="text-white font-medium tracking-widest text-sm uppercase">Analizando Recibo...</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Instruction */}
-            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md text-white px-6 py-2 rounded-full border border-white/10 text-sm font-medium shadow-lg whitespace-nowrap z-20">
-                Enfoca el ticket completo y evita sombras
-            </div>
+            {!isProcessing && (
+                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md text-white px-6 py-2 rounded-full border border-white/10 text-sm font-medium shadow-lg whitespace-nowrap z-20">
+                    Enfoca el ticket completo y evita sombras
+                </div>
+            )}
         </div>
     </div>
 );
@@ -85,15 +116,16 @@ const ScanToolbar: React.FC<{
     onGallery: () => void;
     onCapture: () => void;
     onCrop: () => void;
-}> = ({ onGallery, onCapture, onCrop }) => (
+    disabled: boolean;
+}> = ({ onGallery, onCapture, onCrop, disabled }) => (
     <div className={cn(styles.glassPanel, 'w-full md:w-24 lg:w-32 flex md:flex-col items-center justify-center gap-8 md:gap-12 p-4 rounded-3xl')}>
-        <button onClick={onGallery} className="group flex flex-col items-center gap-2">
+        <button onClick={onGallery} disabled={disabled} className="group flex flex-col items-center gap-2 disabled:opacity-50">
             <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-400 group-hover:text-white group-hover:border-slate-400 transition-all">
                 <FolderOpen size={20} />
             </div>
             <span className="text-xs text-slate-400 font-medium">Galería</span>
         </button>
-        <button onClick={onCapture} className="relative group">
+        <button onClick={onCapture} disabled={disabled} className="relative group disabled:opacity-50">
             <div className="absolute inset-0 bg-blue-500 rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity" />
             <div className="w-20 h-20 rounded-full border-4 border-blue-500 flex items-center justify-center relative bg-slate-900 shadow-glow group-active:scale-95 transition-transform">
                 <div className="w-16 h-16 rounded-full bg-blue-500 group-hover:bg-blue-400 transition-colors flex items-center justify-center">
@@ -101,7 +133,7 @@ const ScanToolbar: React.FC<{
                 </div>
             </div>
         </button>
-        <button onClick={onCrop} className="group flex flex-col items-center gap-2">
+        <button onClick={onCrop} disabled={disabled} className="group flex flex-col items-center gap-2 disabled:opacity-50">
             <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-400 group-hover:text-white group-hover:border-slate-400 transition-all">
                 <Crop size={20} />
             </div>
@@ -114,9 +146,11 @@ const ScanToolbar: React.FC<{
 
 export const OCRScanner: React.FC = () => {
     const navigate = useNavigate();
+    const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
     const {
         scanResult,
         flashOn,
+        isProcessing,
         toggleFlash,
         handleCapture,
         handleGallery,
@@ -127,16 +161,13 @@ export const OCRScanner: React.FC = () => {
         formatCurrency,
     } = useOCRScanner();
 
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-[#0f172a] text-slate-200 antialiased selection:bg-cyan-500 selection:text-white">
-            {/* Sidebar - Persistent on desktop, Drawer on mobile */}
-            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
             <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
                 {/* Unified Header */}
                 <PageHeader
+                    onMenuClick={toggleSidebar}
                     title="OCR SCANNER"
                     subtitle="Easy-Pay"
                     onBack={() => navigate(-1)}
@@ -153,8 +184,8 @@ export const OCRScanner: React.FC = () => {
 
                     {/* Camera + Toolbar */}
                     <div className="w-full flex flex-col md:flex-row gap-6 h-auto md:h-[500px]">
-                        <Viewfinder flashOn={flashOn} onFlashToggle={toggleFlash} />
-                        <ScanToolbar onGallery={handleGallery} onCapture={handleCapture} onCrop={handleCrop} />
+                        <Viewfinder flashOn={flashOn} onFlashToggle={toggleFlash} isProcessing={isProcessing} />
+                        <ScanToolbar onGallery={handleGallery} onCapture={handleCapture} onCrop={handleCrop} disabled={isProcessing} />
                     </div>
 
                     {/* Analysis Panel */}
@@ -270,8 +301,6 @@ export const OCRScanner: React.FC = () => {
                     <p>© 2025 Easy-Pay Technology. All rights reserved.</p>
                 </footer>
             </div>
-
-            <MobileNavigation />
         </div>
     );
 };

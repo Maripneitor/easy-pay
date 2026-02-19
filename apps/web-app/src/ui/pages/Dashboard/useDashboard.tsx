@@ -1,15 +1,18 @@
-
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import React from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Plane, Utensils, Home, PartyPopper, Users } from 'lucide-react';
+import type { Group } from '../../../types';
+
+type DashboardContextType = {
+    toggleSidebar: () => void;
+};
 
 export const useDashboard = () => {
     const navigate = useNavigate();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const { toggleSidebar } = useOutletContext<DashboardContextType>();
 
     // Mock data for groups
-    const allActiveGroups = [
+    const allActiveGroups: Group[] = [
         {
             id: '1',
             name: 'Viaje a Cancún',
@@ -38,7 +41,7 @@ export const useDashboard = () => {
         }
     ];
 
-    const settledGroups = [
+    const settledGroups: Group[] = [
         {
             id: '3',
             name: 'Regalo Mamá',
@@ -50,7 +53,7 @@ export const useDashboard = () => {
         }
     ];
 
-    // Helper for group icons (can be exported or kept internal)
+    // Helper for group icons
     const getGroupIcon = (name: string) => {
         const lowerName = name.toLowerCase();
         if (lowerName.includes('viaje')) return { icon: <Plane size={24} />, bg: 'bg-blue-100', color: 'text-blue-600' };
@@ -60,12 +63,19 @@ export const useDashboard = () => {
         return { icon: <Users size={24} />, bg: 'bg-slate-100', color: 'text-slate-600' };
     };
 
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setIsLoading(false), 1500);
+        return () => clearTimeout(timer);
+    }, []);
+
     return {
-        isSidebarOpen,
-        setIsSidebarOpen,
+        toggleSidebar,
         navigate,
         allActiveGroups,
         settledGroups,
-        getGroupIcon
+        getGroupIcon,
+        isLoading
     };
 };

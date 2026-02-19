@@ -26,13 +26,21 @@ const MOCK_SCAN: OCRScanResult = {
 export const useOCRScanner = () => {
     const [scanResult] = useState<OCRScanResult>(MOCK_SCAN);
     const [isScanning, setIsScanning] = useState(true);
+    const [isProcessing, setIsProcessing] = useState(false);
     const [flashOn, setFlashOn] = useState(false);
 
     const toggleFlash = () => setFlashOn((prev) => !prev);
 
     const handleCapture = () => {
-        setIsScanning(false);
-        console.log('Capture ticket');
+        if (isProcessing) return;
+        setIsProcessing(true);
+
+        // Simulate OCR analysis delay
+        setTimeout(() => {
+            setIsProcessing(false);
+            setIsScanning(false);
+            console.log('Capture ticket processed');
+        }, 2500);
     };
 
     const handleGallery = () => {
@@ -63,6 +71,7 @@ export const useOCRScanner = () => {
     return {
         scanResult,
         isScanning,
+        isProcessing,
         flashOn,
         difference,
         toggleFlash,
