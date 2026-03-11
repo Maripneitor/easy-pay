@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
     Share2,
     Settings,
@@ -10,12 +9,12 @@ import {
 } from 'lucide-react';
 import { cn } from '../../../infrastructure/utils';
 import { useGroupDetail } from './useGroupDetail';
-import { Sidebar } from '@ui/components/Sidebar/Sidebar';
-import { MobileNavigation } from '@ui/components/MobileNavigation';
 import { PageHeader } from '@ui/components/PageHeader';
+import { useOutletContext } from 'react-router-dom';
 // import styles from './GroupDetail.module.css'; // Removed unused styles
 
 export const GroupDetail = () => {
+    const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
     const {
         activeTab,
         setActiveTab,
@@ -28,16 +27,12 @@ export const GroupDetail = () => {
         balances
     } = useGroupDetail();
 
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-alice-blue dark:bg-slate-900 font-display text-slate-800 dark:text-slate-200 antialiased selection:bg-blue-500 selection:text-white transition-colors duration-300">
-            {/* Sidebar - Persistent on desktop, Drawer on mobile */}
-            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-
             <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
                 {/* Header */}
                 <PageHeader
+                    onMenuClick={toggleSidebar}
                     title={groupName || "Detalle del Grupo"}
                     onBack={() => navigate(-1)}
                     rightSlot={
@@ -216,8 +211,6 @@ export const GroupDetail = () => {
                     <span className="font-bold pr-2 hidden sm:inline">Nuevo Gasto</span>
                 </button>
             </div>
-
-            <MobileNavigation />
         </div>
     );
 };

@@ -8,19 +8,18 @@ import {
     ChevronDown,
     CreditCard
 } from 'lucide-react';
-import { Sidebar } from '@ui/components/Sidebar/Sidebar';
-import { MobileNavigation } from '@ui/components/MobileNavigation';
 import { PageHeader } from '@ui/components/PageHeader';
+import { useOutletContext } from 'react-router-dom';
 
 export const MyPayments = () => {
+    const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
+
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-alice-blue dark:bg-slate-900 font-display text-slate-900 dark:text-slate-200 antialiased selection:bg-blue-500 selection:text-white transition-colors duration-300">
-            {/* Sidebar - Persistent on desktop, Drawer on mobile */}
-            <Sidebar isOpen={false} onClose={() => { }} />
-
             <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
                 {/* Header */}
                 <PageHeader
+                    onMenuClick={toggleSidebar}
                     title="MIS PAGOS"
                     rightSlot={
                         <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400/90 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
@@ -242,8 +241,6 @@ export const MyPayments = () => {
                     </section>
                 </main>
             </div>
-
-            <MobileNavigation />
         </div>
     );
 };

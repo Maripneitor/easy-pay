@@ -28,6 +28,8 @@ interface PageHeaderProps {
     notificationCount?: number;
     /** Optional user name to display next to avatar */
     userName?: string;
+    /** Called when the menu button is clicked (mobile) */
+    onMenuClick?: () => void;
 }
 
 /**
@@ -37,6 +39,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     title,
     subtitle,
     onBack,
+    onMenuClick, // New prop
     rightSlot,
     showAvatar = true,
     onAvatarClick,
@@ -53,6 +56,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             <div className={styles.headerContainer}>
                 {/* Left – Back button or Menu */}
                 <div className={styles.leftSlot}>
+                    {/* Mobile Menu Button */}
+                    {onMenuClick && (
+                        <button onClick={onMenuClick} className="md:hidden p-2 text-slate-600 dark:text-slate-300 mr-2">
+                            <span className="sr-only">Menu</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        </button>
+                    )}
+
                     {onBack ? (
                         <button onClick={onBack} className={styles.backBtn}>
                             <ArrowLeft size={18} className={styles.backIcon} />

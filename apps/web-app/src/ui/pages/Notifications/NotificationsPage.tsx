@@ -4,21 +4,22 @@ import {
     Cake,
     Plane,
 } from 'lucide-react';
-import { Sidebar } from '@ui/components/Sidebar/Sidebar';
-import { MobileNavigation } from '@ui/components/MobileNavigation';
 import { PageHeader } from '@ui/components/PageHeader';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 
 export const NotificationsPage = () => {
+    const navigate = useNavigate();
+    const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
+
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-alice-blue dark:bg-slate-900 font-display text-slate-900 dark:text-slate-200 antialiased selection:bg-blue-500 selection:text-white transition-colors duration-300">
-            {/* Sidebar - Persistent on desktop, Drawer on mobile */}
-            <Sidebar isOpen={false} onClose={() => { }} />
-
             <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
                 {/* Header */}
                 <PageHeader
+                    onMenuClick={toggleSidebar}
                     title="MI HISTORIAL"
                     subtitle="Actividad reciente y pasada"
+                    onBack={() => navigate(-1)}
                     showNotification={false}
                 />
 
@@ -151,8 +152,6 @@ export const NotificationsPage = () => {
                     </section>
                 </main>
             </div>
-
-            <MobileNavigation />
         </div>
     );
 };

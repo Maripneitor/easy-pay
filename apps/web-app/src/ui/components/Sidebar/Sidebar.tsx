@@ -1,6 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { X, Home, User, Bell, Plus, Settings, CreditCard, LogOut } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { X, Home, User, Bell, Plus, CreditCard, LogOut, Camera, FileText } from 'lucide-react';
 import { cn } from '@infrastructure/utils';
 
 interface SidebarProps {
@@ -13,11 +13,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
     const menuItems = [
         { icon: Home, label: 'Inicio', path: '/dashboard' },
-        { icon: Bell, label: 'Notificaciones', path: '/notifications' },
         { icon: Plus, label: 'Crear Grupo', path: '/create-group' },
         { icon: CreditCard, label: 'Mis Pagos', path: '/my-payments' },
+        { icon: Camera, label: 'Escáner OCR', path: '/ocr-scanner' },
+        { icon: FileText, label: 'Registrar Gasto', path: '/register-expense' },
+        { icon: Bell, label: 'Notificaciones', path: '/notifications' },
         { icon: User, label: 'Mi Perfil', path: '/profile' },
-        { icon: Settings, label: 'Configuración', path: '/profile/personal-data' },
     ];
 
     return (
@@ -66,19 +67,45 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 {/* Menu Items */}
                 <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto custom-scrollbar">
                     {menuItems.map((item, index) => (
-                        <button
+                        <NavLink
                             key={index}
-                            onClick={() => {
-                                navigate(item.path);
-                                onClose();
-                            }}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl transition-all group"
+                            to={item.path}
+                            onClick={onClose}
+                            className={({ isActive }) =>
+                                cn(
+                                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group",
+                                    isActive
+                                        ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80"
+                                )
+                            }
                         >
-                            <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg group-hover:bg-blue-500/20 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                <item.icon size={20} />
-                            </div>
-                            <span className="font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{item.label}</span>
-                        </button>
+                            {({ isActive }) => (
+                                <>
+                                    {/* Active Indicator Bar */}
+                                    {isActive && (
+                                        <div className="absolute left-0 h-8 w-1 rounded-r-full bg-blue-600 dark:bg-blue-400" />
+                                    )}
+
+                                    <div className={cn(
+                                        "p-2 rounded-lg transition-colors ml-1", // Added ml-1 for spacing
+                                        isActive
+                                            ? "bg-white/20 text-white"
+                                            : "bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-500/20 group-hover:text-blue-600 dark:group-hover:text-blue-400 text-slate-500 dark:text-slate-400"
+                                    )}>
+                                        <item.icon size={20} />
+                                    </div>
+                                    <span className={cn(
+                                        "font-medium transition-colors",
+                                        isActive
+                                            ? "text-white"
+                                            : "group-hover:text-slate-900 dark:group-hover:text-white"
+                                    )}>
+                                        {item.label}
+                                    </span>
+                                </>
+                            )}
+                        </NavLink>
                     ))}
                 </nav>
 
