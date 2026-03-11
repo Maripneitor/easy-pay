@@ -1,6 +1,23 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { PaymentCard, PaymentTransaction } from '@easy-pay/shared';
+export interface PaymentCard {
+    id: string;
+    lastFour: string;
+    holder: string;
+    brand: string;
+    isDefault: boolean;
+}
+
+export interface PaymentTransaction {
+    id: string;
+    description: string;
+    category: string;
+    date: string;
+    status: string;
+    amount: number;
+    avatarUrl?: string;
+    icon?: string;
+}
 
 const MOCK_CARDS: PaymentCard[] = [
     {

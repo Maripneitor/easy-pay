@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Easy-Pay - Crear Nuevo Grupo</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#2078f3",
+              "primary-glow": "#2078f380",
+              "background-light": "#f5f7f8",
+              "background-dark": "#0f172a",
+              "surface-dark": "#1e293b",
+              "glass-border": "rgba(255, 255, 255, 0.08)",
+              "glass-bg": "rgba(30, 41, 59, 0.7)",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"],
+              "body": ["Inter", "sans-serif"],
+            },
+            borderRadius: {
+              "DEFAULT": "0.25rem", 
+              "lg": "0.5rem", 
+              "xl": "0.75rem", 
+              "2xl": "1rem",
+              "full": "9999px"
+            },
+            boxShadow: {
+              'glow': '0 0 20px -5px var(--tw-shadow-color)',
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white min-h-screen flex flex-col font-display selection:bg-primary selection:text-white">
+<div class="fixed bottom-8 right-8 z-[60]">
+<button class="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-glow shadow-primary-glow transition-all transform hover:-translate-y-1 active:translate-y-0 active:shadow-none">
+<span class="material-symbols-outlined">qr_code_scanner</span>
+<span class="text-sm">Escanear ticket</span>
+</button>
+</div>
+<header class="w-full px-6 py-4 flex items-center justify-between sticky top-0 z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/50">
+<div class="flex items-center gap-2">
+<a class="group flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-xl group-hover:-translate-x-1 transition-transform">arrow_back</span>
+<span class="text-sm font-medium">Volver</span>
+</a>
+</div>
+<div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+<h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+            Easy-Pay
+        </h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="size-8 rounded-full bg-gradient-to-tr from-primary to-blue-400 p-[1px]">
+<img alt="Profile Avatar" class="w-full h-full rounded-full object-cover border-2 border-background-dark" data-alt="User profile picture showing a smiling woman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQlnbeEDIDTcgpDqaFDTS_781E69GEW3-CeGT7kz-hfgBsmdIXRq4CIXynq5M_vESOrd_OFIHjAkdX8i2b-yjLrPEcbkqy18cCkLVRIm-RFehmIgPu6Kazu9zcCR9rkmibiH2vMM5VPEEE90TP_wPtHDuH9U6k8JnUjUarpdS9EAO5RYX8fYZNTmfhQTnnLh3nin31g2i77bE73kC3cykm1ZuTiFiJvPURr96cZ3SjwTSXaeL49cylj8Byo3NCxcBdWOQjnjIMFTar"/>
+</div>
+</div>
+</header>
+<main class="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-10 relative overflow-hidden">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-64 bg-primary/20 blur-[100px] rounded-full pointer-events-none z-0"></div>
+<div class="w-full max-w-2xl relative z-10 flex flex-col gap-8">
+<div class="text-center space-y-2">
+<h2 class="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-lg">
+                Crear nuevo grupo
+            </h2>
+<p class="text-slate-400 text-base font-normal max-w-md mx-auto">
+                Configura los detalles del grupo y añade participantes para comenzar a dividir gastos fácilmente.
+            </p>
+</div>
+<div class="glass-card rounded-2xl p-6 sm:p-8 md:p-10 flex flex-col gap-8">
+<section class="flex flex-col gap-5">
+<div class="flex items-center gap-2 pb-2 border-b border-slate-700/50">
+<span class="material-symbols-outlined text-primary text-xl">info</span>
+<h3 class="text-lg font-bold text-white tracking-tight">Información básica</h3>
+</div>
+<div class="space-y-5">
+<div class="space-y-2">
+<label class="block text-sm font-medium text-slate-300" for="groupName">Nombre del grupo <span class="text-primary">*</span></label>
+<input class="w-full bg-surface-dark border border-slate-700 text-white text-base rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block p-3.5 placeholder-slate-500 transition-all shadow-inner" id="groupName" placeholder="Ej. Viaje a la playa 2024" required="" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="block text-sm font-medium text-slate-300" for="groupDesc">Descripción <span class="text-slate-500 text-xs font-normal">(opcional)</span></label>
+<textarea class="w-full bg-surface-dark border border-slate-700 text-white text-base rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block p-3.5 placeholder-slate-500 transition-all resize-none shadow-inner" id="groupDesc" placeholder="Describe el propósito de este grupo..." rows="3"></textarea>
+</div>
+</div>
+</section>
+<section class="flex flex-col gap-5">
+<div class="flex items-center gap-2 pb-2 border-b border-slate-700/50">
+<span class="material-symbols-outlined text-primary text-xl">group_add</span>
+<h3 class="text-lg font-bold text-white tracking-tight">Invitar miembros</h3>
+</div>
+<div class="space-y-6">
+<div class="flex gap-2">
+<div class="relative flex-grow">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+<span class="material-symbols-outlined text-slate-500">search</span>
+</div>
+<input class="w-full bg-surface-dark border border-slate-700 text-white text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block w-full pl-10 p-3 placeholder-slate-500 transition-all" id="memberSearch" placeholder="Buscar por nombre o email..." type="text"/>
+</div>
+<button class="flex-none bg-surface-dark hover:bg-slate-700 border border-slate-600 hover:border-slate-500 text-white rounded-lg px-4 transition-colors flex items-center justify-center group" type="button">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">add</span>
+</button>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Miembros agregados</h4>
+<div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors group">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img alt="Avatar" class="w-10 h-10 rounded-full object-cover border border-slate-600" data-alt="Avatar of Ana Pérez" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDALp_f_8XM-nJdAaL8Vfbs6bAntqnd8ONeSR2Pm7YhEc2Y5ANLBwk11csP85L1fhJMmmgQ2r8HnD-1XYSgF_5VbKnh3GUy491UKxz1lMTRtnDLOoW-0V23nD_vq_oO_m4iCevQtvLzwf3ohOgF1raGY7P087xrW0twUtfmDglOITBCyvfv5L7aa13x4A2rx10lG2EoSx5SFcW5RxEJLgYTfxcMXcCZwgd_0kgTJnr3aAjlxNjhxXAQsHESEoMR9WSIMmlK7AV9Q_ey"/>
+<div class="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full p-0.5 border-2 border-background-dark">
+<span class="material-symbols-outlined text-[10px] text-white font-bold block">check</span>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-white">Ana Pérez</span>
+<span class="text-xs text-slate-400">ana.perez@example.com</span>
+</div>
+</div>
+<span class="px-2.5 py-1 text-[10px] font-bold text-primary bg-primary/10 rounded-full border border-primary/20">Administrador</span>
+</div>
+<div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors group">
+<div class="flex items-center gap-3">
+<img alt="Avatar" class="w-10 h-10 rounded-full object-cover border border-slate-600" data-alt="Avatar of Carlos López" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG8yj0VVFvlwz1fKiv2ZsPgPev651LZZL4QqZxluw7ky0Ybvzc2xiv_RwGOqz4TBIUVp1rvXBCLNKfHafwH2_7BIq9YPj0Q_lnds07OzIMaiBn8rwIX5xClNb5bLjcw6oO_Yl5Nf-kKezQJvcL4niDX7KhqKaJ_SChFiqi39MozuTbRihEHoUniBOW4K1Ve1ovFAfhRWD2z0umSJLsS2A014s5WQ9Kk1pDWYUOtWcx26zyuz0riwQaUGUSwSKtUR0tHiq9Jd-xZaxZ"/>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-white">Carlos López</span>
+<span class="text-xs text-slate-400">carlos.lopez@example.com</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="px-2.5 py-1 text-[10px] font-bold text-slate-400 bg-slate-700/30 rounded-full border border-slate-600/30">Miembro</span>
+<button class="text-slate-500 hover:text-red-400 transition-colors p-1 rounded hover:bg-red-400/10" title="Eliminar miembro">
+<span class="material-symbols-outlined text-lg">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<div class="pt-4 mt-2 border-t border-slate-700/50 flex justify-center">
+<button class="w-full sm:w-auto bg-primary hover:bg-blue-600 text-white font-bold py-3.5 px-12 rounded-lg shadow-glow shadow-primary-glow transition-all transform hover:-translate-y-0.5 active:translate-y-0 active:shadow-none flex items-center justify-center gap-2">
+<span>CREAR GRUPO</span>
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Easy-Pay History and Archives (Mi Historial)</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3b82f6", // Neon Blue
+                        "background-dark": "#0f172a", // Deep dark blue requested
+                        "card-glass": "rgba(30, 41, 59, 0.7)", 
+                        "card-glass-opaque": "rgba(30, 41, 59, 0.9)",
+                        "card-border": "rgba(255, 255, 255, 0.1)",
+                        "neon-blue": "#3b82f6",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                    backgroundImage: {
+                        'gradient-card': 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)',
+                        'gradient-bar': 'linear-gradient(to top, #7c3aed, #22d3ee)', // Violet to Cyan
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+    </style>
+</head>
+<body class="bg-background-dark font-display text-slate-200 min-h-screen flex flex-col antialiased selection:bg-primary selection:text-white">
+<header class="sticky top-0 z-50 w-full backdrop-blur-xl bg-[#0f172a]/80 border-b border-slate-700/30">
+<div class="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between relative">
+<a class="group flex items-center gap-2 text-slate-400 hover:text-white transition-colors duration-200 text-sm font-medium z-10" href="#">
+<span class="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span>
+<span>Volver</span>
+</a>
+<h1 class="absolute left-1/2 top-1/2 -translate-x-1/2 text-white text-lg font-bold tracking-widest uppercase">MI HISTORIAL</h1>
+<div class="w-10"></div> 
+</div>
+</header>
+<main class="flex-1 w-full max-w-5xl mx-auto px-6 py-10 space-y-12">
+<section class="flex flex-wrap gap-4 items-center">
+<button class="px-5 py-2 rounded-full text-xs font-semibold tracking-wide bg-neon-blue/20 text-neon-blue border border-neon-blue shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-all">
+                Últimos 3 meses
+            </button>
+<button class="px-5 py-2 rounded-full text-xs font-medium tracking-wide bg-slate-800/40 text-slate-400 border border-slate-700/50 hover:bg-slate-700/50 hover:text-slate-200 transition-all">
+                Este Año
+            </button>
+<button class="px-5 py-2 rounded-full text-xs font-medium tracking-wide bg-slate-800/40 text-slate-400 border border-slate-700/50 hover:bg-slate-700/50 hover:text-slate-200 transition-all">
+                2023
+            </button>
+<button class="px-5 py-2 rounded-full text-xs font-medium tracking-wide bg-slate-800/40 text-slate-400 border border-slate-700/50 hover:bg-slate-700/50 hover:text-slate-200 transition-all">
+                Personalizado
+            </button>
+</section>
+<section>
+<div class="flex justify-between items-end mb-6">
+<h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Grupos Archivados</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="group relative rounded-2xl p-6 flex flex-col justify-between overflow-hidden border border-slate-700/60 bg-card-glass-opaque backdrop-blur-xl transition-all duration-300 hover:border-slate-500 hover:bg-slate-800/80 hover:shadow-lg">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<div class="p-3 bg-purple-500/20 rounded-xl border border-purple-500/30 text-purple-300">
+<span class="material-symbols-outlined">cake</span>
+</div>
+<div>
+<h3 class="text-white font-semibold text-lg">Cumpleaños Pedro</h3>
+<p class="text-slate-400 text-xs mt-0.5">Finalizado el 12 Ago</p>
+</div>
+</div>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+                            Pagado
+                        </span>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center text-sm border-t border-slate-700/50 pt-4">
+<span class="text-slate-400">Total recolectado</span>
+<span class="text-white font-mono font-medium">$4,250.00</span>
+</div>
+<div class="flex gap-3 mt-2">
+<button class="flex-1 py-2 rounded-lg border border-slate-600 text-slate-300 text-xs font-medium hover:bg-slate-700 hover:text-white transition-colors">
+                                Ver Detalle
+                            </button>
+<button class="flex-1 py-2 rounded-lg border border-slate-600 text-slate-300 text-xs font-medium hover:bg-slate-700 hover:text-white transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-sm">replay</span>
+                                Reactivar
+                            </button>
+</div>
+</div>
+</div>
+<div class="group relative rounded-2xl p-6 flex flex-col justify-between overflow-hidden border border-slate-700/60 bg-card-glass-opaque backdrop-blur-xl transition-all duration-300 hover:border-slate-500 hover:bg-slate-800/80 hover:shadow-lg">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<div class="p-3 bg-cyan-500/20 rounded-xl border border-cyan-500/30 text-cyan-300">
+<span class="material-symbols-outlined">flight</span>
+</div>
+<div>
+<h3 class="text-white font-semibold text-lg">Viaje Acapulco</h3>
+<p class="text-slate-400 text-xs mt-0.5">Finalizado el 05 Jul</p>
+</div>
+</div>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+                            Pagado
+                        </span>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center text-sm border-t border-slate-700/50 pt-4">
+<span class="text-slate-400">Total recolectado</span>
+<span class="text-white font-mono font-medium">$12,800.00</span>
+</div>
+<div class="flex gap-3 mt-2">
+<button class="flex-1 py-2 rounded-lg border border-slate-600 text-slate-300 text-xs font-medium hover:bg-slate-700 hover:text-white transition-colors">
+                                Ver Detalle
+                            </button>
+<button class="flex-1 py-2 rounded-lg border border-slate-600 text-slate-300 text-xs font-medium hover:bg-slate-700 hover:text-white transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-sm">replay</span>
+                                Reactivar
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-6">Gráfica de Gastos</h2>
+<div class="w-full bg-card-glass border border-slate-700/50 rounded-2xl p-6 backdrop-blur-md relative overflow-hidden">
+<div class="absolute inset-0 pointer-events-none flex flex-col justify-between py-12 px-12 opacity-10">
+<div class="w-full h-px bg-slate-200"></div>
+<div class="w-full h-px bg-slate-200"></div>
+<div class="w-full h-px bg-slate-200"></div>
+<div class="w-full h-px bg-slate-200"></div>
+<div class="w-full h-px bg-slate-200"></div>
+</div>
+<div class="flex items-end justify-between h-64 gap-2 md:gap-4 px-2 md:px-6 relative z-10">
+<div class="absolute left-0 top-6 bottom-12 flex flex-col justify-between text-[10px] font-mono text-slate-500">
+<span>$5k</span>
+<span>$4k</span>
+<span>$3k</span>
+<span>$2k</span>
+<span>$1k</span>
+<span>$0</span>
+</div>
+<div class="ml-8 flex-1 flex items-end justify-around h-full pb-6 pt-6 border-l border-slate-700/50 border-b border-slate-700/50">
+<div class="group flex flex-col items-center gap-2 w-1/6 h-full justify-end cursor-pointer">
+<div class="w-full max-w-[24px] md:max-w-[40px] bg-gradient-bar rounded-t-sm relative transition-all duration-300 hover:brightness-110 shadow-[0_-4px_15px_rgba(34,211,238,0.3)]" style="height: 45%;"></div>
+<span class="text-[10px] font-mono text-slate-400 group-hover:text-white transition-colors">ENE</span>
+</div>
+<div class="group flex flex-col items-center gap-2 w-1/6 h-full justify-end cursor-pointer">
+<div class="w-full max-w-[24px] md:max-w-[40px] bg-gradient-bar rounded-t-sm relative transition-all duration-300 hover:brightness-110 shadow-[0_-4px_15px_rgba(34,211,238,0.3)]" style="height: 65%;"></div>
+<span class="text-[10px] font-mono text-slate-400 group-hover:text-white transition-colors">FEB</span>
+</div>
+<div class="group flex flex-col items-center gap-2 w-1/6 h-full justify-end cursor-pointer">
+<div class="w-full max-w-[24px] md:max-w-[40px] bg-gradient-bar rounded-t-sm relative transition-all duration-300 hover:brightness-110 shadow-[0_-4px_15px_rgba(34,211,238,0.3)]" style="height: 30%;"></div>
+<span class="text-[10px] font-mono text-slate-400 group-hover:text-white transition-colors">MAR</span>
+</div>
+<div class="group flex flex-col items-center gap-2 w-1/6 h-full justify-end cursor-pointer">
+<div class="w-full max-w-[24px] md:max-w-[40px] bg-gradient-bar rounded-t-sm relative transition-all duration-300 hover:brightness-110 shadow-[0_-4px_15px_rgba(34,211,238,0.3)]" style="height: 85%;"></div>
+<span class="text-[10px] font-mono text-slate-400 group-hover:text-white transition-colors">ABR</span>
+</div>
+<div class="group flex flex-col items-center gap-2 w-1/6 h-full justify-end cursor-pointer">
+<div class="w-full max-w-[24px] md:max-w-[40px] bg-gradient-bar rounded-t-sm relative transition-all duration-300 hover:brightness-110 shadow-[0_-4px_15px_rgba(34,211,238,0.3)]" style="height: 55%;"></div>
+<span class="text-[10px] font-mono text-slate-400 group-hover:text-white transition-colors">MAY</span>
+</div>
+<div class="group flex flex-col items-center gap-2 w-1/6 h-full justify-end cursor-pointer">
+<div class="w-full max-w-[24px] md:max-w-[40px] bg-gradient-bar rounded-t-sm relative transition-all duration-300 hover:brightness-110 shadow-[0_-4px_15px_rgba(34,211,238,0.3)]" style="height: 72%;"></div>
+<span class="text-[10px] font-mono text-slate-400 group-hover:text-white transition-colors">JUN</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="pb-10">
+<h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-6">Exportar Datos</h2>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+<button class="h-24 rounded-xl bg-slate-800/40 border border-slate-700/50 flex flex-col items-center justify-center gap-2 hover:bg-slate-700/60 hover:border-slate-500 transition-all backdrop-blur-md group">
+<div class="p-2 bg-green-500/10 rounded-lg text-green-400 group-hover:bg-green-500/20 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl">table_chart</span>
+</div>
+<span class="text-xs font-medium text-slate-300 group-hover:text-white">Formato CSV</span>
+</button>
+<button class="h-24 rounded-xl bg-slate-800/40 border border-slate-700/50 flex flex-col items-center justify-center gap-2 hover:bg-slate-700/60 hover:border-slate-500 transition-all backdrop-blur-md group">
+<div class="p-2 bg-red-500/10 rounded-lg text-red-400 group-hover:bg-red-500/20 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl">picture_as_pdf</span>
+</div>
+<span class="text-xs font-medium text-slate-300 group-hover:text-white">Archivo PDF</span>
+</button>
+<button class="h-24 rounded-xl bg-slate-800/40 border border-slate-700/50 flex flex-col items-center justify-center gap-2 hover:bg-slate-700/60 hover:border-slate-500 transition-all backdrop-blur-md group">
+<div class="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:bg-blue-500/20 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl">mail</span>
+</div>
+<span class="text-xs font-medium text-slate-300 group-hover:text-white">Enviar por Email</span>
+</button>
+</div>
+</section>
+</main>
+
+</body></html>

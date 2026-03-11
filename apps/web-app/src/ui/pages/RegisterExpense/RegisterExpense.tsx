@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import {
     ArrowLeft,
     DollarSign,
@@ -16,15 +16,13 @@ import {
     Camera
 } from 'lucide-react';
 import { cn } from '@infrastructure/utils';
-import { Sidebar } from '@ui/components/Sidebar/Sidebar';
-import { MobileNavigation } from '@ui/components/MobileNavigation';
 import { PageHeader } from '@ui/components/PageHeader';
 
 export const RegisterExpense = () => {
     const navigate = useNavigate();
+    const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
     const [amount, setAmount] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const categories = [
         { id: 'food', name: 'Comida', icon: Utensils, color: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-500/20' },
@@ -39,12 +37,10 @@ export const RegisterExpense = () => {
 
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-alice-blue dark:bg-slate-900 font-display text-slate-800 dark:text-slate-200 antialiased selection:bg-blue-500 selection:text-white transition-colors duration-300">
-            {/* Sidebar - Persistent on desktop, Drawer on mobile */}
-            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-
             <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
                 {/* Header */}
                 <PageHeader
+                    onMenuClick={toggleSidebar}
                     title="Registrar Gasto"
                     onBack={() => navigate(-1)}
                     rightSlot={
@@ -160,8 +156,6 @@ export const RegisterExpense = () => {
                     </div>
                 </main>
             </div>
-
-            <MobileNavigation />
         </div>
     );
 };

@@ -1,6 +1,15 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { SplitType, TipMode, Participant } from '@easy-pay/shared';
+export type SplitType = 'equally' | 'individual' | 'exact';
+export type TipMode = 'percentage' | 'fixed';
+export interface Participant {
+    id: string;
+    name: string;
+    initials: string;
+    color: string;
+    isSelected: boolean;
+    isCurrentUser?: boolean;
+}
 
 const MOCK_PARTICIPANTS: Participant[] = [
     { id: 'p1', name: 'Ana Pérez', initials: 'AP', color: 'pink', isSelected: true },
