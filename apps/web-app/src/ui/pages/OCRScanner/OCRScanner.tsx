@@ -31,7 +31,7 @@ interface OCRItem {
 /* ─── Viewfinder component ─── */
 
 const Viewfinder: React.FC<{ flashOn: boolean; onFlashToggle: () => void; isProcessing: boolean }> = ({ flashOn, onFlashToggle, isProcessing }) => (
-    <div className={cn(styles.glassPanel, 'relative flex-grow rounded-3xl overflow-hidden shadow-2xl shadow-black/40 border-slate-700/50 flex flex-col')}>
+    <div className={cn(styles.glassPanel, 'relative flex-grow rounded-3xl overflow-hidden shadow-2xl shadow-black/40 border-[var(--border-color)] flex flex-col')}>
         {/* Top overlay */}
         <div className="absolute top-0 left-0 w-full p-4 z-20 flex justify-between items-start bg-gradient-to-b from-black/60 to-transparent">
             <div className="bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10 flex items-center gap-2">
@@ -118,12 +118,12 @@ const ScanToolbar: React.FC<{
     onCrop: () => void;
     disabled: boolean;
 }> = ({ onGallery, onCapture, onCrop, disabled }) => (
-    <div className={cn(styles.glassPanel, 'w-full md:w-24 lg:w-32 flex md:flex-col items-center justify-center gap-8 md:gap-12 p-4 rounded-3xl')}>
+    <div className={cn(styles.glassPanel, 'w-full md:w-24 lg:w-32 flex md:flex-col items-center justify-center gap-8 md:gap-12 p-4 rounded-3xl bg-[var(--bg-card)] border-[var(--border-color)]')}>
         <button onClick={onGallery} disabled={disabled} className="group flex flex-col items-center gap-2 disabled:opacity-50">
-            <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-400 group-hover:text-white group-hover:border-slate-400 transition-all">
+            <div className="w-12 h-12 rounded-full bg-[var(--bg-body)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] group-hover:border-blue-400 transition-all">
                 <FolderOpen size={20} />
             </div>
-            <span className="text-xs text-slate-400 font-medium">Galería</span>
+            <span className="text-xs text-[var(--text-secondary)] font-medium">Galería</span>
         </button>
         <button onClick={onCapture} disabled={disabled} className="relative group disabled:opacity-50">
             <div className="absolute inset-0 bg-blue-500 rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity" />
@@ -134,10 +134,10 @@ const ScanToolbar: React.FC<{
             </div>
         </button>
         <button onClick={onCrop} disabled={disabled} className="group flex flex-col items-center gap-2 disabled:opacity-50">
-            <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-400 group-hover:text-white group-hover:border-slate-400 transition-all">
+            <div className="w-12 h-12 rounded-full bg-[var(--bg-body)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] group-hover:border-blue-400 transition-all">
                 <Crop size={20} />
             </div>
-            <span className="text-xs text-slate-400 font-medium">Recortar</span>
+            <span className="text-xs text-[var(--text-secondary)] font-medium">Recortar</span>
         </button>
     </div>
 );
@@ -162,7 +162,7 @@ export const OCRScanner: React.FC = () => {
     } = useOCRScanner();
 
     return (
-        <div className="min-h-screen flex flex-col md:flex-row bg-[#0f172a] text-slate-200 antialiased selection:bg-cyan-500 selection:text-white">
+        <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg-body)] text-[var(--text-primary)] antialiased selection:bg-cyan-500 selection:text-white transition-colors duration-300">
 
             <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
                 {/* Unified Header */}
@@ -189,12 +189,12 @@ export const OCRScanner: React.FC = () => {
                     </div>
 
                     {/* Analysis Panel */}
-                    <div className={cn(styles.glassPanel, 'w-full rounded-2xl shadow-glass flex flex-col overflow-hidden mt-2')}>
+                    <div className={cn(styles.glassPanel, 'w-full rounded-2xl shadow-glass flex flex-col overflow-hidden mt-2 bg-[var(--bg-card)] border border-[var(--border-color)]')}>
                         {/* Panel header */}
-                        <div className="p-4 sm:px-6 border-b border-white/5 flex items-center justify-between bg-white/5">
+                        <div className="p-4 sm:px-6 border-b border-[var(--border-color)] flex items-center justify-between bg-white/5">
                             <div className="flex items-center gap-2">
                                 <Sparkles size={20} className="text-cyan-400" />
-                                <h3 className="text-lg font-bold text-white">Análisis del Ticket</h3>
+                                <h3 className="text-lg font-bold text-[var(--text-primary)]">Análisis del Ticket</h3>
                             </div>
                             <StatusBadge label={`OCR Confianza: ${scanResult.confidence}%`} variant="success" />
                         </div>
@@ -202,8 +202,8 @@ export const OCRScanner: React.FC = () => {
                         {/* Two-column content */}
                         <div className="flex flex-col md:flex-row h-full">
                             {/* Left – Detected (OCR) */}
-                            <div className="w-full md:w-1/2 border-r border-white/5 p-4 sm:p-6 bg-black/20">
-                                <h4 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <div className="w-full md:w-1/2 border-r border-[var(--border-color)] p-4 sm:p-6 bg-black/5">
+                                <h4 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4 flex items-center gap-2">
                                     <ReceiptText size={16} /> Detectado (OCR)
                                 </h4>
                                 <div className="space-y-3 font-mono text-sm">
@@ -214,11 +214,11 @@ export const OCRScanner: React.FC = () => {
                                                 'flex justify-between items-center p-2 rounded transition',
                                                 item.isUnassigned
                                                     ? 'bg-amber-500/10 border border-amber-500/30'
-                                                    : 'hover:bg-white/5 border-b border-dashed border-slate-700',
+                                                    : 'hover:bg-white/5 border-b border-dashed border-[var(--border-color)]',
                                             )}
                                         >
-                                            <span className={item.isUnassigned ? 'text-amber-200' : 'text-slate-300'}>{item.description}</span>
-                                            <span className={cn('font-bold', item.isUnassigned ? 'text-amber-200' : 'text-white')}>
+                                            <span className={item.isUnassigned ? 'text-amber-200' : 'text-[var(--text-secondary)]'}>{item.description}</span>
+                                            <span className={cn('font-bold', item.isUnassigned ? 'text-amber-200' : 'text-[var(--text-primary)]')}>
                                                 {formatCurrency(item.amount)}
                                             </span>
                                         </div>
@@ -227,15 +227,15 @@ export const OCRScanner: React.FC = () => {
                             </div>
 
                             {/* Right – App totals + warnings */}
-                            <div className="w-full md:w-1/2 p-4 sm:p-6 bg-slate-800/30 relative">
-                                <h4 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <div className="w-full md:w-1/2 p-4 sm:p-6 bg-[var(--hover-bg)] relative">
+                                <h4 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4 flex items-center gap-2">
                                     <Smartphone size={16} /> En la App (Cuenta)
                                 </h4>
                                 <div className="space-y-3 mb-6 opacity-60">
                                     {scanResult.appItems.map((item: OCRItem, idx: number) => (
                                         <div key={idx} className="flex justify-between items-center text-sm">
-                                            <span className="text-slate-300">{item.description}</span>
-                                            <span className="text-white">{formatCurrency(item.amount)}</span>
+                                            <span className="text-[var(--text-secondary)]">{item.description}</span>
+                                            <span className="text-[var(--text-primary)]">{formatCurrency(item.amount)}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -250,13 +250,13 @@ export const OCRScanner: React.FC = () => {
                                             <AlertTriangle size={20} className="text-amber-500 mt-0.5" />
                                             <div className="flex-grow">
                                                 <h5 className="text-amber-100 font-bold text-sm mb-1">Item no asignado detectado</h5>
-                                                <p className="text-slate-300 text-xs mb-3">
-                                                    <span className="text-white font-mono">{item.description} ({formatCurrency(item.amount)})</span> aparece en el ticket pero nadie lo reclamó en la app.
+                                                <p className="text-[var(--text-secondary)] text-xs mb-3 font-medium">
+                                                    <span className="text-[var(--text-primary)] font-mono font-bold">{item.description} ({formatCurrency(item.amount)})</span> aparece en el ticket pero nadie lo reclamó en la app.
                                                 </p>
                                                 <div className="flex gap-2">
                                                     <button
                                                         onClick={() => handleSplitAll(item)}
-                                                        className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded transition"
+                                                        className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-[var(--text-primary)] text-xs px-3 py-1.5 rounded transition border border-[var(--border-color)]"
                                                     >
                                                         <Users size={14} /> Dividir entre todos
                                                     </button>
@@ -275,16 +275,16 @@ export const OCRScanner: React.FC = () => {
                         </div>
 
                         {/* Footer totals */}
-                        <div className="bg-slate-900/80 p-4 sm:px-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="bg-[var(--bg-card)] p-4 sm:px-6 border-t border-[var(--border-color)] flex flex-col sm:flex-row items-center justify-between gap-4">
                             <div className="flex items-center gap-6 w-full sm:w-auto justify-center sm:justify-start">
                                 <div className="text-center sm:text-left">
-                                    <span className="block text-xs text-slate-500 uppercase font-bold">Total Ticket</span>
-                                    <span className="block text-xl font-mono text-white">{formatCurrency(scanResult.ticketTotal)}</span>
+                                    <span className="block text-xs text-[var(--text-secondary)] uppercase font-bold">Total Ticket</span>
+                                    <span className="block text-xl font-mono text-[var(--text-primary)]">{formatCurrency(scanResult.ticketTotal)}</span>
                                 </div>
-                                <div className="h-8 w-px bg-white/10" />
+                                <div className="h-8 w-px bg-[var(--border-color)]" />
                                 <div className="text-center sm:text-left">
-                                    <span className="block text-xs text-slate-500 uppercase font-bold">Total App</span>
-                                    <span className="block text-xl font-mono text-red-400">{formatCurrency(scanResult.appTotal)}</span>
+                                    <span className="block text-xs text-[var(--text-secondary)] uppercase font-bold">Total App</span>
+                                    <span className="block text-xl font-mono text-red-500">{formatCurrency(scanResult.appTotal)}</span>
                                 </div>
                             </div>
                             <button
@@ -297,7 +297,7 @@ export const OCRScanner: React.FC = () => {
                     </div>
                 </main>
 
-                <footer className="py-6 text-center text-slate-600 text-sm">
+                <footer className="py-6 text-center text-[var(--text-secondary)] text-sm">
                     <p>© 2025 Easy-Pay Technology. All rights reserved.</p>
                 </footer>
             </div>

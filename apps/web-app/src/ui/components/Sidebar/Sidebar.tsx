@@ -1,129 +1,110 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { X, Home, User, Bell, Plus, CreditCard, LogOut, Camera, FileText } from 'lucide-react';
-import { cn } from '@infrastructure/utils';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { 
+    Home, 
+    PlusSquare, 
+    CreditCard, 
+    Camera, 
+    FileText, 
+    Bell, 
+    User,
+    ChevronRight,
+    Settings,
+    DollarSign
+} from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
-interface SidebarProps {
-    isOpen: boolean;
-    onClose: () => void;
-}
-
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+export const Sidebar: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { theme } = useTheme();
 
     const menuItems = [
-        { icon: Home, label: 'Inicio', path: '/dashboard' },
-        { icon: Plus, label: 'Crear Grupo', path: '/create-group' },
-        { icon: CreditCard, label: 'Mis Pagos', path: '/my-payments' },
-        { icon: Camera, label: 'Escáner OCR', path: '/ocr-scanner' },
-        { icon: FileText, label: 'Registrar Gasto', path: '/register-expense' },
-        { icon: Bell, label: 'Notificaciones', path: '/notifications' },
-        { icon: User, label: 'Mi Perfil', path: '/profile' },
+        { icon: <Home size={22} />, label: 'Inicio', path: '/dashboard' },
+        { icon: <PlusSquare size={22} />, label: 'Crear Grupo', path: '/create-group' },
+        { icon: <CreditCard size={22} />, label: 'Mis Pagos', path: '/my-payments' },
+        { icon: <Camera size={22} />, label: 'Escáner OCR', path: '/ocr-scanner' },
+        { icon: <FileText size={22} />, label: 'Registrar Gasto', path: '/register-expense' },
+        { icon: <Bell size={22} />, label: 'Notificaciones', path: '/notifications' },
     ];
 
+    const userName = "Juan Pérez";
+    const userEmail = "juan.perez@easypay.com";
+
     return (
-        <>
-            {/* Overlay - visible on mobile when open, hidden on desktop */}
-            <div
-                className={cn(
-                    "fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity duration-300 md:hidden",
-                    isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-                )}
-                onClick={onClose}
-            />
-
-            {/* Drawer / Sidebar */}
-            <div className={cn(
-                "fixed inset-y-0 left-0 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700/50 shadow-2xl z-[70] transition-transform duration-300 ease-in-out flex flex-col",
-                "md:translate-x-0 md:static md:shadow-none md:z-auto md:w-64 md:h-screen md:sticky md:top-0",
-                isOpen ? "translate-x-0" : "-translate-x-full"
-            )}>
-                {/* Header */}
-                <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                    <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-500 bg-clip-text text-transparent">Easy-Pay</h2>
-                    {/* Close button - visible only on mobile */}
-                    <button onClick={onClose} className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors md:hidden">
-                        <X size={20} />
-                    </button>
-                </div>
-
-                {/* User Info */}
-                <div className="p-6 pb-2">
-                    <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/50">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 p-[2px]">
-                            <img
-                                src="https://ui-avatars.com/api/?name=Juan+Perez&background=0f172a&color=fff"
-                                alt="Juan"
-                                className="w-full h-full rounded-full"
-                            />
-                        </div>
-                        <div className="overflow-hidden">
-                            <p className="font-bold text-slate-800 dark:text-white truncate">Juan Pérez</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">juan@easypay.com</p>
-                        </div>
+        <aside className="hidden md:flex flex-col w-64 min-h-screen bg-[var(--bg-sidebar)] border-r border-[var(--border-color)] transition-colors duration-300 relative z-50">
+            <div className="p-8">
+                <div className="flex items-center gap-2 group cursor-pointer" onClick={() => navigate('/dashboard')}>
+                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-600/20 group-hover:rotate-12 transition-transform">
+                        <DollarSign size={20} className="font-black" />
                     </div>
-                </div>
-
-                {/* Menu Items */}
-                <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto custom-scrollbar">
-                    {menuItems.map((item, index) => (
-                        <NavLink
-                            key={index}
-                            to={item.path}
-                            onClick={onClose}
-                            className={({ isActive }) =>
-                                cn(
-                                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group",
-                                    isActive
-                                        ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80"
-                                )
-                            }
-                        >
-                            {({ isActive }) => (
-                                <>
-                                    {/* Active Indicator Bar */}
-                                    {isActive && (
-                                        <div className="absolute left-0 h-8 w-1 rounded-r-full bg-blue-600 dark:bg-blue-400" />
-                                    )}
-
-                                    <div className={cn(
-                                        "p-2 rounded-lg transition-colors ml-1", // Added ml-1 for spacing
-                                        isActive
-                                            ? "bg-white/20 text-white"
-                                            : "bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-500/20 group-hover:text-blue-600 dark:group-hover:text-blue-400 text-slate-500 dark:text-slate-400"
-                                    )}>
-                                        <item.icon size={20} />
-                                    </div>
-                                    <span className={cn(
-                                        "font-medium transition-colors",
-                                        isActive
-                                            ? "text-white"
-                                            : "group-hover:text-slate-900 dark:group-hover:text-white"
-                                    )}>
-                                        {item.label}
-                                    </span>
-                                </>
-                            )}
-                        </NavLink>
-                    ))}
-                </nav>
-
-                {/* Footer */}
-                <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-                    <button
-                        onClick={() => {
-                            navigate('/auth');
-                            onClose();
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-red-500 dark:text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
-                    >
-                        <LogOut size={20} />
-                        <span className="font-medium">Cerrar Sesión</span>
-                    </button>
-                    <p className="text-center text-[10px] text-slate-400 dark:text-slate-600 mt-4 font-mono">v1.2.0 • Build 245</p>
+                    <h1 className="text-xl font-black tracking-tighter text-[var(--text-primary)]">
+                        Easy-Pay
+                    </h1>
                 </div>
             </div>
-        </>
+
+            <div className="px-4 mb-8">
+                <div 
+                    onClick={() => navigate('/profile')}
+                    className="relative p-4 rounded-3xl bg-[var(--bg-body)] border border-[var(--border-color)] hover:border-blue-500/50 transition-all group cursor-pointer overflow-hidden"
+                >
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="relative z-10 flex flex-col items-center text-center">
+                        <div className="relative mb-3">
+                            <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-blue-600/20 group-hover:scale-105 transition-transform">
+                                JP
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-[var(--bg-body)] rounded-full"></div>
+                        </div>
+                        <span className="text-sm font-black text-[var(--text-primary)] truncate w-full">{userName}</span>
+                        <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-tighter opacity-70">{userEmail}</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav className="flex-1 px-4 space-y-1">
+                <p className="px-4 mb-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Menú Principal</p>
+                {menuItems.map((item) => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                        <button
+                            key={item.path}
+                            onClick={() => navigate(item.path)}
+                            className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all group ${
+                                isActive 
+                                ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/30' 
+                                : 'text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)]'
+                            }`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <span className={`${isActive ? 'text-white' : 'text-slate-400 group-hover:text-blue-500'} transition-colors`}>
+                                    {item.icon}
+                                </span>
+                                <span>{item.label}</span>
+                            </div>
+                            {!isActive && <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />}
+                        </button>
+                    );
+                })}
+            </nav>
+
+            <div className="p-4 mt-auto">
+                <button 
+                    onClick={() => navigate('/profile')}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)] transition-all group"
+                >
+                    <Settings size={22} className="text-slate-400 group-hover:text-blue-500 group-hover:rotate-45 transition-all duration-500" />
+                    Configuración
+                </button>
+                
+                <div className="pt-6 pb-2 text-center">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-[var(--border-color)]">
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
+                        <span className="text-[10px] font-black font-mono text-slate-400 tracking-tighter">v1.2.0-BUILD-245</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
     );
 };

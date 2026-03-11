@@ -12,7 +12,7 @@ export const NotificationsPage = () => {
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
 
     return (
-        <div className="min-h-screen flex flex-col md:flex-row bg-alice-blue dark:bg-slate-900 font-display text-slate-900 dark:text-slate-200 antialiased selection:bg-blue-500 selection:text-white transition-colors duration-300">
+        <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg-body)] font-display text-[var(--text-primary)] antialiased selection:bg-blue-500 selection:text-white transition-colors duration-300">
             <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
                 {/* Header */}
                 <PageHeader
@@ -30,7 +30,7 @@ export const NotificationsPage = () => {
                             Últimos 3 meses
                         </button>
                         {['Este Año', '2023', 'Personalizado'].map(filter => (
-                            <button key={filter} className="px-5 py-2 rounded-full text-xs font-medium tracking-wide bg-white dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200 transition-all">
+                            <button key={filter} className="px-5 py-2 rounded-full text-xs font-medium tracking-wide bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--border-color)] hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)] transition-all">
                                 {filter}
                             </button>
                         ))}
@@ -39,19 +39,19 @@ export const NotificationsPage = () => {
                     {/* Archived Groups */}
                     <section>
                         <div className="flex justify-between items-end mb-6">
-                            <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Grupos Archivados</h2>
+                            <h2 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Grupos Archivados</h2>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Card 1 */}
-                            <div className="group relative rounded-2xl p-6 flex flex-col justify-between overflow-hidden border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/60 backdrop-blur-xl transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-500 hover:shadow-lg">
+                            <div className="group relative rounded-2xl p-6 flex flex-col justify-between overflow-hidden border border-[var(--border-color)] bg-[var(--bg-card)] backdrop-blur-xl transition-all duration-300 hover:border-blue-400 dark:hover:border-slate-500 hover:shadow-lg">
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-3 bg-purple-500/10 dark:bg-purple-500/20 rounded-xl border border-purple-500/20 dark:border-purple-500/30 text-purple-600 dark:text-purple-300">
+                                        <div className="p-3 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-600 dark:text-purple-300">
                                             <Cake size={24} />
                                         </div>
                                         <div>
-                                            <h3 className="text-slate-900 dark:text-white font-semibold text-lg">Cumpleaños Pedro</h3>
-                                            <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Finalizado el 12 Ago</p>
+                                            <h3 className="text-[var(--text-primary)] font-semibold text-lg">Cumpleaños Pedro</h3>
+                                            <p className="text-[var(--text-secondary)] text-xs mt-0.5">Finalizado el 12 Ago</p>
                                         </div>
                                     </div>
                                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -60,15 +60,15 @@ export const NotificationsPage = () => {
                                     </span>
                                 </div>
                                 <div className="space-y-4">
-                                    <div className="flex justify-between items-center text-sm border-t border-slate-100 dark:border-slate-700/50 pt-4">
-                                        <span className="text-slate-500 dark:text-slate-400">Total recolectado</span>
-                                        <span className="text-slate-900 dark:text-white font-mono font-medium">$4,250.00</span>
+                                    <div className="flex justify-between items-center text-sm border-t border-[var(--border-color)] pt-4">
+                                        <span className="text-[var(--text-secondary)]">Total recolectado</span>
+                                        <span className="text-[var(--text-primary)] font-mono font-medium">$4,250.00</span>
                                     </div>
                                     <div className="flex gap-3 mt-2">
-                                        <button className="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors">
+                                        <button className="flex-1 py-2 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] text-xs font-medium hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)] transition-colors">
                                             Ver Detalle
                                         </button>
-                                        <button className="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center gap-1">
+                                        <button className="flex-1 py-2 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] text-xs font-medium hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)] transition-colors flex items-center justify-center gap-1">
                                             <RotateCw size={14} />
                                             Reactivar
                                         </button>
@@ -77,15 +77,15 @@ export const NotificationsPage = () => {
                             </div>
 
                             {/* Card 2 */}
-                            <div className="group relative rounded-2xl p-6 flex flex-col justify-between overflow-hidden border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/60 backdrop-blur-xl transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-500 hover:shadow-lg">
+                            <div className="group relative rounded-2xl p-6 flex flex-col justify-between overflow-hidden border border-[var(--border-color)] bg-[var(--bg-card)] backdrop-blur-xl transition-all duration-300 hover:border-blue-400 dark:hover:border-slate-500 hover:shadow-lg">
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-3 bg-cyan-500/10 dark:bg-cyan-500/20 rounded-xl border border-cyan-500/20 dark:border-cyan-500/30 text-cyan-600 dark:text-cyan-300">
+                                        <div className="p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20 text-cyan-600 dark:text-cyan-300">
                                             <Plane size={24} />
                                         </div>
                                         <div>
-                                            <h3 className="text-slate-900 dark:text-white font-semibold text-lg">Viaje Acapulco</h3>
-                                            <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Finalizado el 05 Jul</p>
+                                            <h3 className="text-[var(--text-primary)] font-semibold text-lg">Viaje Acapulco</h3>
+                                            <p className="text-[var(--text-secondary)] text-xs mt-0.5">Finalizado el 05 Jul</p>
                                         </div>
                                     </div>
                                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -94,15 +94,15 @@ export const NotificationsPage = () => {
                                     </span>
                                 </div>
                                 <div className="space-y-4">
-                                    <div className="flex justify-between items-center text-sm border-t border-slate-100 dark:border-slate-700/50 pt-4">
-                                        <span className="text-slate-500 dark:text-slate-400">Total recolectado</span>
-                                        <span className="text-slate-900 dark:text-white font-mono font-medium">$12,800.00</span>
+                                    <div className="flex justify-between items-center text-sm border-t border-[var(--border-color)] pt-4">
+                                        <span className="text-[var(--text-secondary)]">Total recolectado</span>
+                                        <span className="text-[var(--text-primary)] font-mono font-medium">$12,800.00</span>
                                     </div>
                                     <div className="flex gap-3 mt-2">
-                                        <button className="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors">
+                                        <button className="flex-1 py-2 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] text-xs font-medium hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)] transition-colors">
                                             Ver Detalle
                                         </button>
-                                        <button className="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center gap-1">
+                                        <button className="flex-1 py-2 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] text-xs font-medium hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)] transition-colors flex items-center justify-center gap-1">
                                             <RotateCw size={14} />
                                             Reactivar
                                         </button>
@@ -114,20 +114,20 @@ export const NotificationsPage = () => {
 
                     {/* Expenses Chart */}
                     <section>
-                        <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-6">Gráfica de Gastos</h2>
-                        <div className="w-full bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 backdrop-blur-md relative overflow-hidden transition-colors duration-300">
+                        <h2 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-6">Gráfica de Gastos</h2>
+                        <div className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-6 backdrop-blur-md relative overflow-hidden transition-colors duration-300">
                             <div className="absolute inset-0 pointer-events-none flex flex-col justify-between py-12 px-12 opacity-10">
                                 {[...Array(5)].map((_, i) => (
                                     <div key={i} className="w-full h-px bg-slate-400 dark:bg-slate-200"></div>
                                 ))}
                             </div>
                             <div className="flex items-end justify-between h-64 gap-2 md:gap-4 px-2 md:px-6 relative z-10">
-                                <div className="absolute left-0 top-6 bottom-12 flex flex-col justify-between text-[10px] font-mono text-slate-500">
+                                <div className="absolute left-0 top-6 bottom-12 flex flex-col justify-between text-[10px] font-mono text-[var(--text-secondary)]">
                                     {['$5k', '$4k', '$3k', '$2k', '$1k', '$0'].map(val => (
                                         <span key={val}>{val}</span>
                                     ))}
                                 </div>
-                                <div className="ml-8 flex-1 flex items-end justify-around h-full pb-6 pt-6 border-l border-slate-200 dark:border-slate-700/50 border-b border-slate-200 dark:border-slate-700/50">
+                                <div className="ml-8 flex-1 flex items-end justify-around h-full pb-6 pt-6 border-l border-[var(--border-color)] border-b border-[var(--border-color)]">
                                     {[
                                         { month: 'ENE', height: '45%' },
                                         { month: 'FEB', height: '65%' },
@@ -141,7 +141,7 @@ export const NotificationsPage = () => {
                                                 className="w-full max-w-[24px] md:max-w-[40px] bg-gradient-to-t from-violet-600 to-cyan-400 rounded-t-sm relative transition-all duration-300 hover:brightness-110 shadow-[0_-4px_15px_rgba(34,211,238,0.3)]"
                                                 style={{ height: bar.height }}
                                             ></div>
-                                            <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                                            <span className="text-[10px] font-mono text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
                                                 {bar.month}
                                             </span>
                                         </div>

@@ -30,7 +30,7 @@ export const CreateGroup = () => {
     } = useCreateGroup();
 
     return (
-        <div className="min-h-screen flex flex-col md:flex-row bg-alice-blue dark:bg-slate-900 font-display text-slate-800 dark:text-slate-200 antialiased selection:bg-blue-500 selection:text-white transition-colors duration-300">
+        <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg-body)] font-display text-[var(--text-primary)] antialiased selection:bg-blue-500 selection:text-white transition-colors duration-300">
             <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
                 {/* Header */}
                 <PageHeader
@@ -43,14 +43,14 @@ export const CreateGroup = () => {
                 <main className="flex-1 w-full max-w-xl mx-auto px-6 py-8 flex flex-col items-center space-y-8">
 
                     {/* Tabs */}
-                    <div className="w-full bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl flex border border-slate-200 dark:border-slate-700/50 transition-colors duration-300">
+                    <div className="w-full bg-[var(--bg-card)] p-1 rounded-xl flex border border-[var(--border-color)] transition-colors duration-300 shadow-sm">
                         <button
                             onClick={() => setActiveTab('create')}
                             className={cn(
                                 "flex-1 py-2.5 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2",
                                 activeTab === 'create'
                                     ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700/30"
+                                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-bg)]"
                             )}
                         >
                             <Plus size={16} />
@@ -62,7 +62,7 @@ export const CreateGroup = () => {
                                 "flex-1 py-2.5 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2",
                                 activeTab === 'join'
                                     ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700/30"
+                                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-bg)]"
                             )}
                         >
                             <Users size={16} />
@@ -73,31 +73,31 @@ export const CreateGroup = () => {
                     {/* Create Form */}
                     {activeTab === 'create' && (
                         <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 space-y-6 shadow-xl transition-colors duration-300">
+                            <div className="bg-[var(--bg-card)] backdrop-blur-xl border border-[var(--border-color)] rounded-2xl p-6 space-y-6 shadow-xl transition-colors duration-300">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-600 dark:text-slate-300 ml-1">Nombre del Grupo</label>
+                                    <label className="text-sm font-medium text-[var(--text-secondary)] ml-1">Nombre del Grupo</label>
                                     <input
                                         type="text"
                                         value={groupName}
                                         onChange={(e) => setGroupName(e.target.value)}
                                         placeholder="Ej. Viaje a la playa"
-                                        className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                                        className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium"
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-600 dark:text-slate-300 ml-1">Descripción (Opcional)</label>
+                                    <label className="text-sm font-medium text-[var(--text-secondary)] ml-1">Descripción (Opcional)</label>
                                     <textarea
                                         value={groupDesc}
                                         onChange={(e) => setGroupDesc(e.target.value)}
                                         placeholder="¿De qué trata este grupo?"
                                         rows={3}
-                                        className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all resize-none"
+                                        className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all resize-none font-medium"
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-600 dark:text-slate-300 ml-1">Invitar Miembros</label>
+                                    <label className="text-sm font-medium text-[var(--text-secondary)] ml-1">Invitar Miembros</label>
                                     <div className="relative">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={18} />
                                         <input
@@ -105,12 +105,12 @@ export const CreateGroup = () => {
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             placeholder="Buscar por nombre o email..."
-                                            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-4 py-3 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                                            className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl pl-10 pr-4 py-3 text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium"
                                         />
                                         {searchQuery && (
                                             <button
                                                 onClick={() => handleAddMember(searchQuery)}
-                                                className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-500 text-white p-1 rounded-lg text-xs"
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-md hover:bg-blue-600 transition-all"
                                             >
                                                 Añadir
                                             </button>
@@ -120,40 +120,45 @@ export const CreateGroup = () => {
 
                                 {/* Mock Member List */}
                                 <div className="space-y-2 pt-2">
-                                    <p className="text-xs uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold ml-1">Miembros añadidos</p>
-                                    {members.map((member) => (
-                                        <div key={member.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700/30">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
-                                                    <img src={member.avatar} alt={member.name} className="w-full h-full rounded-full" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-slate-900 dark:text-white">{member.name}</p>
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400">{member.role}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                {member.isAdmin ? (
-                                                    <div className="bg-emerald-500/10 p-1 rounded-full">
-                                                        <Check size={16} className="text-emerald-500" />
+                                    <p className="text-xs uppercase tracking-wider text-[var(--text-secondary)] font-bold ml-1 opacity-70">Miembros añadidos</p>
+                                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                                        {members.map((member) => (
+                                            <div key={member.id} className="flex items-center justify-between p-3 bg-[var(--bg-body)] rounded-xl border border-[var(--border-color)] group hover:border-blue-400 transition-colors">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px] shadow-sm">
+                                                        <img src={member.avatar} alt={member.name} className="w-full h-full rounded-full border-2 border-[var(--bg-card)]" />
                                                     </div>
-                                                ) : (
-                                                    <button onClick={() => handleRemoveMember(member.id)} className="text-red-500 hover:bg-red-50 p-1 rounded">
-                                                        <Check size={16} className="rotate-45" />
-                                                    </button>
-                                                )}
+                                                    <div>
+                                                        <p className="text-sm font-bold text-[var(--text-primary)]">{member.name}</p>
+                                                        <p className="text-xs text-[var(--text-secondary)]">{member.role}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    {member.isAdmin ? (
+                                                        <div className="bg-emerald-500/10 p-1.5 rounded-lg border border-emerald-500/20">
+                                                            <Check size={16} className="text-emerald-500" />
+                                                        </div>
+                                                    ) : (
+                                                        <button 
+                                                            onClick={() => handleRemoveMember(member.id)} 
+                                                            className="text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-colors border border-transparent hover:border-red-500/20"
+                                                        >
+                                                            <Check size={16} className="rotate-45" />
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
 
                             <button
-                                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98]"
+                                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] group"
                                 onClick={handleCreateGroup}
                             >
                                 <span>Crear Grupo</span>
-                                <ArrowRight size={20} />
+                                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                             </button>
                         </div>
                     )}
@@ -162,24 +167,24 @@ export const CreateGroup = () => {
                     {activeTab === 'join' && (
                         <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="text-center space-y-4 py-8">
-                                <div className="w-20 h-20 bg-white dark:bg-slate-800 mx-auto rounded-2xl flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-glow mb-4">
-                                    <QrCode size={40} className="text-blue-500 dark:text-blue-400" />
+                                <div className="w-20 h-20 bg-[var(--bg-card)] mx-auto rounded-2xl flex items-center justify-center border border-[var(--border-color)] shadow-lg mb-4 group hover:scale-105 transition-transform">
+                                    <QrCode size={40} className="text-blue-500 dark:text-blue-400 group-hover:rotate-3 transition-transform" />
                                 </div>
-                                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Escanea un código QR</h2>
-                                <p className="text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+                                <h2 className="text-2xl font-bold text-[var(--text-primary)]">Escanea un código QR</h2>
+                                <p className="text-[var(--text-secondary)] max-w-xs mx-auto text-sm font-medium">
                                     Pídele al administrador del grupo que te muestre su código QR para unirte al instante.
                                 </p>
-                                <button className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white px-6 py-3 rounded-xl font-medium transition-colors">
+                                <button className="bg-[var(--bg-card)] hover:bg-[var(--hover-bg)] border border-[var(--border-color)] text-[var(--text-primary)] px-6 py-3 rounded-xl font-bold transition-all shadow-sm active:scale-95">
                                     Abrir Cámara
                                 </button>
                             </div>
 
                             <div className="relative">
                                 <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
+                                    <div className="w-full border-t border-[var(--border-color)]"></div>
                                 </div>
                                 <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-alice-blue dark:bg-slate-900 text-slate-400 dark:text-slate-500">O ingresa el código</span>
+                                    <span className="px-3 bg-[var(--bg-body)] text-[var(--text-secondary)] font-bold uppercase tracking-widest text-[10px]">O ingresa el código</span>
                                 </div>
                             </div>
 
@@ -187,10 +192,10 @@ export const CreateGroup = () => {
                                 <input
                                     type="text"
                                     placeholder="Ej. ABC-123"
-                                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-4 text-center text-2xl tracking-widest uppercase font-mono text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                                    className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl px-4 py-5 text-center text-2xl tracking-widest uppercase font-mono text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-inner"
                                 />
                                 <button
-                                    className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold py-4 rounded-xl border border-slate-200 dark:border-slate-600 flex items-center justify-center gap-2 transition-all"
+                                    className="w-full bg-[var(--bg-card)] hover:bg-[var(--hover-bg)] text-[var(--text-primary)] font-bold py-4 rounded-xl border border-[var(--border-color)] flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95"
                                     onClick={() => handleCreateGroup()}
                                 >
                                     Unirse Manualmente

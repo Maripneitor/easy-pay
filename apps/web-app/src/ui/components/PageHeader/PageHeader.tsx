@@ -8,40 +8,27 @@ const USER_AVATAR_URL = 'https://ui-avatars.com/api/?name=Juan&background=3b82f6
 const DEFAULT_USER_NAME = 'Juan';
 
 interface PageHeaderProps {
-    /** Centered title text (uppercased) */
     title: string;
-    /** Subtitle displayed below the title in smaller text */
     subtitle?: string;
-    /** Called when back arrow is clicked */
     onBack?: () => void;
-    /** Optional node rendered on the right before the avatar */
     rightSlot?: React.ReactNode;
-    /** Show user avatar (default: true) */
+    /** Cambiado a false por defecto para limpiar la interfaz */
     showAvatar?: boolean;
-    /** Called when avatar is clicked */
     onAvatarClick?: () => void;
-    /** Show notification bell (default: false) */
     showNotification?: boolean;
-    /** Called when notification bell is clicked */
     onNotificationClick?: () => void;
-    /** Number of unread notifications – shows red badge */
     notificationCount?: number;
-    /** Optional user name to display next to avatar */
     userName?: string;
-    /** Called when the menu button is clicked (mobile) */
     onMenuClick?: () => void;
 }
 
-/**
- * Unified sticky top header used across all inner pages.
- */
 export const PageHeader: React.FC<PageHeaderProps> = ({
     title,
     subtitle,
     onBack,
-    onMenuClick, // New prop
+    onMenuClick,
     rightSlot,
-    showAvatar = true,
+    showAvatar = false, // <-- CAMBIO AQUÍ: Ahora es false por defecto
     onAvatarClick,
     showNotification = false,
     onNotificationClick,
@@ -56,11 +43,17 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             <div className={styles.headerContainer}>
                 {/* Left – Back button or Menu */}
                 <div className={styles.leftSlot}>
-                    {/* Mobile Menu Button */}
                     {onMenuClick && (
-                        <button onClick={onMenuClick} className="md:hidden p-2 text-slate-600 dark:text-slate-300 mr-2">
+                        <button 
+                            onClick={onMenuClick} 
+                            className="md:hidden p-2 text-[var(--text-primary)] mr-2"
+                        >
                             <span className="sr-only">Menu</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <line x1="3" y1="18" x2="21" y2="18"></line>
+                            </svg>
                         </button>
                     )}
 
@@ -84,11 +77,12 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                     </h1>
                 </div>
 
-                {/* Right – rightSlot + notification + avatar */}
+                {/* Right – ThemeSwitch + notification */}
                 <div className={styles.rightActions}>
-                    <div style={{ marginRight: '1rem' }}>
+                    <div className="mr-4 flex items-center">
                         <ThemeSwitch />
                     </div>
+                    
                     {rightSlot}
 
                     {showNotification && (
@@ -103,6 +97,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                         </button>
                     )}
 
+                    {/* El bloque del Avatar se mantiene pero no se renderiza por el showAvatar=false */}
                     {showAvatar && (
                         <div className={styles.avatarGroup} onClick={handleAvatarClick} style={{ cursor: 'pointer' }}>
                             <span className={styles.userNameLabel}>{userName}</span>
@@ -124,4 +119,3 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         </header>
     );
 };
-

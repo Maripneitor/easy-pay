@@ -1,45 +1,45 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'dark' | 'light';
+type Theme = 'light' | 'dark' | 'vibrant' | 'serene' | 'earth';
 
 interface ThemeContextType {
     theme: Theme;
+    setTheme: (theme: Theme) => void;
     toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [theme, setTheme] = useState<Theme>(() => {
-        const savedTheme = localStorage.getItem('theme');
-        return (savedTheme as Theme) || 'dark';
+    const [theme, setThemeState] = useState<Theme>(() => {
+        const saved = localStorage.getItem('theme');
+        return (saved as Theme) || 'light';
     });
 
     useEffect(() => {
-        const root = window.document.documentElement;
-        root.classList.remove('light', 'dark');
-        root.classList.add(theme);
+        const root = window.document.body;
+        
+        // LIMPIEZA AGRESIVA: Borramos absolutamente todas las clases del body
+        root.className = ''; 
+        
+        // Si no es light, aplicamos la clase del tema
+        if (theme !== 'light') {
+            root.classList.add(theme);
+        }
+        
         localStorage.setItem('theme', theme);
     }, [theme]);
 
-    // Listen for storage changes to sync across tabs
-    useEffect(() => {
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'theme' && e.newValue) {
-                setTheme(e.newValue as Theme);
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
+    const setTheme = (newTheme: Theme) => {
+        setThemeState(newTheme);
+    };
 
     const toggleTheme = () => {
-        setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+        setThemeState((prev) => (prev === 'light' ? 'dark' : 'light'));
     };
 
     return (
-        <ThemeContext.Provider value={{ theme, toggleTheme }}>
+        <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
             {children}
         </ThemeContext.Provider>
     );
