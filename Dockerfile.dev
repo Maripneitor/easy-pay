@@ -4,11 +4,14 @@ FROM node:20-alpine
 # Instalamos herramientas básicas para el sistema operativo del contenedor
 RUN apk add --no-cache git bash
 
+# Instalamos pnpm globalmente para evitar hacerlo en el runtime
+RUN npm install -g pnpm
+
 # Establecemos el directorio de trabajo
 WORKDIR /app
 
-# Exponemos el puerto de Vite (5173) y el de la API (3000 - futuro)
-EXPOSE 5173 3000
+# Exponemos el puerto de Vite (5173), el de la API (3000), y Metro (8081)
+EXPOSE 5173 3000 8081
 
 # Comando por defecto para mantener el contenedor vivo
 CMD ["tail", "-f", "/dev/null"]
