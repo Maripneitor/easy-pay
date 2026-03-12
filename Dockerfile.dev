@@ -4,8 +4,8 @@ FROM node:20-alpine
 # Instalamos herramientas básicas para el sistema operativo del contenedor
 RUN apk add --no-cache git bash
 
-# Instalamos pnpm globalmente para evitar hacerlo en el runtime
-RUN npm install -g pnpm
+# Habilitamos corepack para manejar pnpm de forma nativa y rápida
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Establecemos el directorio de trabajo
 WORKDIR /app

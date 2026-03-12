@@ -1,3 +1,5 @@
+import { ValidationException } from '../exceptions';
+
 /**
  * Value Object: Money
  *
@@ -7,8 +9,12 @@
  */
 export class Money {
     private constructor(private readonly _amount: number) {
-        if (!isFinite(_amount)) throw new Error('Money: amount must be a finite number');
-        if (_amount < 0) throw new Error(`Money: amount cannot be negative (got ${_amount})`);
+        if (!isFinite(_amount)) {
+            throw new ValidationException('El monto debe ser un número válido.');
+        }
+        if (_amount < 0) {
+            throw new ValidationException(`El monto no puede ser negativo (recibido: ${_amount}).`);
+        }
     }
 
     // ─── Factories ────────────────────────────────────────────────────────────
@@ -35,17 +41,23 @@ export class Money {
 
     subtract(other: Money): Money {
         const result = this._amount - other._amount;
-        if (result < 0) throw new Error('Money: result of subtraction cannot be negative');
+        if (result < 0) {
+            throw new ValidationException('El resultado de la resta no puede ser negativo.');
+        }
         return Money.of(result);
     }
 
     multiply(factor: number): Money {
-        if (factor < 0) throw new Error('Money: factor cannot be negative');
+        if (factor < 0) {
+            throw new ValidationException('El factor de multiplicación no puede ser negativo.');
+        }
         return Money.of(this._amount * factor);
     }
 
     divide(divisor: number): Money {
-        if (divisor === 0) throw new Error('Money: cannot divide by zero');
+        if (divisor === 0) {
+            throw new ValidationException('No es posible dividir por cero.');
+        }
         return Money.of(this._amount / divisor);
     }
 

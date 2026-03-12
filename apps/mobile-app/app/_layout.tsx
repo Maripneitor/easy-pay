@@ -6,6 +6,7 @@ import { useFonts } from 'expo-font';
 import { useEffect } from 'react';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useColorScheme } from 'react-native';
+import { DependenciesProvider } from '../src/infrastructure/context/DependenciesContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,17 +26,19 @@ export default function RootLayout() {
   if (!loaded && !error) return null;
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="auth" />
-        <Stack.Screen name="create-group" />
-        <Stack.Screen name="password-recovery" />
-        <Stack.Screen name="expense-form" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="notifications" />
-        <Stack.Screen name="payments" />
-      </Stack>
-    </ThemeProvider>
+    <DependenciesProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="auth" />
+          <Stack.Screen name="create-group" />
+          <Stack.Screen name="password-recovery" />
+          <Stack.Screen name="expense-form" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="notifications" />
+          <Stack.Screen name="payments" />
+        </Stack>
+      </ThemeProvider>
+    </DependenciesProvider>
   );
 }
