@@ -9,8 +9,8 @@ COPY apps/mobile-app/package.json ./apps/mobile-app/
 COPY packages/domain/package.json ./packages/domain/
 COPY packages/ui/package.json ./packages/ui/
 
-# Install dependencies (only for mobile and core)
-RUN npm install -g pnpm
+# Habilitamos corepack para manejar pnpm de forma nativa
+RUN corepack enable && corepack prepare pnpm@latest --activate
 RUN pnpm install
 
 COPY . .

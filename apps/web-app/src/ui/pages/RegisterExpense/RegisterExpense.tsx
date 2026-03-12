@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 import {
     ArrowLeft,
     DollarSign,
@@ -13,16 +13,26 @@ import {
     MoreHorizontal,
     Check,
     Calendar,
-    Camera
+    Camera,
+    AlertCircle
 } from 'lucide-react';
 import { cn } from '@infrastructure/utils';
 import { PageHeader } from '@ui/components/PageHeader';
+import { useRegisterExpense } from './useRegisterExpense';
 
 export const RegisterExpense = () => {
-    const navigate = useNavigate();
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
-    const [amount, setAmount] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const {
+        amount,
+        setAmount,
+        description,
+        setDescription,
+        amountError,
+        handleSubmit,
+        goBack
+    } = useRegisterExpense();
+
+    const [selectedCategory, setSelectedCategory] = useState<string | null>('food');
 
     const categories = [
         { id: 'food', name: 'Comida', icon: Utensils, color: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-500/20' },
@@ -42,9 +52,12 @@ export const RegisterExpense = () => {
                 <PageHeader
                     onMenuClick={toggleSidebar}
                     title="Registrar Gasto"
-                    onBack={() => navigate(-1)}
+                    onBack={goBack}
                     rightSlot={
-                        <button className="text-cobalt-blue dark:text-blue-400 font-medium text-sm hover:underline">
+                        <button 
+                            onClick={handleSubmit}
+                            className="text-cobalt-blue dark:text-blue-400 font-medium text-sm hover:underline"
+                        >
                             Guardar
                         </button>
                     }
@@ -55,16 +68,32 @@ export const RegisterExpense = () => {
                     {/* Amount Input */}
                     <div className="flex flex-col items-center justify-center py-6">
                         <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">Monto total</p>
-                        <div className="relative flex items-center">
-                            <DollarSign size={40} className="text-slate-400 dark:text-slate-600 absolute -left-8 top-1/2 -translate-y-1/2" />
-                            <input
-                                type="text"
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                placeholder="0.00"
-                                className="bg-transparent text-6xl font-black text-slate-900 dark:text-white text-center w-full focus:outline-none placeholder:text-slate-300 dark:placeholder:text-slate-700"
-                                autoFocus
-                            />
+                        <div className="relative flex flex-col items-center">
+                            <div className="relative">
+                                <DollarSign size={40} className={cn(
+                                    "absolute -left-10 top-1/2 -translate-y-1/2 transition-colors",
+                                    amountError ? "text-red-400" : "text-slate-400 dark:text-slate-600"
+                                )} />
+                                <input
+                                    type="text"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    placeholder="0.00"
+                                    className={cn(
+                                        "bg-transparent text-6xl font-black text-center w-full focus:outline-none placeholder:text-slate-300 dark:placeholder:text-slate-700 transition-colors",
+                                        amountError ? "text-red-500" : "text-slate-900 dark:text-white"
+                                    )}
+                                    autoFocus
+                                />
+                            </div>
+                            
+                            {/* Fail Fast Validation Display */}
+                            {amountError && (
+                                <div className="flex items-center gap-1.5 mt-2 text-red-500 animate-in fade-in slide-in-from-top-1">
+                                    <AlertCircle size={14} />
+                                    <span className="text-xs font-bold uppercase tracking-tight">{amountError}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -76,6 +105,8 @@ export const RegisterExpense = () => {
                             </div>
                             <input
                                 type="text"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
                                 placeholder="¿Qué compraste?"
                                 className="flex-1 bg-transparent text-lg font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
                             />
@@ -147,8 +178,12 @@ export const RegisterExpense = () => {
                     {/* Bottom Action */}
                     <div className="pb-8 sticky bottom-0">
                         <button
-                            className="w-full bg-cobalt-blue hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98]"
-                            onClick={() => navigate(-1)}
+                            className={cn(
+                                "w-full text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all transform active:scale-[0.98]",
+                                amountError ? "bg-slate-400 cursor-not-allowed shadow-none" : "bg-cobalt-blue hover:bg-blue-700 shadow-blue-900/20"
+                            )}
+                            onClick={handleSubmit}
+                            disabled={!!amountError}
                         >
                             <Check size={20} />
                             <span>Confirmar Gasto</span>

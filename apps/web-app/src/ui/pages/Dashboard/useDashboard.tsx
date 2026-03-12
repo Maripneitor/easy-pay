@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Plane, Utensils, Home, PartyPopper, Users, ShoppingBag } from 'lucide-react';
 import type { Group } from '@easy-pay/domain';
-import { groupRepository } from '../../../infrastructure/api/repositories/GroupRepository';
+import { useDependencies } from '../../../infrastructure/context/DependenciesContext';
 import type { GroupViewModel } from '../../../types';
 import { toGroupViewModel } from '../../../types';
 
@@ -40,6 +40,7 @@ const resolveGroupAppearance = (name = ''): GroupAppearance => {
 export const useDashboard = () => {
     const navigate = useNavigate();
     const { toggleSidebar } = useOutletContext<DashboardContextType>();
+    const { useCases } = useDependencies();
 
     const [allGroups,  setAllGroups]  = useState<GroupViewModel[]>([]);
     const [isLoading,  setIsLoading]  = useState<boolean>(true);
@@ -54,11 +55,11 @@ export const useDashboard = () => {
                 setIsLoading(true);
                 setError(null);
 
-                // Fetch all groups — the repository handles mock vs real API
+                // Fetch all groups — now via injected Use Case
                 // For now we load the 2 pre-seeded mock groups
                 const [group1, group2] = await Promise.all([
-                    groupRepository.getGroup('1').catch(() => null),
-                    groupRepository.getGroup('2').catch(() => null),
+                    useCases.getGroup.execute('1').catch(() => null),
+                    useCases.getGroup.execute('2').catch(() => null),
                 ]);
 
                 if (cancelled) return;
@@ -87,7 +88,7 @@ export const useDashboard = () => {
 
         loadGroups();
         return () => { cancelled = true; };
-    }, []);
+    }, [useCases.getGroup]);
 
     // ── Derived data ───────────────────────────────────────────────────────────
 

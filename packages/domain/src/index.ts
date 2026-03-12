@@ -10,5 +10,8 @@ export * from './domain/services';
 // ─── Application Use Cases ────────────────────────────────────────────────────
 export * from './application/use-cases';
 
+// ─── Domain Exceptions ────────────────────────────────────────────────────────
+export * from './domain/exceptions';
+
 // ─── Infrastructure Ports (Interfaces/Contracts) ──────────────────────────────
 export * from './infrastructure/ports';

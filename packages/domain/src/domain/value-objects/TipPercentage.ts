@@ -1,3 +1,5 @@
+import { ValidationException } from '../exceptions';
+
 /**
  * Value Object: TipPercentage
  *
@@ -32,7 +34,7 @@ export class TipPercentage {
     /** Creates a custom tip percentage. Rate must be between 0 and 1. */
     static custom(rate: number): TipPercentage {
         if (rate < 0 || rate > 1) {
-            throw new Error(`TipPercentage: rate must be between 0 and 1 (got ${rate})`);
+            throw new ValidationException(`El porcentaje de propina debe estar entre 0 y 1 (recibido: ${rate}).`);
         }
         return new TipPercentage(rate);
     }

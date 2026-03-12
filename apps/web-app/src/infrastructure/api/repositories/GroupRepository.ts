@@ -1,7 +1,8 @@
 import { Group, Item, Member, GroupRepository } from '@easy-pay/domain';
 import { httpClient } from '../http-client';
 import { subscribeToGroup } from '../websocket-client';
-import { toGroup, toApiItem } from '../mappers';
+import { toGroup, toApiItem, ApiGroup } from '../mappers';
+import { handleApiError } from '../error-handler';
 
 /**
  * Concrete implementation of the `GroupRepository` port.
@@ -72,150 +73,158 @@ export class ApiGroupRepository implements GroupRepository {
 
     // ── getGroup ──────────────────────────────────────────────────────────────
     async getGroup(id: string): Promise<Group> {
-        if (USE_MOCK_DATA) {
-            await delay();
-            const group = MOCK_GROUPS.find(g => g.id === id);
-            if (!group) throw new Error(`Grupo con id "${id}" no encontrado.`);
-            return { ...group }; // Return a copy to avoid mutation
+        try {
+            if (USE_MOCK_DATA) {
+                await delay();
+                const group = MOCK_GROUPS.find(g => g.id === id);
+                if (!group) throw new Error(`Grupo con id "${id}" no encontrado.`);
+                return { ...group };
+            }
+
+            const res = await httpClient.get<ApiGroup>(`/groups/${id}`);
+            return toGroup(res.data);
+        } catch (e) {
+            return handleApiError(e);
         }
-
-        // REAL ↓ (uncomment when backend is ready)
-        // const res = await httpClient.get<ApiGroup>(`/groups/${id}`);
-        // return toGroup(res.data);
-
-        throw new Error('Real API not yet connected — set VITE_USE_MOCK_DATA=false only when backend is ready.');
     }
 
     // ── createGroup ───────────────────────────────────────────────────────────
     async createGroup(leader: Member, name?: string): Promise<Group> {
-        if (USE_MOCK_DATA) {
-            await delay(1_200);
-            const newGroup: Group = {
-                id:        `mock-${Date.now()}`,
-                code:      Math.random().toString(36).substring(2, 8).toUpperCase(),
-                name,
-                leaderId:  leader.id,
-                status:    'active',
-                subtotal:  0,
-                tip:       0,
-                total:     0,
-                members:   [{ ...leader, role: 'leader' }],
-                items:     [],
-                createdAt: new Date().toISOString(),
-            };
-            MOCK_GROUPS.push(newGroup);
-            return newGroup;
+        try {
+            if (USE_MOCK_DATA) {
+                await delay(1_200);
+                const newGroup: Group = {
+                    id:        `mock-${Date.now()}`,
+                    code:      Math.random().toString(36).substring(2, 8).toUpperCase(),
+                    name,
+                    leaderId:  leader.id,
+                    status:    'active',
+                    subtotal:  0,
+                    tip:       0,
+                    total:     0,
+                    members:   [{ ...leader, role: 'leader' }],
+                    items:     [],
+                    createdAt: new Date().toISOString(),
+                };
+                MOCK_GROUPS.push(newGroup);
+                return newGroup;
+            }
+
+            const res = await httpClient.post<ApiGroup>('/groups', { leader_id: leader.id, name });
+            return toGroup(res.data);
+        } catch (e) {
+            return handleApiError(e);
         }
-
-        // REAL ↓
-        // const res = await httpClient.post<ApiGroup>('/groups', { leader_id: leader.id, name });
-        // return toGroup(res.data);
-
-        throw new Error('Real API not yet connected.');
     }
 
     // ── joinGroup ─────────────────────────────────────────────────────────────
     async joinGroup(code: string, member: Member): Promise<Group> {
-        if (USE_MOCK_DATA) {
-            await delay();
-            const group = MOCK_GROUPS.find(g => g.code === code.toUpperCase());
-            if (!group) throw new Error(`No se encontró ningún grupo con el código "${code}".`);
-            if (!group.members.find(m => m.id === member.id)) {
-                group.members.push({ ...member, role: 'member' });
+        try {
+            if (USE_MOCK_DATA) {
+                await delay();
+                const group = MOCK_GROUPS.find(g => g.code === code.toUpperCase());
+                if (!group) throw new Error(`No se encontró ningún grupo con el código "${code}".`);
+                if (!group.members.find(m => m.id === member.id)) {
+                    group.members.push({ ...member, role: 'member' });
+                }
+                return { ...group };
             }
-            return { ...group };
+
+            const res = await httpClient.post<ApiGroup>(`/groups/${code}/join`, { member_id: member.id, name: member.name });
+            return toGroup(res.data);
+        } catch (e) {
+            return handleApiError(e);
         }
-
-        // REAL ↓
-        // const res = await httpClient.post<ApiGroup>(`/groups/${code}/join`, { member_id: member.id, name: member.name });
-        // return toGroup(res.data);
-
-        throw new Error('Real API not yet connected.');
     }
 
     // ── closeGroup ────────────────────────────────────────────────────────────
     async closeGroup(groupId: string): Promise<void> {
-        if (USE_MOCK_DATA) {
-            await delay();
-            const group = MOCK_GROUPS.find(g => g.id === groupId);
-            if (group) group.status = 'closed';
-            return;
+        try {
+            if (USE_MOCK_DATA) {
+                await delay();
+                const group = MOCK_GROUPS.find(g => g.id === groupId);
+                if (group) group.status = 'closed';
+                return;
+            }
+
+            await httpClient.patch(`/groups/${groupId}/close`);
+        } catch (e) {
+            return handleApiError(e);
         }
-
-        // REAL ↓
-        // await httpClient.patch(`/groups/${groupId}/close`);
-
-        throw new Error('Real API not yet connected.');
     }
 
     // ── addItem ───────────────────────────────────────────────────────────────
     async addItem(groupId: string, item: Item): Promise<void> {
-        if (USE_MOCK_DATA) {
-            await delay(600);
-            const group = MOCK_GROUPS.find(g => g.id === groupId);
-            if (!group) throw new Error(`Grupo ${groupId} no encontrado.`);
-            group.items.push({ ...item, id: `item-${Date.now()}` });
-            this.recalculateTotals(group);
-            return;
+        try {
+            if (USE_MOCK_DATA) {
+                await delay(600);
+                const group = MOCK_GROUPS.find(g => g.id === groupId);
+                if (!group) throw new Error(`Grupo ${groupId} no encontrado.`);
+                group.items.push({ ...item, id: `item-${Date.now()}` });
+                this.recalculateTotals(group);
+                return;
+            }
+
+            await httpClient.post(`/groups/${groupId}/items`, toApiItem(item));
+        } catch (e) {
+            return handleApiError(e);
         }
-
-        // REAL ↓
-        // await httpClient.post(`/groups/${groupId}/items`, toApiItem(item));
-
-        throw new Error('Real API not yet connected.');
     }
 
     // ── removeItem ────────────────────────────────────────────────────────────
     async removeItem(groupId: string, itemId: string): Promise<void> {
-        if (USE_MOCK_DATA) {
-            await delay(600);
-            const group = MOCK_GROUPS.find(g => g.id === groupId);
-            if (!group) throw new Error(`Grupo ${groupId} no encontrado.`);
-            group.items = group.items.filter(i => i.id !== itemId);
-            this.recalculateTotals(group);
-            return;
+        try {
+            if (USE_MOCK_DATA) {
+                await delay(600);
+                const group = MOCK_GROUPS.find(g => g.id === groupId);
+                if (!group) throw new Error(`Grupo ${groupId} no encontrado.`);
+                group.items = group.items.filter(i => i.id !== itemId);
+                this.recalculateTotals(group);
+                return;
+            }
+
+            await httpClient.delete(`/groups/${groupId}/items/${itemId}`);
+        } catch (e) {
+            return handleApiError(e);
         }
-
-        // REAL ↓
-        // await httpClient.delete(`/groups/${groupId}/items/${itemId}`);
-
-        throw new Error('Real API not yet connected.');
     }
 
     // ── assignItem ────────────────────────────────────────────────────────────
     async assignItem(groupId: string, itemId: string, memberIds: string[]): Promise<void> {
-        if (USE_MOCK_DATA) {
-            await delay(600);
-            const group = MOCK_GROUPS.find(g => g.id === groupId);
-            if (!group) throw new Error(`Grupo ${groupId} no encontrado.`);
-            const item = group.items.find(i => i.id === itemId);
-            if (!item) throw new Error(`Ítem ${itemId} no encontrado.`);
-            item.assignedTo = memberIds;
-            return;
+        try {
+            if (USE_MOCK_DATA) {
+                await delay(600);
+                const group = MOCK_GROUPS.find(g => g.id === groupId);
+                if (!group) throw new Error(`Grupo ${groupId} no encontrado.`);
+                const item = group.items.find(i => i.id === itemId);
+                if (!item) throw new Error(`Ítem ${itemId} no encontrado.`);
+                item.assignedTo = memberIds;
+                return;
+            }
+
+            await httpClient.patch(`/groups/${groupId}/items/${itemId}/assign`, { member_id: memberIds });
+        } catch (e) {
+            return handleApiError(e);
         }
-
-        // REAL ↓
-        // await httpClient.patch(`/groups/${groupId}/items/${itemId}/assign`, { member_ids: memberIds });
-
-        throw new Error('Real API not yet connected.');
     }
 
     // ── markMemberAsPaid ──────────────────────────────────────────────────────
     async markMemberAsPaid(groupId: string, memberId: string): Promise<void> {
-        if (USE_MOCK_DATA) {
-            await delay(600);
-            const group = MOCK_GROUPS.find(g => g.id === groupId);
-            if (!group) throw new Error(`Grupo ${groupId} no encontrado.`);
-            const member = group.members.find(m => m.id === memberId);
-            if (!member) throw new Error(`Miembro ${memberId} no encontrado.`);
-            member.hasPaid = true;
-            return;
+        try {
+            if (USE_MOCK_DATA) {
+                await delay(600);
+                const group = MOCK_GROUPS.find(g => g.id === groupId);
+                if (!group) throw new Error(`Grupo ${groupId} no encontrado.`);
+                const member = group.members.find(m => m.id === memberId);
+                if (!member) throw new Error(`Miembro ${memberId} no encontrado.`);
+                member.hasPaid = true;
+                return;
+            }
+
+            await httpClient.patch(`/groups/${groupId}/members/${memberId}/paid`);
+        } catch (e) {
+            return handleApiError(e);
         }
-
-        // REAL ↓
-        // await httpClient.patch(`/groups/${groupId}/members/${memberId}/paid`);
-
-        throw new Error('Real API not yet connected.');
     }
 
     // ── onGroupUpdate (WebSocket) ─────────────────────────────────────────────
