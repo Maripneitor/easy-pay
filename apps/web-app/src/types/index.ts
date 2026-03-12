@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * UI-only types (ViewModels)
  *
@@ -79,14 +80,20 @@ export const toMemberViewModel = (member: DomainMember): MemberViewModel => ({
 // Use the domain types or ViewModels for new code.
 
 /** @deprecated Use `MemberViewModel` or `Member` from `@easy-pay/domain` */
+=======
+>>>>>>> origin/main
 export interface Member {
     id?: string;
     name: string;
     avatar?: string;
 }
 
+<<<<<<< HEAD
 /** @deprecated Use `GroupViewModel` or `Group` from `@easy-pay/domain` */
 export interface LegacyGroup {
+=======
+export interface Group {
+>>>>>>> origin/main
     id: string;
     name: string;
     icon?: React.ReactNode;
@@ -94,6 +101,7 @@ export interface LegacyGroup {
     iconColor?: string;
     isAdmin?: boolean;
     lastAct?: string;
+<<<<<<< HEAD
     members: (Member | string)[];
     extraMembers?: number;
     total: number;
@@ -104,6 +112,15 @@ export interface LegacyGroup {
 export type { LegacyGroup as Group };
 
 /** @deprecated Use `Payment` from `@easy-pay/domain` */
+=======
+    members: (Member | string)[]; // Allowing string for backward compatibility with current mock data URLs
+    extraMembers?: number;
+    total: number;
+    userBalance?: number;
+    date?: string; // For settled groups
+}
+
+>>>>>>> origin/main
 export interface Payment {
     id: string;
     amount: number;
@@ -111,6 +128,9 @@ export interface Payment {
     date: string;
     payer: Member;
 }
+<<<<<<< HEAD
 
 // Unused in new code but kept so existing imports don't break:
 export type { GroupStatus };
+=======
+>>>>>>> origin/main
