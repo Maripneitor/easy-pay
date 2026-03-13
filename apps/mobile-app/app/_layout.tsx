@@ -35,8 +35,6 @@ export default function RootLayout() {
           <Stack.Screen name="password-recovery" />
           <Stack.Screen name="expense-form" />
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="notifications" />
-          <Stack.Screen name="payments" />
         </Stack>
       </ThemeProvider>
     </DependenciesProvider>

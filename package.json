@@ -14,5 +14,10 @@
     "lucide-react": "^0.574.0",
     "react-router-dom": "^7.13.0",
     "tailwind-merge": "^3.4.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "react-native-worklets-core": "0.5.1"
+    }
   }
 }
