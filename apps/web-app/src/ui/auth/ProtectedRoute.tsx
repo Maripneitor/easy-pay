@@ -1,6 +1,5 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-<<<<<<< HEAD
 import { useAuthContext } from '../context/AuthContext';
 import { Loader } from '../components/Loader/Loader';
 
@@ -20,12 +19,6 @@ export const ProtectedRoute: React.FC = () => {
     if (isLoading) {
         return <Loader />;
     }
-=======
-
-export const ProtectedRoute: React.FC = () => {
-    // TODO: Connect with real auth state (e.g. from context or store)
-    const isAuthenticated = true; // Mocked for now to allow development
->>>>>>> origin/main
 
     if (!isAuthenticated) {
         return <Navigate to="/auth" replace />;

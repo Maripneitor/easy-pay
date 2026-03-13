@@ -127,7 +127,7 @@ export const NotificationsPage = () => {
                                         <span key={val}>{val}</span>
                                     ))}
                                 </div>
-                                <div className="ml-8 flex-1 flex items-end justify-around h-full pb-6 pt-6 border-l border-slate-200 dark:border-slate-700/50 border-b border-slate-200 dark:border-slate-700/50">
+                                <div className="ml-8 flex-1 flex items-end justify-around h-full pb-6 pt-6 border-l border-b border-slate-200 dark:border-slate-700/50">
                                     {[
                                         { month: 'ENE', height: '45%' },
                                         { month: 'FEB', height: '65%' },

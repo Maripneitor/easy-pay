@@ -1,31 +1,29 @@
-import { StyleSheet } from 'react-native';
+import React from 'react';
+import { ScrollView, View, Text, SafeAreaView } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import { StatusBar } from 'expo-status-bar';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+export default function HistoryScreen() {
+    return (
+        <SafeAreaView className="flex-1 bg-[#0f172a]">
+            <StatusBar style="light" />
+            
+            <View className="px-6 py-8">
+                <Text className="text-white text-3xl font-bold tracking-tight">Historial</Text>
+                <Text className="text-slate-400 text-sm mt-1">Tus gastos y pagos pasados</Text>
+            </View>
 
-export default function TabTwoScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab Two</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/two.tsx" />
-    </View>
-  );
+            <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
+                <View className="items-center justify-center py-20 opacity-40">
+                    <View className="w-20 h-20 rounded-full bg-slate-800 items-center justify-center mb-4">
+                        <MaterialIcons name="history" size={40} color="#64748b" />
+                    </View>
+                    <Text className="text-white text-lg font-bold">Sin actividad reciente</Text>
+                    <Text className="text-slate-500 text-sm text-center mt-2 px-10">
+                        Aquí verás los grupos que hayas liquidado y tus facturas pasadas.
+                    </Text>
+                </View>
+            </ScrollView>
+        </SafeAreaView>
+    );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
-});
