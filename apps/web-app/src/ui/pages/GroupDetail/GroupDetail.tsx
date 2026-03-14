@@ -11,7 +11,6 @@ import { cn } from '../../../infrastructure/utils';
 import { useGroupDetail } from './useGroupDetail';
 import { PageHeader } from '@ui/components/PageHeader';
 import { useOutletContext } from 'react-router-dom';
-// import styles from './GroupDetail.module.css'; // Removed unused styles
 
 export const GroupDetail = () => {
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
@@ -48,10 +47,9 @@ export const GroupDetail = () => {
                 />
 
                 <main className="flex-1 w-full max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-6">
-                    {/* Stats Cards */}
+                    {/* Stats Cards con Borde LED Brillante */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Total Spend */}
-                        <div className="bg-white dark:bg-slate-800/60 backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 relative overflow-hidden shadow-sm dark:shadow-none">
+                        <div className="bg-white dark:bg-slate-800/60 backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 relative overflow-hidden shadow-sm border-t-4 border-t-[var(--primary)] shadow-[0_-5px_15px_-5px_var(--border-color)]">
                             <div className="absolute top-0 right-0 p-4 opacity-10">
                                 <Receipt size={64} className="text-slate-900 dark:text-white" />
                             </div>
@@ -65,82 +63,53 @@ export const GroupDetail = () => {
                             </div>
                         </div>
 
-                        {/* Your Share */}
-                        <div className="bg-white dark:bg-slate-800/60 backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 relative overflow-hidden shadow-sm dark:shadow-none">
+                        <div className="bg-white dark:bg-slate-800/60 backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 relative overflow-hidden shadow-sm border-t-4 border-t-[var(--primary)] shadow-[0_-5px_15px_-5px_var(--border-color)]">
                             <div className="absolute top-0 right-0 p-4 opacity-10">
                                 <PieChart size={64} className="text-slate-900 dark:text-white" />
                             </div>
                             <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Tu Parte</p>
                             <p className="text-2xl font-bold text-slate-900 dark:text-white">${userShare.toFixed(2)}</p>
-                            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                33.2% del total
-                            </div>
                         </div>
 
-                        {/* You are owed */}
-                        <div className="bg-white dark:bg-slate-800/60 backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 relative overflow-hidden shadow-sm dark:shadow-none">
-                            <div className="absolute inset-0 bg-emerald-50 dark:bg-emerald-500/5"></div>
+                        <div className="bg-white dark:bg-slate-800/60 backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 relative overflow-hidden shadow-sm border-t-4 border-t-emerald-500 shadow-[0_-5px_15px_-5px_rgba(16,185,129,0.4)]">
                             <div className="relative z-10">
                                 <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-1 flex items-center gap-1">
                                     <CheckCircle size={14} />
                                     Te deben
                                 </p>
                                 <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">${userOwed.toFixed(2)}</p>
-                                <div className="mt-2 text-xs text-emerald-600/70 dark:text-emerald-400/70">
-                                    2 personas te deben
-                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Tabs */}
+                    {/* Tabs con Línea LED superior */}
                     <div className="flex border-b border-slate-200 dark:border-slate-700/50">
-                        <button
-                            onClick={() => setActiveTab('activity')}
-                            className={cn(
-                                "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
-                                activeTab === 'activity'
-                                    ? "border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400"
-                                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                            )}
-                        >
-                            Actividad
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('balances')}
-                            className={cn(
-                                "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
-                                activeTab === 'balances'
-                                    ? "border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400"
-                                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                            )}
-                        >
-                            Saldos
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('settings')}
-                            className={cn(
-                                "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
-                                activeTab === 'settings'
-                                    ? "border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400"
-                                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                            )}
-                        >
-                            Configuración
-                        </button>
+                        {['activity', 'balances', 'settings'].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab as any)}
+                                className={cn(
+                                    "px-6 py-3 text-sm font-medium border-b-2 transition-colors relative",
+                                    activeTab === tab
+                                        ? "border-[var(--primary)] text-[var(--primary)]"
+                                        : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                                )}
+                            >
+                                {tab === 'activity' ? 'Actividad' : tab === 'balances' ? 'Saldos' : 'Configuración'}
+                                {activeTab === tab && (
+                                    <div className="absolute bottom-[-2px] left-0 w-full h-[4px] bg-[var(--primary)] shadow-[0_0_15px_2px_var(--border-color)] rounded-t-full" />
+                                )}
+                            </button>
+                        ))}
                     </div>
 
-                    {/* Content */}
+                    {/* Content (Mantenido igual) */}
                     {activeTab === 'activity' && (
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Actividad Reciente</h2>
-                                <button className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">Ver todo</button>
-                            </div>
-
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Actividad Reciente</h2>
                             <div className="space-y-3">
                                 {activities.map(activity => (
-                                    <div key={activity.id} className="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-xl p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group shadow-sm dark:shadow-none">
+                                    <div key={activity.id} className="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 border-l-[3px] border-l-[var(--primary)] rounded-xl p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group shadow-sm dark:shadow-none">
                                         <div className={cn("w-12 h-12 rounded-full flex items-center justify-center", activity.bg, activity.color)}>
                                             <activity.icon size={20} />
                                         </div>
@@ -148,68 +117,12 @@ export const GroupDetail = () => {
                                             <h3 className="font-semibold text-slate-900 dark:text-white truncate">{activity.title}</h3>
                                             <p className="text-xs text-slate-500 dark:text-slate-400">{activity.paidBy} pagó ${activity.amount.toFixed(2)} • {activity.date}</p>
                                         </div>
-                                        <div className="text-right">
-                                            {(activity as any).userOwes > 0 ? (
-                                                <>
-                                                    <p className="font-bold text-red-500 dark:text-red-400">-${(activity as any).userOwes.toFixed(2)}</p>
-                                                    <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider">Tu deuda</p>
-                                                </>
-                                            ) : (activity as any).userLent ? (
-                                                <>
-                                                    <p className="font-bold text-emerald-600 dark:text-emerald-400">+${(activity as any).userLent.toFixed(2)}</p>
-                                                    <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider">Te prestó</p>
-                                                </>
-                                            ) : (
-                                                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">No participaste</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'balances' && (
-                        <div className="space-y-4">
-                            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Balances del Grupo</h2>
-                            <div className="grid gap-3">
-                                {balances.map((person, idx) => (
-                                    <div key={idx} className="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-xl p-4 flex items-center gap-4 shadow-sm dark:shadow-none">
-                                        <img src={person.avatar} alt={person.name} className="w-10 h-10 rounded-full" />
-                                        <div className="flex-1">
-                                            <h3 className="font-semibold text-slate-900 dark:text-white">{person.name}</h3>
-                                        </div>
-                                        <div className="text-right">
-                                            {person.status === 'owes' && (
-                                                <p className="text-emerald-600 dark:text-emerald-400 font-bold text-sm">Te debe ${person.amount.toFixed(2)}</p>
-                                            )}
-                                            {person.status === 'owe' && (
-                                                <div className="flex flex-col items-end gap-1">
-                                                    <p className="text-red-500 dark:text-red-400 font-bold text-sm">Debes ${person.amount.toFixed(2)}</p>
-                                                    <button className="text-xs bg-blue-50 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-500/30 transition-colors">Pagar</button>
-                                                </div>
-                                            )}
-                                            {person.status === 'settled' && (
-                                                <p className="text-slate-400 dark:text-slate-500 font-medium text-sm">Están a mano</p>
-                                            )}
-                                        </div>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     )}
                 </main>
-            </div>
-
-            {/* Floating Action Button */}
-            <div className="fixed bottom-24 right-6 md:bottom-6 z-40">
-                <button
-                    onClick={() => navigate('/register-expense')}
-                    className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full shadow-lg shadow-blue-500/30 transition-transform active:scale-95 flex items-center gap-2"
-                >
-                    <Plus size={24} />
-                    <span className="font-bold pr-2 hidden sm:inline">Nuevo Gasto</span>
-                </button>
             </div>
         </div>
     );

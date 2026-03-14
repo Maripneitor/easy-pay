@@ -1,45 +1,62 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'light' | 'dark' | 'vibrant' | 'serene' | 'earth';
+type ColorTheme = 'vibrant' | 'serene' | 'earth' | 'default';
 
 interface ThemeContextType {
-    theme: Theme;
-    setTheme: (theme: Theme) => void;
+    colorTheme: ColorTheme;
+    isDark: boolean;
+    setTheme: (theme: ColorTheme) => void;
     toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [theme, setThemeState] = useState<Theme>(() => {
-        const saved = localStorage.getItem('theme');
-        return (saved as Theme) || 'light';
+    const [colorTheme, setColorTheme] = useState<ColorTheme>(() => 
+        (localStorage.getItem('color-theme') as ColorTheme) || 'default'
+    );
+
+    const [isDark, setIsDark] = useState<boolean>(() => {
+        const saved = localStorage.getItem('is-dark');
+        // Si no hay nada guardado, lo ponemos en oscuro por defecto
+        return saved ? saved === 'true' : true;
     });
 
     useEffect(() => {
         const root = window.document.body;
         
-        // LIMPIEZA AGRESIVA: Borramos absolutamente todas las clases del body
-        root.className = ''; 
-        
-        // Si no es light, aplicamos la clase del tema
-        if (theme !== 'light') {
-            root.classList.add(theme);
-        }
-        
-        localStorage.setItem('theme', theme);
-    }, [theme]);
+        // 1. Limpiamos todas las clases de colores
+        root.classList.remove('vibrant', 'serene', 'earth');
+        // También quitamos 'dark' para decidir si la ponemos de nuevo
+        root.classList.remove('dark');
 
-    const setTheme = (newTheme: Theme) => {
-        setThemeState(newTheme);
+        // 2. Aplicamos la oscuridad SOLO si isDark es true
+        // Esto evita que el color 'default' ponga la pantalla negra en modo claro
+        if (isDark) {
+            root.classList.add('dark');
+        }
+
+        // 3. Aplicamos el color especial si no es el azul
+        if (colorTheme !== 'default') {
+            root.classList.add(colorTheme);
+        }
+
+        localStorage.setItem('color-theme', colorTheme);
+        localStorage.setItem('is-dark', isDark.toString());
+    }, [colorTheme, isDark]);
+
+    // Función para cambiar color sin tocar el brillo
+    const setTheme = (newColor: ColorTheme) => {
+        setColorTheme(newColor);
     };
 
+    // Función para cambiar brillo sin tocar el color
     const toggleTheme = () => {
-        setThemeState((prev) => (prev === 'light' ? 'dark' : 'light'));
+        setIsDark(prev => !prev);
     };
 
     return (
-        <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+        <ThemeContext.Provider value={{ colorTheme, isDark, setTheme, toggleTheme }}>
             {children}
         </ThemeContext.Provider>
     );
@@ -47,8 +64,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 export const useTheme = () => {
     const context = useContext(ThemeContext);
-    if (context === undefined) {
-        throw new Error('useTheme must be used within a ThemeProvider');
-    }
+    if (context === undefined) throw new Error('useTheme error');
     return context;
 };

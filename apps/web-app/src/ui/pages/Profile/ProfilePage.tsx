@@ -20,11 +20,8 @@ import { PageHeader } from '@ui/components/PageHeader';
 export const ProfilePage = () => {
     const navigate = useNavigate();
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
-    const { theme, setTheme, toggleTheme } = useTheme();
+    const { colorTheme, isDark, setTheme, toggleTheme } = useTheme();
     
-    // Switch visual: encendido si no estamos en modo claro
-    const isDarkPalette = theme !== 'light';
-
     const userName = "Juan Pérez";
     const userEmail = "juan.perez@easypay.com";
     const avatarUrl = "https://ui-avatars.com/api/?name=Juan+Perez&background=3b82f6&color=fff&bold=true";
@@ -33,9 +30,7 @@ export const ProfilePage = () => {
         <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg-body)] font-display text-[var(--text-primary)] antialiased selection:bg-blue-500 selection:text-white transition-colors duration-300">
             <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
                 
-                {/* CORRECCIÓN: Envolvemos el Header en un div que fuerza el color de fondo del tema 
-                   para que deje de verse blanco en Vibrant, Serene o Earth.
-                */}
+                {/* Header Section */}
                 <div className="bg-[var(--bg-body)] [&_header]:bg-transparent [&_header]:backdrop-blur-none [&_header]:border-[var(--border-color)]">
                     <PageHeader
                         onMenuClick={toggleSidebar}
@@ -48,15 +43,14 @@ export const ProfilePage = () => {
                 </div>
 
                 <main className="flex-1 w-full max-w-5xl mx-auto px-4 md:px-6 py-8 space-y-8">
-                    {/* Profile Card */}
+                    {/* Profile Banner Card */}
                     <section className="w-full">
                         <div className="bg-[var(--bg-card)] backdrop-blur-xl border border-[var(--border-color)] rounded-2xl p-8 flex flex-col items-center justify-center relative overflow-hidden group shadow-lg dark:shadow-none transition-all">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
-
+                            
                             <div className="relative z-10 flex flex-col items-center text-center">
                                 <div className="relative mb-6">
-                                    <div className="w-28 h-28 rounded-full bg-slate-100 dark:bg-slate-800 p-1 shadow-[0_0_20px_rgba(186,230,253,0.4)] border-2 border-sky-200 dark:border-sky-900 overflow-hidden">
+                                    <div className="w-28 h-28 rounded-full bg-slate-100 dark:bg-slate-800 p-1 shadow-[0_0_20px_rgba(59,130,246,0.3)] border-2 border-sky-200 dark:border-sky-900 overflow-hidden">
                                         <img
                                             alt="Avatar"
                                             className="w-full h-full rounded-full object-cover"
@@ -67,7 +61,7 @@ export const ProfilePage = () => {
                                 </div>
                                 <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-1">{userName}</h2>
                                 <p className="text-[var(--text-secondary)] text-sm">{userEmail}</p>
-                                <p className="text-slate-400 dark:text-slate-500 text-xs mt-2 font-mono">Miembro desde: Enero 2024</p>
+                                <p className="text-slate-400 dark:text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest">Miembro desde: Enero 2024</p>
 
                                 <button
                                     onClick={() => navigate('/profile/personal-data')}
@@ -81,11 +75,11 @@ export const ProfilePage = () => {
                     </section>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Stats Section */}
+                        {/* Left Column: Stats */}
                         <section className="lg:col-span-2">
                             <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Estadísticas</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 hover:border-blue-300 dark:hover:border-slate-500 transition-colors shadow-sm dark:shadow-none">
+                                <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 shadow-sm dark:shadow-none">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-[var(--text-secondary)] text-sm font-medium">Total Gastado</span>
                                         <CreditCard className="text-slate-400 dark:text-slate-500" size={20} />
@@ -93,7 +87,7 @@ export const ProfilePage = () => {
                                     <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">$8,450.00</div>
                                 </div>
 
-                                <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 hover:border-blue-300 dark:hover:border-slate-500 transition-colors shadow-sm dark:shadow-none">
+                                <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 shadow-sm dark:shadow-none">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-[var(--text-secondary)] text-sm font-medium">Grupos Activos</span>
                                         <Users className="text-slate-400 dark:text-slate-500" size={20} />
@@ -101,7 +95,7 @@ export const ProfilePage = () => {
                                     <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">3</div>
                                 </div>
 
-                                <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 hover:border-blue-300 dark:hover:border-slate-500 transition-colors shadow-sm dark:shadow-none">
+                                <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 shadow-sm dark:shadow-none">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-[var(--text-secondary)] text-sm font-medium">Deudas Pagadas</span>
                                         <CheckCircle className="text-green-500 dark:text-green-400" size={20} />
@@ -109,12 +103,12 @@ export const ProfilePage = () => {
                                     <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">12</div>
                                 </div>
 
-                                <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 hover:border-blue-300 dark:hover:border-slate-500 transition-colors flex items-center justify-between shadow-sm dark:shadow-none">
+                                <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 flex items-center justify-between shadow-sm dark:shadow-none">
                                     <div>
                                         <span className="text-[var(--text-secondary)] text-sm font-medium block mb-1">Confiabilidad</span>
                                         <div className="text-2xl font-mono font-bold text-cyan-600 dark:text-cyan-400">98%</div>
                                     </div>
-                                    <div className="relative w-12 h-12 flex items-center justify-center">
+                                    <div className="relative w-12 h-12">
                                         <svg className="transform -rotate-90 w-12 h-12">
                                             <circle className="text-slate-200 dark:text-slate-700" cx="24" cy="24" fill="transparent" r="20" stroke="currentColor" strokeWidth="4"></circle>
                                             <circle className="text-cyan-500 dark:text-cyan-400" cx="24" cy="24" fill="transparent" r="20" stroke="currentColor" strokeDasharray="126" strokeDashoffset="2.5" strokeWidth="4"></circle>
@@ -124,85 +118,88 @@ export const ProfilePage = () => {
                             </div>
                         </section>
 
+                        {/* Right Column: Ajustes y Seguridad */}
                         <section className="lg:col-span-1">
                             <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Ajustes</h3>
-                            <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-700/50 shadow-sm dark:shadow-none">
+                            <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-700/50 shadow-sm dark:shadow-none">
                                 
+                                {/* Brillo / Modo Oscuro */}
                                 <div className="p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors cursor-pointer group" onClick={toggleTheme}>
                                     <div className="flex items-center gap-3">
-                                        {theme === 'light' ? (
-                                            <Sun className="text-slate-500 group-hover:text-slate-900" size={20} />
-                                        ) : (
-                                            <Moon className="text-slate-500 dark:text-slate-400 group-hover:text-white" size={20} />
-                                        )}
+                                        {!isDark ? <Sun className="text-slate-500 group-hover:text-slate-900" size={20} /> : <Moon className="text-slate-500 dark:text-slate-400 group-hover:text-white" size={20} />}
                                         <span className="text-sm font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">
-                                            {theme === 'light' ? 'Modo claro' : 'Modo oscuro'}
+                                            {!isDark ? 'Modo claro' : 'Modo oscuro'}
                                         </span>
                                     </div>
-                                    <div className={`w-10 h-6 rounded-full relative transition-colors duration-300 ${isDarkPalette ? 'bg-blue-600' : 'bg-slate-300'}`}>
-                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${isDarkPalette ? 'right-1' : 'left-1'}`}></div>
+                                    <div className={`w-10 h-6 rounded-full relative transition-colors duration-300 ${isDark ? 'bg-blue-600' : 'bg-slate-300'}`}>
+                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${isDark ? 'right-1' : 'left-1'}`}></div>
                                     </div>
                                 </div>
 
-                                <div className="p-4 flex flex-col gap-3 hover:bg-[var(--hover-bg)] transition-colors group">
+                                {/* Temas de Color */}
+                                <div className="p-4 flex flex-col gap-3">
                                     <div className="flex items-center gap-3">
-                                        <Palette className="text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]" size={20} />
-                                        <span className="text-sm font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">Tema de color</span>
+                                        <Palette className="text-[var(--text-secondary)]" size={20} />
+                                        <span className="text-sm font-medium text-[var(--text-secondary)]">Tema de color</span>
                                     </div>
                                     <div className="flex justify-around items-center pt-1">
-                                        <button onClick={() => setTheme('dark')} className={`w-8 h-8 rounded-full bg-[#1e293b] border-2 transition-transform hover:scale-110 ${theme === 'dark' ? 'border-white ring-2 ring-blue-400' : 'border-transparent opacity-60'}`} />
-                                        <button onClick={() => setTheme('vibrant')} className={`w-8 h-8 rounded-full bg-[#7f1d1d] border-2 transition-transform hover:scale-110 ${theme === 'vibrant' ? 'border-white ring-2 ring-red-500' : 'border-transparent opacity-60'}`} />
-                                        <button onClick={() => setTheme('serene')} className={`w-8 h-8 rounded-full bg-[#065f46] border-2 transition-transform hover:scale-110 ${theme === 'serene' ? 'border-white ring-2 ring-emerald-500' : 'border-transparent opacity-60'}`} />
-                                        <button onClick={() => setTheme('earth')} className={`w-8 h-8 rounded-full bg-[#292524] border-2 transition-transform hover:scale-110 ${theme === 'earth' ? 'border-white ring-2 ring-stone-500' : 'border-transparent opacity-60'}`} />
+                                        <button onClick={() => setTheme('default')} className={`w-8 h-8 rounded-full bg-[#3b82f6] border-2 transition-transform hover:scale-110 ${colorTheme === 'default' ? 'border-white ring-2 ring-blue-400' : 'border-transparent opacity-60'}`} />
+                                        <button onClick={() => setTheme('vibrant')} className={`w-8 h-8 rounded-full bg-[#7f1d1d] border-2 transition-transform hover:scale-110 ${colorTheme === 'vibrant' ? 'border-white ring-2 ring-red-500' : 'border-transparent opacity-60'}`} />
+                                        <button onClick={() => setTheme('serene')} className={`w-8 h-8 rounded-full bg-[#065f46] border-2 transition-transform hover:scale-110 ${colorTheme === 'serene' ? 'border-white ring-2 ring-emerald-500' : 'border-transparent opacity-60'}`} />
+                                        <button onClick={() => setTheme('earth')} className={`w-8 h-8 rounded-full bg-[#292524] border-2 transition-transform hover:scale-110 ${colorTheme === 'earth' ? 'border-white ring-2 ring-stone-500' : 'border-transparent opacity-60'}`} />
                                     </div>
                                 </div>
 
-                                <button onClick={() => navigate('/notifications')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group text-left">
+                                {/* Notificaciones */}
+                                <button onClick={() => navigate('/notifications')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
                                     <div className="flex items-center gap-3">
                                         <Bell className="text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]" size={20} />
                                         <span className="text-sm font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">Notificaciones</span>
                                     </div>
-                                    <ChevronRight className="text-slate-400 dark:text-slate-600 group-hover:text-[var(--text-primary)]" size={20} />
+                                    <ChevronRight className="text-slate-400 group-hover:text-[var(--text-primary)]" size={20} />
                                 </button>
 
-                                <button onClick={() => navigate('/my-payments')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group text-left">
+                                {/* Métodos de Pago */}
+                                <button onClick={() => navigate('/my-payments')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
                                     <div className="flex items-center gap-3">
                                         <CreditCard className="text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]" size={20} />
                                         <span className="text-sm font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">Métodos de Pago</span>
                                     </div>
-                                    <ChevronRight className="text-slate-400 dark:text-slate-600 group-hover:text-[var(--text-primary)]" size={20} />
+                                    <ChevronRight className="text-slate-400 group-hover:text-[var(--text-primary)]" size={20} />
                                 </button>
 
-                                <button className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group text-left">
+                                {/* Privacidad */}
+                                <button className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
                                     <div className="flex items-center gap-3">
                                         <EyeOff className="text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]" size={20} />
                                         <span className="text-sm font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">Privacidad</span>
                                     </div>
-                                    <ChevronRight className="text-slate-400 dark:text-slate-600 group-hover:text-[var(--text-primary)]" size={20} />
+                                    <ChevronRight className="text-slate-400 group-hover:text-[var(--text-primary)]" size={20} />
                                 </button>
                             </div>
 
+                            {/* Seguridad Section */}
                             <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4 mt-8">Seguridad</h3>
                             <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-700/50 shadow-sm dark:shadow-none">
-                                <button onClick={() => navigate('/recover-password')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group text-left">
+                                <button onClick={() => navigate('/recover-password')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
                                     <div className="flex items-center gap-3">
                                         <Lock className="text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]" size={20} />
                                         <span className="text-sm font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">Cambiar contraseña</span>
                                     </div>
-                                    <ChevronRight className="text-slate-400 dark:text-slate-600 group-hover:text-[var(--text-primary)]" size={20} />
+                                    <ChevronRight className="text-slate-400 group-hover:text-[var(--text-primary)]" size={20} />
                                 </button>
 
-                                <button onClick={() => navigate('/2fa-setup')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group text-left">
+                                <button onClick={() => navigate('/2fa-setup')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
                                     <div className="flex items-center gap-3">
                                         <Smartphone className="text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]" size={20} />
                                         <span className="text-sm font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">2FA</span>
                                     </div>
-                                    <span className="text-xs text-green-600 dark:text-green-400 font-medium bg-green-100 dark:bg-green-500/10 px-2 py-0.5 rounded border border-green-200 dark:border-green-500/20">Activado</span>
+                                    <span className="text-xs text-green-600 font-medium bg-green-100 dark:bg-green-500/10 px-2 py-0.5 rounded border border-green-200">Activado</span>
                                 </button>
                             </div>
 
                             <div className="mt-8">
-                                <button onClick={() => navigate('/auth')} className="w-full py-3 rounded-xl border border-red-200 dark:border-red-400/30 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 transition-colors flex items-center justify-center gap-2 text-sm font-medium group">
+                                <button onClick={() => navigate('/auth')} className="w-full py-3 rounded-xl border border-red-200 dark:border-red-400/30 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 transition-colors flex items-center justify-center gap-2 text-sm font-medium">
                                     <LogOut size={20} />
                                     Cerrar sesión
                                 </button>
