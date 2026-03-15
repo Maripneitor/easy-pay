@@ -1,2 +1,5 @@
 fastapi
-uvicorn[standard]
+uvicorn
+motor  # Piloto asíncrono para MongoDB
+pydantic[email]
+bcrypt # Para el hash de contraseñas de seguridad
