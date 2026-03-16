@@ -33,7 +33,7 @@
     --input-text: #0F172A;
 }
 
-/* 1. MODO OSCURO ORIGINAL */
+/* --- 1. MODO OSCURO BASE (Azul Slate Apagado - Estilo Dashboard) --- */
 .dark {
     --bg-body: #0f172a;
     --bg-card: #1e293b;
@@ -50,19 +50,44 @@
     --input-text: #F8FAFC;
 }
 
-/* TEMAS DE COLOR SÓLIDO */
-.vibrant { --primary: #ff0000; }
-.serene { --primary: #00ff88; }
-.earth { --primary: #fbbf24; }
-
-/* REGLA DE BORDES COMPLETOS PARA TODOS LOS TEMAS */
-/* Esto aplica a los cuadros el borde del tema activo o el azul por defecto */
-[class*="rounded-2xl"]:not(button) {
-    border: 2px solid var(--primary) !important;
-    transition: border-color 0.3s ease;
+/* --- 2. TEMA ROJO (Vibrant) - Adaptable y Muted --- */
+.dark.vibrant {
+    --bg-body: #1a0a0a; /* Fondo rojo mate muy oscuro */
+    --bg-card: #2d1212; /* Tarjeta un poco más clara */
+    --bg-sidebar: #1a0a0a;
+    --primary: #f87171; /* Rojo que resalta */
+    --border-color: rgba(248, 113, 113, 0.2);
+    --header-bg: rgba(26, 10, 10, 0.85);
 }
 
-/* Color de Iconos */
+/* --- 3. TEMA VERDE (Serene) - Bosque Oscuro --- */
+.dark.serene {
+    --bg-body: #051a14; /* Verde petróleo apagado */
+    --bg-card: #0a2e24; /* Tarjeta verde oscuro */
+    --bg-sidebar: #051a14;
+    --primary: #34d399; /* Verde que resalta */
+    --border-color: rgba(52, 211, 153, 0.2);
+    --header-bg: rgba(5, 26, 20, 0.85);
+}
+
+/* --- 4. TEMA TIERRA (Earth) - Ámbar Mate --- */
+.dark.earth {
+    --bg-body: #17120a; /* Café/Negro mate */
+    --bg-card: #261e12; /* Ámbar tierra oscuro */
+    --bg-sidebar: #17120a;
+    --primary: #fbbf24; /* Ámbar que resalta */
+    --border-color: rgba(251, 191, 36, 0.2);
+    --header-bg: rgba(23, 18, 10, 0.85);
+}
+
+/* REGLA DE BORDES Y FONDOS ADAPTABLES */
+[class*="rounded-2xl"]:not(button) {
+    border: 1.5px solid var(--border-color) !important;
+    background-color: var(--bg-card) !important;
+    transition: all 0.3s ease;
+}
+
+/* Color de Iconos - Resaltado Inteligente */
 svg {
     color: var(--primary) !important;
     transition: color 0.3s ease;
@@ -78,7 +103,7 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* --- TODAS TUS ANIMACIONES (MANTENIDAS LÍNEA POR LÍNEA) --- */
+/* --- ANIMACIONES MANTENIDAS --- */
 @keyframes float1 { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(5deg); } }
 @keyframes float2 { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(15px) rotate(-8deg); } }
 @keyframes bounceSubtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
@@ -102,7 +127,7 @@ body {
 @keyframes fadeInSlideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 .page-enter { animation: fadeInSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-/* REGLAS DE ADAPTABILIDAD */
+/* REGLAS DE ADAPTABILIDAD FINAL */
 .dark, .vibrant, .serene, .earth {
     [class*="bg-white"], [class*="bg-slate-50"], header[class*="header"], div[class*="bg-gray-50"] {
         background-color: var(--bg-card) !important;
