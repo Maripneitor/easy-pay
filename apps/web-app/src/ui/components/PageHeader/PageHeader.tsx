@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bell } from 'lucide-react';
-import { ThemeSwitch } from '../ThemeSwitch/ThemeSwitch';
+/* Eliminamos el import del ThemeSwitch ya que no lo usaremos aquí */
 import styles from './PageHeader.module.css';
 
 const USER_AVATAR_URL = 'https://ui-avatars.com/api/?name=Juan&background=3b82f6&color=fff&bold=true';
@@ -64,9 +64,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                 </div>
 
                 <div className={styles.rightActions}>
-                    <div className="mr-4 flex items-center">
-                        <ThemeSwitch />
-                    </div>
+                    {/* Se eliminó el ThemeSwitch de aquí para centralizarlo en Ajustes */}
                     {rightSlot}
                     {showNotification && (
                         <button className={styles.notifBtn} onClick={onNotificationClick}>

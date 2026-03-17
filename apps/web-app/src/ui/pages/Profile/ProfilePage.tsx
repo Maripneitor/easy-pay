@@ -10,8 +10,6 @@ import {
     Lock,
     Smartphone,
     LogOut,
-    Sun,
-    Moon,
     Palette
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
@@ -25,6 +23,17 @@ export const ProfilePage = () => {
     const userName = "Juan Pérez";
     const userEmail = "juan.perez@easypay.com";
     const avatarUrl = "https://ui-avatars.com/api/?name=Juan+Perez&background=3b82f6&color=fff&bold=true";
+
+    // Lógica para el selector tipo Roblox
+    const handleThemeChange = (value: string) => {
+        if (value === 'light') {
+            if (isDark) toggleTheme(); // Si estaba en oscuro, lo pasamos a claro
+            setTheme('default');
+        } else {
+            if (!isDark) toggleTheme(); // Si elige cualquier tema de color, activamos el modo oscuro
+            setTheme(value as any);
+        }
+    };
 
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg-body)] font-display text-[var(--text-primary)] antialiased selection:bg-blue-500 selection:text-white transition-colors duration-300">
@@ -123,31 +132,27 @@ export const ProfilePage = () => {
                             <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Ajustes</h3>
                             <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-700/50 shadow-sm dark:shadow-none">
                                 
-                                {/* Brillo / Modo Oscuro */}
-                                <div className="p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors cursor-pointer group" onClick={toggleTheme}>
-                                    <div className="flex items-center gap-3">
-                                        {!isDark ? <Sun className="text-slate-500 group-hover:text-slate-900" size={20} /> : <Moon className="text-slate-500 dark:text-slate-400 group-hover:text-white" size={20} />}
-                                        <span className="text-sm font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">
-                                            {!isDark ? 'Modo claro' : 'Modo oscuro'}
-                                        </span>
-                                    </div>
-                                    <div className={`w-10 h-6 rounded-full relative transition-colors duration-300 ${isDark ? 'bg-blue-600' : 'bg-slate-300'}`}>
-                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${isDark ? 'right-1' : 'left-1'}`}></div>
-                                    </div>
-                                </div>
-
-                                {/* Temas de Color */}
+                                {/* NUEVO SELECTOR DE TEMA ESTILO ROBLOX */}
                                 <div className="p-4 flex flex-col gap-3">
                                     <div className="flex items-center gap-3">
                                         <Palette className="text-[var(--text-secondary)]" size={20} />
-                                        <span className="text-sm font-medium text-[var(--text-secondary)]">Tema de color</span>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-medium text-[var(--text-primary)]">Tema a nivel de dispositivo</span>
+                                            <p className="text-[10px] text-[var(--text-secondary)]">Elige un tema para este dispositivo.</p>
+                                        </div>
                                     </div>
-                                    <div className="flex justify-around items-center pt-1">
-                                        <button onClick={() => setTheme('default')} className={`w-8 h-8 rounded-full bg-[#3b82f6] border-2 transition-transform hover:scale-110 ${colorTheme === 'default' ? 'border-white ring-2 ring-blue-400' : 'border-transparent opacity-60'}`} />
-                                        <button onClick={() => setTheme('vibrant')} className={`w-8 h-8 rounded-full bg-[#7f1d1d] border-2 transition-transform hover:scale-110 ${colorTheme === 'vibrant' ? 'border-white ring-2 ring-red-500' : 'border-transparent opacity-60'}`} />
-                                        <button onClick={() => setTheme('serene')} className={`w-8 h-8 rounded-full bg-[#065f46] border-2 transition-transform hover:scale-110 ${colorTheme === 'serene' ? 'border-white ring-2 ring-emerald-500' : 'border-transparent opacity-60'}`} />
-                                        <button onClick={() => setTheme('earth')} className={`w-8 h-8 rounded-full bg-[#292524] border-2 transition-transform hover:scale-110 ${colorTheme === 'earth' ? 'border-white ring-2 ring-stone-500' : 'border-transparent opacity-60'}`} />
-                                    </div>
+                                    
+                                    <select 
+                                        value={!isDark ? 'light' : colorTheme}
+                                        onChange={(e) => handleThemeChange(e.target.value)}
+                                        className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] text-[var(--text-primary)] text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer transition-all"
+                                    >
+                                        <option value="light">Claro</option>
+                                        <option value="default">Oscuro (Original)</option>
+                                        <option value="vibrant">Vibrante (Rojo Mate)</option>
+                                        <option value="serene">Sereno (Verde Bosque)</option>
+                                        <option value="earth">Tierra (Ámbar)</option>
+                                    </select>
                                 </div>
 
                                 {/* Notificaciones */}
