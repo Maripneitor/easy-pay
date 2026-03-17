@@ -27,7 +27,8 @@ export const GroupDetail = () => {
     } = useGroupDetail();
 
     return (
-        <div className="min-h-screen flex flex-col md:flex-row bg-alice-blue dark:bg-slate-900 font-display text-slate-800 dark:text-slate-200 antialiased selection:bg-blue-500 selection:text-white transition-colors duration-300">
+        /* CAMBIO AQUÍ: Quitamos bg-slate-900 y ponemos var(--bg-body) para que sea adaptable */
+        <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg-body)] font-display text-[var(--text-primary)] antialiased selection:bg-blue-500 selection:text-white transition-colors duration-300">
             <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
                 {/* Header */}
                 <PageHeader
@@ -82,7 +83,7 @@ export const GroupDetail = () => {
                         </div>
                     </div>
 
-                    {/* Tabs con Línea LED superior */}
+                    {/* Tabs */}
                     <div className="flex border-b border-slate-200 dark:border-slate-700/50">
                         {['activity', 'balances', 'settings'].map((tab) => (
                             <button
@@ -103,7 +104,7 @@ export const GroupDetail = () => {
                         ))}
                     </div>
 
-                    {/* Content (Mantenido igual) */}
+                    {/* Content */}
                     {activeTab === 'activity' && (
                         <div className="space-y-4">
                             <h2 className="text-lg font-bold text-slate-900 dark:text-white">Actividad Reciente</h2>
