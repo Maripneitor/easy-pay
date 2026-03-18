@@ -1,12 +1,11 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, PlusSquare, CreditCard, Camera, FileText, Bell, ChevronRight, Settings, DollarSign } from 'lucide-react';
-import { useTheme } from '../../context/ThemeContext';
+import { Home, PlusSquare, CreditCard, Camera, FileText, Bell, Settings, DollarSign } from 'lucide-react';
+/* Importamos useTheme si es necesario, aunque ya estás usando las variables CSS */
 
 export const Sidebar: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { theme } = useTheme();
 
     const menuItems = [
         { icon: <Home size={22} />, label: 'Inicio', path: '/dashboard' },
@@ -21,7 +20,8 @@ export const Sidebar: React.FC = () => {
         <aside className="hidden md:flex flex-col w-64 min-h-screen bg-[var(--bg-sidebar)] border-r border-[var(--border-color)] transition-colors duration-300 relative z-50">
             <div className="p-8">
                 <div className="flex items-center gap-2 group cursor-pointer" onClick={() => navigate('/dashboard')}>
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-600/20 group-hover:rotate-12 transition-transform">
+                    {/* LOGO ADAPTABLE: Cambiado bg-blue-600 por var(--primary) */}
+                    <div className="w-8 h-8 bg-[var(--primary)] rounded-lg flex items-center justify-center text-white shadow-lg shadow-[var(--primary)]/20 group-hover:rotate-12 transition-transform">
                         <DollarSign size={20} className="font-black" />
                     </div>
                     <h1 className="text-xl font-black tracking-tighter text-[var(--text-primary)]">Easy-Pay</h1>
@@ -29,9 +29,12 @@ export const Sidebar: React.FC = () => {
             </div>
 
             <div className="px-4 mb-8">
-                <div onClick={() => navigate('/profile')} className="relative p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] group cursor-pointer overflow-hidden transition-all">
+                <div onClick={() => navigate('/profile')} className="relative p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] group cursor-pointer overflow-hidden transition-all hover:border-[var(--primary)]/50">
                     <div className="flex flex-col items-center text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-xl font-black mb-3">JP</div>
+                        {/* AVATAR ADAPTABLE: Cambiado bg-blue-600 por var(--primary) */}
+                        <div className="w-16 h-16 rounded-2xl bg-[var(--primary)] flex items-center justify-center text-white text-xl font-black mb-3 shadow-md shadow-[var(--primary)]/20">
+                            JP
+                        </div>
                         <span className="text-sm font-black text-[var(--text-primary)]">Juan Pérez</span>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter opacity-70">juan.perez@easypay.com</span>
                     </div>
@@ -47,11 +50,15 @@ export const Sidebar: React.FC = () => {
                             key={item.path}
                             onClick={() => navigate(item.path)}
                             className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all ${
-                                isActive ? 'text-[var(--primary)] bg-[var(--hover-bg)]' : 'text-slate-500 hover:bg-[var(--hover-bg)]'
+                                isActive 
+                                ? 'text-[var(--primary)] bg-[var(--hover-bg)] shadow-sm' 
+                                : 'text-slate-500 hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)]'
                             }`}
                         >
                             <div className="flex items-center gap-3">
-                                <span className={isActive ? 'text-[var(--primary)]' : 'text-slate-500'}>{item.icon}</span>
+                                <span className={isActive ? 'text-[var(--primary)]' : 'text-slate-500 group-hover:text-[var(--primary)]'}>
+                                    {item.icon}
+                                </span>
                                 <span>{item.label}</span>
                             </div>
                         </button>
@@ -61,7 +68,7 @@ export const Sidebar: React.FC = () => {
 
             <div className="p-4 mt-auto">
                 <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] transition-all group">
-                    <Settings size={22} className="group-hover:text-[var(--primary)] transition-all duration-500" />
+                    <Settings size={22} className="group-hover:text-[var(--primary)] transition-all duration-300" />
                     Configuración
                 </button>
                 <div className="pt-6 pb-2 text-center">

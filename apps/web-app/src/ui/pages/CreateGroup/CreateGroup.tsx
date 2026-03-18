@@ -37,19 +37,19 @@ export const CreateGroup = () => {
                     onMenuClick={toggleSidebar}
                     title={activeTab === 'create' ? 'Nuevo Grupo' : 'Unirse a Grupo'}
                     onBack={goBack}
-                    rightSlot={<div className="w-8" />} // Spacer to balance back button if needed, or leave empty
+                    rightSlot={<div className="w-8" />} 
                 />
 
                 <main className="flex-1 w-full max-w-xl mx-auto px-6 py-8 flex flex-col items-center space-y-8">
 
-                    {/* Tabs */}
+                    {/* Tabs Adaptables */}
                     <div className="w-full bg-[var(--bg-card)] p-1 rounded-xl flex border border-[var(--border-color)] transition-colors duration-300 shadow-sm">
                         <button
                             onClick={() => setActiveTab('create')}
                             className={cn(
                                 "flex-1 py-2.5 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2",
                                 activeTab === 'create'
-                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                                    ? "bg-[var(--primary)] text-white shadow-lg shadow-[var(--primary)]/20"
                                     : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-bg)]"
                             )}
                         >
@@ -61,7 +61,7 @@ export const CreateGroup = () => {
                             className={cn(
                                 "flex-1 py-2.5 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2",
                                 activeTab === 'join'
-                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                                    ? "bg-[var(--primary)] text-white shadow-lg shadow-[var(--primary)]/20"
                                     : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-bg)]"
                             )}
                         >
@@ -81,7 +81,7 @@ export const CreateGroup = () => {
                                         value={groupName}
                                         onChange={(e) => setGroupName(e.target.value)}
                                         placeholder="Ej. Viaje a la playa"
-                                        className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium"
+                                        className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50 focus:border-[var(--primary)] transition-all font-medium"
                                     />
                                 </div>
 
@@ -92,7 +92,7 @@ export const CreateGroup = () => {
                                         onChange={(e) => setGroupDesc(e.target.value)}
                                         placeholder="¿De qué trata este grupo?"
                                         rows={3}
-                                        className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all resize-none font-medium"
+                                        className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50 focus:border-[var(--primary)] transition-all resize-none font-medium"
                                     />
                                 </div>
 
@@ -105,12 +105,12 @@ export const CreateGroup = () => {
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             placeholder="Buscar por nombre o email..."
-                                            className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl pl-10 pr-4 py-3 text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium"
+                                            className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl pl-10 pr-4 py-3 text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50 focus:border-[var(--primary)] transition-all font-medium"
                                         />
                                         {searchQuery && (
                                             <button
                                                 onClick={() => handleAddMember(searchQuery)}
-                                                className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-md hover:bg-blue-600 transition-all"
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 bg-[var(--primary)] text-white px-3 py-1 rounded-lg text-xs font-bold shadow-md hover:opacity-90 transition-all"
                                             >
                                                 Añadir
                                             </button>
@@ -118,14 +118,14 @@ export const CreateGroup = () => {
                                     </div>
                                 </div>
 
-                                {/* Mock Member List */}
+                                {/* Listado de miembros */}
                                 <div className="space-y-2 pt-2">
                                     <p className="text-xs uppercase tracking-wider text-[var(--text-secondary)] font-bold ml-1 opacity-70">Miembros añadidos</p>
                                     <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                                         {members.map((member) => (
-                                            <div key={member.id} className="flex items-center justify-between p-3 bg-[var(--bg-body)] rounded-xl border border-[var(--border-color)] group hover:border-blue-400 transition-colors">
+                                            <div key={member.id} className="flex items-center justify-between p-3 bg-[var(--bg-body)] rounded-xl border border-[var(--border-color)] group hover:border-[var(--primary)] transition-colors">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px] shadow-sm">
+                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--primary)] to-purple-600 p-[2px] shadow-sm">
                                                         <img src={member.avatar} alt={member.name} className="w-full h-full rounded-full border-2 border-[var(--bg-card)]" />
                                                     </div>
                                                     <div>
@@ -154,7 +154,7 @@ export const CreateGroup = () => {
                             </div>
 
                             <button
-                                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] group"
+                                className="w-full bg-[var(--primary)] hover:opacity-90 text-white font-bold py-4 rounded-xl shadow-lg shadow-[var(--primary)]/25 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] group"
                                 onClick={handleCreateGroup}
                             >
                                 <span>Crear Grupo</span>
@@ -163,12 +163,12 @@ export const CreateGroup = () => {
                         </div>
                     )}
 
-                    {/* Join Form */}
+                    {/* Join Form Adaptable */}
                     {activeTab === 'join' && (
                         <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="text-center space-y-4 py-8">
                                 <div className="w-20 h-20 bg-[var(--bg-card)] mx-auto rounded-2xl flex items-center justify-center border border-[var(--border-color)] shadow-lg mb-4 group hover:scale-105 transition-transform">
-                                    <QrCode size={40} className="text-blue-500 dark:text-blue-400 group-hover:rotate-3 transition-transform" />
+                                    <QrCode size={40} className="text-[var(--primary)] group-hover:rotate-3 transition-transform" />
                                 </div>
                                 <h2 className="text-2xl font-bold text-[var(--text-primary)]">Escanea un código QR</h2>
                                 <p className="text-[var(--text-secondary)] max-w-xs mx-auto text-sm font-medium">
@@ -192,7 +192,7 @@ export const CreateGroup = () => {
                                 <input
                                     type="text"
                                     placeholder="Ej. ABC-123"
-                                    className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl px-4 py-5 text-center text-2xl tracking-widest uppercase font-mono text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-inner"
+                                    className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl px-4 py-5 text-center text-2xl tracking-widest uppercase font-mono text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50 focus:border-[var(--primary)] transition-all shadow-inner"
                                 />
                                 <button
                                     className="w-full bg-[var(--bg-card)] hover:bg-[var(--hover-bg)] text-[var(--text-primary)] font-bold py-4 rounded-xl border border-[var(--border-color)] flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95"

@@ -38,13 +38,16 @@ export const RegisterExpense = () => {
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg-body)] font-display text-[var(--text-primary)] antialiased selection:bg-blue-500 selection:text-white transition-colors duration-300">
             <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
-                {/* Header */}
+                {/* Header Adaptable */}
                 <PageHeader
                     onMenuClick={toggleSidebar}
                     title="Registrar Gasto"
                     onBack={() => navigate(-1)}
                     rightSlot={
-                        <button className="text-blue-600 dark:text-blue-400 font-bold text-sm hover:underline uppercase tracking-widest">
+                        <button 
+                            className="text-[var(--primary)] font-bold text-sm hover:underline uppercase tracking-widest"
+                            onClick={() => navigate(-1)}
+                        >
                             Guardar
                         </button>
                     }
@@ -52,11 +55,11 @@ export const RegisterExpense = () => {
 
                 <main className="flex-1 w-full max-w-xl mx-auto px-6 py-6 space-y-8">
 
-                    {/* Amount Input */}
+                    {/* Amount Input: Brilla con el color primario */}
                     <div className="flex flex-col items-center justify-center py-6">
                         <p className="text-sm font-bold text-[var(--text-secondary)] mb-2 uppercase tracking-widest opacity-70">Monto total</p>
                         <div className="relative flex items-center">
-                            <DollarSign size={40} className="text-[var(--text-secondary)] absolute -left-8 top-1/2 -translate-y-1/2 opacity-40" />
+                            <DollarSign size={40} className="text-[var(--primary)] absolute -left-8 top-1/2 -translate-y-1/2 opacity-60" />
                             <input
                                 type="text"
                                 value={amount}
@@ -79,7 +82,10 @@ export const RegisterExpense = () => {
                                 placeholder="¿Qué compraste?"
                                 className="flex-1 bg-transparent text-lg font-bold text-[var(--text-primary)] placeholder:text-slate-400 focus:outline-none"
                             />
-                            <button className="p-2 text-slate-400 hover:text-blue-500 transition-colors">
+                            <button 
+                                className="p-2 text-slate-400 hover:text-[var(--primary)] transition-colors"
+                                onClick={() => navigate('/ocr-scanner')}
+                            >
                                 <Camera size={20} />
                             </button>
                         </div>
@@ -96,7 +102,7 @@ export const RegisterExpense = () => {
                         </div>
                     </div>
 
-                    {/* Categories */}
+                    {/* Categorías con Selección Adaptable */}
                     <div className="space-y-3">
                         <h3 className="text-sm font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1 opacity-70">Categoría</h3>
                         <div className="grid grid-cols-4 gap-3">
@@ -107,7 +113,7 @@ export const RegisterExpense = () => {
                                     className={cn(
                                         "flex flex-col items-center gap-2 p-3 rounded-2xl transition-all",
                                         selectedCategory === cat.id
-                                            ? "bg-blue-600 text-white shadow-lg shadow-blue-500/25 scale-105"
+                                            ? "bg-[var(--primary)] text-white shadow-lg shadow-[var(--primary)]/25 scale-105"
                                             : "bg-[var(--bg-card)] hover:bg-[var(--hover-bg)] border border-[var(--border-color)]"
                                     )}
                                 >
@@ -130,7 +136,7 @@ export const RegisterExpense = () => {
                         </div>
                     </div>
 
-                    {/* Split Option */}
+                    {/* Opción de División Equitativa */}
                     <div className="bg-[var(--bg-card)] rounded-2xl p-4 shadow-lg border border-[var(--border-color)] flex items-center justify-between cursor-pointer hover:bg-[var(--hover-bg)] transition-all group">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 border border-emerald-500/20 group-hover:scale-110 transition-transform">
@@ -144,10 +150,10 @@ export const RegisterExpense = () => {
                         <ArrowLeft size={16} className="rotate-180 text-slate-400 group-hover:translate-x-1 transition-transform" />
                     </div>
 
-                    {/* Bottom Action */}
+                    {/* Botón Inferior Adaptable */}
                     <div className="pb-8 sticky bottom-0">
                         <button
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-900/20 flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] uppercase tracking-[0.1em]"
+                            className="w-full bg-[var(--primary)] hover:opacity-90 text-white font-black py-5 rounded-2xl shadow-xl shadow-[var(--primary)]/20 flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] uppercase tracking-[0.1em]"
                             onClick={() => navigate(-1)}
                         >
                             <Check size={24} className="font-black" />

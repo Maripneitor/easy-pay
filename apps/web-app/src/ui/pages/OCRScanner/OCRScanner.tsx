@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -29,13 +29,11 @@ interface OCRItem {
 }
 
 /* ─── Viewfinder component ─── */
-
 const Viewfinder: React.FC<{ flashOn: boolean; onFlashToggle: () => void; isProcessing: boolean }> = ({ flashOn, onFlashToggle, isProcessing }) => (
     <div className={cn(styles.glassPanel, 'relative flex-grow rounded-3xl overflow-hidden shadow-2xl shadow-black/40 border-[var(--border-color)] flex flex-col')}>
-        {/* Top overlay */}
         <div className="absolute top-0 left-0 w-full p-4 z-20 flex justify-between items-start bg-gradient-to-b from-black/60 to-transparent">
             <div className="bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10 flex items-center gap-2">
-                <span className={cn("w-2 h-2 rounded-full", isProcessing ? "bg-cyan-400 animate-ping" : "bg-red-500 animate-pulse")} />
+                <span className={cn("w-2 h-2 rounded-full", isProcessing ? "bg-[var(--primary)] animate-ping" : "bg-red-500 animate-pulse")} />
                 <span className="text-xs font-mono text-white/90">
                     {isProcessing ? 'PROCESSING...' : 'LIVE FEED'}
                 </span>
@@ -48,11 +46,8 @@ const Viewfinder: React.FC<{ flashOn: boolean; onFlashToggle: () => void; isProc
             </button>
         </div>
 
-        {/* Simulated camera feed */}
         <div className="relative w-full h-full bg-slate-900 flex items-center justify-center overflow-hidden min-h-[350px]">
             <div className={cn('absolute inset-0 opacity-30 z-0', styles.viewfinderGrid)} />
-
-            {/* Simulated receipt */}
             <div className="w-[60%] h-[80%] bg-slate-200 transform rotate-1 shadow-2xl relative flex flex-col p-6 items-center opacity-90 blur-[0.5px]">
                 <div className="w-16 h-16 bg-slate-800 rounded-full mb-4" />
                 <div className="w-32 h-4 bg-slate-800/20 mb-2" />
@@ -64,23 +59,20 @@ const Viewfinder: React.FC<{ flashOn: boolean; onFlashToggle: () => void; isProc
                 </div>
             </div>
 
-            {/* Corner brackets */}
-            <div className={cn(styles.cornerBracket, styles.cornerTL)} />
-            <div className={cn(styles.cornerBracket, styles.cornerTR)} />
-            <div className={cn(styles.cornerBracket, styles.cornerBL)} />
-            <div className={cn(styles.cornerBracket, styles.cornerBR)} />
+            <div className={cn(styles.cornerBracket, styles.cornerTL, "border-[var(--primary)]")} />
+            <div className={cn(styles.cornerBracket, styles.cornerTR, "border-[var(--primary)]")} />
+            <div className={cn(styles.cornerBracket, styles.cornerBL, "border-[var(--primary)]")} />
+            <div className={cn(styles.cornerBracket, styles.cornerBR, "border-[var(--primary)]")} />
 
-            {/* Laser Scan Animation */}
             {!isProcessing && (
                 <motion.div
                     initial={{ top: 0, opacity: 0.8 }}
                     animate={{ top: "100%", opacity: [0.8, 1, 0.8] }}
                     transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-                    className="absolute left-0 w-full h-1 bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.8)] z-10"
+                    className="absolute left-0 w-full h-1 bg-[var(--primary)] shadow-[0_0_20px_var(--primary)] z-10"
                 />
             )}
 
-            {/* Processing Overlay */}
             <AnimatePresence>
                 {isProcessing && (
                     <motion.div
@@ -93,14 +85,13 @@ const Viewfinder: React.FC<{ flashOn: boolean; onFlashToggle: () => void; isProc
                             animate={{ rotate: 360 }}
                             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                         >
-                            <Loader2 size={48} className="text-cyan-400 mb-4" />
+                            <Loader2 size={48} className="text-[var(--primary)] mb-4" />
                         </motion.div>
                         <p className="text-white font-medium tracking-widest text-sm uppercase">Analizando Recibo...</p>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Instruction */}
             {!isProcessing && (
                 <div className="absolute bottom-12 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md text-white px-6 py-2 rounded-full border border-white/10 text-sm font-medium shadow-lg whitespace-nowrap z-20">
                     Enfoca el ticket completo y evita sombras
@@ -111,7 +102,6 @@ const Viewfinder: React.FC<{ flashOn: boolean; onFlashToggle: () => void; isProc
 );
 
 /* ─── Action toolbar ─── */
-
 const ScanToolbar: React.FC<{
     onGallery: () => void;
     onCapture: () => void;
@@ -119,22 +109,22 @@ const ScanToolbar: React.FC<{
     disabled: boolean;
 }> = ({ onGallery, onCapture, onCrop, disabled }) => (
     <div className={cn(styles.glassPanel, 'w-full md:w-24 lg:w-32 flex md:flex-col items-center justify-center gap-8 md:gap-12 p-4 rounded-3xl bg-[var(--bg-card)] border-[var(--border-color)]')}>
-        <button onClick={onGallery} disabled={disabled} className="group flex flex-col items-center gap-2 disabled:opacity-50">
-            <div className="w-12 h-12 rounded-full bg-[var(--bg-body)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] group-hover:border-blue-400 transition-all">
+        <button onClick={onGallery} disabled={disabled} className="group flex flex-col items-center gap-2 disabled:opacity-50 text-center">
+            <div className="w-12 h-12 rounded-full bg-[var(--bg-body)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] group-hover:text-[var(--primary)] group-hover:border-[var(--primary)] transition-all">
                 <FolderOpen size={20} />
             </div>
             <span className="text-xs text-[var(--text-secondary)] font-medium">Galería</span>
         </button>
         <button onClick={onCapture} disabled={disabled} className="relative group disabled:opacity-50">
-            <div className="absolute inset-0 bg-blue-500 rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity" />
-            <div className="w-20 h-20 rounded-full border-4 border-blue-500 flex items-center justify-center relative bg-slate-900 shadow-glow group-active:scale-95 transition-transform">
-                <div className="w-16 h-16 rounded-full bg-blue-500 group-hover:bg-blue-400 transition-colors flex items-center justify-center">
+            <div className="absolute inset-0 bg-[var(--primary)] rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity" />
+            <div className="w-20 h-20 rounded-full border-4 border-[var(--primary)] flex items-center justify-center relative bg-slate-900 shadow-glow group-active:scale-95 transition-transform">
+                <div className="w-16 h-16 rounded-full bg-[var(--primary)] hover:opacity-90 transition-colors flex items-center justify-center">
                     <Camera size={28} className="text-white" />
                 </div>
             </div>
         </button>
-        <button onClick={onCrop} disabled={disabled} className="group flex flex-col items-center gap-2 disabled:opacity-50">
-            <div className="w-12 h-12 rounded-full bg-[var(--bg-body)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] group-hover:border-blue-400 transition-all">
+        <button onClick={onCrop} disabled={disabled} className="group flex flex-col items-center gap-2 disabled:opacity-50 text-center">
+            <div className="w-12 h-12 rounded-full bg-[var(--bg-body)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] group-hover:text-[var(--primary)] group-hover:border-[var(--primary)] transition-all">
                 <Crop size={20} />
             </div>
             <span className="text-xs text-[var(--text-secondary)] font-medium">Recortar</span>
@@ -143,7 +133,6 @@ const ScanToolbar: React.FC<{
 );
 
 /* ─── Main Page Component ─── */
-
 export const OCRScanner: React.FC = () => {
     const navigate = useNavigate();
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
@@ -162,46 +151,39 @@ export const OCRScanner: React.FC = () => {
     } = useOCRScanner();
 
     return (
-        <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg-body)] text-[var(--text-primary)] antialiased selection:bg-cyan-500 selection:text-white transition-colors duration-300">
-
+        <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg-body)] text-[var(--text-primary)] antialiased selection:bg-[var(--primary)] selection:text-white transition-colors duration-300">
             <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
-                {/* Unified Header */}
+                {/* PageHeader corregido: showAvatar={false} elimina el circulo azul de arriba */}
                 <PageHeader
                     onMenuClick={toggleSidebar}
                     title="OCR SCANNER"
                     subtitle="Easy-Pay"
                     onBack={() => navigate(-1)}
-                    showAvatar
+                    showAvatar={false} 
                     showNotification
                 />
 
                 <main className="flex-grow flex flex-col items-center justify-start p-4 sm:p-6 lg:p-8 relative w-full max-w-7xl mx-auto gap-6">
-                    {/* Decorative glows */}
                     <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-                        <div className="absolute top-[-10%] left-[20%] w-[30%] h-[30%] bg-cyan-500/5 rounded-full blur-[100px]" />
-                        <div className="absolute bottom-[10%] right-[10%] w-[40%] h-[40%] bg-blue-600/5 rounded-full blur-[120px]" />
+                        <div className="absolute top-[-10%] left-[20%] w-[30%] h-[30%] bg-[var(--primary)]/5 rounded-full blur-[100px]" />
+                        <div className="absolute bottom-[10%] right-[10%] w-[40%] h-[40%] bg-[var(--primary)]/5 rounded-full blur-[120px]" />
                     </div>
 
-                    {/* Camera + Toolbar */}
-                    <div className="w-full flex flex-col md:flex-row gap-6 h-auto md:h-[500px]">
+                    <div className="w-full flex flex-col md:flex-row gap-6 h-auto md:min-h-[500px]">
                         <Viewfinder flashOn={flashOn} onFlashToggle={toggleFlash} isProcessing={isProcessing} />
                         <ScanToolbar onGallery={handleGallery} onCapture={handleCapture} onCrop={handleCrop} disabled={isProcessing} />
                     </div>
 
-                    {/* Analysis Panel */}
                     <div className={cn(styles.glassPanel, 'w-full rounded-2xl shadow-glass flex flex-col overflow-hidden mt-2 bg-[var(--bg-card)] border border-[var(--border-color)]')}>
-                        {/* Panel header */}
                         <div className="p-4 sm:px-6 border-b border-[var(--border-color)] flex items-center justify-between bg-white/5">
                             <div className="flex items-center gap-2">
-                                <Sparkles size={20} className="text-cyan-400" />
+                                <Sparkles size={20} className="text-[var(--primary)]" />
                                 <h3 className="text-lg font-bold text-[var(--text-primary)]">Análisis del Ticket</h3>
                             </div>
                             <StatusBadge label={`OCR Confianza: ${scanResult.confidence}%`} variant="success" />
                         </div>
 
-                        {/* Two-column content */}
                         <div className="flex flex-col md:flex-row h-full">
-                            {/* Left – Detected (OCR) */}
                             <div className="w-full md:w-1/2 border-r border-[var(--border-color)] p-4 sm:p-6 bg-black/5">
                                 <h4 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4 flex items-center gap-2">
                                     <ReceiptText size={16} /> Detectado (OCR)
@@ -226,7 +208,6 @@ export const OCRScanner: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Right – App totals + warnings */}
                             <div className="w-full md:w-1/2 p-4 sm:p-6 bg-[var(--hover-bg)] relative">
                                 <h4 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4 flex items-center gap-2">
                                     <Smartphone size={16} /> En la App (Cuenta)
@@ -240,7 +221,6 @@ export const OCRScanner: React.FC = () => {
                                     ))}
                                 </div>
 
-                                {/* Unassigned warnings */}
                                 {scanResult.unassignedItems.map((item: OCRItem) => (
                                     <div
                                         key={item.id}
@@ -274,7 +254,6 @@ export const OCRScanner: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Footer totals */}
                         <div className="bg-[var(--bg-card)] p-4 sm:px-6 border-t border-[var(--border-color)] flex flex-col sm:flex-row items-center justify-between gap-4">
                             <div className="flex items-center gap-6 w-full sm:w-auto justify-center sm:justify-start">
                                 <div className="text-center sm:text-left">
@@ -298,7 +277,7 @@ export const OCRScanner: React.FC = () => {
                 </main>
 
                 <footer className="py-6 text-center text-[var(--text-secondary)] text-sm">
-                    <p>© 2025 Easy-Pay Technology. All rights reserved.</p>
+                    <p>© 2026 Easy-Pay Technology. All rights reserved.</p>
                 </footer>
             </div>
         </div>
