@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { View, Platform, StyleSheet } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '../../constants/StitchTheme';
+import { Colors } from '@easy-pay/ui';
 import { useColorScheme } from '../../components/useColorScheme';
 
 export default function TabLayout() {

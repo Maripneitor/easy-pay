@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
-// Colores según el diseño de Stitch
+
 const COLORS = {
   backgroundDark: '#0D47A1',
   oceanDeep: '#1565C0',

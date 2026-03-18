@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ScrollView, View, Text, Pressable, TextInput, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '../constants/StitchTheme';
+import { Colors } from '@easy-pay/ui';
 import { StatusBar } from 'expo-status-bar';
 
 export default function AddExpenseScreen() {

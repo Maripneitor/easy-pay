@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, View, Text, Pressable, SafeAreaView, Image } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../constants/StitchTheme';
+import { Colors } from '@easy-pay/ui';
 import { StatusBar } from 'expo-status-bar';
 
 const NOTIFICATIONS = [

@@ -3,7 +3,7 @@ import { ScrollView, View, Text, Pressable, Image, Dimensions, StyleSheet } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { MaterialIcons, FontAwesome5, Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../constants/StitchTheme';
+import { Colors } from '@easy-pay/ui';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 
