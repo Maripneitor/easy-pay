@@ -69,7 +69,7 @@ export default function LandingScreen() {
                 </View>
                 <Text className="text-white/60 text-xs mb-5">Eres el anfitrión. Crea un código.</Text>
                 <TouchableOpacity 
-                  onPress={() => router.push('/(tabs)/dashboard')}
+                  onPress={() => router.push('/auth')}
                   className="bg-dodger-blue py-3 rounded-xl items-center shadow-lg shadow-blue-900/40"
                 >
                   <Text className="text-white font-bold">Crear Mesa</Text>
@@ -83,7 +83,7 @@ export default function LandingScreen() {
                 </View>
                 <Text className="text-white/60 text-xs mb-5">¿Tienes código? Únete ya.</Text>
                 <TouchableOpacity 
-                  onPress={() => router.push('/(tabs)/dashboard')}
+                  onPress={() => router.push('/auth')}
                   className="bg-white py-3 rounded-xl items-center shadow-lg shadow-white/10"
                 >
                   <Text className="text-dodger-blue font-bold">Unirme</Text>
@@ -200,7 +200,7 @@ export default function LandingScreen() {
                 Únete a miles de comensales felices que ya no sufren con la cuenta.
               </Text>
               <TouchableOpacity 
-                onPress={() => router.push('/(tabs)/dashboard')}
+                onPress={() => router.push('/auth')}
                 className="bg-dodger-blue px-10 py-5 rounded-full shadow-xl shadow-blue-500/40"
               >
                 <Text className="text-white font-black text-lg">COMENZAR GRATIS</Text>

@@ -42,7 +42,16 @@ export default function RootLayout() {
             <Stack.Screen name="settle-up" />
             <Stack.Screen name="settings" />
             <Stack.Screen name="ocr-scanner" />
+            <Stack.Screen name="friends/add" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="friends/[id]" />
+            <Stack.Screen name="wallet/security" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="wallet/methods/new" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="wallet/methods/[id]" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="wallet/history/[id]" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="onboarding" />
             <Stack.Screen name="(tabs)" />
+
+
           </Stack>
         </ThemeProvider>
       </DependenciesProvider>

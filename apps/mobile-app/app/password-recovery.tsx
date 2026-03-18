@@ -1,15 +1,38 @@
 import React, { useState } from 'react';
-import { ScrollView, View, Text, Pressable, TextInput, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { 
+    ScrollView, 
+    View, 
+    Text, 
+    Pressable, 
+    TextInput, 
+    KeyboardAvoidingView, 
+    Platform,
+    ActivityIndicator,
+    TouchableOpacity
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '@easy-pay/ui';
+import { MaterialIcons, Ionicons, Feather } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { MotiView } from 'moti';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function PasswordRecoveryScreen() {
     const [email, setEmail] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [sent, setSent] = useState(false);
+
+    const handleRecovery = () => {
+        if (!email) return;
+        setLoading(true);
+        setTimeout(() => {
+            setLoading(false);
+            setSent(true);
+        }, 1500);
+    };
 
     return (
-        <SafeAreaView className="flex-1 bg-[#0f172a]">
+        <SafeAreaView className="flex-1 bg-[#0d1425]" edges={['top']}>
             <StatusBar style="light" />
             <Stack.Screen options={{ headerShown: false }} />
             
@@ -17,98 +40,101 @@ export default function PasswordRecoveryScreen() {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 className="flex-1"
             >
+                {/* Background Decor */}
+                <View className="absolute top-0 right-0 w-80 h-80 bg-blue-600/10 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
+                
                 <ScrollView 
-                    className="flex-1"
-                    contentContainerStyle={{ flexGrow: 1 }}
+                    className="flex-1 px-8"
+                    contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Background Decorative Particles */}
-                    <View className="absolute inset-0 opacity-20">
-                        <View className="w-2 h-2 rounded-full bg-blue-500 absolute top-20 left-10" />
-                        <View className="w-1 h-1 rounded-full bg-blue-300 absolute top-40 right-20" />
-                        <View className="w-1.5 h-1.5 rounded-full bg-white absolute bottom-40 left-1/4" />
-                        <View className="absolute -top-40 -left-40 w-80 h-80 bg-blue-600/10 rounded-full blur-[100px]" />
-                        <View className="absolute -bottom-40 -right-40 w-80 h-80 bg-blue-600/5 rounded-full blur-[100px]" />
-                    </View>
+                    <TouchableOpacity 
+                        onPress={() => router.back()}
+                        className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl items-center justify-center mb-8"
+                    >
+                        <Ionicons name="arrow-back" size={24} color="white" />
+                    </TouchableOpacity>
 
-                    {/* Top Bar */}
-                    <View className="px-6 py-4 flex-row justify-between items-center">
-                        <Pressable 
-                            onPress={() => router.back()}
-                            className="flex-row items-center gap-2"
-                        >
-                            <View className="w-10 h-10 bg-white/5 rounded-xl items-center justify-center border border-white/10">
-                                <MaterialIcons name="confirmation-number" size={24} color={Colors.coolSky} />
-                            </View>
-                            <Text className="text-white font-bold text-xl tracking-tight">Easy-Pay</Text>
-                        </Pressable>
-                        <Pressable className="w-10 h-10 rounded-full bg-slate-800 items-center justify-center border border-white/5 shadow-sm">
-                            <MaterialIcons name="light-mode" size={20} color="#94a3b8" />
-                        </Pressable>
-                    </View>
-
-                    {/* Main Content */}
-                    <View className="flex-1 justify-center px-6 pb-20">
-                        <View className="bg-slate-800/40 rounded-[40px] p-8 border border-white/10 shadow-2xl backdrop-blur-xl">
-                            {/* Hero Icon */}
-                            <View className="items-center mb-8">
-                                <View className="w-16 h-16 rounded-2xl bg-blue-500/20 items-center justify-center mb-6 border border-blue-500/30">
-                                    <MaterialIcons name="lock-reset" size={40} color={Colors.coolSky} />
+                    <MotiView 
+                        from={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-white/5 border border-white/10 rounded-[48px] p-8 shadow-2xl"
+                    >
+                        {!sent ? (
+                            <>
+                                <View className="items-center mb-10">
+                                    <LinearGradient
+                                        colors={['#3b82f6', '#2563eb']}
+                                        className="w-20 h-20 rounded-[30px] items-center justify-center mb-6 shadow-xl shadow-blue-500/20"
+                                    >
+                                        <MaterialIcons name="lock-reset" size={40} color="white" />
+                                    </LinearGradient>
+                                    <Text className="text-white text-3xl font-black text-center tracking-tight">Recuperar Acceso</Text>
+                                    <Text className="text-slate-500 font-bold text-center mt-3 text-sm px-4 leading-relaxed">
+                                        Ingresa tu correo y te enviaremos un enlace mágico para restablecer tu contraseña.
+                                    </Text>
                                 </View>
-                                <Text className="text-white text-2xl font-black text-center mb-3">¿Olvidaste tu contraseña?</Text>
-                                <Text className="text-slate-400 text-sm text-center leading-relaxed max-w-[280px]">
-                                    Introduce tu email y te enviaremos las instrucciones para restablecerla.
-                                </Text>
-                            </View>
 
-                            {/* Recovery Form */}
-                            <View className="gap-6">
-                                <View>
-                                    <Text className="text-slate-300 text-xs font-bold uppercase tracking-widest mb-2 ml-1">Email</Text>
-                                    <View className="relative">
-                                        <View className="absolute left-4 top-4 z-10">
-                                            <MaterialIcons name="mail-outline" size={20} color="#64748b" />
+                                <View className="gap-6">
+                                    <View>
+                                        <Text className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-3 ml-4">Tu Correo Institucional</Text>
+                                        <View className="bg-white/5 border border-white/10 p-5 rounded-2xl flex-row items-center">
+                                            <Feather name="mail" size={18} color="#64748b" />
+                                            <TextInput 
+                                                placeholder="ejemplo@correo.com"
+                                                placeholderTextColor="#334155"
+                                                keyboardType="email-address"
+                                                autoCapitalize="none"
+                                                className="flex-1 ml-4 text-white font-bold"
+                                                value={email}
+                                                onChangeText={setEmail}
+                                            />
                                         </View>
-                                        <TextInput 
-                                            placeholder="tu@email.com"
-                                            placeholderTextColor="#475569"
-                                            keyboardType="email-address"
-                                            autoCapitalize="none"
-                                            className="bg-slate-900/50 border border-slate-700 text-white px-12 py-4 rounded-2xl font-medium"
-                                        />
                                     </View>
+
+                                    <TouchableOpacity 
+                                        onPress={handleRecovery}
+                                        disabled={loading || !email}
+                                        className={`p-6 rounded-[28px] items-center justify-center shadow-lg flex-row gap-3 ${!email ? 'bg-slate-800' : 'bg-blue-600 shadow-blue-500/30'}`}
+                                    >
+                                        {loading ? (
+                                            <ActivityIndicator color="white" />
+                                        ) : (
+                                            <>
+                                                <Text className="text-white font-black uppercase tracking-widest text-[13px]">Enviar Enlace</Text>
+                                                <Ionicons name="paper-plane" size={18} color="white" />
+                                            </>
+                                        )}
+                                    </TouchableOpacity>
                                 </View>
-
-                                <Pressable 
-                                    onPress={() => {
-                                        // Accción de recuperación
-                                    }}
-                                    className="bg-blue-600 py-5 rounded-2xl items-center shadow-lg shadow-blue-500/30 active:scale-95 flex-row justify-center gap-2"
-                                    style={{ backgroundColor: Colors.brilliantAzure }}
+                            </>
+                        ) : (
+                            <MotiView 
+                                from={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="items-center py-6"
+                            >
+                                <View className="w-20 h-20 bg-emerald-500/10 rounded-[30px] items-center justify-center mb-8 border border-emerald-500/20">
+                                    <Ionicons name="checkmark-circle" size={48} color="#10b981" />
+                                </View>
+                                <Text className="text-white text-3xl font-black text-center tracking-tight">¡Correo Enviado!</Text>
+                                <Text className="text-slate-500 font-bold text-center mt-4 text-sm px-4 leading-relaxed">
+                                    Hemos enviado las instrucciones a <Text className="text-white">{email}</Text>. Revisa tu bandeja de entrada o spam.
+                                </Text>
+                                <TouchableOpacity 
+                                    onPress={() => router.replace('/auth')}
+                                    className="mt-12 bg-white/5 border border-white/10 px-8 py-4 rounded-full"
                                 >
-                                    <Text className="text-white font-black text-lg">Enviar instrucciones</Text>
-                                    <MaterialIcons name="arrow-forward" size={20} color="white" />
-                                </Pressable>
-                            </View>
+                                    <Text className="text-slate-300 font-bold text-xs uppercase tracking-widest">Volver al Inicio</Text>
+                                </TouchableOpacity>
+                            </MotiView>
+                        )}
+                    </MotiView>
 
-                            {/* Footer Link */}
-                            <View className="mt-8 pt-6 border-t border-slate-700/50">
-                                <Pressable 
-                                    onPress={() => router.push('/auth')}
-                                    className="flex-row items-center justify-center gap-2"
-                                >
-                                    <MaterialIcons name="arrow-back" size={18} color={Colors.coolSky} />
-                                    <Text className="text-blue-400 font-bold text-sm">Volver al inicio de sesión</Text>
-                                </Pressable>
-                            </View>
-                        </View>
-
-                        {/* Branding Footer */}
-                        <View className="mt-8">
-                            <Text className="text-slate-600 text-[10px] text-center font-black uppercase tracking-[3px]">
-                                SECURE PAYMENTS BY EASY-PAY
-                            </Text>
-                        </View>
+                    <View className="items-center mt-12 pb-10">
+                        <Text className="text-slate-700 text-[10px] font-black uppercase tracking-[3px]">
+                            Secure ID Recovery by EasyPay
+                        </Text>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>

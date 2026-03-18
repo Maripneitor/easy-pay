@@ -62,6 +62,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="group"
+        options={{
+          title: 'Grupos',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeIconContainer : null}>
+              <MaterialIcons name="group-work" size={24} color={color} />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="payments"
         options={{
           title: 'Cartera',
@@ -84,7 +95,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen name="two" options={{ href: null }} />
+      <Tabs.Screen name="group/[id]" options={{ href: null }} />
     </Tabs>
+
   );
 }
 

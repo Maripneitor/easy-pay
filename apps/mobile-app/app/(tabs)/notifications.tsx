@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, View, Text, Pressable, SafeAreaView, Image } from 'react-native';
+import { ScrollView, View, Text, Pressable, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { Colors } from '@easy-pay/ui';
