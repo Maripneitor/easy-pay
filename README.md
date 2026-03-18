@@ -1,58 +1,56 @@
-# 🚀 EASY-PAY (v2.5) - Guía de Operación
+# 💸 EASY-PAY: Gestión de Gastos Compartidos
 
-Bienvenido a **EASY-PAY**. Este monorepositorio integra Backend (FastAPI), Web (React) y Mobile (Expo SDK 54) en un entorno orquestado por Docker.
-
----
-
-## 📋 Requisitos Previos
-
-Asegúrate de tener instalado lo siguiente:
-1.  **Git**, **Node.js (v20+)** y **pnpm** (`npm install -g pnpm`).
-2.  **Docker Desktop** (Esencial para Windows).
-3.  **Expo Go** en tu móvil.
+¡Bienvenido a **EASY-PAY**! Esta es una plataforma integral (Móvil, Web y API) diseñada para facilitar el registro y la liquidación de gastos entre amigos y grupos, al estilo de Splitwise pero con un enfoque moderno y rápido.
 
 ---
 
-## 🏗️ INICIO RÁPIDO CON DOCKER
-
-### 1. Preparación local
-```powershell
-pnpm install
-```
-
-### 2. Encender el Proyecto
-```powershell
-docker compose up -d --build
-```
-
-### 3. Ver Logs y QR
-```powershell
-docker compose logs mobile -f
-```
-*El sistema usa un **túnel** (`exp://...exp.direct`). Espera a que cargue el QR.*
-
-### 4. Apagar y Limpiar (Estado Sano)
-```powershell
-docker compose down -v
-```
+## 🌟 ¿Qué es EASY-PAY?
+EASY-PAY permite:
+- **Registrar gastos** rápidamente desde el móvil.
+- **Escanear tickets** físicos usando OCR (Inteligencia Artificial).
+- **Gestionar deudas** y saldos en tiempo real.
+- **Liquidar deudas** con flujos de pago intuitivos.
+- **Seguridad avanzada** con autenticación de dos factores (2FA).
 
 ---
 
-## 🆘 Solución de Problemas (FAQ)
+## 🚦 Guía de Inicio Rápido
 
-### ❓ Error "Worklets Mismatch" o "Timeout 6000ms"
-Este error ocurre cuando las versiones de las librerías nativas de Expo Go no coinciden con el JS.
-**Solución aplicada:** 
-- Se forzó `react-native-worklets-core: 0.5.1` mediante un `override` en el `package.json` de la raíz.
-- Se actualizaron todas las dependencias a las versiones oficiales de SDK 54.
-- Si ves un timeout, simplemente reinicia con `docker compose down -v && docker compose up -d`.
+Si acabas de descargar el proyecto, elige tu camino:
 
-### ❓ Advertencias de "No route named notifications"
-Corregido en v2.5 eliminando las definiciones redundantes en `app/_layout.tsx`. Las rutas ahora se gestionan correctamente dentro de la carpeta `(tabs)`.
+### 1. Solo quiero probarlo rápido (Docker)
+Si tienes Docker instalado y quieres ver la app corriendo sin configurar nada:
+👉 [**Guía de Docker**](./docs/DOCKER_USAGE.md)
+
+### 2. Quiero programar y hacer cambios (WSL + Emulador)
+Si vas a desarrollar nuevas funcionalidades, esta es la forma profesional y rápida:
+👉 [**Guía de Entorno de Desarrollo**](./GUIA_ENTORNO.md)
 
 ---
 
-## 📂 Estructura
-- **apps/api-backend**: Lógica en Python.
-- **apps/web-app**: Dashboard administrativo.
-- **apps/mobile-app**: Aplicación para usuarios finales (Estructura de pestañas limpia).
+## 📚 Documentación por Categoría
+
+Para entender mejor el proyecto, consulta estas guías:
+
+| Categoría | Documento | Descripción |
+| :--- | :--- | :--- |
+| **Arquitectura** | [**Mapa del Proyecto**](./docs/PROJECT_MAP.md) | Estructura de vistas y pantallas. |
+| **Desarrollo** | [**Reglas de Código**](./docs/CODING_GUIDELINES.md) | Cómo evitar errores comunes y estándares. |
+| **Entorno** | [**Configuración WSL**](./docs/ENVIRONMENT_WSL.md) | Detalles técnicos de la terminal en Ubuntu. |
+
+---
+
+## 📁 Estructura del Monorepositorio
+
+- `apps/mobile-app`: Aplicación móvil desarrollada con Expo y React Native.
+- `apps/web-app`: Panel administrativo web con React y Vite.
+- `apps/api-backend`: Servidor y lógica de negocio.
+- `packages/`: Componentes y tipos compartidos entre todas las apps.
+
+---
+
+## 🛠️ Tecnologías Principales
+- **Móvil**: Expo, React Native, NativeWind (Tailwind CSS).
+- **Web**: React, Vite, Tailwind CSS.
+- **Backend**: FastAPI (Python) / Node.js.
+- **Base de Datos**: PostgreSQL.

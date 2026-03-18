@@ -4,9 +4,18 @@ import {
     CreateGroupUseCase,
     JoinGroupUseCase,
     CloseGroupUseCase,
-    GetGroupUseCase
+    GetGroupUseCase,
+    CalculateSharesUseCase,
+    AddItemUseCase,
+    AssignItemUseCase,
+    GetGroupUpdateUseCase
 } from '@easy-pay/domain';
 import { groupRepository as mobileGroupRepository } from '../api/repositories/GroupRepository';
+import { InMemoryGroupRepository } from '../mock/InMemoryGroupRepository';
+
+// TOGGLE MOCKS: Set to true to use In-Memory Repositories for faster UI development
+const USE_MOCKS = true;
+
 
 interface Dependencies {
     repositories: {
@@ -17,6 +26,10 @@ interface Dependencies {
         joinGroup: JoinGroupUseCase;
         closeGroup: CloseGroupUseCase;
         getGroup: GetGroupUseCase;
+        calculateShares: CalculateSharesUseCase;
+        addItem: AddItemUseCase;
+        assignItem: AssignItemUseCase;
+        getGroupUpdate: GetGroupUpdateUseCase;
     };
 }
 
@@ -35,6 +48,10 @@ export const DependenciesProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 joinGroup: new JoinGroupUseCase(groupRepo),
                 closeGroup: new CloseGroupUseCase(groupRepo),
                 getGroup: new GetGroupUseCase(groupRepo),
+                calculateShares: new CalculateSharesUseCase(), // Repository-less use case
+                addItem: new AddItemUseCase(groupRepo),
+                assignItem: new AssignItemUseCase(groupRepo),
+                getGroupUpdate: new GetGroupUpdateUseCase(groupRepo),
             }
         };
     }, []);

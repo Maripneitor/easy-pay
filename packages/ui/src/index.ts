@@ -1,1 +1,1 @@
-export const TEMP = true;
+export * from './theme';

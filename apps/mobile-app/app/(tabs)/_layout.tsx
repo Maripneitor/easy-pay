@@ -1,45 +1,62 @@
-import React from 'react';
-import { Link, Tabs } from 'expo-router';
-import { Pressable, View } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Tabs } from 'expo-router';
+import { View, Platform, StyleSheet } from 'react-native';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Colors } from '../../constants/StitchTheme';
+import { useColorScheme } from '../../components/useColorScheme';
 
 export default function TabLayout() {
-  const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
 
   return (
     <Tabs
       screenOptions={{
+        tabBarActiveTintColor: '#2196F3',
+        tabBarInactiveTintColor: '#94a3b8',
         headerShown: false,
-        tabBarShowLabel: false,
+        tabBarShowLabel: true,
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: 'bold',
+          marginBottom: 10,
+        },
         tabBarStyle: {
-            backgroundColor: '#0f172a',
-            borderTopColor: '#1e293b',
-            borderTopWidth: 1,
-            height: 64 + insets.bottom,
-            paddingBottom: insets.bottom,
-            position: 'absolute',
-            elevation: 0,
-        }
+          position: 'absolute',
+          bottom: 25,
+          left: 20,
+          right: 20,
+          height: 70,
+          backgroundColor: '#1e293b', // Fondo oscuro premium
+          borderRadius: 25,
+          borderTopWidth: 0,
+          elevation: 10,
+          shadowColor: '#2196F3',
+          shadowOpacity: 0.2,
+          shadowOffset: { width: 0, height: 10 },
+          shadowRadius: 20,
+          paddingBottom: Platform.OS === 'ios' ? 20 : 0,
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.05)',
+        },
       }}>
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: 'Mesa',
-          tabBarIcon: ({ focused }) => (
-            <View className={`items-center justify-center p-3 rounded-2xl transition-all duration-200 ${focused ? 'bg-blue-500/20 shadow-lg shadow-blue-500/20' : 'bg-transparent'}`}>
-                <MaterialIcons name="restaurant" size={26} color={focused ? '#3b82f6' : '#64748b'} />
+          title: 'Inicio',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeIconContainer : null}>
+              <MaterialIcons name="dashboard" size={24} color={color} />
             </View>
           ),
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="friends"
         options={{
-          title: 'Historial',
-          tabBarIcon: ({ focused }) => (
-            <View className={`items-center justify-center p-3 rounded-2xl transition-all duration-200 ${focused ? 'bg-blue-500/20 shadow-lg shadow-blue-500/20' : 'bg-transparent'}`}>
-                <MaterialIcons name="history" size={26} color={focused ? '#3b82f6' : '#64748b'} />
+          title: 'Amigos',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeIconContainer : null}>
+              <MaterialIcons name="people" size={24} color={color} />
             </View>
           ),
         }}
@@ -47,10 +64,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="payments"
         options={{
-          title: 'Pagos',
-          tabBarIcon: ({ focused }) => (
-            <View className={`items-center justify-center p-3 rounded-2xl transition-all duration-200 ${focused ? 'bg-blue-500/20 shadow-lg shadow-blue-500/20' : 'bg-transparent'}`}>
-                <MaterialIcons name="account-balance-wallet" size={26} color={focused ? '#3b82f6' : '#64748b'} />
+          title: 'Cartera',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeIconContainer : null}>
+              <MaterialIcons name="account-balance-wallet" size={24} color={color} />
             </View>
           ),
         }}
@@ -58,14 +75,27 @@ export default function TabLayout() {
       <Tabs.Screen
         name="notifications"
         options={{
-          title: 'Notificaciones',
-          tabBarIcon: ({ focused }) => (
-            <View className={`items-center justify-center p-3 rounded-2xl transition-all duration-200 ${focused ? 'bg-blue-500/20 shadow-lg shadow-blue-500/20' : 'bg-transparent'}`}>
-                <MaterialIcons name="notifications" size={26} color={focused ? '#3b82f6' : '#64748b'} />
+          title: 'Alertas',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeIconContainer : null}>
+              <MaterialIcons name="notifications" size={24} color={color} />
             </View>
           ),
         }}
       />
+      <Tabs.Screen name="two" options={{ href: null }} />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  activeIconContainer: {
+    padding: 8,
+    borderRadius: 15,
+    backgroundColor: 'rgba(33, 150, 243, 0.1)',
+    shadowColor: '#2196F3',
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+  }
+});
+

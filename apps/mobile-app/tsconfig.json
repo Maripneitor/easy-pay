@@ -21,7 +21,8 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "types": ["nativewind/types"]
   },
   "include": [
     "**/*.ts",
