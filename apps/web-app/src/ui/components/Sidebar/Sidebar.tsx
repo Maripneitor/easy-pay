@@ -35,7 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             {/* Drawer / Sidebar */}
             <div className={cn(
                 "fixed inset-y-0 left-0 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700/50 shadow-2xl z-[70] transition-transform duration-300 ease-in-out flex flex-col",
-                "md:translate-x-0 md:static md:shadow-none md:z-auto md:w-64 md:h-screen md:sticky md:top-0",
+                "md:translate-x-0 md:shadow-none md:z-auto md:w-64 md:h-screen md:sticky md:top-0",
                 isOpen ? "translate-x-0" : "-translate-x-full"
             )}>
                 {/* Header */}

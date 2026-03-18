@@ -60,12 +60,12 @@ export const Dashboard: React.FC = () => {
                                     {allActiveGroups.map(group => {
                                         const styling = group.iconBg
                                             ? { icon: group.icon, bg: group.iconBg, color: group.iconColor }
-                                            : getGroupIcon(group.name);
+                                            : getGroupIcon(group.name || '');
 
                                         return (
                                             <GroupCard
                                                 key={group.id}
-                                                group={group}
+                                                group={{ ...group, name: group.name || 'Sin Nombre' }}
                                                 onClick={() => navigate(`/group/${group.id}`)}
                                                 appearance={{
                                                     icon: styling.icon,
@@ -98,12 +98,13 @@ export const Dashboard: React.FC = () => {
                             {settledGroups.length > 0 && (
                                 <div className="mt-4 grid gap-4 md:grid-cols-1 lg:grid-cols-2">
                                     {settledGroups.map(group => {
-                                        const styling = getGroupIcon(group.name);
+                                        const styling = getGroupIcon(group.name || '');
                                         return (
                                             <SettledGroupCard
                                                 key={group.id}
                                                 group={{
                                                     ...group,
+                                                    name: group.name || 'Sin Nombre',
                                                     icon: styling.icon,
                                                     members: group.members,
                                                     extraMembers: group.extraMembers

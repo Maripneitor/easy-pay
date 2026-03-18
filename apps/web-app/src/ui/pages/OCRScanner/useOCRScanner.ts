@@ -1,5 +1,19 @@
 import { useState } from 'react';
-import type { OCRItem, OCRScanResult } from '@easy-pay/shared';
+export interface OCRItem {
+    id?: string;
+    description: string;
+    amount: number;
+    isUnassigned?: boolean;
+}
+
+export interface OCRScanResult {
+    ticketTotal: number;
+    appTotal: number;
+    confidence: number;
+    detectedItems: OCRItem[];
+    appItems: OCRItem[];
+    unassignedItems: OCRItem[];
+}
 
 const MOCK_SCAN: OCRScanResult = {
     ticketTotal: 475.0,

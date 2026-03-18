@@ -40,5 +40,13 @@ thumbs.db
 
 # Project Specific
 apps/api-backend/data.json
-
+.pnpm-store
+.expo
+__pycache__
 _archive_google_dashboard
+
+# Stitch and temporary files
+*stitch*
+logs2.txt
+mobile_logs.txt
+*.log

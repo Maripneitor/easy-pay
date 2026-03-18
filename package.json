@@ -1,18 +1,30 @@
 {
   "name": "easy-pay-monorepo",
-  "private": true,
   "version": "2.1.0",
+  "private": true,
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "dev:web": "npm run dev -w apps/web-app"
+    "install:all": "pnpm install",
+    "dev:backend": "docker-compose up backend",
+    "dev:mobile": "pnpm --filter mobile-app start",
+    "dev:web": "pnpm --filter web-app dev",
+    "dev": "pnpm run /^dev:*/",
+    "clean": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' + && pnpm install"
   },
   "dependencies": {
     "clsx": "^2.1.1",
     "lucide-react": "^0.574.0",
     "react-router-dom": "^7.13.0",
     "tailwind-merge": "^3.4.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "react": "19.1.0",
+      "react-dom": "19.1.0",
+      "react-native-worklets-core": "0.5.0"
+    }
   }
 }

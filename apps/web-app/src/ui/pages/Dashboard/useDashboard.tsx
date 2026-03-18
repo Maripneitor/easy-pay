@@ -1,81 +1,107 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Plane, Utensils, Home, PartyPopper, Users } from 'lucide-react';
-import type { Group } from '../../../types';
+import { Plane, Utensils, Home, PartyPopper, Users, ShoppingBag } from 'lucide-react';
+import type { Group } from '@easy-pay/domain';
+import { useDependencies } from '../../../infrastructure/context/DependenciesContext';
+import type { GroupViewModel } from '../../../types';
+import { toGroupViewModel } from '../../../types';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type DashboardContextType = {
     toggleSidebar: () => void;
 };
 
+type GroupAppearance = {
+    icon: React.ReactNode;
+    bg: string;
+    color: string;
+};
+
+// ─── Icon resolver ────────────────────────────────────────────────────────────
+
+const resolveGroupAppearance = (name = ''): GroupAppearance => {
+    const lower = name.toLowerCase();
+    if (lower.includes('viaje') || lower.includes('vuelo') || lower.includes('hotel'))
+        return { icon: <Plane size={24} />,       bg: 'bg-blue-100   dark:bg-blue-500/10',     color: 'text-blue-600   dark:text-blue-400' };
+    if (lower.includes('cena') || lower.includes('comida') || lower.includes('restaur'))
+        return { icon: <Utensils size={24} />,    bg: 'bg-orange-100 dark:bg-orange-500/10',   color: 'text-orange-600 dark:text-orange-400' };
+    if (lower.includes('casa') || lower.includes('depa') || lower.includes('renta'))
+        return { icon: <Home size={24} />,         bg: 'bg-green-100  dark:bg-green-500/10',    color: 'text-green-600  dark:text-green-400' };
+    if (lower.includes('fiesta') || lower.includes('cumplea') || lower.includes('celebr'))
+        return { icon: <PartyPopper size={24} />,  bg: 'bg-purple-100 dark:bg-purple-500/10',   color: 'text-purple-600 dark:text-purple-400' };
+    if (lower.includes('compra') || lower.includes('super') || lower.includes('mercado'))
+        return { icon: <ShoppingBag size={24} />,  bg: 'bg-pink-100   dark:bg-pink-500/10',     color: 'text-pink-600   dark:text-pink-400' };
+    return     { icon: <Users size={24} />,        bg: 'bg-slate-100  dark:bg-slate-700/50',    color: 'text-slate-600  dark:text-slate-400' };
+};
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
 export const useDashboard = () => {
     const navigate = useNavigate();
     const { toggleSidebar } = useOutletContext<DashboardContextType>();
+    const { useCases } = useDependencies();
 
-    // Mock data for groups
-    const allActiveGroups: Group[] = [
-        {
-            id: '1',
-            name: 'Viaje a Cancún',
-            icon: <Plane size={24} />,
-            iconBg: 'bg-blue-100',
-            iconColor: 'text-blue-600',
-            isAdmin: true,
-            lastAct: 'Hace 2 horas',
-            members: ['https://ui-avatars.com/api/?name=Juan', 'https://ui-avatars.com/api/?name=Maria'],
-            extraMembers: 0,
-            total: 15400.50,
-            userBalance: 1200.00
-        },
-        {
-            id: '2',
-            name: 'Cena de Navidad',
-            icon: <Utensils size={24} />,
-            iconBg: 'bg-red-100',
-            iconColor: 'text-red-600',
-            isAdmin: false,
-            lastAct: 'Ayer',
-            members: ['https://ui-avatars.com/api/?name=Ana', 'https://ui-avatars.com/api/?name=Luis', 'https://ui-avatars.com/api/?name=Carlos'],
-            extraMembers: 2,
-            total: 3400.00,
-            userBalance: -500.00
-        }
-    ];
+    const [allGroups,  setAllGroups]  = useState<GroupViewModel[]>([]);
+    const [isLoading,  setIsLoading]  = useState<boolean>(true);
+    const [error,      setError]      = useState<string | null>(null);
 
-    const settledGroups: Group[] = [
-        {
-            id: '3',
-            name: 'Regalo Mamá',
-            icon: <PartyPopper size={24} />,
-            date: '15 Oct 2023',
-            members: ['https://ui-avatars.com/api/?name=Yo', 'https://ui-avatars.com/api/?name=Hermanos'],
-            extraMembers: 0,
-            total: 2500.00
-        }
-    ];
-
-    // Helper for group icons
-    const getGroupIcon = (name: string) => {
-        const lowerName = name.toLowerCase();
-        if (lowerName.includes('viaje')) return { icon: <Plane size={24} />, bg: 'bg-blue-100', color: 'text-blue-600' };
-        if (lowerName.includes('cena') || lowerName.includes('comida')) return { icon: <Utensils size={24} />, bg: 'bg-orange-100', color: 'text-orange-600' };
-        if (lowerName.includes('casa')) return { icon: <Home size={24} />, bg: 'bg-green-100', color: 'text-green-600' };
-        if (lowerName.includes('fiesta')) return { icon: <PartyPopper size={24} />, bg: 'bg-purple-100', color: 'text-purple-600' };
-        return { icon: <Users size={24} />, bg: 'bg-slate-100', color: 'text-slate-600' };
-    };
-
-    const [isLoading, setIsLoading] = useState(true);
-
+    // ── Load groups from repository ────────────────────────────────────────────
     useEffect(() => {
-        const timer = setTimeout(() => setIsLoading(false), 1500);
-        return () => clearTimeout(timer);
-    }, []);
+        let cancelled = false;
+
+        const loadGroups = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+
+                // Fetch all groups — now via injected Use Case
+                // For now we load the 2 pre-seeded mock groups
+                const [group1, group2] = await Promise.all([
+                    useCases.getGroup.execute('1').catch(() => null),
+                    useCases.getGroup.execute('2').catch(() => null),
+                ]);
+
+                if (cancelled) return;
+
+                const fetched = [group1, group2].filter(Boolean) as Group[];
+
+                const viewModels: GroupViewModel[] = fetched.map(group => {
+                    const appearance = resolveGroupAppearance(group.name);
+                    return toGroupViewModel(group, {
+                        icon:     appearance.icon,
+                        iconBg:   appearance.bg,
+                        iconColor: appearance.color,
+                        lastAct:  'Recién',
+                    });
+                });
+
+                setAllGroups(viewModels);
+            } catch (err) {
+                if (!cancelled) {
+                    setError(err instanceof Error ? err.message : 'Error cargando grupos');
+                }
+            } finally {
+                if (!cancelled) setIsLoading(false);
+            }
+        };
+
+        loadGroups();
+        return () => { cancelled = true; };
+    }, [useCases.getGroup]);
+
+    // ── Derived data ───────────────────────────────────────────────────────────
+
+    const activeGroups  = allGroups.filter(g => g.status === 'active' || g.status === 'paying');
+    const settledGroups = allGroups.filter(g => g.status === 'closed');
 
     return {
         toggleSidebar,
         navigate,
-        allActiveGroups,
+        allActiveGroups: activeGroups,
         settledGroups,
-        getGroupIcon,
-        isLoading
+        getGroupIcon: resolveGroupAppearance,
+        isLoading,
+        error,
     };
 };

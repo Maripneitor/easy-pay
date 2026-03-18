@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider } from './context/AuthContext';
 import { Loader } from './components/Loader/Loader';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { ProtectedRoute } from './auth/ProtectedRoute';
@@ -51,10 +52,12 @@ export const App = () => {
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider>
-                <BrowserRouter>
-                    <AnimatedRoutes />
-                </BrowserRouter>
-                <Toaster position="top-center" richColors />
+                <AuthProvider>
+                    <BrowserRouter>
+                        <AnimatedRoutes />
+                    </BrowserRouter>
+                    <Toaster position="top-center" richColors />
+                </AuthProvider>
             </ThemeProvider>
         </QueryClientProvider>
     );
