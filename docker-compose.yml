@@ -1,5 +1,32 @@
 services:
-  # --- TU FRONTEND (Ya existente) ---
+  # --- BASE DE DATOS LOCAL (Tu salvavidas para la UNACH/Redes Públicas) ---
+  mongodb_local:
+    image: mongo:latest
+    container_name: mongodb_local
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db # Persistencia para que no pierdas tus usuarios al apagar
+
+  # --- BACKEND (FastAPI / Python) ---
+  backend:
+    build:
+      context: ./apps/api-backend
+      dockerfile: Dockerfile
+    container_name: easy-pay-backend
+    volumes:
+      # Mapeamos la carpeta para que el --reload detecte cambios en caliente
+      - ./apps/api-backend:/app
+    ports:
+      - "8000:8000"
+    # 🔥 Esta línea lee las variables directamente de tu .env del backend
+    env_file:
+      - ./apps/api-backend/.env
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - mongodb_local
+
+  # --- FRONTEND (React / Vite) ---
   dev-env:
     build:
       context: .
@@ -10,21 +37,12 @@ services:
       - /app/node_modules
     ports:
       - "5173:5173"
-    stdin_open: true # Equivalent to -i
-    tty: true # Equivalent to -t
+    stdin_open: true # Equivalente a -i
+    tty: true # Equivalente a -t
     command: sh -c "npm install && npm run dev:web"
     depends_on:
-      - backend # Espera a que el backend arranque
+      - backend
 
-  # --- TU NUEVO BACKEND (Python) ---
-  backend:
-    build:
-      context: ./apps/api-backend
-      dockerfile: Dockerfile
-    container_name: easy-pay-backend
-    volumes:
-      # Mapeamos solo la carpeta del backend
-      - ./apps/api-backend:/app
-    ports:
-      - "8000:8000" # Puerto estándar de FastAPI
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+# --- VOLÚMENES ---
+volumes:
+  mongo_data: # Espacio en tu disco para la base de datos local
