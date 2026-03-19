@@ -31,8 +31,8 @@ export const Dashboard: React.FC = () => {
                 />
 
                 <main className="relative flex-grow px-4 py-8 md:px-8">
-                    {/* Efectos de fondo */}
-                    <div className="pointer-events-none absolute -left-[10%] -top-[20%] h-[500px] w-[500px] rounded-full bg-blue-500/10 blur-[120px]" />
+                    {/* Efectos de fondo adaptables */}
+                    <div className="pointer-events-none absolute -left-[10%] -top-[20%] h-[500px] w-[500px] rounded-full bg-[var(--primary)]/10 blur-[120px] transition-colors duration-500" />
                     <div className="pointer-events-none absolute bottom-0 right-0 h-[500px] w-[500px] rounded-full bg-purple-500/10 blur-[120px]" />
 
                     <div className="relative z-10 mx-auto max-w-5xl space-y-10">
@@ -43,8 +43,9 @@ export const Dashboard: React.FC = () => {
                                 <h2 className="text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]">
                                     Mis Grupos Activos
                                 </h2>
+                                {/* CORRECCIÓN: Botón Crear adaptable */}
                                 <button
-                                    className="flex items-center gap-2 rounded-lg bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-500/20"
+                                    className="flex items-center gap-2 rounded-lg bg-[var(--primary)]/10 px-4 py-2 text-sm font-semibold text-[var(--primary)] transition-all hover:bg-[var(--primary)]/20 active:scale-95"
                                     onClick={() => navigate('/create-group')}
                                 >
                                     <Plus size={18} />
@@ -53,10 +54,8 @@ export const Dashboard: React.FC = () => {
                             </div>
 
                             {isLoading ? (
-                                /* CARGA: Mostramos el esqueleto de 3 cuadros */
                                 <DashboardSkeleton />
                             ) : (
-                                /* REAL: Grupos Activos + Liquidados */
                                 <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
                                     {allActiveGroups.map(group => {
                                         const styling = getGroupIcon(group.name);
@@ -87,17 +86,15 @@ export const Dashboard: React.FC = () => {
                             )}
                         </section>
 
-                        {/* SECCIÓN DE INVITACIONES (FUERA DEL ISLOADING PARA QUE SIEMPRE SE VEA) */}
+                        {/* SECCIÓN DE INVITACIONES */}
                         <section>
                             <h2 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]">
                                 Invitaciones Pendientes
                             </h2>
                             <div className="grid gap-4">
                                 {isLoading ? (
-                                    /* Esqueleto simple para la invitación mientras carga */
                                     <div className="h-20 w-full animate-pulse rounded-2xl bg-slate-200/50 dark:bg-slate-800/50" />
                                 ) : (
-                                    /* Invitación real */
                                     <InvitationCard />
                                 )}
                             </div>
@@ -107,9 +104,9 @@ export const Dashboard: React.FC = () => {
                 </main>
             </div>
 
-            {/* Botón flotante siempre visible */}
+            {/* CORRECCIÓN: Botón flotante siempre visible y adaptable */}
             <button
-                className="fixed bottom-28 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/50 md:hidden"
+                className="fixed bottom-28 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--primary)] text-white shadow-lg shadow-[var(--primary)]/40 transition-all hover:scale-110 active:scale-90 md:hidden"
                 onClick={() => navigate('/create-group')}
             >
                 <Plus size={32} />

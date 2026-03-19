@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, PlusSquare, CreditCard, Camera, FileText, Bell, Settings, DollarSign } from 'lucide-react';
-/* Importamos useTheme si es necesario, aunque ya estás usando las variables CSS */
+import { Home, PlusSquare, CreditCard, Camera, FileText, Bell, Settings } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
     const navigate = useNavigate();
@@ -17,31 +16,31 @@ export const Sidebar: React.FC = () => {
     ];
 
     return (
-        <aside className="hidden md:flex flex-col w-64 min-h-screen bg-[var(--bg-sidebar)] border-r border-[var(--border-color)] transition-colors duration-300 relative z-50">
-            <div className="p-8">
-                <div className="flex items-center gap-2 group cursor-pointer" onClick={() => navigate('/dashboard')}>
-                    {/* LOGO ADAPTABLE: Cambiado bg-blue-600 por var(--primary) */}
-                    <div className="w-8 h-8 bg-[var(--primary)] rounded-lg flex items-center justify-center text-white shadow-lg shadow-[var(--primary)]/20 group-hover:rotate-12 transition-transform">
-                        <DollarSign size={20} className="font-black" />
+        <aside className="hidden md:flex flex-col w-64 min-h-screen max-h-screen bg-[var(--bg-sidebar)] border-r border-[var(--border-color)] transition-colors duration-300 relative z-50">
+            
+            {/* 1. SECCIÓN FIJA: LOGO */}
+            <div className="p-8 flex-shrink-0">
+                <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigate('/dashboard')}>
+                    <div className="transition-transform duration-300 group-hover:scale-110">
+                        <img src="/assets/images/logo-ep.png" alt="Logo" className="w-20 h-auto drop-shadow-md" />
                     </div>
                     <h1 className="text-xl font-black tracking-tighter text-[var(--text-primary)]">Easy-Pay</h1>
                 </div>
             </div>
 
-            <div className="px-4 mb-8">
-                <div onClick={() => navigate('/profile')} className="relative p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] group cursor-pointer overflow-hidden transition-all hover:border-[var(--primary)]/50">
-                    <div className="flex flex-col items-center text-center">
-                        {/* AVATAR ADAPTABLE: Cambiado bg-blue-600 por var(--primary) */}
-                        <div className="w-16 h-16 rounded-2xl bg-[var(--primary)] flex items-center justify-center text-white text-xl font-black mb-3 shadow-md shadow-[var(--primary)]/20">
-                            JP
-                        </div>
-                        <span className="text-sm font-black text-[var(--text-primary)]">Juan Pérez</span>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter opacity-70">juan.perez@easypay.com</span>
+            {/* 2. SECCIÓN FIJA: PERFIL COMPACTO */}
+            <div className="px-4 mb-6 flex-shrink-0">
+                <div onClick={() => navigate('/profile')} className="p-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] flex flex-col items-center text-center group cursor-pointer transition-all hover:border-[var(--primary)]/50">
+                    <div className="w-11 h-11 rounded-xl bg-[var(--primary)] flex items-center justify-center text-white text-lg font-black mb-1.5 shadow-md shadow-[var(--primary)]/20">
+                        JP
                     </div>
+                    <span className="text-xs font-black text-[var(--text-primary)]">Juan Pérez</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase opacity-70">juan.perez@easypay.com</span>
                 </div>
             </div>
 
-            <nav className="flex-1 px-4 space-y-1">
+            {/* 3. ÚNICA SECCIÓN CON SCROLL: EL MENÚ DE OPCIONES */}
+            <nav className="flex-1 px-4 space-y-0.5 custom-scrollbar overflow-y-auto min-h-0">
                 <p className="px-4 mb-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Menú Principal</p>
                 {menuItems.map((item) => {
                     const isActive = location.pathname === item.path;
@@ -49,16 +48,14 @@ export const Sidebar: React.FC = () => {
                         <button
                             key={item.path}
                             onClick={() => navigate(item.path)}
-                            className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all ${
+                            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-2xl text-sm font-bold transition-all ${
                                 isActive 
-                                ? 'text-[var(--primary)] bg-[var(--hover-bg)] shadow-sm' 
-                                : 'text-slate-500 hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)]'
+                                ? 'text-[var(--primary)] bg-[var(--hover-bg)]' 
+                                : 'text-slate-500 hover:bg-[var(--hover-bg)]'
                             }`}
                         >
                             <div className="flex items-center gap-3">
-                                <span className={isActive ? 'text-[var(--primary)]' : 'text-slate-500 group-hover:text-[var(--primary)]'}>
-                                    {item.icon}
-                                </span>
+                                {item.icon}
                                 <span>{item.label}</span>
                             </div>
                         </button>
@@ -66,16 +63,14 @@ export const Sidebar: React.FC = () => {
                 })}
             </nav>
 
-            <div className="p-4 mt-auto">
-                <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] transition-all group">
-                    <Settings size={22} className="group-hover:text-[var(--primary)] transition-all duration-300" />
+            {/* 4. SECCIÓN FIJA: CONFIGURACIÓN ABAJO */}
+            <div className="p-4 mt-auto border-t border-[var(--border-color)] flex-shrink-0">
+                <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] group transition-all">
+                    <Settings size={22} className="group-hover:text-[var(--primary)] transition-all" />
                     Configuración
                 </button>
-                <div className="pt-6 pb-2 text-center">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-[var(--border-color)]">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] animate-pulse shadow-[0_0_5px_var(--primary)]"></div>
-                        <span className="text-[10px] font-black font-mono text-slate-400 tracking-tighter uppercase">v1.2.0-BUILD</span>
-                    </div>
+                <div className="pt-4 pb-2 text-center text-[10px] font-black font-mono text-slate-400 opacity-50">
+                    v1.2.0-BUILD
                 </div>
             </div>
         </aside>

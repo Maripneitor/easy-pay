@@ -33,7 +33,7 @@
     --input-text: #0F172A;
 }
 
-/* --- 1. MODO OSCURO BASE (Azul Slate Apagado - Estilo Dashboard) --- */
+/* --- 1. MODO OSCURO BASE --- */
 .dark {
     --bg-body: #0f172a;
     --bg-card: #1e293b;
@@ -50,34 +50,44 @@
     --input-text: #F8FAFC;
 }
 
-/* --- 2. TEMA ROJO (Vibrant) - Adaptable y Muted --- */
+/* --- 2. TEMA ROJO (Vibrant) --- */
 .dark.vibrant {
-    --bg-body: #1a0a0a; /* Fondo rojo mate muy oscuro */
-    --bg-card: #2d1212; /* Tarjeta un poco más clara */
+    --bg-body: #1a0a0a;
+    --bg-card: #2d1212;
     --bg-sidebar: #1a0a0a;
-    --primary: #f87171; /* Rojo que resalta */
+    --primary: #f87171;
     --border-color: rgba(248, 113, 113, 0.2);
     --header-bg: rgba(26, 10, 10, 0.85);
 }
 
-/* --- 3. TEMA VERDE (Serene) - Bosque Oscuro --- */
+/* --- 3. TEMA VERDE (Serene) --- */
 .dark.serene {
-    --bg-body: #051a14; /* Verde petróleo apagado */
-    --bg-card: #0a2e24; /* Tarjeta verde oscuro */
+    --bg-body: #051a14;
+    --bg-card: #0a2e24;
     --bg-sidebar: #051a14;
-    --primary: #34d399; /* Verde que resalta */
+    --primary: #34d399;
     --border-color: rgba(52, 211, 153, 0.2);
     --header-bg: rgba(5, 26, 20, 0.85);
 }
 
-/* --- 4. TEMA TIERRA (Earth) - Ámbar Mate --- */
+/* --- 4. TEMA TIERRA (Earth) --- */
 .dark.earth {
-    --bg-body: #17120a; /* Café/Negro mate */
-    --bg-card: #261e12; /* Ámbar tierra oscuro */
+    --bg-body: #17120a;
+    --bg-card: #261e12;
     --bg-sidebar: #17120a;
-    --primary: #fbbf24; /* Ámbar que resalta */
+    --primary: #fbbf24;
     --border-color: rgba(251, 191, 36, 0.2);
     --header-bg: rgba(23, 18, 10, 0.85);
+}
+
+/* --- 5. TEMA ROSA (Pink / Lomecan) --- */
+.dark.pink {
+    --bg-body: #1a0a14;      /* Fondo negro con matiz violeta/rosa */
+    --bg-card: #2d1222;      /* Cards un poco más claras */
+    --bg-sidebar: #1a0a14;
+    --primary: #ff4081;      /* Rosa vibrante */
+    --border-color: rgba(255, 64, 129, 0.2);
+    --header-bg: rgba(26, 10, 20, 0.85);
 }
 
 /* REGLA DE BORDES Y FONDOS ADAPTABLES */
@@ -87,10 +97,16 @@
     transition: all 0.3s ease;
 }
 
-/* Color de Iconos - Resaltado Inteligente */
+/* Color de Iconos */
 svg {
     color: var(--primary) !important;
     transition: color 0.3s ease;
+}
+
+/* CORRECCIÓN FLASH BLANCO: Forzamos el color de fondo desde el HTML */
+html {
+    background-color: var(--bg-body) !important;
+    transition: font-size 0.3s ease-in-out, background-color 0.3s ease;
 }
 
 body {
@@ -100,7 +116,7 @@ body {
     font-family: 'Inter', sans-serif;
     color: var(--text-primary);
     overflow-x: hidden;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease, font-size 0.3s ease;
 }
 
 /* --- ANIMACIONES MANTENIDAS --- */
@@ -127,11 +143,40 @@ body {
 @keyframes fadeInSlideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 .page-enter { animation: fadeInSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-/* REGLAS DE ADAPTABILIDAD FINAL */
-.dark, .vibrant, .serene, .earth {
+/* Limpieza de fondos para temas oscuros */
+.dark, .vibrant, .serene, .earth, .pink {
     [class*="bg-white"], [class*="bg-slate-50"], header[class*="header"], div[class*="bg-gray-50"] {
         background-color: var(--bg-card) !important;
         border-color: var(--border-color) !important;
         color: var(--text-primary) !important;
     }
+}
+
+/* --- 🚀 LÓGICA DE ESCALADO GLOBAL --- */
+html.font-small { font-size: 14px !important; }
+html.font-medium { font-size: 16px !important; }
+html.font-large { font-size: 20px !important; }
+
+/* --- 🛠️ SCROLL ADAPTABLE SOLO EN MODO GRANDE PARA LA CLASE ESPECÍFICA --- */
+html.font-large .custom-scrollbar {
+    overflow-y: auto !important;
+}
+
+/* Estilo de la barra solo para la zona de menú */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Asegurar que el scroll no atraviese todo el sidebar */
+html.font-large aside {
+    overflow: hidden !important;
 }

@@ -1,12 +1,16 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type ColorTheme = 'vibrant' | 'serene' | 'earth' | 'default';
+// 1. Añadimos 'pink' a los tipos permitidos
+type ColorTheme = 'vibrant' | 'serene' | 'earth' | 'pink' | 'default';
+type FontSize = 'small' | 'medium' | 'large';
 
 interface ThemeContextType {
     colorTheme: ColorTheme;
     isDark: boolean;
+    fontSize: FontSize;
     setTheme: (theme: ColorTheme) => void;
     toggleTheme: () => void;
+    setFontSize: (size: FontSize) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -18,42 +22,51 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const [isDark, setIsDark] = useState<boolean>(() => {
         const saved = localStorage.getItem('is-dark');
-        // Mantener oscuro por defecto para ese look profesional que te gustó
         return saved ? saved === 'true' : true;
     });
 
+    const [fontSize, setFontSizeState] = useState<FontSize>(() => 
+        (localStorage.getItem('font-size') as FontSize) || 'medium'
+    );
+
     useEffect(() => {
-        const root = window.document.body;
+        const rootBody = window.document.body;
+        const rootHtml = window.document.documentElement;
         
-        // 1. Limpiamos todas las clases para evitar conflictos
-        root.classList.remove('vibrant', 'serene', 'earth', 'dark');
+        // 1. Limpiamos clases de color (añadimos pink aquí) y tamaño
+        const themes = ['vibrant', 'serene', 'earth', 'pink', 'dark'];
+        const sizes = ['font-small', 'font-medium', 'font-large'];
+        
+        rootBody.classList.remove(...themes, ...sizes);
+        rootHtml.classList.remove(...sizes);
 
-        // 2. Aplicamos 'dark' solo si el estado es oscuro
+        // 2. Aplicamos Modo Oscuro
         if (isDark) {
-            root.classList.add('dark');
+            rootBody.classList.add('dark');
         }
 
-        // 3. Aplicamos el color especial (rojo, verde, tierra)
-        // Solo si no es el azul por defecto ('default')
+        // 3. Aplicamos Tema de Color
         if (colorTheme !== 'default') {
-            root.classList.add(colorTheme);
+            rootBody.classList.add(colorTheme);
         }
 
-        // 4. Guardamos en persistencia
+        // 4. ESCALADO GLOBAL: Aplicamos al HTML y al BODY
+        rootHtml.classList.add(`font-${fontSize}`);
+        rootBody.classList.add(`font-${fontSize}`);
+
+        // 5. Persistencia
         localStorage.setItem('color-theme', colorTheme);
         localStorage.setItem('is-dark', isDark.toString());
-    }, [colorTheme, isDark]);
+        localStorage.setItem('font-size', fontSize);
+        
+    }, [colorTheme, isDark, fontSize]);
 
-    const setTheme = (newColor: ColorTheme) => {
-        setColorTheme(newColor);
-    };
-
-    const toggleTheme = () => {
-        setIsDark(prev => !prev);
-    };
+    const setTheme = (newColor: ColorTheme) => setColorTheme(newColor);
+    const toggleTheme = () => setIsDark(prev => !prev);
+    const setFontSize = (size: FontSize) => setFontSizeState(size);
 
     return (
-        <ThemeContext.Provider value={{ colorTheme, isDark, setTheme, toggleTheme }}>
+        <ThemeContext.Provider value={{ colorTheme, isDark, fontSize, setTheme, toggleTheme, setFontSize }}>
             {children}
         </ThemeContext.Provider>
     );
