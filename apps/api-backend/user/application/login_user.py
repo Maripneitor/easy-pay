@@ -3,7 +3,6 @@ import jwt
 import os
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from user.domain.models.user import UserLogin
 
 load_dotenv()
 
@@ -28,7 +27,7 @@ class LoginUserUseCase:
             "sub": str(user_data["_id"]),
             "email": user_data["email"],
             "nombre": user_data["nombre"],
-            "exp": datatime.utcnow() + timedelta(hours=24)#Se usa para el tiempo que sera valido el token
+            "exp": datetime.utcnow() + timedelta(hours=24)#Se usa para el tiempo que sera valido el token
         }
 
         token = jwt.encode(payload, self.secret_key, algorithm="HS256" )
@@ -38,6 +37,7 @@ class LoginUserUseCase:
             "message": "Login exitoso",
             "access_token": token,
             "user": {
+                "id": str (user_data["_id"]),
                 "nombre": user_data["nombre"],
                 "email": user_data["email"]
             } 

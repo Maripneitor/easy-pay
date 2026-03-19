@@ -21,3 +21,12 @@ class MongoUserRepository:
             ]
         })
         return user
+
+    async def update_user(self, user_id: str, update_data: dict):
+        
+        result = await self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": update_data}
+        )
+        return result.modified_count > 0
+    

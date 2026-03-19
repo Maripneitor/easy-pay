@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Mail, Lock, Smartphone, ArrowRight, Github, Facebook, Ticket, Sun, Moon } from 'lucide-react';
 import { GoogleIcon } from '@ui/components/icons/GoogleIcon';
 import styles from './Auth.module.css';
@@ -5,8 +6,30 @@ import { useAuth } from './useAuth';
 import { useTheme } from '../../context/ThemeContext';
 
 export const Auth = () => {
-    const { mode, setMode, loginType, setLoginType, navigate } = useAuth();
+    // Extraemos todo lo necesario del hook, incluyendo loading y error
+    const { mode, setMode, loginType, setLoginType, login, register, loading, error, navigate } = useAuth();
     const { theme, toggleTheme } = useTheme();
+
+    // Estados para los inputs
+    const [identifier, setIdentifier] = useState(''); // Cambiamos 'email' por 'identifier'
+    const [password, setPassword] = useState('');
+    const [fullName, setFullName] = useState('');
+
+    const handleLoginSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        // El identifier puede ser el email o el nombre de usuario
+        await login(identifier, password);
+    };
+
+    const handleRegisterSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await register({
+            nombre: fullName,
+            apellido: "", // Lo dejamos vacío para que el backend lo maneje
+            email: identifier, // En registro, el identifier actúa como email
+            password: password
+        });
+    };
 
     return (
         <div className={styles.authPage}>
@@ -29,25 +52,39 @@ export const Auth = () => {
                     <div className={styles.tabs}>
                         <button
                             className={`${styles.tab} ${mode === 'login' ? styles.tabActive : ''}`}
-                            onClick={() => setMode('login')}
+                            onClick={() => { setMode('login'); setError(null); }}
                         >
                             Iniciar Sesión
                         </button>
                         <button
                             className={`${styles.tab} ${mode === 'register' ? styles.tabActive : ''}`}
-                            onClick={() => setMode('register')}
+                            onClick={() => { setMode('register'); setError(null); }}
                         >
                             Registrarse
                         </button>
                     </div>
 
+                    {/* MENSAJE DE ERROR DINÁMICO */}
+                    {error && (
+                        <div className={styles.errorMessage} style={{ color: '#ff4d4d', backgroundColor: 'rgba(255, 77, 77, 0.1)', padding: '10px', borderRadius: '8px', marginBottom: '1rem', textAlign: 'center', fontSize: '0.85rem' }}>
+                            {error}
+                        </div>
+                    )}
+
                     {mode === 'login' && loginType === 'email' && (
-                        <form className={styles.form}>
+                        <form className={styles.form} onSubmit={handleLoginSubmit}>
                             <div className={styles.inputGroup}>
-                                <label htmlFor="email">Email</label>
+                                <label htmlFor="identifier">Email o Usuario</label>
                                 <div className={styles.inputWrapper}>
                                     <Mail className={styles.inputIcon} size={20} />
-                                    <input type="email" id="email" placeholder="tu@ejemplo.com" />
+                                    <input
+                                        type="text"
+                                        id="identifier"
+                                        placeholder="ejemplo@mail.com"
+                                        value={identifier}
+                                        onChange={(e) => setIdentifier(e.target.value)}
+                                        required
+                                    />
                                 </div>
                             </div>
 
@@ -55,97 +92,71 @@ export const Auth = () => {
                                 <label htmlFor="password">Contraseña</label>
                                 <div className={styles.inputWrapper}>
                                     <Lock className={styles.inputIcon} size={20} />
-                                    <input type="password" id="password" placeholder="••••••••" />
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        placeholder="••••••••"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
                                 </div>
                             </div>
 
-                            <div className={styles.options}>
-                                <label className={styles.rememberMe}>
-                                    <input type="checkbox" />
-                                    <span>Recordarme</span>
-                                </label>
-                                <button type="button" className={styles.forgotPass} onClick={() => navigate('/recover-password')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                                    ¿Olvidaste tu contraseña?
-                                </button>
-                            </div>
-
-                            <button type="button" className={styles.primaryBtn} onClick={() => navigate('/dashboard')}>
-                                Entrar
-                            </button>
-
-                            <button type="button" className={styles.switchBtn} onClick={() => setLoginType('phone')}>
-                                <Smartphone size={18} />
-                                <span style={{ marginLeft: '0.5rem' }}>Usar número de teléfono</span>
-                            </button>
-                        </form>
-                    )}
-
-                    {mode === 'login' && loginType === 'phone' && (
-                        <form className={styles.form}>
-                            <h2 className={styles.formTitle}>Ingresa con tu móvil</h2>
-                            <div className={styles.inputGroup}>
-                                <label htmlFor="phone">Número de teléfono</label>
-                                <div className={styles.phoneInputRow}>
-                                    <select className={styles.countrySelect}>
-                                        <option>+34 🇪🇸</option>
-                                        <option>+1 🇺🇸</option>
-                                        <option>+52 🇲🇽</option>
-                                    </select>
-                                    <input type="tel" id="phone" placeholder="600 000 000" className={styles.phoneInput} />
-                                </div>
-                                <p className={styles.hint}>Te enviaremos un código de verificación.</p>
-                            </div>
-
-                            <button type="button" className={styles.primaryBtn} onClick={() => navigate('/dashboard')}>
-                                Enviar Código
-                            </button>
-
-                            <button type="button" className={styles.switchBtn} onClick={() => setLoginType('email')}>
-                                <Mail size={18} />
-                                <span>Volver al login con email</span>
+                            <button type="submit" className={styles.primaryBtn} disabled={loading}>
+                                {loading ? 'Validando...' : 'Entrar'}
                             </button>
                         </form>
                     )}
 
                     {mode === 'register' && (
-                        <form className={styles.form}>
+                        <form className={styles.form} onSubmit={handleRegisterSubmit}>
                             <div className={styles.inputGroup}>
                                 <label htmlFor="name">Nombre Completo</label>
                                 <div className={styles.inputWrapper}>
-                                    <input type="text" id="name" placeholder="Juan Pérez" />
+                                    <input
+                                        type="text"
+                                        id="name"
+                                        placeholder="Juan Pérez"
+                                        value={fullName}
+                                        onChange={(e) => setFullName(e.target.value)}
+                                        required
+                                    />
                                 </div>
                             </div>
                             <div className={styles.inputGroup}>
                                 <label htmlFor="reg-email">Email</label>
                                 <div className={styles.inputWrapper}>
                                     <Mail className={styles.inputIcon} size={20} />
-                                    <input type="email" id="reg-email" placeholder="tu@ejemplo.com" />
+                                    <input
+                                        type="email"
+                                        id="reg-email"
+                                        placeholder="tu@ejemplo.com"
+                                        value={identifier}
+                                        onChange={(e) => setIdentifier(e.target.value)}
+                                        required
+                                    />
                                 </div>
                             </div>
                             <div className={styles.inputGroup}>
                                 <label htmlFor="reg-password">Contraseña</label>
                                 <div className={styles.inputWrapper}>
                                     <Lock className={styles.inputIcon} size={20} />
-                                    <input type="password" id="reg-password" placeholder="••••••••" />
+                                    <input
+                                        type="password"
+                                        id="reg-password"
+                                        placeholder="••••••••"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
                                 </div>
                             </div>
-                            <button type="button" className={styles.primaryBtn} onClick={() => navigate('/dashboard')}>
-                                Crear Cuenta
+                            <button type="submit" className={styles.primaryBtn} disabled={loading}>
+                                {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
                             </button>
                         </form>
                     )}
-
-                    <div className={styles.divider}>
-                        <div className={styles.line} />
-                        <span>O continúa con</span>
-                        <div className={styles.line} />
-                    </div>
-
-                    <div className={styles.socialGrid}>
-                        <button className={styles.socialBtn}><GoogleIcon size={20} /></button>
-                        <button className={styles.socialBtn}><Github size={20} /></button>
-                        <button className={styles.socialBtn}><Facebook size={20} /></button>
-                    </div>
                 </div>
 
                 <div className={styles.guestAction}>
@@ -155,12 +166,6 @@ export const Auth = () => {
                     </button>
                 </div>
             </main>
-
-            <div className={styles.particles}>
-                <div className={styles.particle1} />
-                <div className={styles.particle2} />
-                <div className={styles.particle3} />
-            </div>
         </div>
     );
 };

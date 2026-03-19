@@ -1,20 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Camera, Save, ArrowLeft } from 'lucide-react';
+import { User, Mail, Camera, Save } from 'lucide-react';
 import { PageHeader } from '@ui/components/PageHeader';
-import { cn } from '@infrastructure/utils';
 import styles from './PersonalData.module.css';
 
 export const PersonalData = () => {
     const navigate = useNavigate();
-    const [name, setName] = useState('Juan Pérez');
-    const [email, setEmail] = useState('juan.perez@example.com');
-    const [avatar, setAvatar] = useState('https://ui-avatars.com/api/?name=Juan+Perez&background=3b82f6&color=fff&bold=true');
 
-    const handleSave = () => {
-        // Logic to save data would go here
-        console.log('Saving data:', { name, email, avatar });
-        navigate(-1);
+    // --- ESTADOS CONECTADOS AL LOCALSTORAGE ---
+    const [name, setName] = useState(localStorage.getItem('userName') || '');
+    const [email, setEmail] = useState(localStorage.getItem('userEmail') || '');
+    const [loading, setLoading] = useState(false);
+
+    const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff&bold=true`;
+
+    const handleSave = async () => {
+        const userId = localStorage.getItem('userId');
+        if (!userId) return alert("Error: No se encontró el ID de usuario");
+
+        setLoading(true);
+        try {
+            const response = await fetch(`http://localhost:8000/api/auth/update/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nombre: name,
+                    email: email
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) throw new Error(data.detail || 'Error al actualizar');
+
+            // ✅ ACTUALIZAMOS EL LOCALSTORAGE PARA QUE EL RESTO DE LA APP SE ENTERE
+            localStorage.setItem('userName', name);
+            localStorage.setItem('userEmail', email);
+
+            alert("¡Perfil actualizado con éxito!");
+            navigate(-1); // Volvemos al perfil
+        } catch (error: any) {
+            alert(error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -50,6 +79,7 @@ export const PersonalData = () => {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 className={styles.input}
+                                placeholder="Escribe tu nombre"
                             />
                         </div>
 
@@ -63,13 +93,18 @@ export const PersonalData = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className={styles.input}
+                                placeholder="tu@correo.com"
                             />
                         </div>
                     </div>
 
-                    <button className={styles.saveBtn} onClick={handleSave}>
+                    <button
+                        className={styles.saveBtn}
+                        onClick={handleSave}
+                        disabled={loading}
+                    >
                         <Save size={20} />
-                        Guardar Cambios
+                        {loading ? 'Guardando...' : 'Guardar Cambios'}
                     </button>
                 </div>
             </main>
