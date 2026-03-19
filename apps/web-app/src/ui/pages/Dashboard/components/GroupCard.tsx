@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { cn } from '../../../../infrastructure/utils';
 import { MemberAvatars } from './MemberAvatars';
 import { BalanceBadge } from './BalanceBadge';
-
 import type { Member } from '../../../../types';
 
 interface GroupProps {
@@ -16,71 +15,62 @@ interface GroupProps {
     userBalance?: number;
     isAdmin?: boolean;
     icon?: React.ReactNode;
-    iconBg?: string; // Optional direct overrides
-    iconColor?: string;
 }
 
 interface GroupCardProps {
     group: GroupProps;
     onClick: () => void;
-    // We pass the resolved styling since it implies logic
-    appearance: {
-        icon: React.ReactNode;
-        bg: string;
-        color: string;
-    };
+    appearance: { icon: React.ReactNode; bg: string; color: string; };
 }
 
 export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, appearance }) => {
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4, scale: 1.01 }}
-            transition={{ duration: 0.3 }}
             onClick={onClick}
-            className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white/50 p-5 shadow-sm backdrop-blur-xl transition-all hover:bg-white hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:bg-slate-800 cursor-pointer"
-        >
-            {group.isAdmin && (
-                <div className="absolute top-0 right-0 rounded-bl-xl border-b border-l border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[0.625rem] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                    Administrador
-                </div>
+            /* Mantenemos el borde sólido que cambia con el tema */
+            className={cn(
+                "group relative overflow-hidden rounded-2xl border border-slate-200 bg-white/50 p-5 shadow-sm backdrop-blur-xl transition-all hover:bg-white hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:bg-slate-800 cursor-pointer"
             )}
-
+        >
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                {/* Main Info */}
                 <div className="flex items-start gap-4">
-                    <div className={cn(
-                        "flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm ring-1 ring-inset ring-black/5 dark:ring-white/10",
-                        appearance.bg,
-                        appearance.color
-                    )}>
+                    {/* Icono del Grupo */}
+                    <div className={cn("flex h-14 w-14 items-center justify-center rounded-2xl", appearance.bg, appearance.color)}>
                         {appearance.icon}
                     </div>
-
+                    
                     <div>
-                        <h3 className="text-lg font-bold text-slate-900 transition-colors group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
-                            {group.name}
-                        </h3>
-                        <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-[var(--primary)] transition-colors">
+                                {group.name}
+                            </h3>
+                            {group.isAdmin && (
+                                <span className="text-[9px] font-black bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full uppercase tracking-wider border border-slate-200 dark:border-slate-700">
+                                    Administrador
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
                             Última act. {group.lastAct || 'Recién'}
                         </p>
-
-                        <MemberAvatars
-                            members={group.members || []}
-                            extraMembers={group.extraMembers}
-                        />
+                        <MemberAvatars members={group.members || []} extraMembers={group.extraMembers} />
                     </div>
                 </div>
 
-                {/* Balance Info */}
-                <div className="flex min-w-[120px] flex-col items-end gap-1">
-                    <span className="text-xs font-medium text-slate-400">Total del grupo</span>
-                    <span className="mb-2 text-base font-semibold text-slate-900 dark:text-white">
-                        ${(group.total || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}
-                    </span>
-
-                    <BalanceBadge balance={group.userBalance || 0} />
+                {/* Sección de Dinero (Lo que se había perdido) */}
+                <div className="flex min-w-[140px] flex-col items-end gap-1">
+                    <div className="text-right">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Total del grupo</p>
+                        <p className="text-lg font-black text-slate-900 dark:text-white">
+                            ${(group.total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </p>
+                    </div>
+                    
+                    {/* Badge de "Te deben" o "Debes" */}
+                    <div className="mt-2">
+                        <BalanceBadge balance={group.userBalance || 0} />
+                    </div>
                 </div>
             </div>
         </motion.div>

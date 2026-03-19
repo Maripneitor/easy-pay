@@ -11,7 +11,6 @@ import { cn } from '../../../infrastructure/utils';
 import { useGroupDetail } from './useGroupDetail';
 import { PageHeader } from '@ui/components/PageHeader';
 import { useOutletContext } from 'react-router-dom';
-// import styles from './GroupDetail.module.css'; // Removed unused styles
 
 export const GroupDetail = () => {
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
@@ -28,19 +27,19 @@ export const GroupDetail = () => {
     } = useGroupDetail();
 
     return (
-        <div className="min-h-screen flex flex-col md:flex-row bg-alice-blue dark:bg-slate-900 font-display text-slate-800 dark:text-slate-200 antialiased selection:bg-blue-500 selection:text-white transition-colors duration-300">
+        <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg-body)] font-display text-[var(--text-primary)] antialiased transition-colors duration-300">
             <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
-                {/* Header */}
+                {/* Header Adaptable */}
                 <PageHeader
                     onMenuClick={toggleSidebar}
                     title={groupName || "Detalle del Grupo"}
                     onBack={() => navigate(-1)}
                     rightSlot={
                         <div className="flex gap-2">
-                            <button className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                            <button className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors rounded-full hover:bg-[var(--hover-bg)]">
                                 <Share2 size={20} />
                             </button>
-                            <button className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                            <button className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors rounded-full hover:bg-[var(--hover-bg)]">
                                 <Settings size={20} />
                             </button>
                         </div>
@@ -48,150 +47,93 @@ export const GroupDetail = () => {
                 />
 
                 <main className="flex-1 w-full max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-6">
-                    {/* Stats Cards */}
+                    
+                    {/* Stats Cards con Borde Adaptable */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Total Spend */}
-                        <div className="bg-white dark:bg-slate-800/60 backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 relative overflow-hidden shadow-sm dark:shadow-none">
-                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <Receipt size={64} className="text-slate-900 dark:text-white" />
+                        {/* Total Grupo */}
+                        <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-2xl p-5 relative overflow-hidden shadow-sm border-t-4 border-t-[var(--primary)] shadow-[0_-5px_15px_-5px_var(--primary)]/20">
+                            <div className="absolute top-0 right-0 p-4 opacity-5">
+                                <Receipt size={64} className="text-[var(--text-primary)]" />
                             </div>
-                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Total Grupo</p>
-                            <p className="text-2xl font-bold text-slate-900 dark:text-white">${totalSpent.toFixed(2)}</p>
-                            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                                <span className="text-emerald-600 dark:text-emerald-400 flex items-center">
+                            <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-1">Total Grupo</p>
+                            <p className="text-2xl font-black text-[var(--text-primary)]">${totalSpent.toFixed(2)}</p>
+                            <div className="mt-2 text-[10px] font-bold uppercase text-[var(--text-secondary)] flex items-center gap-1">
+                                <span className="text-emerald-500 flex items-center">
                                     <ArrowUpRight size={14} /> 12%
                                 </span>
                                 vs mes anterior
                             </div>
                         </div>
 
-                        {/* Your Share */}
-                        <div className="bg-white dark:bg-slate-800/60 backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 relative overflow-hidden shadow-sm dark:shadow-none">
-                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <PieChart size={64} className="text-slate-900 dark:text-white" />
+                        {/* Tu Parte */}
+                        <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-2xl p-5 relative overflow-hidden shadow-sm border-t-4 border-t-[var(--primary)] shadow-[0_-5px_15px_-5px_var(--primary)]/20">
+                            <div className="absolute top-0 right-0 p-4 opacity-5">
+                                <PieChart size={64} className="text-[var(--text-primary)]" />
                             </div>
-                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Tu Parte</p>
-                            <p className="text-2xl font-bold text-slate-900 dark:text-white">${userShare.toFixed(2)}</p>
-                            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                33.2% del total
-                            </div>
+                            <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-1">Tu Parte</p>
+                            <p className="text-2xl font-black text-[var(--text-primary)]">${userShare.toFixed(2)}</p>
                         </div>
 
-                        {/* You are owed */}
-                        <div className="bg-white dark:bg-slate-800/60 backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 relative overflow-hidden shadow-sm dark:shadow-none">
-                            <div className="absolute inset-0 bg-emerald-50 dark:bg-emerald-500/5"></div>
+                        {/* Te Deben (Color Éxito fijo pero card adaptable) */}
+                        <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-2xl p-5 relative overflow-hidden shadow-sm border-t-4 border-t-emerald-500 shadow-[0_-5px_15px_-5px_rgba(16,185,129,0.3)]">
                             <div className="relative z-10">
-                                <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-1 flex items-center gap-1">
+                                <p className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-1 flex items-center gap-1">
                                     <CheckCircle size={14} />
                                     Te deben
                                 </p>
-                                <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">${userOwed.toFixed(2)}</p>
-                                <div className="mt-2 text-xs text-emerald-600/70 dark:text-emerald-400/70">
-                                    2 personas te deben
-                                </div>
+                                <p className="text-2xl font-black text-emerald-500">${userOwed.toFixed(2)}</p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Tabs */}
-                    <div className="flex border-b border-slate-200 dark:border-slate-700/50">
-                        <button
-                            onClick={() => setActiveTab('activity')}
-                            className={cn(
-                                "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
-                                activeTab === 'activity'
-                                    ? "border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400"
-                                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                            )}
-                        >
-                            Actividad
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('balances')}
-                            className={cn(
-                                "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
-                                activeTab === 'balances'
-                                    ? "border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400"
-                                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                            )}
-                        >
-                            Saldos
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('settings')}
-                            className={cn(
-                                "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
-                                activeTab === 'settings'
-                                    ? "border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400"
-                                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                            )}
-                        >
-                            Configuración
-                        </button>
+                    {/* Tabs Estilo "UNACH" */}
+                    <div className="flex border-b border-[var(--border-color)]">
+                        {['activity', 'balances', 'settings'].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab as any)}
+                                className={cn(
+                                    "px-6 py-4 text-xs font-black uppercase tracking-widest transition-all relative",
+                                    activeTab === tab
+                                        ? "text-[var(--primary)]"
+                                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                                )}
+                            >
+                                {tab === 'activity' ? 'Actividad' : tab === 'balances' ? 'Saldos' : 'Configuración'}
+                                {activeTab === tab && (
+                                    <div className="absolute bottom-[-1px] left-0 w-full h-[3px] bg-[var(--primary)] shadow-[0_0_10px_var(--primary)] rounded-t-full" />
+                                )}
+                            </button>
+                        ))}
                     </div>
 
-                    {/* Content */}
+                    {/* Content: Actividad con estilo de Cards adaptable */}
                     {activeTab === 'activity' && (
-                        <div className="space-y-4">
+                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Actividad Reciente</h2>
-                                <button className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">Ver todo</button>
+                                <h2 className="text-sm font-black uppercase tracking-widest text-[var(--text-secondary)]">Actividad Reciente</h2>
+                                <button 
+                                    onClick={() => navigate('/register-expense')}
+                                    className="p-2 bg-[var(--primary)] text-white rounded-full shadow-lg shadow-[var(--primary)]/30 hover:scale-110 active:scale-95 transition-all"
+                                >
+                                    <Plus size={20} />
+                                </button>
                             </div>
-
+                            
                             <div className="space-y-3">
                                 {activities.map(activity => (
-                                    <div key={activity.id} className="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-xl p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group shadow-sm dark:shadow-none">
-                                        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center", activity.bg, activity.color)}>
+                                    <div key={activity.id} className="bg-[var(--bg-card)] border border-[var(--border-color)] border-l-4 border-l-[var(--primary)] rounded-xl p-4 flex items-center gap-4 hover:bg-[var(--hover-bg)] transition-all cursor-pointer group shadow-sm">
+                                        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shadow-inner", activity.bg, activity.color)}>
                                             <activity.icon size={20} />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="font-semibold text-slate-900 dark:text-white truncate">{activity.title}</h3>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">{activity.paidBy} pagó ${activity.amount.toFixed(2)} • {activity.date}</p>
+                                            <h3 className="font-bold text-[var(--text-primary)] truncate">{activity.title}</h3>
+                                            <p className="text-xs font-medium text-[var(--text-secondary)]">
+                                                <span className="text-[var(--text-primary)]">{activity.paidBy}</span> pagó ${activity.amount.toFixed(2)} • {activity.date}
+                                            </p>
                                         </div>
-                                        <div className="text-right">
-                                            {(activity as any).userOwes > 0 ? (
-                                                <>
-                                                    <p className="font-bold text-red-500 dark:text-red-400">-${(activity as any).userOwes.toFixed(2)}</p>
-                                                    <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider">Tu deuda</p>
-                                                </>
-                                            ) : (activity as any).userLent ? (
-                                                <>
-                                                    <p className="font-bold text-emerald-600 dark:text-emerald-400">+${(activity as any).userLent.toFixed(2)}</p>
-                                                    <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider">Te prestó</p>
-                                                </>
-                                            ) : (
-                                                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">No participaste</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'balances' && (
-                        <div className="space-y-4">
-                            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Balances del Grupo</h2>
-                            <div className="grid gap-3">
-                                {balances.map((person, idx) => (
-                                    <div key={idx} className="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-xl p-4 flex items-center gap-4 shadow-sm dark:shadow-none">
-                                        <img src={person.avatar} alt={person.name} className="w-10 h-10 rounded-full" />
-                                        <div className="flex-1">
-                                            <h3 className="font-semibold text-slate-900 dark:text-white">{person.name}</h3>
-                                        </div>
-                                        <div className="text-right">
-                                            {person.status === 'owes' && (
-                                                <p className="text-emerald-600 dark:text-emerald-400 font-bold text-sm">Te debe ${person.amount.toFixed(2)}</p>
-                                            )}
-                                            {person.status === 'owe' && (
-                                                <div className="flex flex-col items-end gap-1">
-                                                    <p className="text-red-500 dark:text-red-400 font-bold text-sm">Debes ${person.amount.toFixed(2)}</p>
-                                                    <button className="text-xs bg-blue-50 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-500/30 transition-colors">Pagar</button>
-                                                </div>
-                                            )}
-                                            {person.status === 'settled' && (
-                                                <p className="text-slate-400 dark:text-slate-500 font-medium text-sm">Están a mano</p>
-                                            )}
+                                        <div className="text-[var(--text-secondary)] group-hover:text-[var(--primary)] transition-colors">
+                                            <ArrowUpRight size={18} />
                                         </div>
                                     </div>
                                 ))}
@@ -199,17 +141,6 @@ export const GroupDetail = () => {
                         </div>
                     )}
                 </main>
-            </div>
-
-            {/* Floating Action Button */}
-            <div className="fixed bottom-24 right-6 md:bottom-6 z-40">
-                <button
-                    onClick={() => navigate('/register-expense')}
-                    className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full shadow-lg shadow-blue-500/30 transition-transform active:scale-95 flex items-center gap-2"
-                >
-                    <Plus size={24} />
-                    <span className="font-bold pr-2 hidden sm:inline">Nuevo Gasto</span>
-                </button>
             </div>
         </div>
     );

@@ -21,7 +21,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@easy-pay/domain': path.resolve(__dirname, '../../packages/domain/src/index.ts'),
+      '@easy-pay/shared': path.resolve(__dirname, '../../packages/shared/index.ts'),
       '@ui': path.resolve(__dirname, './src/ui'),
       '@application': path.resolve(__dirname, './src/application'),
       '@infrastructure': path.resolve(__dirname, './src/infrastructure'),

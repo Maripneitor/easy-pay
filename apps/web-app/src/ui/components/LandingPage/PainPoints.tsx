@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calculator, Mic2, Banknote, Hourglass } from 'lucide-react';
+import { Calculator, Mic2, Banknote, HourglassOff } from 'lucide-react';
 import styles from './PainPoints.module.css';
 
 export const PainPoints = () => {
@@ -20,7 +20,7 @@ export const PainPoints = () => {
             description: 'Calcula la propina justa automáticamente, sin regatear ni quedar mal.'
         },
         {
-            icon: <Hourglass className={styles.icon} size={32} />,
+            icon: <HourglassOff className={styles.icon} size={32} />,
             title: 'Tiempo perdido',
             description: 'Pagar debería tomar segundos, no 20 minutos esperando el datáfono.'
         }

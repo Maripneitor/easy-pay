@@ -4,17 +4,18 @@ import { useTheme } from '../../context/ThemeContext';
 import { Sun, Moon } from 'lucide-react';
 
 export const ThemeSwitch = () => {
-    const { theme, toggleTheme } = useTheme();
-    const isLight = theme === 'light';
+    const { toggleTheme, isDark } = useTheme();
+    
+    // Si isDark es false, significa que el fondo es blanco (Luz)
+    const isLightActive = !isDark;
 
     return (
         <div style={{ display: 'flex', alignItems: 'center' }}>
-            {/* Desktop Switch */}
             <div className="hidden md:block">
                 <label className={styles.switch}>
                     <input
                         type="checkbox"
-                        checked={isLight}
+                        checked={isLightActive}
                         onChange={toggleTheme}
                         id="theme-checkbox"
                     />
@@ -33,13 +34,12 @@ export const ThemeSwitch = () => {
                 </label>
             </div>
 
-            {/* Mobile Button */}
             <button
                 onClick={toggleTheme}
                 className="p-2 mr-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 md:hidden transition-colors"
                 aria-label="Toggle theme"
             >
-                {isLight ? <Moon size={20} className="text-slate-600" /> : <Sun size={20} />}
+                {isLightActive ? <Moon size={20} className="text-slate-600" /> : <Sun size={20} />}
             </button>
         </div>
     );

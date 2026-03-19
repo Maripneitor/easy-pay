@@ -1,9 +1,8 @@
 import { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from './context/ThemeContext';
-import { AuthProvider } from './context/AuthContext';
 import { Loader } from './components/Loader/Loader';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { ProtectedRoute } from './auth/ProtectedRoute';
@@ -52,12 +51,10 @@ export const App = () => {
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider>
-                <AuthProvider>
-                    <BrowserRouter>
-                        <AnimatedRoutes />
-                    </BrowserRouter>
-                    <Toaster position="top-center" richColors />
-                </AuthProvider>
+                <BrowserRouter>
+                    <AnimatedRoutes />
+                </BrowserRouter>
+                <Toaster position="top-center" richColors />
             </ThemeProvider>
         </QueryClientProvider>
     );
@@ -91,6 +88,9 @@ const AnimatedRoutes = () => {
                             <Route path="/profile/personal-data" element={<PageTransition><PersonalData /></PageTransition>} />
                         </Route>
                     </Route>
+
+                    {/* Fallback para rutas no encontradas */}
+                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
             </Suspense>
         </AnimatePresence>
