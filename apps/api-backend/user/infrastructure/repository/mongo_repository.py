@@ -4,7 +4,7 @@ from user.domain.user import User
 
 class MongoUserRepository:
     def __init__(self):
-        # Usamos la instancia global que ya tiene el nombre de la DB del .env
+        print("\n\n>>> REPOSITORIO CARGADO: VERSIÓN 2FA OK <<<\n\n")
         self.collection = db_instance.get_collection("users")
 
     async def save_user(self, user: User):
@@ -35,3 +35,25 @@ class MongoUserRepository:
         
         # matched_count > 0 significa que encontró al usuario
         return result.matched_count > 0
+
+    async def get_user_by_id(self, user_id: str):
+        # Validar el formato antes de buscar
+        if not ObjectId.is_valid(user_id):
+            return None
+        user = await self.collection.find_one({"_id": ObjectId(user_id)})
+        return user
+
+    async def update_2fa_secret(self, user_id: str, secret: str):
+        # Guardamos el secreto dentro del objeto anidado 'two_factor'
+        # Usamos la notación de punto para entrar al objeto
+        await self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"two_factor.secret": secret}}
+        )
+
+    async def enable_2fa(self, user_id: str):
+        # Activamos el booleano 'enabled' y podríamos limpiar códigos de recuperación
+        await self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"two_factor.enabled": True}}
+        )

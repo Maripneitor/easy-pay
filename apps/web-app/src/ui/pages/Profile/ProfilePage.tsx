@@ -7,7 +7,6 @@ import {
     CheckCircle,
     Bell,
     ChevronRight,
-    Lock,
     Smartphone,
     LogOut,
     Palette,
@@ -15,12 +14,12 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { PageHeader } from '@ui/components/PageHeader';
-import { useAuth } from '../Auth/useAuth'; // Hook para logout
+import { useAuth } from '../Auth/useAuth';
 
 export const ProfilePage = () => {
     const navigate = useNavigate();
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
-    const { logout } = useAuth(); // Extraemos la función de cerrar sesión
+    const { logout } = useAuth();
 
     const { colorTheme, isDark, setTheme, toggleTheme, fontSize, setFontSize } = useTheme();
 
@@ -28,7 +27,9 @@ export const ProfilePage = () => {
     const userName = localStorage.getItem('userName') || "Usuario";
     const userEmail = localStorage.getItem('userEmail') || "usuario@easypay.com";
 
-    // Avatar dinámico basado en el nombre real del usuario
+    // CORRECCIÓN: Validamos si el 2FA está activo realmente en la sesión
+    const is2FAActive = localStorage.getItem('2fa_enabled') === 'true';
+
     const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=3b82f6&color=fff&bold=true`;
 
     const handleThemeChange = (value: string) => {
@@ -45,7 +46,6 @@ export const ProfilePage = () => {
         <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg-body)] font-display text-[var(--text-primary)] antialiased selection:bg-[var(--primary)] selection:text-white transition-colors duration-300">
             <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
 
-                {/* Header de la página */}
                 <div className="bg-[var(--bg-body)] [&_header]:bg-transparent [&_header]:backdrop-blur-none [&_header]:border-[var(--border-color)]">
                     <PageHeader
                         onMenuClick={toggleSidebar}
@@ -76,7 +76,6 @@ export const ProfilePage = () => {
                                     <div className="absolute bottom-1 right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900"></div>
                                 </div>
 
-                                {/* Datos dinámicos del usuario */}
                                 <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-1">{userName}</h2>
                                 <p className="text-[var(--text-secondary)] text-sm">{userEmail}</p>
                                 <p className="text-slate-400 dark:text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest">Miembro desde: Marzo 2026</p>
@@ -185,7 +184,7 @@ export const ProfilePage = () => {
                                     </div>
                                 </div>
 
-                                {/* Seguridad y Logout */}
+                                {/* Notificaciones */}
                                 <button onClick={() => navigate('/notifications')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
                                     <div className="flex items-center gap-3">
                                         <Bell className="text-[var(--text-secondary)]" size={20} />
@@ -194,12 +193,18 @@ export const ProfilePage = () => {
                                     <ChevronRight className="text-slate-400" size={18} />
                                 </button>
 
+                                {/* CORRECCIÓN: Seguridad 2FA Dinámica */}
                                 <button onClick={() => navigate('/2fa-setup')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
                                     <div className="flex items-center gap-3">
                                         <Smartphone className="text-[var(--text-secondary)]" size={20} />
                                         <span className="text-sm font-medium text-[var(--text-secondary)]">Seguridad 2FA</span>
                                     </div>
-                                    <span className="text-[10px] text-green-500 font-bold bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20">ACTIVO</span>
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border transition-colors ${is2FAActive
+                                            ? "text-green-500 bg-green-500/10 border-green-500/20"
+                                            : "text-amber-500 bg-amber-500/10 border-amber-500/20"
+                                        }`}>
+                                        {is2FAActive ? "ACTIVO" : "CONFIGURAR"}
+                                    </span>
                                 </button>
 
                                 {/* BOTÓN DE CERRAR SESIÓN FINAL */}
