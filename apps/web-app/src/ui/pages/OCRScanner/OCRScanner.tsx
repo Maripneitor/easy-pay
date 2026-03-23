@@ -1,11 +1,8 @@
 import React from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-    Zap,
     FolderOpen,
-    Camera,
-    Crop,
     Sparkles,
     ReceiptText,
     Smartphone,
@@ -28,107 +25,61 @@ interface OCRItem {
     isUnassigned?: boolean;
 }
 
-/* ─── Viewfinder component ─── */
-const Viewfinder: React.FC<{ flashOn: boolean; onFlashToggle: () => void; isProcessing: boolean }> = ({ flashOn, onFlashToggle, isProcessing }) => (
-    <div className={cn(styles.glassPanel, 'relative flex-grow rounded-3xl overflow-hidden shadow-2xl shadow-black/40 border-[var(--border-color)] flex flex-col')}>
-        <div className="absolute top-0 left-0 w-full p-4 z-20 flex justify-between items-start bg-gradient-to-b from-black/60 to-transparent">
-            <div className="bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10 flex items-center gap-2">
-                <span className={cn("w-2 h-2 rounded-full", isProcessing ? "bg-[var(--primary)] animate-ping" : "bg-red-500 animate-pulse")} />
-                <span className="text-xs font-mono text-white/90">
-                    {isProcessing ? 'PROCESSING...' : 'LIVE FEED'}
-                </span>
-            </div>
-            <button
-                onClick={onFlashToggle}
-                className="text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition"
-            >
-                <Zap size={20} className={cn(flashOn && 'text-yellow-300')} />
-            </button>
-        </div>
-
-        <div className="relative w-full h-full bg-slate-900 flex items-center justify-center overflow-hidden min-h-[350px]">
-            <div className={cn('absolute inset-0 opacity-30 z-0', styles.viewfinderGrid)} />
-            <div className="w-[60%] h-[80%] bg-slate-200 transform rotate-1 shadow-2xl relative flex flex-col p-6 items-center opacity-90 blur-[0.5px]">
-                <div className="w-16 h-16 bg-slate-800 rounded-full mb-4" />
-                <div className="w-32 h-4 bg-slate-800/20 mb-2" />
-                <div className="w-24 h-3 bg-slate-800/10 mb-8" />
-                <div className="w-full space-y-2">
-                    <div className="flex justify-between"><div className="w-1/2 h-3 bg-slate-800/20" /><div className="w-10 h-3 bg-slate-800/20" /></div>
-                    <div className="flex justify-between"><div className="w-1/3 h-3 bg-slate-800/20" /><div className="w-10 h-3 bg-slate-800/20" /></div>
-                    <div className="flex justify-between"><div className="w-2/3 h-3 bg-slate-800/20" /><div className="w-10 h-3 bg-slate-800/20" /></div>
-                </div>
-            </div>
-
-            <div className={cn(styles.cornerBracket, styles.cornerTL, "border-[var(--primary)]")} />
-            <div className={cn(styles.cornerBracket, styles.cornerTR, "border-[var(--primary)]")} />
-            <div className={cn(styles.cornerBracket, styles.cornerBL, "border-[var(--primary)]")} />
-            <div className={cn(styles.cornerBracket, styles.cornerBR, "border-[var(--primary)]")} />
-
-            {!isProcessing && (
+/* ─── UploadZone component ─── */
+const UploadZone: React.FC<{ isProcessing: boolean; onUpload: () => void }> = ({ isProcessing, onUpload }) => (
+    <div className={cn(styles.glassPanel, 'relative flex-grow rounded-3xl overflow-hidden shadow-2xl shadow-black/40 border-[var(--border-color)] flex flex-col min-h-[400px]')}>
+        <div className="absolute inset-0 opacity-10 z-0" style={{ backgroundImage: 'radial-gradient(circle at center, var(--primary) 0%, transparent 70%)' }} />
+        
+        <div className="relative flex-grow flex flex-col items-center justify-center p-12 text-center">
+            {isProcessing ? (
                 <motion.div
-                    initial={{ top: 0, opacity: 0.8 }}
-                    animate={{ top: "100%", opacity: [0.8, 1, 0.8] }}
-                    transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-                    className="absolute left-0 w-full h-1 bg-[var(--primary)] shadow-[0_0_20px_var(--primary)] z-10"
-                />
-            )}
-
-            <AnimatePresence>
-                {isProcessing && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center"
+                >
+                    <div className="relative mb-8">
+                        <div className="absolute inset-0 bg-[var(--primary)] rounded-full blur-2xl opacity-20 animate-pulse" />
+                        <Loader2 size={64} className="text-[var(--primary)] animate-spin relative z-10" />
+                    </div>
+                    <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-widest">Analizando Ticket</h3>
+                    <p className="text-[var(--text-secondary)] font-medium">Extrayendo datos con IA...</p>
+                </motion.div>
+            ) : (
+                <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col items-center"
+                >
+                    <div className="w-24 h-24 rounded-[32px] bg-white/5 border border-white/10 flex items-center justify-center mb-8 shadow-xl">
+                        <FolderOpen size={40} className="text-[var(--primary)]" />
+                    </div>
+                    <h3 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">Sube tu Ticket</h3>
+                    <p className="text-[var(--text-secondary)] max-w-sm mb-10 font-medium">
+                        Arrastra tus archivos aquí o haz clic para seleccionar. Soportamos JPG, PNG y PDF.
+                    </p>
+                    <button 
+                        onClick={onUpload}
+                        className="group relative px-10 py-4 bg-[var(--primary)] hover:opacity-90 rounded-2xl transition-all shadow-glow active:scale-95"
                     >
-                        <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                        >
-                            <Loader2 size={48} className="text-[var(--primary)] mb-4" />
-                        </motion.div>
-                        <p className="text-white font-medium tracking-widest text-sm uppercase">Analizando Recibo...</p>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {!isProcessing && (
-                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md text-white px-6 py-2 rounded-full border border-white/10 text-sm font-medium shadow-lg whitespace-nowrap z-20">
-                    Enfoca el ticket completo y evita sombras
-                </div>
+                        <div className="flex items-center gap-3">
+                            <ReceiptText size={20} className="text-white" />
+                            <span className="text-white font-black uppercase tracking-widest text-sm">Seleccionar Archivo</span>
+                        </div>
+                    </button>
+                </motion.div>
             )}
         </div>
-    </div>
-);
 
-/* ─── Action toolbar ─── */
-const ScanToolbar: React.FC<{
-    onGallery: () => void;
-    onCapture: () => void;
-    onCrop: () => void;
-    disabled: boolean;
-}> = ({ onGallery, onCapture, onCrop, disabled }) => (
-    <div className={cn(styles.glassPanel, 'w-full md:w-24 lg:w-32 flex md:flex-col items-center justify-center gap-8 md:gap-12 p-4 rounded-3xl bg-[var(--bg-card)] border-[var(--border-color)]')}>
-        <button onClick={onGallery} disabled={disabled} className="group flex flex-col items-center gap-2 disabled:opacity-50 text-center">
-            <div className="w-12 h-12 rounded-full bg-[var(--bg-body)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] group-hover:text-[var(--primary)] group-hover:border-[var(--primary)] transition-all">
-                <FolderOpen size={20} />
+        <div className="p-4 bg-black/20 border-t border-white/5 flex items-center justify-center gap-6">
+            <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">OCR Local</span>
             </div>
-            <span className="text-xs text-[var(--text-secondary)] font-medium">Galería</span>
-        </button>
-        <button onClick={onCapture} disabled={disabled} className="relative group disabled:opacity-50">
-            <div className="absolute inset-0 bg-[var(--primary)] rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity" />
-            <div className="w-20 h-20 rounded-full border-4 border-[var(--primary)] flex items-center justify-center relative bg-slate-900 shadow-glow group-active:scale-95 transition-transform">
-                <div className="w-16 h-16 rounded-full bg-[var(--primary)] hover:opacity-90 transition-colors flex items-center justify-center">
-                    <Camera size={28} className="text-white" />
-                </div>
+            <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sincronización Cloud</span>
             </div>
-        </button>
-        <button onClick={onCrop} disabled={disabled} className="group flex flex-col items-center gap-2 disabled:opacity-50 text-center">
-            <div className="w-12 h-12 rounded-full bg-[var(--bg-body)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] group-hover:text-[var(--primary)] group-hover:border-[var(--primary)] transition-all">
-                <Crop size={20} />
-            </div>
-            <span className="text-xs text-[var(--text-secondary)] font-medium">Recortar</span>
-        </button>
+        </div>
     </div>
 );
 
@@ -138,12 +89,8 @@ export const OCRScanner: React.FC = () => {
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
     const {
         scanResult,
-        flashOn,
         isProcessing,
-        toggleFlash,
-        handleCapture,
         handleGallery,
-        handleCrop,
         handleSplitAll,
         handleAssignToMe,
         handleConfirmSync,
@@ -153,10 +100,9 @@ export const OCRScanner: React.FC = () => {
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg-body)] text-[var(--text-primary)] antialiased selection:bg-[var(--primary)] selection:text-white transition-colors duration-300">
             <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
-                {/* PageHeader corregido: showAvatar={false} elimina el circulo azul de arriba */}
                 <PageHeader
                     onMenuClick={toggleSidebar}
-                    title="OCR SCANNER"
+                    title="SUBIR TICKETS"
                     subtitle="Easy-Pay"
                     onBack={() => navigate(-1)}
                     showAvatar={false} 
@@ -169,9 +115,8 @@ export const OCRScanner: React.FC = () => {
                         <div className="absolute bottom-[10%] right-[10%] w-[40%] h-[40%] bg-[var(--primary)]/5 rounded-full blur-[120px]" />
                     </div>
 
-                    <div className="w-full flex flex-col md:flex-row gap-6 h-auto md:min-h-[500px]">
-                        <Viewfinder flashOn={flashOn} onFlashToggle={toggleFlash} isProcessing={isProcessing} />
-                        <ScanToolbar onGallery={handleGallery} onCapture={handleCapture} onCrop={handleCrop} disabled={isProcessing} />
+                    <div className="w-full flex flex-col gap-6">
+                        <UploadZone isProcessing={isProcessing} onUpload={handleGallery} />
                     </div>
 
                     <div className={cn(styles.glassPanel, 'w-full rounded-2xl shadow-glass flex flex-col overflow-hidden mt-2 bg-[var(--bg-card)] border border-[var(--border-color)]')}>

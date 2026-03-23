@@ -5,7 +5,6 @@ import {
     Users,
     CheckCircle,
     Bell,
-    EyeOff,
     ChevronRight,
     Lock,
     Smartphone,
@@ -15,16 +14,14 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { PageHeader } from '@ui/components/PageHeader';
+import { SHARED_USER } from '../../../infrastructure/constants/MockUser';
 
 export const ProfilePage = () => {
     const navigate = useNavigate();
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
     
     const { colorTheme, isDark, setTheme, toggleTheme, fontSize, setFontSize } = useTheme();
-    
-    const userName = "Juan Pérez";
-    const userEmail = "juan.perez@easypay.com";
-    const avatarUrl = "https://ui-avatars.com/api/?name=Juan+Perez&background=3b82f6&color=fff&bold=true";
+    const user = SHARED_USER;
 
     const handleThemeChange = (value: string) => {
         if (value === 'light') {
@@ -62,16 +59,15 @@ export const ProfilePage = () => {
                                         <img
                                             alt="Avatar"
                                             className="w-full h-full rounded-full object-cover"
-                                            src={avatarUrl}
+                                            src={user.avatar}
                                         />
                                     </div>
                                     <div className="absolute bottom-1 right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900"></div>
                                 </div>
-                                <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-1">{userName}</h2>
-                                <p className="text-[var(--text-secondary)] text-sm">{userEmail}</p>
+                                <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-1">{user.name}</h2>
+                                <p className="text-[var(--text-secondary)] text-sm">{user.email}</p>
                                 <p className="text-slate-400 dark:text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest">Miembro desde: Enero 2024</p>
 
-                                {/* BOTÓN: Marco adaptable y TEXTO BLANCO */}
                                 <button
                                     onClick={() => navigate('/profile/personal-data')}
                                     className="mt-6 px-6 py-2 rounded-full border border-[var(--primary)] bg-transparent text-white text-sm font-medium hover:bg-[var(--primary)]/10 transition-all flex items-center gap-2 shadow-sm duration-300"
@@ -92,7 +88,7 @@ export const ProfilePage = () => {
                                         <span className="text-[var(--text-secondary)] text-sm font-medium">Total Gastado</span>
                                         <CreditCard className="text-slate-400 dark:text-slate-500" size={20} />
                                     </div>
-                                    <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">$8,450.00</div>
+                                    <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">${user.stats.spent.toLocaleString()}</div>
                                 </div>
 
                                 <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 shadow-sm dark:shadow-none">
@@ -100,7 +96,7 @@ export const ProfilePage = () => {
                                         <span className="text-[var(--text-secondary)] text-sm font-medium">Grupos Activos</span>
                                         <Users className="text-slate-400 dark:text-slate-500" size={20} />
                                     </div>
-                                    <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">3</div>
+                                    <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">{user.stats.groups}</div>
                                 </div>
 
                                 <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 shadow-sm dark:shadow-none">
@@ -108,13 +104,13 @@ export const ProfilePage = () => {
                                         <span className="text-[var(--text-secondary)] text-sm font-medium">Deudas Pagadas</span>
                                         <CheckCircle className="text-green-500 dark:text-green-400" size={20} />
                                     </div>
-                                    <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">12</div>
+                                    <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">{user.stats.paid}</div>
                                 </div>
 
                                 <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 flex items-center justify-between shadow-sm dark:shadow-none">
                                     <div>
                                         <span className="text-[var(--text-secondary)] text-sm font-medium block mb-1">Confiabilidad</span>
-                                        <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">98%</div>
+                                        <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">{user.trustScore}%</div>
                                     </div>
                                     <div className="relative w-12 h-12">
                                         <svg className="transform -rotate-90 w-12 h-12">
@@ -146,7 +142,6 @@ export const ProfilePage = () => {
                                             <p className="text-[10px] text-[var(--text-secondary)]">Elige un tema visual.</p>
                                         </div>
                                     </div>
-                                    {/* SELECTOR ACTUALIZADO CON TEMA ROSA */}
                                     <select 
                                         value={!isDark ? 'light' : colorTheme}
                                         onChange={(e) => handleThemeChange(e.target.value)}

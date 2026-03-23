@@ -1,12 +1,14 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Dimensions, StyleSheet } from 'react-native';
-import { router, Stack } from 'expo-router';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Dimensions, StyleSheet, Image as RNImage } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter, Stack } from 'expo-router';
 import { Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
+import { MotiView, MotiText } from 'moti';
+import { Skeleton } from 'moti/skeleton';
 
 const { width } = Dimensions.get('window');
-
 
 const COLORS = {
   backgroundDark: '#0D47A1',
@@ -20,10 +22,16 @@ const COLORS = {
 };
 
 export default function LandingScreen() {
+  const router = useRouter();
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+
+  const toggleFaq = (index: number) => {
+    setExpandedFaq(expandedFaq === index ? null : index);
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.backgroundDark }}>
       <StatusBar style="light" />
-      <Stack.Screen options={{ headerShown: false }} />
 
       {/* Fondo con degradado radial simulado */}
       <LinearGradient
@@ -33,11 +41,11 @@ export default function LandingScreen() {
         end={{ x: 0.5, y: 1 }}
       />
 
-      <SafeAreaView className="flex-1">
+      <SafeAreaView style={{ flex: 1 }}>
         <ScrollView showsVerticalScrollIndicator={false}>
           
           {/* Navbar */}
-          <View className="px-6 py-6 flex-row justify-between items-center">
+          <View className="px-6 py-6 flex-row justify-between items-center z-50">
             <View className="flex-row items-center gap-2">
               <View className="w-10 h-10 bg-white rounded-xl items-center justify-center shadow-lg">
                 <MaterialIcons name="receipt-long" size={24} color={COLORS.dodgerBlue} />
@@ -50,15 +58,43 @@ export default function LandingScreen() {
           </View>
 
           {/* Hero Section */}
-          <View className="px-6 pt-12 pb-16">
-            <Text className="text-5xl font-black text-white leading-[55px] mb-6 shadow-sm">
+          <View className="px-6 pt-12 pb-16 relative overflow-hidden">
+            {/* Elementos Decorativos Flotantes */}
+            <MotiView
+              from={{ translateY: -10, rotate: '0deg' }}
+              animate={{ translateY: 10, rotate: '5deg' }}
+              transition={{ loop: true, type: 'timing', duration: 4000 }}
+              style={{ position: 'absolute', top: 40, right: -20, opacity: 0.2 }}
+            >
+              <MaterialCommunityIcons name="currency-usd" size={100} color="white" />
+            </MotiView>
+            <MotiView
+              from={{ translateY: 10, rotate: '0deg' }}
+              animate={{ translateY: -10, rotate: '-10deg' }}
+              transition={{ loop: true, type: 'timing', duration: 5000, delay: 500 }}
+              style={{ position: 'absolute', bottom: 100, left: -30, opacity: 0.15 }}
+            >
+              <Ionicons name="restaurant" size={80} color="white" />
+            </MotiView>
+
+            <MotiText
+              from={{ opacity: 0, translateY: 20 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ duration: 800 }}
+              className="text-5xl font-black text-white leading-[55px] mb-6 shadow-sm"
+            >
               La cuenta,{'\n'}
               dividida en{'\n'}
-              <Text className="text-cool-sky">segundos</Text>.
-            </Text>
-            <Text className="text-lg text-white/80 font-light leading-7 mb-10 max-w-[90%]">
+              <Text style={{ color: COLORS.coolSky }}>segundos</Text>.
+            </MotiText>
+            <MotiText
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1000, delay: 500 }}
+              className="text-lg text-white/80 font-light leading-7 mb-10 max-w-[90%]"
+            >
               Cero estrés. Escanea, asigna y paga tu parte. Olvídate de las calculadoras y disfruta de la sobremesa.
-            </Text>
+            </MotiText>
 
             {/* Action Cards */}
             <View className="flex-row gap-4 mb-8">
@@ -151,16 +187,20 @@ export default function LandingScreen() {
 
           {/* Testimonials */}
           <View className="px-6 py-20 bg-[#0D47A1]">
-            <Text className="text-3xl font-bold text-white text-center mb-12">Lo que dicen nuestros expertos</Text>
+            <Text className="text-3xl font-bold text-white text-center mb-12">Lo que dicen nuestros usuarios</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} snapToInterval={width * 0.8 + 16} decelerationRate="fast">
               {[
-                { name: 'Carlos M.', quote: 'Increíblemente fácil de usar. Ya no hay discusiones incómodas.' },
-                { name: 'Sofia R.', quote: 'La mejor app para salir con amigos. Calculamos la propina en segundos.' },
-                { name: 'Javier L.', quote: 'Me encanta pagar solo por lo que consumí. ¡Adiós a dividir en partes iguales!' }
+                { name: 'Carlos M.', quote: 'Increíblemente fácil de usar. Ya no hay discusiones incómodas.', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDainCyPQs2p8Eeuu3PGJLemedOuJ3mpJvuzcJASmmrFTiVCoj22mihB_NzIc8G9W5JCqk9Y8Fuy8Kd7UKSQwv6ATBYcmeM_7Vi93SCphJ5DZkgm_HNiUeWg7GHt5PWYEVCa3hlTEyradWkryGGm3zucv_L5yDFRA8FCCfcDVwWL1mZ0HX6lzamzqXhEdehkKTUkzR96RBsCpMCUtWjuJmPQcwpqH3f1MrJCFsO7Rpm5IRJIVnf7Gg2ams1kdv3fK11x4bYJ1xpZBid' },
+                { name: 'Sofia R.', quote: 'La mejor app para salir con amigos. Calculamos la propina en segundos.', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAq9Z-pK4VHG9jpMzu4OF7LWRJ21XplOxmtUFVYf0kwJZShmTajlh8Lz9zcV567aJDXcr1hG8WUPhd12Cwp2Tm-K1pdXamNOMITQ_hRGpQHIQQAWPJJXxIV0dcJSaBxMYOSfj8fIyrVEY5o2wwYlvdCWemXMB_6hIaP1xRC58VbkdAuTDR8tI2GzM2_J3IGxP34by8ULPk2rLiXMrRxNC79ylXrY0ky928t7r1YuQ5nvOKqF--y1jVM6b4bzB72-KhJqZG62BM_r8-U' },
+                { name: 'Javier L.', quote: 'Me encanta pagar solo por lo que consumí. ¡Adiós a dividir en partes iguales!', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBqJjrs0fkwpw2ovn5Cg-2iLba3PLCVoIy5rbhebJ5EbMI7X1eBPqasof8aJR4igDEku9JIXkFh8L81PcMsqM1AMz9KoJznCwwvYWNMVRuRiJS_NdkqLTgA00bxsg1w1joaDUnLRXTS71YmroDPieXUFJwKr5lN-lIhaOaPqcex6eKvnmERpJEG7f9ApEpkAI9IMQU-lSgBQMjonDUSAfb1VYDWQ4PPS9C7CIXUtgSSF2RNZZbc7rqH8iZFNK6B5TlWm7mmRf3OBq9Y' }
               ].map((item, index) => (
                 <View key={index} style={{ width: width * 0.8 }} className="bg-white/5 p-8 rounded-3xl border border-white/10 mr-4 items-center">
-                   <View className="w-16 h-16 bg-gray-400 rounded-full mb-4 border-2 border-cool-sky items-center justify-center">
-                     <Ionicons name="person" size={32} color="white" />
+                   <View className="w-16 h-16 bg-gray-400 rounded-full mb-4 border-2 border-cool-sky items-center justify-center overflow-hidden">
+                     {item.avatar ? (
+                       <RNImage source={{ uri: item.avatar }} style={{ width: '100%', height: '100%' }} />
+                     ) : (
+                       <Ionicons name="person" size={32} color="white" />
+                     )}
                    </View>
                    <View className="flex-row gap-1 mb-4">
                      {[1,2,3,4,5].map(s => <Ionicons key={s} name="star" size={14} color="#facc15" />)}
@@ -172,22 +212,81 @@ export default function LandingScreen() {
             </ScrollView>
           </View>
 
+          {/* ¿Por qué elegir Easy-Pay? / Comparativa */}
+          <View className="px-6 py-20 bg-[#0D47A1]">
+            <Text className="text-3xl font-bold text-white text-center mb-12">
+              ¿Por qué elegir Easy-Pay?
+            </Text>
+            
+            <View className="bg-white/5 rounded-3xl border border-white/10 overflow-hidden">
+              <View className="flex-row border-b border-white/10 p-4 bg-white/5">
+                <View className="flex-[1.5]"><Text className="text-white/40 text-xs font-bold uppercase">Características</Text></View>
+                <View className="flex-1 items-center"><Text className="text-white/40 text-xs font-bold uppercase text-center">Tradicional</Text></View>
+                <View className="flex-1 items-center"><Text className="text-white/40 text-xs font-bold uppercase text-center">Easy-Pay</Text></View>
+              </View>
+
+              {[
+                { label: 'Tiempo de cobro', trad: '15-25 min', easy: '< 2 min', green: true },
+                { label: 'Precisión', trad: false, border: true, easy: true },
+                { label: 'Pago contactless', trad: false, easy: true },
+                { label: 'Historial', trad: false, easy: true },
+              ].map((row, i) => (
+                <View key={i} className="flex-row p-5 border-b border-white/5 items-center">
+                  <View className="flex-[1.5]">
+                    <Text className="text-white font-medium text-sm">{row.label}</Text>
+                  </View>
+                  <View className="flex-1 items-center">
+                    {typeof row.trad === 'string' ? (
+                      <Text className="text-white/60 text-xs">{row.trad}</Text>
+                    ) : (
+                      <Ionicons name="close-circle" size={20} color="#f87171" />
+                    )}
+                  </View>
+                  <View className="flex-1 items-center bg-blue-500/10 rounded-lg py-2">
+                    {typeof row.easy === 'string' ? (
+                      <Text className="text-emerald text-xs font-bold">{row.easy}</Text>
+                    ) : (
+                      <Ionicons name="checkmark-circle" size={20} color={COLORS.emerald} />
+                    )}
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+
           {/* FAQ */}
           <View className="px-6 py-20 bg-[#0D47A1]">
             <Text className="text-3xl font-bold text-white text-center mb-12">Preguntas Frecuentes</Text>
             <View className="gap-4">
               {[
-                { q: '¿Es seguro pagar?', a: 'Absolutamente. Utilizamos encriptación de grado bancario.' },
-                { q: '¿Necesito la app?', a: 'No necesariamente, pero ofrece funciones adicionales como histórico.' },
-                { q: '¿Puedo dividir desigual?', a: '¡Sí! Puedes asignar items específicos a cada persona.' }
+                { q: '¿Es seguro pagar?', a: 'Absolutamente. Utilizamos encriptación de grado bancario para proteger todos tus datos y transacciones. Tu seguridad es nuestra prioridad.' },
+                { q: '¿Necesito la app?', a: 'No necesariamente. Puedes usar nuestra versión web directamente desde tu navegador escaneando el código QR. Sin embargo, la app ofrece funciones adicionales.' },
+                { q: '¿Puedo dividir desigual?', a: '¡Sí! Puedes asignar items específicos a cada persona o dividir el costo de platos compartidos como prefieras.' }
               ].map((item, index) => (
-                <View key={index} className="bg-white/5 p-6 rounded-2xl border border-white/10">
+                <TouchableOpacity 
+                  key={index} 
+                  onPress={() => toggleFaq(index)}
+                  className="bg-white/5 p-6 rounded-2xl border border-white/10"
+                >
                   <View className="flex-row justify-between items-center mb-2">
                     <Text className="text-white font-bold text-lg">{item.q}</Text>
-                    <Ionicons name="chevron-down" size={20} color={COLORS.coolSky} />
+                    <MotiView
+                      animate={{ rotate: expandedFaq === index ? '180deg' : '0deg' }}
+                      transition={{ type: 'timing', duration: 300 }}
+                    >
+                      <Ionicons name="chevron-down" size={20} color={COLORS.coolSky} />
+                    </MotiView>
                   </View>
-                  <Text className="text-white/60 leading-5">{item.a}</Text>
-                </View>
+                  {expandedFaq === index && (
+                    <MotiView
+                      from={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      transition={{ type: 'timing', duration: 300 }}
+                    >
+                      <Text className="text-white/60 leading-5 pt-2">{item.a}</Text>
+                    </MotiView>
+                  )}
+                </TouchableOpacity>
               ))}
             </View>
           </View>

@@ -1,19 +1,18 @@
 import React, { useState, useRef } from 'react';
-import { ScrollView, View, Text, Pressable, Image, Dimensions, Animated, StyleSheet, TouchableOpacity } from 'react-native';
+import { ScrollView, View, Text, Pressable, Image, Dimensions, Animated, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
-import { MaterialIcons, FontAwesome5, Ionicons, Feather } from '@expo/vector-icons';
+import { MaterialIcons, FontAwesome5, Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../../src/infrastructure/context/ThemeContext';
+import { MotiView, MotiText, AnimatePresence } from 'moti';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
 const CARD_SPACING = (width - CARD_WIDTH) / 2;
 
-const METHODS = [
-    { id: '1', type: 'VISA', last4: '4242', holder: 'LUIS GONZALEZ', expiry: '08/28', default: true, colors: ['#4f46e5', '#9333ea', '#db2777'] },
-    { id: '2', type: 'MASTERCARD', last4: '8888', holder: 'LUIS GONZALEZ', expiry: '12/26', default: false, colors: ['#1e293b', '#334155'] },
-];
+
 
 const QUICK_CONNECTS = [
     { id: 'apple', label: 'Apple Pay', icon: 'apple', color: '#000000', connected: true },
@@ -22,16 +21,38 @@ const QUICK_CONNECTS = [
 ];
 
 const HISTORY = [
-    { id: 'h1', title: 'Pago a Ana', category: 'Comida Grupal', date: 'Hoy, 12:30 PM', amount: '-$320.00', status: 'Completado', method: 'Visa ****4242', type: 'user' },
-    { id: 'h2', title: 'Amazon MX', category: 'Electrónicos', date: 'Ayer, 4:15 PM', amount: '-$1,250.00', status: 'Completado', method: 'Visa ****4242', type: 'shop' },
-    { id: 'h3', title: 'Netflix', category: 'Suscripción', date: '14 Oct, 9:00 AM', amount: '-$199.00', status: 'Fallido', method: 'Mastercard ****8888', type: 'service' },
+    { id: 'h1', title: 'Cena Amigos', category: 'Comida Grupal', date: 'Hoy, 12:30 PM', amount: '-$320.00', status: 'Completado', method: 'Visa ****4242', type: 'restaurant' },
+    { id: 'h2', title: 'Uber Taxi', category: 'Transporte', date: 'Ayer, 4:15 PM', amount: '-$15.50', status: 'Completado', method: 'Visa ****4242', type: 'local-taxi' },
+    { id: 'h3', title: 'Netflix Sub', category: 'Suscripción', date: '14 Oct, 9:00 AM', amount: '-$12.99', status: 'Fallido', method: 'Master****8888', type: 'subscriptions' },
 ];
 
 export default function PaymentsScreen() {
+    const { theme, fontScale } = useTheme();
     const scrollX = useRef(new Animated.Value(0)).current;
 
+    const METHODS = [
+        { id: '1', type: 'VISA', last4: '4242', holder: 'LUIS GONZALEZ', expiry: '08/28', default: true, colors: [theme.primary, '#4f46e5'], icon: 'credit-card' },
+        { id: '2', type: 'MASTERCARD', last4: '8888', holder: 'LUIS GONZALEZ', expiry: '12/26', default: false, colors: [theme.primary === '#38bdf8' ? '#0b979e' : theme.primary, '#00ff9f'], icon: 'payments' },
+    ];
+
+    const SectionHeader = ({ title, action, route }: { title: string, action?: string, route?: any }) => (
+        <View className="flex-row justify-between items-end mb-6">
+            <Text 
+                style={{ fontSize: 10 * fontScale, color: theme.textSecondary }} 
+                className="font-black uppercase tracking-[3px]"
+            >
+                {title}
+            </Text>
+            {action && (
+                <TouchableOpacity onPress={() => route && router.push(route)}>
+                    <Text style={{ fontSize: 11 * fontScale, color: theme.primary }} className="font-black">TODO</Text>
+                </TouchableOpacity>
+            )}
+        </View>
+    );
+
     return (
-        <SafeAreaView className="flex-1 bg-[#0d1425]" edges={['top']}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
             <StatusBar style="light" />
             <Stack.Screen options={{ headerShown: false }} />
             
@@ -41,28 +62,24 @@ export default function PaymentsScreen() {
                 contentContainerStyle={{ paddingBottom: 150 }}
             >
                 {/* Header */}
-                <View className="px-6 py-6 flex-row justify-between items-center">
+                <View className="px-6 py-8 flex-row justify-between items-center">
                     <View>
-                        <Text className="text-white text-3xl font-black tracking-tight">Cartera</Text>
-                        <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Administra tus pagos</Text>
+                        <Text style={{ fontSize: 32 * fontScale, color: theme.text }} className="font-black tracking-tighter leading-none">CARTERA</Text>
+                        <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-[3px] mt-2">Personal & Grupos</Text>
                     </View>
                     <TouchableOpacity 
                         onPress={() => router.push('/wallet/security')}
-                        className="bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-2xl flex-row items-center gap-2"
-                        activeOpacity={0.7}
+                        style={{ backgroundColor: theme.glassBg, borderColor: theme.border }}
+                        className="w-12 h-12 rounded-[18px] items-center justify-center border"
                     >
-                        <MaterialIcons name="security" size={14} color="#10b981" />
-                        <Text className="text-emerald-500 text-[10px] font-black uppercase tracking-widest">Pagos Seguros</Text>
+                        <MaterialIcons name="security" size={24} color={theme.textSecondary} />
                     </TouchableOpacity>
                 </View>
 
                 {/* Credit Cards Carousel */}
                 <View className="mb-10">
-                    <View className="px-6 flex-row justify-between items-end mb-6">
-                        <Text className="text-slate-500 font-black text-[10px] uppercase tracking-widest">Mis Tarjetas</Text>
-                        <TouchableOpacity onPress={() => router.push('/wallet/methods')}>
-                            <Text className="text-slate-600 text-[10px] font-bold">Ver todos</Text>
-                        </TouchableOpacity>
+                    <View className="px-6">
+                        <SectionHeader title="Mis Tarjetas" />
                     </View>
 
                     <Animated.ScrollView
@@ -88,16 +105,16 @@ export default function PaymentsScreen() {
                                 outputRange: [0.95, 1, 0.95],
                                 extrapolate: 'clamp'
                             });
-                            const opacity = scrollX.interpolate({
+                            const rotate = scrollX.interpolate({
                                 inputRange,
-                                outputRange: [0.7, 1, 0.7],
+                                outputRange: ['-2deg', '0deg', '2deg'],
                                 extrapolate: 'clamp'
                             });
 
                             return (
                                 <Animated.View 
                                     key={item.id} 
-                                    style={{ width: CARD_WIDTH, transform: [{ scale }], opacity }} 
+                                    style={{ width: CARD_WIDTH, transform: [{ scale }, { rotate }] }} 
                                     className="mr-3.5"
                                 >
                                     <TouchableOpacity 
@@ -108,65 +125,64 @@ export default function PaymentsScreen() {
                                             colors={item.colors as any}
                                             start={{ x: 0, y: 0 }}
                                             end={{ x: 1, y: 1 }}
-                                            className="h-52 rounded-[40px] p-8 shadow-2xl shadow-black/40 overflow-hidden relative"
+                                            className="h-52 rounded-[40px] p-8 shadow-2xl relative overflow-hidden"
                                         >
-                                            <View className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
-                                            <View className="flex-row justify-between items-start mb-10">
-                                                <Image 
-                                                    source={{ uri: 'https://img.icons8.com/color/96/chip.png' }}
-                                                    className="w-12 h-10 opacity-80"
-                                                />
-                                                <Text className="text-white font-black italic text-2xl tracking-tighter">{item.type}</Text>
+                                            <View className="absolute top-0 right-0 w-44 h-44 bg-white/10 rounded-full -mr-20 -mt-20 border border-white/5" />
+                                            <View className="flex-row justify-between items-start mb-8">
+                                                <View className="w-14 h-10 bg-white/20 rounded-lg items-center justify-center border border-white/10">
+                                                    <MaterialIcons name="contactless" size={28} color="white" />
+                                                </View>
+                                                <Text className="text-white font-black italic text-xl tracking-tighter">{item.type}</Text>
                                             </View>
-                                            <Text className="text-white font-mono text-2xl tracking-[4px] mb-8">**** **** **** {item.last4}</Text>
+                                            <Text className="text-white font-mono text-2xl tracking-[5px] mb-8">**** **** **** {item.last4}</Text>
                                             <View className="flex-row justify-between items-end">
                                                 <View>
-                                                    <Text className="text-white/40 text-[8px] font-black uppercase tracking-widest mb-1">Titular</Text>
-                                                    <Text className="text-white font-black text-xs uppercase">{item.holder}</Text>
+                                                    <Text style={{ fontSize: 8 * fontScale }} className="text-white/40 font-black uppercase tracking-widest mb-1">TITULAR</Text>
+                                                    <Text style={{ fontSize: 11 * fontScale }} className="text-white font-black uppercase">{item.holder}</Text>
                                                 </View>
-                                                {item.default && (
-                                                    <View className="bg-white/20 px-3 py-1 rounded-full border border-white/20">
-                                                        <Text className="text-white text-[8px] font-black uppercase">Predeterminada</Text>
-                                                    </View>
-                                                )}
+                                                <View className="items-end">
+                                                    <Text style={{ fontSize: 8 * fontScale }} className="text-white/40 font-black uppercase tracking-widest mb-1">EXPIRA</Text>
+                                                    <Text style={{ fontSize: 11 * fontScale }} className="text-white font-black uppercase">{item.expiry}</Text>
+                                                </View>
                                             </View>
                                         </LinearGradient>
                                     </TouchableOpacity>
                                 </Animated.View>
                             );
                         })}
+                        
+                        {/* New Card placeholder */}
+                        <TouchableOpacity 
+                            onPress={() => router.push('/wallet/methods/new')}
+                            activeOpacity={0.8}
+                            style={{ width: CARD_WIDTH, borderColor: theme.border, backgroundColor: theme.glassBg }} 
+                            className="h-52 rounded-[40px] border-2 border-dashed items-center justify-center gap-3"
+                        >
+                            <View style={{ backgroundColor: theme.primary }} className="w-12 h-12 rounded-2xl items-center justify-center">
+                                <MaterialIcons name="add" size={32} color="white" />
+                            </View>
+                            <Text style={{ color: theme.text, fontSize: 12 * fontScale }} className="font-black uppercase tracking-widest">NUEVA TARJETA</Text>
+                        </TouchableOpacity>
                     </Animated.ScrollView>
-                </View>
-
-                {/* Add New Method */}
-                <View className="px-6 mb-12">
-                    <TouchableOpacity 
-                        onPress={() => router.push('/wallet/methods/new')}
-                        className="w-full border border-dashed border-blue-500/40 bg-blue-500/5 rounded-3xl py-6 items-center justify-center flex-row gap-3 active:bg-blue-500/10"
-                    >
-                        <View className="w-8 h-8 bg-blue-600 rounded-full items-center justify-center">
-                            <MaterialIcons name="add" size={20} color="white" />
-                        </View>
-                        <Text className="text-blue-500 font-black text-xs uppercase tracking-widest">AGREGAR NUEVO MÉTODO</Text>
-                    </TouchableOpacity>
                 </View>
 
                 {/* Quick Wallet Connections */}
                 <View className="px-6 mb-12">
-                    <Text className="text-slate-500 font-black text-[10px] uppercase tracking-widest mb-6">Conexiones Rápidas</Text>
+                    <SectionHeader title="Pagos Rápidos" />
                     <View className="flex-row gap-4">
                         {QUICK_CONNECTS.map(conn => (
                             <TouchableOpacity 
                                 key={conn.id}
-                                onPress={() => router.push(`/wallet/connect/${conn.id}` as any)}
                                 activeOpacity={0.8}
-                                className="flex-1 h-16 rounded-2xl items-center justify-center relative border border-white/5"
-                                style={{ backgroundColor: conn.color === '#ffffff' ? 'rgba(255,255,255,0.05)' : conn.color }}
+                                style={{ backgroundColor: conn.color === '#ffffff' ? theme.glassBg : conn.color }}
+                                className="flex-1 h-20 rounded-[28px] items-center justify-center relative border border-white/5"
                             >
-                                <FontAwesome5 name={conn.icon} size={20} color={conn.color === '#ffffff' ? 'white' : 'white'} />
-                                <View className={`absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full border-2 border-[#0d1425] items-center justify-center ${conn.connected ? 'bg-emerald-500' : 'bg-slate-600'}`}>
-                                    <MaterialIcons name={conn.connected ? 'check' : 'add'} size={10} color="white" />
-                                </View>
+                                <FontAwesome5 name={conn.icon} size={24} color={conn.color === '#ffffff' ? '#ffffff' : 'white'} />
+                                {conn.connected && (
+                                    <View className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-4 border-[#050a15] items-center justify-center">
+                                        <MaterialIcons name="check" size={10} color="white" />
+                                    </View>
+                                )}
                             </TouchableOpacity>
                         ))}
                     </View>
@@ -174,43 +190,42 @@ export default function PaymentsScreen() {
 
                 {/* Transaction History */}
                 <View className="px-6 mb-10">
-                    <View className="flex-row justify-between items-center mb-6">
-                        <Text className="text-slate-500 font-black text-[10px] uppercase tracking-widest">Historial Operativo</Text>
-                        <TouchableOpacity onPress={() => router.push('/wallet/history')}>
-                            <Text className="text-blue-500 text-[11px] font-bold">Ver historial completo</Text>
-                        </TouchableOpacity>
-                    </View>
+                    <SectionHeader title="Historial de Pagos" action="TODO" route="/history/all" />
 
-                    <View className="bg-white/5 border border-white/10 rounded-[40px] overflow-hidden">
+                    <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="border rounded-[40px] overflow-hidden p-2">
                         {HISTORY.map((tx, i) => (
-                            <TouchableOpacity 
+                            <MotiView 
+                                from={{ opacity: 0, translateX: -10 }}
+                                animate={{ opacity: 1, translateX: 0 }}
+                                transition={{ delay: i * 100 }}
                                 key={tx.id} 
-                                activeOpacity={0.8}
-                                onPress={() => router.push({ pathname: '/wallet/history/[id]', params: { id: tx.id } } as any)}
-                                className={`p-6 flex-row items-center justify-between ${i !== 0 ? 'border-t border-white/5' : ''}`}
                             >
-                                <View className="flex-row items-center gap-4 flex-1">
-                                    <View className={`w-12 h-12 rounded-2xl items-center justify-center ${
-                                        tx.type === 'user' ? 'bg-orange-500/10' : tx.type === 'shop' ? 'bg-blue-500/10' : 'bg-purple-500/10'
-                                    }`}>
-                                        <MaterialIcons 
-                                            name={tx.type === 'user' ? 'person' : tx.type === 'shop' ? 'shopping-bag' : 'movie'} 
-                                            size={22} 
-                                            color={tx.type === 'user' ? '#f97316' : tx.type === 'shop' ? '#3b82f6' : '#a855f7'} 
-                                        />
+                                <TouchableOpacity 
+                                    activeOpacity={0.8}
+                                    className={`p-5 flex-row items-center justify-between mb-2 rounded-[32px] ${i % 2 === 0 ? 'bg-white/5' : ''}`}
+                                >
+                                    <View className="flex-row items-center gap-4 flex-1">
+                                        <View style={{ backgroundColor: theme.glassBg }} className="w-14 h-14 rounded-[20px] items-center justify-center">
+                                            <MaterialIcons 
+                                                name={tx.type as any} 
+                                                size={24} 
+                                                color={theme.primary} 
+                                            />
+                                        </View>
+                                        <View className="flex-1">
+                                            <Text style={{ fontSize: 15 * fontScale, color: theme.text }} className="font-black tracking-tight" numberOfLines={1}>{tx.title}</Text>
+                                            <View className="flex-row items-center gap-2 mt-1">
+                                                <Text style={{ fontSize: 8 * fontScale, color: theme.primary }} className="font-black uppercase tracking-widest">{tx.status}</Text>
+                                                <Text style={{ fontSize: 9 * fontScale }} className="text-slate-500 font-bold uppercase">• {tx.date}</Text>
+                                            </View>
+                                        </View>
                                     </View>
-                                    <View className="flex-1">
-                                        <Text className="text-white font-bold text-sm" numberOfLines={1}>{tx.title}</Text>
-                                        <Text className="text-slate-500 text-[9px] font-bold mt-0.5">{tx.method}</Text>
+                                    <View className="items-end ml-4">
+                                        <Text style={{ fontSize: 16 * fontScale, color: theme.text }} className="font-black mb-1">{tx.amount}</Text>
+                                        <Text style={{ fontSize: 8 * fontScale }} className="text-slate-500 font-black uppercase">{tx.method}</Text>
                                     </View>
-                                </View>
-                                <View className="items-end ml-4">
-                                    <Text className={`font-black text-sm mb-1 ${tx.status === 'Fallido' ? 'text-slate-500' : 'text-slate-100'}`}>{tx.amount}</Text>
-                                    <View className={`px-2 py-0.5 rounded-md ${tx.status === 'Fallido' ? 'bg-rose-500/15' : 'bg-emerald-500/15'}`}>
-                                        <Text className={`text-[8px] font-black uppercase ${tx.status === 'Fallido' ? 'text-rose-500' : 'text-emerald-500'}`}>{tx.status}</Text>
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
+                                </TouchableOpacity>
+                            </MotiView>
                         ))}
                     </View>
                 </View>

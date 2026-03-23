@@ -40,18 +40,18 @@ export const Hero = () => {
                         <div className={styles.actionCard} onClick={() => navigate('/create-group')}>
                             <div className={styles.cardHeader}>
                                 <PlusCircle className={styles.actionIcon} />
-                                <h3>Nueva Mesa</h3>
+                                <h3>Nuevo Grupo</h3>
                             </div>
-                            <p>Eres el anfitrión. Crea un código.</p>
-                            <button className={styles.primaryBtn}>Crear Mesa</button>
+                            <p>Eres el anfitrión. Crea un grupo o mesa.</p>
+                            <button className={styles.primaryBtn}>Crear Grupo</button>
                         </div>
 
-                        <div className={styles.actionCard} onClick={() => navigate('/auth')}>
+                        <div className={styles.actionCard} onClick={() => navigate('/qr-scanner')}>
                             <div className={styles.cardHeader}>
                                 <Users className={styles.actionIconJoin} />
                                 <h3>Unirme</h3>
                             </div>
-                            <p>¿Tienes código? Únete ya.</p>
+                            <p>¿Tienes código? Únete a la mesa.</p>
                             <button className={styles.secondaryBtn}>Unirme</button>
                         </div>
                     </div>

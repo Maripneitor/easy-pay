@@ -1,202 +1,209 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, Dimensions, FlatList } from 'react-native';
-import { useLocalSearchParams, router, Stack } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
+import React, { useState, useRef } from 'react';
+import { 
+    View, 
+    Text, 
+    ScrollView, 
+    TouchableOpacity, 
+    Dimensions, 
+    Image, 
+    LayoutAnimation,
+    Platform,
+    UIManager
+} from 'react-native';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useGroup } from '../../../src/infrastructure/hooks/useGroup';
 import { StatusBar } from 'expo-status-bar';
+import { MotiView, MotiText, AnimatePresence } from 'moti';
+import { useTheme } from '../../../src/infrastructure/context/ThemeContext';
+import { SHARED_USER } from '../../../src/infrastructure/constants/MockUser';
 
-const { width } = Dimensions.get('window');
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Mock Data for "Grupo"
+const MOCK_HISTORY = [
+    { id: 'h1', title: 'Boletos de Avión', group: 'Cancún 2024', date: 'Hace 3 días', amount: 4500.0, paidBy: 'Tú', assigned: ['Tú', 'Ana', 'Carlos'], expanded: false },
+    { id: 'h2', title: 'Súper (Chedraui)', group: 'Roomies', date: 'Ayer', amount: 1200.50, paidBy: 'Ana', assigned: ['Tú', 'Ana'], expanded: false },
+    { id: 'h3', title: 'Gasolina', group: 'Viaje Valle', date: 'Hace 1 semana', amount: 800.0, paidBy: 'Carlos', assigned: ['Ana', 'Carlos'], expanded: false },
+];
+
+const MOCK_BALANCES = [
+    { id: 'b1', name: 'Ana', avatar: 'https://i.pravatar.cc/150?u=ana', status: 'Debe', amount: 450.0, color: '#ec4899' },
+    { id: 'b2', name: 'Carlos', avatar: 'https://i.pravatar.cc/150?u=carlos', status: 'Debes', amount: 120.0, color: '#10b981' },
+];
 
 export default function GroupDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
-    const { group, shares, isLoading, error } = useGroup(id as string);
-    const [activeTab, setActiveTab] = useState<'activity' | 'balances'>('activity');
-    
-    // Safety check for unmount
-    const isMounted = useRef(true);
-    useEffect(() => {
-        return () => { isMounted.current = false; };
-    }, []);
+    const { theme, fontScale } = useTheme();
+    const router = useRouter();
+    const [activeTab, setActiveTab] = useState<'balances' | 'history'>('balances');
+    const [history, setHistory] = useState(MOCK_HISTORY);
 
-    if (isLoading) {
-        return (
-            <View className="flex-1 bg-[#0f172a] items-center justify-center">
-                <ActivityIndicator size="large" color="#3b82f6" />
-                <Text className="text-slate-400 mt-4 font-bold tracking-widest text-[10px] uppercase">Cargando mesa...</Text>
-            </View>
-        );
-    }
-
-    if (error || !group) {
-        return (
-            <View className="flex-1 bg-[#0f172a] items-center justify-center p-8">
-                <View className="w-20 h-20 bg-red-500/10 rounded-full items-center justify-center mb-6 border border-red-500/20">
-                    <MaterialIcons name="error-outline" size={40} color="#ef4444" />
-                </View>
-                <Text className="text-white text-2xl font-black text-center">¡Ups! Algo falló</Text>
-                <Text className="text-slate-400 mt-2 text-center text-sm leading-5">{error || 'No pudimos encontrar los detalles de esta mesa.'}</Text>
-                <Pressable 
-                    onPress={() => router.replace('/(tabs)/dashboard')}
-                    className="mt-10 bg-white/5 px-10 py-4 rounded-2xl border border-white/10 active:bg-white/10"
-                >
-                    <Text className="text-white font-bold">Volver al inicio</Text>
-                </Pressable>
-            </View>
-        );
-    }
-
-    const currentMemberId = group.members[0]?.id; 
-    const myShare = shares?.shares.find(s => s.memberId === currentMemberId)?.total.amount || 0;
-    const amountOwedToMe = shares?.shares
-        .filter(s => s.memberId !== currentMemberId && !group.members.find(m => m.id === s.memberId)?.hasPaid)
-        .reduce((acc, s) => acc + s.total.amount, 0) || 0;
-
-    const renderItem = ({ item }: { item: any }) => (
-        <View className="bg-white/5 border border-white/5 rounded-[24px] p-4 flex-row justify-between items-center mb-3">
-            <View className="flex-row items-center gap-3">
-                <View className="w-10 h-10 rounded-xl bg-slate-800 items-center justify-center border border-white/5">
-                    <MaterialIcons name="restaurant" size={20} color="#94a3b8" />
-                </View>
-                <View className="max-w-[150px]">
-                    <Text className="text-white font-black text-sm" numberOfLines={1}>{item.description}</Text>
-                    <Text className="text-slate-500 text-[9px] font-bold uppercase tracking-widest">
-                        {item.addedBy === currentMemberId ? 'Tú lo agregaste' : 'Agregado'}
-                    </Text>
-                </View>
-            </View>
-            <View className="items-end">
-                <Text className="text-white font-black text-base">${item.amount.toFixed(2)}</Text>
-                <Pressable className="active:opacity-60">
-                    <Text className="text-blue-500 text-[8px] font-black uppercase tracking-tighter">Detalle</Text>
-                </Pressable>
-            </View>
-        </View>
-    );
-
-    const renderMember = ({ item }: { item: any }) => {
-        const memberShare = shares?.shares.find(s => s.memberId === item.id)?.total.amount || 0;
-        const isMe = item.id === currentMemberId;
-        
-        return (
-            <View className="bg-white/5 border border-white/5 rounded-[24px] p-4 flex-row justify-between items-center mb-3">
-                <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 rounded-full bg-slate-700 items-center justify-center border border-white/10">
-                        <MaterialIcons name="person" size={22} color="white" />
-                    </View>
-                    <View>
-                        <Text className="text-white font-black text-sm">
-                            {item.name} {isMe && <Text className="text-blue-500">(Tú)</Text>}
-                        </Text>
-                        <View className="flex-row items-center gap-1.5">
-                            <View className={`w-1.5 h-1.5 rounded-full ${item.hasPaid ? 'bg-emerald-500' : 'bg-orange-500'}`} />
-                            <Text className="text-slate-500 text-[9px] font-bold uppercase">
-                                {item.hasPaid ? 'Liquidado' : 'Pendiente'}
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-                <View className="items-end">
-                    <Text className={`${item.hasPaid ? 'text-emerald-400/80' : isMe ? 'text-orange-400' : 'text-blue-400'} font-black text-base`}>
-                        ${memberShare.toFixed(2)}
-                    </Text>
-                </View>
-            </View>
-        );
+    const toggleExpand = (id: string) => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setHistory(prev => prev.map(item => ({
+            ...item,
+            expanded: item.id === id ? !item.expanded : false
+        })));
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-[#0f172a]" edges={['top']}>
-            <StatusBar style="light" />
-            <Stack.Screen options={{ 
-                headerShown: true, 
-                headerTitle: group.name?.toUpperCase() || 'DETALLE',
-                headerTintColor: 'white',
-                headerTitleStyle: { fontWeight: '900', fontSize: 14 },
-                headerStyle: { backgroundColor: '#0f172a' },
-                headerShadowVisible: false,
-                headerLeft: () => (
-                    <Pressable onPress={() => router.back()} className="mr-4">
-                        <MaterialIcons name="arrow-back" size={24} color="white" />
-                    </Pressable>
-                ),
-            }} />
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
+            <StatusBar style={theme.isDark ? "light" : "dark"} />
+            <Stack.Screen options={{ headerShown: false }} />
 
-            <View className="flex-1">
-                {/* Visual Header - Compact for smaller screens */}
-                <View className="px-6 py-4">
-                    <View className="bg-blue-600 rounded-[32px] p-6 shadow-2xl shadow-blue-500/30 overflow-hidden">
-                        <View className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full" />
-                        <View className="relative z-10">
-                            <Text className="text-blue-100 text-[10px] font-black uppercase tracking-[2px] mb-1">Total</Text>
-                            <Text className="text-white text-3xl font-black tracking-tighter">${group.total?.toFixed(2)}</Text>
-                            
-                            <View className="flex-row mt-4 gap-4">
-                                <View className="flex-1 bg-white/10 p-3 rounded-2xl">
-                                    <Text className="text-blue-200 text-[8px] font-bold uppercase">Tu Parte</Text>
-                                    <Text className="text-white text-sm font-black">${myShare.toFixed(2)}</Text>
-                                </View>
-                                <View className="flex-1 bg-black/10 p-3 rounded-2xl">
-                                    <Text className="text-blue-200 text-[8px] font-bold uppercase">Te Deben</Text>
-                                    <Text className="text-white text-sm font-black">${amountOwedToMe.toFixed(2)}</Text>
-                                </View>
+            {/* CABECERA (Header) */}
+            <View className="px-6 py-4 flex-row items-center justify-between z-20">
+                <TouchableOpacity onPress={() => router.back()}>
+                    <MaterialIcons name="arrow-back" size={24} color={theme.text} />
+                </TouchableOpacity>
+                <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-black">Viaje a Cancún</Text>
+                <TouchableOpacity>
+                    <Ionicons name="settings-outline" size={22} color={theme.textSecondary} />
+                </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+                {/* CABECERA DE CONTEXTO */}
+                <View className="px-6 py-6">
+                    <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="rounded-[40px] border p-8 items-center overflow-hidden">
+                        {/* Status Resumen Personal */}
+                        <MotiView 
+                            from={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="items-center"
+                        >
+                            <Text style={{ color: theme.textSecondary, fontSize: 11 * fontScale }} className="font-black uppercase tracking-[3px] mb-2 text-center">Tu Estado</Text>
+                            <Text style={{ color: '#10b981', fontSize: 36 * fontScale }} className="font-black text-center tracking-tighter">Te deben $450</Text>
+                            <View 
+                                style={{ backgroundColor: '#10b98110', borderColor: '#10b98130' }}
+                                className="px-4 py-1 rounded-full mt-4 border"
+                            >
+                                <Text className="text-[#10b981] text-[10px] font-black uppercase tracking-widest">Saldo a Favor</Text>
                             </View>
-                        </View>
+                        </MotiView>
                     </View>
                 </View>
 
-                {/* Tabs */}
-                <View className="px-6 mb-4">
-                    <View className="bg-white/5 p-1 rounded-[18px] flex-row border border-white/5">
-                        <Pressable 
-                            onPress={() => setActiveTab('activity')}
-                            className={`flex-1 py-3 items-center rounded-[14px] ${activeTab === 'activity' ? 'bg-[#1e293b]' : ''}`}
-                        >
-                            <Text className={`font-black text-[10px] uppercase ${activeTab === 'activity' ? 'text-white' : 'text-slate-500'}`}>Actividad</Text>
-                        </Pressable>
-                        <Pressable 
+                {/* BOTÓN "LIQUIDAR" (KING) */}
+                <View className="px-6 mb-8">
+                    <TouchableOpacity 
+                        onPress={() => router.push('/(tabs)/payments')}
+                        style={{ backgroundColor: theme.primary }}
+                        className="w-full h-16 rounded-[24px] items-center justify-center shadow-xl shadow-blue-500/30 flex-row gap-3"
+                    >
+                        <MaterialIcons name="account-balance-wallet" size={20} color="black" />
+                        <Text className="text-black font-black uppercase tracking-widest text-sm">Liquidar Deuda</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* TABS NAVEGACIÓN */}
+                <View className="px-6 mb-6">
+                    <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="flex-row rounded-3xl p-1.5 border">
+                        <TouchableOpacity 
                             onPress={() => setActiveTab('balances')}
-                            className={`flex-1 py-3 items-center rounded-[14px] ${activeTab === 'balances' ? 'bg-[#1e293b]' : ''}`}
+                            style={{ backgroundColor: activeTab === 'balances' ? theme.card : 'transparent' }}
+                            className="flex-1 py-3 rounded-2xl items-center"
                         >
-                            <Text className={`font-black text-[10px] uppercase ${activeTab === 'balances' ? 'text-white' : 'text-slate-500'}`}>Saldos</Text>
-                        </Pressable>
+                            <Text style={{ color: activeTab === 'balances' ? theme.text : theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-widest">Saldos</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                            onPress={() => setActiveTab('history')}
+                            style={{ backgroundColor: activeTab === 'history' ? theme.card : 'transparent' }}
+                            className="flex-1 py-3 rounded-2xl items-center"
+                        >
+                            <Text style={{ color: activeTab === 'history' ? theme.text : theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-widest">Gastos</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
 
-                {/* List - Using FlatList for performance */}
-                {activeTab === 'activity' ? (
-                    <FlatList
-                        data={group.items}
-                        renderItem={renderItem}
-                        keyExtractor={item => item.id}
-                        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
-                        ListEmptyComponent={() => (
-                            <View className="py-16 items-center justify-center border border-dashed border-white/10 rounded-[32px] bg-white/2">
-                                <MaterialIcons name="post-add" size={32} color="#334155" />
-                                <Text className="text-slate-500 font-bold text-center mt-3 text-xs">No hay gastos aún</Text>
-                            </View>
-                        )}
-                    />
-                ) : (
-                    <FlatList
-                        data={group.members}
-                        renderItem={renderMember}
-                        keyExtractor={item => item.id}
-                        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
-                    />
-                )}
-            </View>
+                {/* LISTA DINÁMICA */}
+                <View className="px-6">
+                    {activeTab === 'balances' ? (
+                        <View className="gap-4">
+                            {MOCK_BALANCES.map(item => (
+                                <MotiView 
+                                    key={item.id}
+                                    style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
+                                    className="p-5 rounded-[32px] border flex-row items-center justify-between"
+                                >
+                                    <View className="flex-row items-center gap-4">
+                                        <View style={{ borderColor: item.color }} className="w-12 h-12 rounded-2xl border-2 p-0.5">
+                                            <Image source={{ uri: item.avatar }} className="w-full h-full rounded-[14px]" />
+                                        </View>
+                                        <View>
+                                            <Text style={{ color: theme.text, fontSize: 15 * fontScale }} className="font-black">{item.name}</Text>
+                                            <Text style={{ color: item.status === 'Debe' ? '#10b981' : '#f43f5e', fontSize: 10 * fontScale }} className="font-bold uppercase">{item.status}</Text>
+                                        </View>
+                                    </View>
+                                    <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black tracking-tight">${item.amount}</Text>
+                                </MotiView>
+                            ))}
+                        </View>
+                    ) : (
+                        <View className="gap-4">
+                            {history.map(item => (
+                                <TouchableOpacity 
+                                    key={item.id}
+                                    activeOpacity={0.9}
+                                    onPress={() => toggleExpand(item.id)}
+                                    style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
+                                    className="p-5 rounded-[32px] border"
+                                >
+                                    <View className="flex-row items-center justify-between">
+                                        <View className="flex-row items-center gap-4">
+                                            <View style={{ backgroundColor: theme.glassBg }} className="w-12 h-12 rounded-2xl items-center justify-center">
+                                                <MaterialIcons name="receipt" size={24} color={theme.primary} />
+                                            </View>
+                                            <View>
+                                                <Text style={{ color: theme.text, fontSize: 15 * fontScale }} className="font-black">{item.title}</Text>
+                                                <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-bold uppercase">{item.paidBy} pagó</Text>
+                                            </View>
+                                        </View>
+                                        <View className="items-end">
+                                            <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-black">${item.amount.toLocaleString()}</Text>
+                                            <Text style={{ color: theme.textSecondary, fontSize: 9 * fontScale }} className="font-medium text-slate-500">{item.date}</Text>
+                                        </View>
+                                    </View>
+                                    
+                                    {item.expanded && (
+                                        <MotiView 
+                                            from={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            className="mt-6 pt-6 border-t border-white/5"
+                                        >
+                                            <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-widest mb-4">Detalle de División</Text>
+                                            <View className="gap-2">
+                                                {item.assigned.map(name => (
+                                                    <View key={name} className="flex-row justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                                                        <Text style={{ color: theme.text, fontSize: 12 * fontScale }} className="font-bold text-slate-400">{name}</Text>
+                                                        <Text style={{ color: theme.primary, fontSize: 12 * fontScale }} className="font-black">${(item.amount / item.assigned.length).toFixed(2)}</Text>
+                                                    </View>
+                                                ))}
+                                            </View>
+                                        </MotiView>
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    )}
+                </View>
+            </ScrollView>
 
-            {/* Bottom Floating Action */}
-            <View className="absolute bottom-8 left-6 right-6">
-                <Pressable 
-                    onPress={() => router.push('/expense-form')}
-                    className="w-full bg-blue-600 py-4 rounded-[20px] items-center flex-row justify-center gap-2 active:scale-95 shadow-xl shadow-blue-500/40"
-                >
-                    <MaterialIcons name="add" size={20} color="white" />
-                    <Text className="text-white font-black text-sm px-2">AGREGAR GASTO</Text>
-                </Pressable>
-            </View>
+            {/* BOTÓN FLOTANTE (FAB) */}
+            <TouchableOpacity 
+                activeOpacity={0.9}
+                onPress={() => router.push('/new-mesa')}
+                style={{ backgroundColor: theme.primary }}
+                className="absolute bottom-8 right-6 w-16 h-16 rounded-[24px] items-center justify-center shadow-2xl shadow-blue-500/40"
+            >
+                <MaterialIcons name="add" size={32} color="black" />
+            </TouchableOpacity>
         </SafeAreaView>
     );
 }
+

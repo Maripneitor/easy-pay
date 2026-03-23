@@ -1,63 +1,115 @@
+import React from 'react';
 import { Tabs } from 'expo-router';
-import { View, Platform, StyleSheet } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '@easy-pay/ui';
-import { useColorScheme } from '../../components/useColorScheme';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { useTheme } from '../../src/infrastructure/context/ThemeContext';
+import { useNotifications } from '../../src/infrastructure/context/NotificationContext';
+import { MotiView } from 'moti';
+
+const CustomTabBarButton = ({ children, onPress, theme }: any) => {
+  const [isExpanding, setIsExpanding] = React.useState(false);
+
+  const handlePress = () => {
+    setIsExpanding(true);
+    setTimeout(() => {
+      onPress();
+      setTimeout(() => setIsExpanding(false), 500); // Reset for next time
+    }, 400);
+  };
+
+  return (
+    <View style={{ alignItems: 'center' }}>
+      {/* Background Expansion Circle */}
+      {isExpanding && (
+        <MotiView 
+          from={{ scale: 0, opacity: 1 }}
+          animate={{ scale: 20, opacity: 1 }}
+          transition={{ type: 'timing', duration: 500 }}
+          style={{
+            position: 'absolute',
+            width: 100,
+            height: 100,
+            borderRadius: 50,
+            backgroundColor: theme.primary,
+            zIndex: 1000,
+            top: -40,
+          }}
+        />
+      )}
+      
+      <TouchableOpacity
+        style={{
+          top: -20,
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1001,
+          ...styles.shadow
+        }}
+        onPress={handlePress}
+        activeOpacity={0.9}
+      >
+        <MotiView
+          from={{ scale: 1, shadowOpacity: 0.3 }}
+          animate={{ scale: [1, 1.05, 1], shadowOpacity: [0.3, 0.6, 0.3] }}
+          transition={{ loop: true, type: 'timing', duration: 3000 }}
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 32,
+            backgroundColor: theme.primary,
+            shadowColor: theme.primary,
+            shadowOffset: { width: 0, height: 10 },
+            shadowRadius: 15,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderWidth: 4,
+            borderColor: theme.bg,
+          }}
+        >
+          {children}
+        </MotiView>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  const { theme } = useTheme();
+  const { hasAlerts } = useNotifications();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#2196F3',
-        tabBarInactiveTintColor: '#94a3b8',
         headerShown: false,
-        tabBarShowLabel: true,
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: 'bold',
-          marginBottom: 10,
-        },
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: '#475569',
         tabBarStyle: {
-          position: 'absolute',
-          bottom: 25,
-          left: 20,
-          right: 20,
-          height: 70,
-          backgroundColor: '#1e293b', // Fondo oscuro premium
-          borderRadius: 25,
+          backgroundColor: theme.bg,
           borderTopWidth: 0,
-          elevation: 10,
-          shadowColor: '#2196F3',
-          shadowOpacity: 0.2,
-          shadowOffset: { width: 0, height: 10 },
-          shadowRadius: 20,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 0,
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.05)',
+          height: Platform.OS === 'ios' ? 95 : 75,
+          paddingBottom: Platform.OS === 'ios' ? 30 : 15,
+          paddingTop: 10,
+          position: 'absolute',
+          elevation: 0,
+          borderTopColor: 'transparent',
         },
-      }}>
+        tabBarLabelStyle: {
+          fontSize: 9,
+          fontWeight: '900',
+          textTransform: 'uppercase',
+          letterSpacing: 1.2,
+          marginTop: 4,
+        },
+      }}
+    >
       <Tabs.Screen
         name="dashboard"
         options={{
           title: 'Inicio',
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <MaterialIcons name="dashboard" size={24} color={color} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="friends"
-        options={{
-          title: 'Amigos',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <MaterialIcons name="people" size={24} color={color} />
-            </View>
+            <MotiView animate={{ scale: focused ? 1.2 : 1, translateY: focused ? -2 : 0 }}>
+              <MaterialIcons name="grid-view" size={26} color={color} />
+            </MotiView>
           ),
         }}
       />
@@ -66,9 +118,20 @@ export default function TabLayout() {
         options={{
           title: 'Grupos',
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <MaterialIcons name="group-work" size={24} color={color} />
-            </View>
+            <MotiView animate={{ scale: focused ? 1.2 : 1, translateY: focused ? -2 : 0 }}>
+              <MaterialIcons name="group-work" size={26} color={color} />
+            </MotiView>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="qr"
+        options={{
+          tabBarLabel: '',
+          tabBarButton: (props) => (
+            <CustomTabBarButton theme={theme} {...props}>
+              <MaterialIcons name="qr-code-scanner" size={32} color="white" />
+            </CustomTabBarButton>
           ),
         }}
       />
@@ -77,9 +140,9 @@ export default function TabLayout() {
         options={{
           title: 'Cartera',
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <MaterialIcons name="account-balance-wallet" size={24} color={color} />
-            </View>
+            <MotiView animate={{ scale: focused ? 1.2 : 1, translateY: focused ? -2 : 0 }}>
+              <MaterialIcons name="account-balance-wallet" size={26} color={color} />
+            </MotiView>
           ),
         }}
       />
@@ -88,27 +151,35 @@ export default function TabLayout() {
         options={{
           title: 'Alertas',
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <MaterialIcons name="notifications" size={24} color={color} />
-            </View>
+            <MotiView animate={{ scale: focused ? 1.2 : 1, translateY: focused ? -2 : 0 }}>
+              <View>
+                <MaterialIcons name="notifications-none" size={26} color={color} />
+                {hasAlerts && (
+                  <View className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#050a15]" />
+                )}
+              </View>
+            </MotiView>
           ),
         }}
       />
+      
+      {/* Hide internal/deprecated routes from tab bar */}
+      <Tabs.Screen name="friends" options={{ href: null }} />
       <Tabs.Screen name="two" options={{ href: null }} />
       <Tabs.Screen name="group/[id]" options={{ href: null }} />
     </Tabs>
-
   );
 }
 
 const styles = StyleSheet.create({
-  activeIconContainer: {
-    padding: 8,
-    borderRadius: 15,
-    backgroundColor: 'rgba(33, 150, 243, 0.1)',
-    shadowColor: '#2196F3',
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-  }
+  shadow: {
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.5,
+    elevation: 5,
+  },
 });
-

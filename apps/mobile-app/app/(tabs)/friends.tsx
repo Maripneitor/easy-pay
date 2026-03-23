@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, Dimensions, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons, Ionicons, Feather } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useTheme } from '../../src/infrastructure/context/ThemeContext';
+import { MotiView, MotiText, AnimatePresence } from 'moti';
 
 const { width } = Dimensions.get('window');
 
@@ -17,6 +19,7 @@ const FRIENDS = [
 ];
 
 export default function FriendsScreen() {
+    const { theme, fontScale } = useTheme();
     const [searchQuery, setSearchQuery] = useState('');
     const [filter, setFilter] = useState('Todos'); // Todos, Me deben, Les debo, Al día
 
@@ -29,14 +32,13 @@ export default function FriendsScreen() {
     const filteredFriends = useMemo(() => {
         return FRIENDS.filter(friend => {
             const matchesSearch = friend.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                               friend.username.toLowerCase().includes(searchQuery.toLowerCase());
+                                friend.username.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesFilter = filter === 'Todos' || 
-                               (filter === 'Me deben' && friend.balance > 0) ||
-                               (filter === 'Les debo' && friend.balance < 0) ||
-                               (filter === 'Al día' && friend.balance === 0);
+                                (filter === 'Me deben' && friend.balance > 0) ||
+                                (filter === 'Les debo' && friend.balance < 0) ||
+                                (filter === 'Al día' && friend.balance === 0);
             return matchesSearch && matchesFilter;
         }).sort((a, b) => {
-            // Priority: Pending balances first
             if (Math.abs(a.balance) > 0 && b.balance === 0) return -1;
             if (a.balance === 0 && Math.abs(b.balance) > 0) return 1;
             return 0;
@@ -44,19 +46,20 @@ export default function FriendsScreen() {
     }, [searchQuery, filter]);
 
     return (
-        <SafeAreaView className="flex-1 bg-[#0d1425]" edges={['top']}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
             <StatusBar style="light" />
             <Stack.Screen options={{ headerShown: false }} />
 
             {/* Header */}
-            <View className="px-6 py-4 flex-row justify-between items-center">
+            <View className="px-6 py-6 flex-row justify-between items-center">
                 <View>
-                    <Text className="text-white text-3xl font-black tracking-tight">Amigos</Text>
-                    <Text className="text-slate-500 text-xs font-medium">Gestiona tus deudas y cobros</Text>
+                    <Text style={{ color: theme.text, fontSize: 32 * fontScale }} className="font-black tracking-tight leading-none">Amigos</Text>
+                    <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-[3px] mt-2">Gestión Social</Text>
                 </View>
                 <TouchableOpacity 
                     onPress={() => router.push('/friends/add')}
-                    className="w-11 h-11 bg-blue-600 rounded-2xl items-center justify-center shadow-lg shadow-blue-500/20"
+                    style={{ backgroundColor: theme.primary, shadowColor: theme.primary }}
+                    className="w-12 h-12 rounded-[18px] items-center justify-center shadow-lg shadow-pink-500/20"
                     activeOpacity={0.7}
                 >
                     <MaterialIcons name="person-add-alt-1" size={24} color="white" />
@@ -64,27 +67,27 @@ export default function FriendsScreen() {
             </View>
 
             {/* Summary Banner */}
-            <View className="px-6 mt-2">
-                <View className="bg-white/5 border border-white/10 rounded-[32px] p-6 flex-row justify-between">
-                    <View className="items-center flex-1 border-r border-white/10">
-                        <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Te deben</Text>
-                        <Text className="text-emerald-400 text-xl font-black">${summary.theyOwe.toFixed(2)}</Text>
+            <View className="px-6 mt-4">
+                <View style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderColor: theme.border }} className="border rounded-[32px] p-6 flex-row justify-between">
+                    <View className="items-center flex-1 border-r border-white/5">
+                        <Text style={{ color: theme.textSecondary, fontSize: 9 * fontScale }} className="font-black uppercase tracking-[2px] mb-1">A TU FAVOR</Text>
+                        <Text style={{ color: '#10b981', fontSize: 24 * fontScale }} className="font-black">${summary.theyOwe.toFixed(2)}</Text>
                     </View>
                     <View className="items-center flex-1">
-                        <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Debes</Text>
-                        <Text className="text-rose-400 text-xl font-black">${summary.iOwe.toFixed(2)}</Text>
+                        <Text style={{ color: theme.textSecondary, fontSize: 9 * fontScale }} className="font-black uppercase tracking-[2px] mb-1">TÚ DEBES</Text>
+                        <Text style={{ color: '#f43f5e', fontSize: 24 * fontScale }} className="font-black">${summary.iOwe.toFixed(2)}</Text>
                     </View>
                 </View>
             </View>
 
             {/* Sticky Search & Filters */}
-            <View className="px-6 mt-8">
-                <View className="flex-row items-center bg-white/5 border border-white/10 rounded-2xl px-4 py-3.5 mb-6 focus:border-blue-500/50">
-                    <Feather name="search" size={18} color="#64748b" />
+            <View className="px-6 mt-10">
+                <View style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderColor: theme.border }} className="flex-row items-center border rounded-2xl px-5 py-3.5 mb-6">
+                    <Feather name="search" size={18} color={theme.textSecondary} />
                     <TextInput 
                         placeholder="Buscar por nombre o @usuario"
                         placeholderTextColor="#475569"
-                        className="flex-1 ml-3 text-white font-medium text-sm"
+                        className="flex-1 ml-3 text-white font-bold text-sm"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                     />
@@ -100,9 +103,13 @@ export default function FriendsScreen() {
                         <TouchableOpacity 
                             key={f}
                             onPress={() => setFilter(f)}
-                            className={`px-5 py-2.5 rounded-full border ${filter === f ? 'bg-blue-600 border-blue-600' : 'bg-white/5 border-white/10'}`}
+                            style={{ 
+                                backgroundColor: filter === f ? theme.primary : 'rgba(255,255,255,0.05)',
+                                borderColor: filter === f ? theme.primary : theme.border 
+                            }}
+                            className={`px-5 py-2.5 rounded-full border shadow-sm`}
                         >
-                            <Text className={`text-[11px] font-bold ${filter === f ? 'text-white' : 'text-slate-400'}`}>{f}</Text>
+                            <Text style={{ fontSize: 10 * fontScale }} className={`font-black uppercase tracking-wider ${filter === f ? 'text-white' : 'text-slate-500'}`}>{f}</Text>
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
@@ -110,51 +117,73 @@ export default function FriendsScreen() {
 
             {/* Friends List */}
             <ScrollView 
-                className="flex-1 px-6 mt-6" 
+                className="flex-1 px-6 mt-8" 
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 120 }}
+                contentContainerStyle={{ paddingBottom: 150 }}
             >
-                {filteredFriends.length > 0 ? (
-                    filteredFriends.map(friend => (
-                        <TouchableOpacity 
-                            key={friend.id}
-                            onPress={() => router.push({ pathname: `/friends/[id]`, params: { id: friend.id } } as any)}
-                            activeOpacity={0.8}
-                            className="bg-white/5 border border-white/10 rounded-[28px] p-4 flex-row items-center mb-3.5"
+                <AnimatePresence>
+                    {filteredFriends.length > 0 ? (
+                        filteredFriends.map((friend, index) => (
+                            <MotiView 
+                                key={friend.id}
+                                from={{ opacity: 0, translateY: 20 }}
+                                animate={{ opacity: 1, translateY: 0 }}
+                                transition={{ delay: index * 50 }}
+                            >
+                                <TouchableOpacity 
+                                    onPress={() => router.push({ pathname: `/friends/[id]`, params: { id: friend.id } } as any)}
+                                    activeOpacity={0.8}
+                                    style={{ backgroundColor: 'rgba(30, 41, 59, 0.4)', borderColor: theme.border }}
+                                    className="border rounded-[32px] p-5 flex-row items-center mb-4"
+                                >
+                                    {/* Avatar with Status Ring */}
+                                    <View style={{ borderColor: friend.balance > 0 ? '#10b981' : friend.balance < 0 ? '#f43f5e' : 'transparent', borderWidth: 2 }} className="p-0.5 rounded-full mr-4">
+                                        <Image 
+                                            source={{ uri: friend.avatar }} 
+                                            className="w-14 h-14 rounded-full bg-slate-800"
+                                        />
+                                    </View>
+
+                                    <View className="flex-1">
+                                        <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-black tracking-tight">{friend.name}</Text>
+                                        <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-widest mt-0.5">{friend.username}</Text>
+                                    </View>
+
+                                    <View className="items-end mr-2">
+                                        <Text style={{ 
+                                            color: friend.balance > 0 ? '#10b981' : friend.balance < 0 ? '#f43f5e' : theme.textSecondary,
+                                            fontSize: 14 * fontScale
+                                        }} className="font-black">
+                                            {friend.balance === 0 ? 'AL DÍA' : `${friend.balance > 0 ? 'TE DEBE' : 'DEBES'} $${Math.abs(friend.balance).toFixed(2)}`}
+                                        </Text>
+                                        <Text style={{ color: '#334155', fontSize: 9 * fontScale }} className="font-black uppercase mt-1">{friend.lastActivity}</Text>
+                                    </View>
+                                    <MaterialIcons name="chevron-right" size={20} color="#334155" />
+                                </TouchableOpacity>
+                            </MotiView>
+                        ))
+                    ) : (
+                        <MotiView 
+                            from={{ opacity: 0, scale: 0.9 }} 
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="items-center justify-center py-20"
                         >
-                            {/* Avatar with Status Ring */}
-                            <View className={`p-0.5 rounded-full mr-4 ${friend.balance > 0 ? 'border-2 border-emerald-500/30' : friend.balance < 0 ? 'border-2 border-rose-500/30' : 'border-2 border-transparent'}`}>
-                                <Image 
-                                    source={{ uri: friend.avatar }} 
-                                    className="w-12 h-12 rounded-full bg-slate-800"
-                                />
+                            <View className="w-24 h-24 rounded-[32px] bg-slate-800/50 items-center justify-center mb-8 border border-white/5">
+                                <MaterialCommunityIcons name="account-search-outline" size={48} color={theme.textSecondary} />
                             </View>
-
-                            <View className="flex-1">
-                                <Text className="text-white font-bold text-base">{friend.name}</Text>
-                                <Text className="text-slate-500 text-[11px] font-medium">{friend.username}</Text>
-                            </View>
-
-                            <View className="items-end mr-2">
-                                <Text className={`font-black text-sm ${friend.balance > 0 ? 'text-emerald-400' : friend.balance < 0 ? 'text-rose-400' : 'text-slate-500'}`}>
-                                    {friend.balance === 0 ? 'Al día' : `${friend.balance > 0 ? 'Te debe' : 'Debes'} $${Math.abs(friend.balance).toFixed(2)}`}
-                                </Text>
-                                <Text className="text-[9px] text-slate-600 font-bold uppercase mt-1">{friend.lastActivity}</Text>
-                            </View>
-                            <MaterialIcons name="chevron-right" size={18} color="#334155" />
-                        </TouchableOpacity>
-                    ))
-                ) : (
-                    <View className="items-center justify-center py-20 opacity-40">
-                        <View className="w-20 h-20 rounded-full bg-slate-800 items-center justify-center mb-6">
-                            <MaterialIcons name="people-outline" size={40} color="#64748b" />
-                        </View>
-                        <Text className="text-white text-lg font-bold">No se encontraron amigos</Text>
-                        <Text className="text-slate-500 text-sm text-center mt-2 px-10">
-                            Prueba ajustando los filtros o agrega un nuevo contacto para empezar.
-                        </Text>
-                    </View>
-                )}
+                            <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black uppercase tracking-widest">¿Buscando a alguien?</Text>
+                            <Text style={{ color: theme.textSecondary, fontSize: 12 * fontScale }} className="text-center mt-3 px-10 font-bold leading-5">
+                                No encontramos a nadie bajo esos criterios. Prueba buscando otro nombre o invita a un nuevo amigo.
+                            </Text>
+                            <TouchableOpacity 
+                                style={{ backgroundColor: theme.primary }}
+                                className="mt-10 px-10 py-4 rounded-full shadow-lg shadow-pink-500/20"
+                            >
+                                <Text className="text-white font-black uppercase tracking-widest">Invitar Amigos</Text>
+                            </TouchableOpacity>
+                        </MotiView>
+                    )}
+                </AnimatePresence>
             </ScrollView>
         </SafeAreaView>
     );

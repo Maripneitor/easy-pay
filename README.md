@@ -18,12 +18,18 @@ EASY-PAY permite:
 
 Si acabas de descargar el proyecto, elige tu camino:
 
-### 1. Solo quiero probarlo rápido (Docker)
+### 1. Instrucciones para Mac (Silicon/Intel)
+Si estás en una Mac, estos son los comandos recomendados:
+1. **Instalar dependencias**: `pnpm install`
+2. **Lanzar Web**: `pnpm run dev:web` (luego abre `http://localhost:5173`)
+3. **Lanzar Mobile**: `pnpm --filter mobile-app run start` (luego presiona `i` para iOS o `a` para Android)
+
+### 2. Solo quiero probarlo rápido (Docker)
 Si tienes Docker instalado y quieres ver la app corriendo sin configurar nada:
 👉 [**Guía de Docker**](./docs/DOCKER_USAGE.md)
 
-### 2. Quiero programar y hacer cambios (WSL + Emulador)
-Si vas a desarrollar nuevas funcionalidades, esta es la forma profesional y rápida:
+### 3. Quiero programar y hacer cambios (WSL + Emulador)
+Si vas a desarrollar en Windows, esta es la guía específica:
 👉 [**Guía de Entorno de Desarrollo**](./GUIA_ENTORNO.md)
 
 ---

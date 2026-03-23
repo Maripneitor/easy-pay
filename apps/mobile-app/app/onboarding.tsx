@@ -31,9 +31,8 @@ export default function OnboardingScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-[#0d1425]" edges={['top']}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#0d1425' }} edges={['top']}>
             <StatusBar style="light" />
-            <Stack.Screen options={{ headerShown: false }} />
 
             <View className="flex-1 px-8 py-10">
                 {/* Stepper Indicator */}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, PlusSquare, CreditCard, Camera, FileText, Bell, Settings } from 'lucide-react';
+import { Home, PlusSquare, CreditCard, FileText, Bell, Settings } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
     const navigate = useNavigate();
@@ -10,7 +10,6 @@ export const Sidebar: React.FC = () => {
         { icon: <Home size={22} />, label: 'Inicio', path: '/dashboard' },
         { icon: <PlusSquare size={22} />, label: 'Crear Grupo', path: '/create-group' },
         { icon: <CreditCard size={22} />, label: 'Mis Pagos', path: '/my-payments' },
-        { icon: <Camera size={22} />, label: 'Escáner OCR', path: '/ocr-scanner' },
         { icon: <FileText size={22} />, label: 'Registrar Gasto', path: '/register-expense' },
         { icon: <Bell size={22} />, label: 'Notificaciones', path: '/notifications' },
     ];

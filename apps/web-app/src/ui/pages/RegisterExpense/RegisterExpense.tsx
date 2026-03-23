@@ -12,8 +12,7 @@ import {
     Coffee,
     MoreHorizontal,
     Check,
-    Calendar,
-    Camera
+    Calendar
 } from 'lucide-react';
 import { cn } from '@infrastructure/utils';
 import { PageHeader } from '@ui/components/PageHeader';
@@ -82,12 +81,6 @@ export const RegisterExpense = () => {
                                 placeholder="¿Qué compraste?"
                                 className="flex-1 bg-transparent text-lg font-bold text-[var(--text-primary)] placeholder:text-slate-400 focus:outline-none"
                             />
-                            <button 
-                                className="p-2 text-slate-400 hover:text-[var(--primary)] transition-colors"
-                                onClick={() => navigate('/ocr-scanner')}
-                            >
-                                <Camera size={20} />
-                            </button>
                         </div>
 
                         <div className="h-px bg-[var(--border-color)] mx-14"></div>
