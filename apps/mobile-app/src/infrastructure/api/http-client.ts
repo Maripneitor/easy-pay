@@ -15,8 +15,8 @@ const getAuthToken = async (): Promise<string | null> => {
     return await AsyncStorage.getItem(AUTH_TOKEN_KEY);
 };
 
-// URL de la API — En mobile usualmente usamos la IP de la máquina si es local
-const API_BASE_URL = 'http://localhost:8000'; 
+// URL de la API — En mobile usamos la IP detectada por el contenedor o localhost por defecto
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000'; 
 
 export const httpClient: AxiosInstance = axios.create({
     baseURL: API_BASE_URL,

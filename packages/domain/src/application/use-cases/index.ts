@@ -2,6 +2,9 @@
 export * from './group/CreateGroup';
 export * from './group/JoinGroup';
 export * from './group/CloseGroup';
+export * from './group/GetGroup';
+export * from './group/GetGroupUpdate';
+
 
 // ─── Item use cases ───────────────────────────────────────────────────────────
 export * from './item/AddItem';

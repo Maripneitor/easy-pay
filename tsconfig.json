@@ -1,4 +1,23 @@
 {
-  "compilerOptions": {},
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@easy-pay/domain": [
+        "packages/domain/src"
+      ],
+      "@easy-pay/ui": [
+        "packages/ui/src"
+      ]
+    },
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "target": "ESNext",
+    "strict": true
+  },
+  "exclude": [
+    "node_modules",
+    "**/node_modules/*"
+  ],
   "extends": "expo/tsconfig.base"
 }

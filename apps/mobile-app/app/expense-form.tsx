@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { ScrollView, View, Text, Pressable, TextInput, SafeAreaView, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { ScrollView, View, Text, Pressable, TextInput, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '../constants/StitchTheme';
+import { Colors } from '@easy-pay/ui';
 import { StatusBar } from 'expo-status-bar';
+
+const { width } = Dimensions.get('window');
 
 const CATEGORIES = [
   { id: '1', name: 'Comida', icon: 'flatware', color: '#f97316' },
@@ -15,20 +18,21 @@ const CATEGORIES = [
 ];
 
 export default function RegisterExpenseScreen() {
-    const [amount, setAmount] = useState('1,250.00'); // Monto de ejemplo claro
+    const [amount, setAmount] = useState('1,250.00');
+    const [title, setTitle] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('1');
 
     return (
-        <SafeAreaView className="flex-1 bg-[#0f172a]">
+        <SafeAreaView className="flex-1 bg-[#0f172a]" edges={['top']}>
             <StatusBar style="light" />
             <Stack.Screen options={{ 
                 headerShown: true,
-                headerTitle: '',
+                headerTitle: 'Detalles del Gasto',
                 headerTintColor: 'white',
-                headerTransparent: true,
+                headerStyle: { backgroundColor: '#0f172a' },
                 headerLeft: () => (
-                    <Pressable onPress={() => router.back()} className="ml-4 bg-white/10 w-10 h-10 rounded-full items-center justify-center">
-                        <MaterialIcons name="close" size={20} color="white" />
+                    <Pressable onPress={() => router.back()} className="ml-2">
+                        <MaterialIcons name="close" size={24} color="white" />
                     </Pressable>
                 )
             }} />
@@ -36,77 +40,77 @@ export default function RegisterExpenseScreen() {
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
                 <ScrollView 
                     className="flex-1"
-                    contentContainerStyle={{ paddingBottom: 160 }}
+                    contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 24 }}
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Amount Hero Section - EL OBJETIVO */}
-                    <View className="pt-24 pb-12 items-center">
-                        <Text className="text-blue-400 text-[10px] font-black uppercase tracking-[5px] mb-4">Monto el Gasto</Text>
-                        <View className="flex-row items-center">
-                            <Text className="text-white text-7xl font-black tracking-tighter">${amount}</Text>
-                        </View>
-                    </View>
-
-                    {/* Details Card - CURADURÍA */}
-                    <View className="px-6 mb-12">
-                        <View className="bg-slate-800/40 rounded-[45px] p-8 border border-white/10 shadow-3xl">
+                    {/* Amount Hero Section */}
+                    <View className="py-12 items-center">
+                        <Text className="text-blue-500 text-[10px] font-black uppercase tracking-[4px] mb-2">Total a registrar</Text>
+                        <View className="flex-row items-baseline">
+                            <Text className="text-white text-3xl font-bold opacity-50 mr-1">$</Text>
                             <TextInput 
-                                placeholder="¿En qué gastaste?"
-                                placeholderTextColor="#475569"
-                                className="text-white text-2xl font-bold p-0 text-center mb-6"
+                                value={amount}
+                                onChangeText={setAmount}
+                                keyboardType="numeric"
+                                className="text-white text-6xl font-black tracking-tighter"
+                                style={{ minWidth: 100 }}
                             />
-                            <View className="h-[1px] bg-slate-700/50 w-full mb-8" />
-                            
-                            <Text className="text-slate-500 text-center text-[10px] font-black uppercase tracking-[3px] mb-6">Categoría</Text>
-                            <View className="flex-row flex-wrap justify-center gap-6">
-                                {CATEGORIES.map((cat) => (
-                                    <Pressable 
-                                        key={cat.id} 
-                                        onPress={() => setSelectedCategory(cat.id)}
-                                        className="items-center w-[25%]"
-                                    >
-                                        <View 
-                                            className={`w-14 h-14 rounded-full items-center justify-center border-2 ${selectedCategory === cat.id ? 'bg-blue-600 shadow-xl shadow-blue-500/50' : 'bg-slate-900/40 border-transparent'}`}
-                                            style={selectedCategory === cat.id ? { borderColor: 'white' } : {}}
-                                        >
-                                            <MaterialIcons name={cat.icon as any} size={24} color={selectedCategory === cat.id ? 'white' : '#64748b'} />
-                                        </View>
-                                        <Text className={`text-[9px] font-bold mt-2 uppercase tracking-tighter ${selectedCategory === cat.id ? 'text-white' : 'text-slate-500'}`}>{cat.name}</Text>
-                                    </Pressable>
-                                ))}
-                            </View>
                         </View>
                     </View>
 
-                    {/* Quick Summary - PREVENIR AMBIGÜEDADES */}
-                    <View className="px-10 items-center">
-                        <View className="flex-row items-center gap-2 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">
-                            <MaterialIcons name="bolt" size={14} color="#10b981" />
-                            <Text className="text-emerald-400 font-black text-[10px] uppercase tracking-widest">Dividir entre 4 personas</Text>
+                    {/* Details Card */}
+                    <View className="bg-slate-800/40 rounded-[32px] p-6 border border-white/5 shadow-2xl mb-8">
+                        <View className="mb-6">
+                            <Text className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-3 ml-1">Descripción</Text>
+                            <TextInput 
+                                value={title}
+                                onChangeText={setTitle}
+                                placeholder="¿En qué gastaste? Ej. Cena Grill"
+                                placeholderTextColor="#475569"
+                                className="bg-slate-900/50 border border-slate-700 text-white text-lg font-bold rounded-2xl p-4"
+                            />
                         </View>
+                        
+                        <View className="h-[1px] bg-white/5 w-full mb-6" />
+                        
+                        <Text className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-4 ml-1 text-center">Categoría</Text>
+                        <View className="flex-row flex-wrap justify-between gap-y-6">
+                            {CATEGORIES.map((cat) => (
+                                <Pressable 
+                                    key={cat.id} 
+                                    onPress={() => setSelectedCategory(cat.id)}
+                                    className="items-center w-[30%]"
+                                >
+                                    <View 
+                                        className={`w-14 h-14 rounded-2xl items-center justify-center border-2 ${selectedCategory === cat.id ? 'bg-blue-600 border-blue-400' : 'bg-slate-900/40 border-transparent'}`}
+                                    >
+                                        <MaterialIcons name={cat.icon as any} size={24} color={selectedCategory === cat.id ? 'white' : '#475569'} />
+                                    </View>
+                                    <Text className={`text-[10px] font-bold mt-2 uppercase tracking-tight ${selectedCategory === cat.id ? 'text-white' : 'text-slate-500'}`}>{cat.name}</Text>
+                                </Pressable>
+                            ))}
+                        </View>
+                    </View>
+
+                    {/* Split Preview */}
+                    <View className="bg-emerald-500/10 px-6 py-4 rounded-2xl border border-emerald-500/20 flex-row items-center justify-center gap-3">
+                        <MaterialIcons name="groups" size={20} color="#10b981" />
+                        <Text className="text-emerald-400 font-bold text-xs">Se dividirá equitativamente entre 4 personas</Text>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
 
-            {/* Bottom Sticky Action Button - LA ACCIÓN */}
-            <View className="absolute bottom-0 left-0 right-0 p-10 bg-[#0f172a]">
-                <Pressable 
-                    onPress={() => router.push('/(tabs)/dashboard')}
-                    className="bg-blue-600 w-full py-6 rounded-[35px] flex-row items-center justify-center gap-3 shadow-3xl shadow-blue-600/50 active:scale-[0.97]"
-                >
-                    <Text className="text-white font-black text-xl tracking-widest uppercase">Confirmar Gasto</Text>
-                </Pressable>
-            </View>
-
             {/* Bottom Sticky Action Button */}
-            <View className="absolute bottom-0 left-0 right-0 p-8 bg-slate-900/80 backdrop-blur-xl border-t border-white/5">
+            <View className="absolute bottom-10 left-6 right-6">
                 <Pressable 
-                    onPress={() => router.push('/(tabs)/dashboard')}
-                    className="bg-blue-600 w-full py-5 rounded-full flex-row items-center justify-center gap-3 shadow-2xl shadow-blue-600/50 active:scale-95"
-                    style={{ backgroundColor: Colors.brilliantAzure }}
+                    onPress={() => {
+                        // Logic to save expense
+                        router.push('/(tabs)/dashboard');
+                    }}
+                    className="bg-blue-600 w-full py-5 rounded-2xl flex-row items-center justify-center gap-3 shadow-2xl shadow-blue-500/40 active:scale-95"
                 >
                     <MaterialIcons name="check-circle" size={24} color="white" />
-                    <Text className="text-white font-black text-xl">Confirmar Gasto</Text>
+                    <Text className="text-white font-black text-lg uppercase tracking-widest">Confirmar Gasto</Text>
                 </Pressable>
             </View>
         </SafeAreaView>

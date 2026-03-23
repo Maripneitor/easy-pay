@@ -18,10 +18,13 @@
     "lib": [
       "ESNext"
     ],
-    "module": "ESNext",
+    "module": "esnext",
     "moduleResolution": "bundler",
+
+
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "types": ["nativewind/types"]
   },
   "include": [
     "**/*.ts",

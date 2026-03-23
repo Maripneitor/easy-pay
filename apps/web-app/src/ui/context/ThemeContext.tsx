@@ -1,45 +1,72 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'dark' | 'light';
+// 1. Añadimos 'pink' a los tipos permitidos
+type ColorTheme = 'vibrant' | 'serene' | 'earth' | 'pink' | 'default';
+type FontSize = 'small' | 'medium' | 'large';
 
 interface ThemeContextType {
-    theme: Theme;
+    colorTheme: ColorTheme;
+    isDark: boolean;
+    fontSize: FontSize;
+    setTheme: (theme: ColorTheme) => void;
     toggleTheme: () => void;
+    setFontSize: (size: FontSize) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [theme, setTheme] = useState<Theme>(() => {
-        const savedTheme = localStorage.getItem('theme');
-        return (savedTheme as Theme) || 'dark';
+    const [colorTheme, setColorTheme] = useState<ColorTheme>(() => 
+        (localStorage.getItem('color-theme') as ColorTheme) || 'default'
+    );
+
+    const [isDark, setIsDark] = useState<boolean>(() => {
+        const saved = localStorage.getItem('is-dark');
+        return saved ? saved === 'true' : true;
     });
 
+    const [fontSize, setFontSizeState] = useState<FontSize>(() => 
+        (localStorage.getItem('font-size') as FontSize) || 'medium'
+    );
+
     useEffect(() => {
-        const root = window.document.documentElement;
-        root.classList.remove('light', 'dark');
-        root.classList.add(theme);
-        localStorage.setItem('theme', theme);
-    }, [theme]);
+        const rootBody = window.document.body;
+        const rootHtml = window.document.documentElement;
+        
+        // 1. Limpiamos clases de color (añadimos pink aquí) y tamaño
+        const themes = ['vibrant', 'serene', 'earth', 'pink', 'dark'];
+        const sizes = ['font-small', 'font-medium', 'font-large'];
+        
+        rootBody.classList.remove(...themes, ...sizes);
+        rootHtml.classList.remove(...sizes);
 
-    // Listen for storage changes to sync across tabs
-    useEffect(() => {
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'theme' && e.newValue) {
-                setTheme(e.newValue as Theme);
-            }
-        };
+        // 2. Aplicamos Modo Oscuro
+        if (isDark) {
+            rootBody.classList.add('dark');
+        }
 
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
+        // 3. Aplicamos Tema de Color
+        if (colorTheme !== 'default') {
+            rootBody.classList.add(colorTheme);
+        }
 
-    const toggleTheme = () => {
-        setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-    };
+        // 4. ESCALADO GLOBAL: Aplicamos al HTML y al BODY
+        rootHtml.classList.add(`font-${fontSize}`);
+        rootBody.classList.add(`font-${fontSize}`);
+
+        // 5. Persistencia
+        localStorage.setItem('color-theme', colorTheme);
+        localStorage.setItem('is-dark', isDark.toString());
+        localStorage.setItem('font-size', fontSize);
+        
+    }, [colorTheme, isDark, fontSize]);
+
+    const setTheme = (newColor: ColorTheme) => setColorTheme(newColor);
+    const toggleTheme = () => setIsDark(prev => !prev);
+    const setFontSize = (size: FontSize) => setFontSizeState(size);
 
     return (
-        <ThemeContext.Provider value={{ theme, toggleTheme }}>
+        <ThemeContext.Provider value={{ colorTheme, isDark, fontSize, setTheme, toggleTheme, setFontSize }}>
             {children}
         </ThemeContext.Provider>
     );
@@ -47,8 +74,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 export const useTheme = () => {
     const context = useContext(ThemeContext);
-    if (context === undefined) {
-        throw new Error('useTheme must be used within a ThemeProvider');
-    }
+    if (context === undefined) throw new Error('useTheme debe usarse dentro de ThemeProvider');
     return context;
 };

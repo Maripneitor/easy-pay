@@ -9,7 +9,8 @@ export const DashboardLayout = () => {
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
     return (
-        <div className="flex h-screen bg-gray-50 dark:bg-slate-900 text-slate-900 dark:text-white overflow-hidden transition-colors duration-300">
+        /* Usamos var(--bg-body) para que el fondo sea global según el tema seleccionado */
+        <div className="flex h-screen bg-[var(--bg-body)] text-[var(--text-primary)] overflow-hidden transition-colors duration-300 font-display">
             {/* Sidebar Navigation */}
             <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
@@ -33,6 +34,7 @@ export const DashboardLayout = () => {
                 {/* Scrollable Content */}
                 <main className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-700">
                     <div className="max-w-7xl mx-auto w-full space-y-6">
+                        {/* Pasamos toggleSidebar a través del Outlet para que todas las páginas puedan abrir la Sidebar */}
                         <Outlet context={{ toggleSidebar }} />
                     </div>
                 </main>

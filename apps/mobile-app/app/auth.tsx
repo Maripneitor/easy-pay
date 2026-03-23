@@ -1,170 +1,235 @@
 import React, { useState } from 'react';
-import { ScrollView, View, Text, Pressable, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { 
+    ScrollView, 
+    View, 
+    Text, 
+    Pressable, 
+    TextInput, 
+    KeyboardAvoidingView, 
+    Platform, 
+    Dimensions,
+    ActivityIndicator,
+    TouchableOpacity,
+    StyleSheet
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, router } from 'expo-router';
-import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Stack, useRouter } from 'expo-router';
+import { Ionicons, Feather, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { MotiView } from 'moti';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../src/infrastructure/context/ThemeContext';
+
+const { width } = Dimensions.get('window');
 
 export default function AuthScreen() {
+    console.log('AuthScreen rendering...');
+    const { theme, fontScale, cycleTheme } = useTheme();
+    const router = useRouter(); // Use the hook instead of singleton
     const [isLogin, setIsLogin] = useState(true);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [name, setName] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
+    const handleAuth = () => {
+        if (!email || !password || (!isLogin && !name)) {
+            setError('Por favor completa todos los campos.');
+            return;
+        }
+        setError('');
+        setLoading(true);
+        setTimeout(() => {
+            setLoading(false);
+            if (isLogin) {
+                router.replace('/(tabs)/dashboard');
+            } else {
+                router.replace('/onboarding');
+            }
+        }, 1500);
+    };
+
+    // Safe ROOT pattern to avoid NativeWind v4 + React 19 + Navigation Context bug
     return (
-        <SafeAreaView className="flex-1 bg-[#0f172a]">
+        <View style={{ flex: 1, backgroundColor: '#0f172a' }}>
             <StatusBar style="light" />
-            <Stack.Screen options={{ headerShown: false }} />
             
             <KeyboardAvoidingView 
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                className="flex-1"
+                style={{ flex: 1 }}
             >
-                {/* Background Floating Circles */}
-                <View className="absolute top-0 left-0 w-96 h-96 bg-[#1976D2]/10 blur-[80px] rounded-full -translate-x-1/2 -translate-y-1/2" />
-                <View className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[#1565C0]/10 blur-[80px] rounded-full translate-x-1/3 translate-y-1/3" />
+                {/* Background Decor */}
+                <View style={{ ...styles.blob, top: 0, left: 0, backgroundColor: 'rgba(25, 118, 210, 0.1)', transform: [{ translateX: -width/3 }, { translateY: -width/3 }] }} />
+                <View style={{ ...styles.blob, bottom: 0, right: 0, backgroundColor: 'rgba(13, 71, 161, 0.15)', transform: [{ translateX: width/3 }, { translateY: width/3 }] }} />
                 
                 <ScrollView 
-                    className="flex-1 px-6 mx-auto w-full max-w-md"
-                    contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 40 }}
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40 }}
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Header Header */}
-                    <View className="items-center mb-8 z-10">
-                        <View className="w-16 h-16 bg-[#64B5F6]/10 rounded-2xl items-center justify-center mb-4 border border-[#64B5F6]/20 shadow-lg shadow-blue-500/20">
+                    {/* Header */}
+                    <View className="items-center mb-10">
+                        <View className="w-16 h-16 bg-[#64B5F6]/10 rounded-2xl flex items-center justify-center mb-4 border border-[#64B5F6]/20">
                             <MaterialIcons name="confirmation-number" size={32} color="#64B5F6" />
                         </View>
-                        <Text className="text-white text-3xl font-bold tracking-tight">Easy-Pay</Text>
-                        <Text className="text-slate-400 mt-2 text-sm z-10">Sin matemáticas, sin dramas</Text>
+                        <Text style={{ fontSize: 32 * fontScale, color: 'white' }} className="font-bold tracking-tight">Easy-Pay</Text>
+                        <Text style={{ fontSize: 13 * fontScale }} className="text-slate-400 mt-2 font-medium">Sin matemáticas, sin dramas</Text>
                     </View>
 
-                    {/* Glass Card */}
-                    <View className="bg-slate-800/40 rounded-3xl p-8 border border-white/10 border-t-white/20 border-l-white/20 shadow-2xl z-10">
-                        
-                        {/* Toggle */}
-                        <View className="flex-row bg-slate-800/50 p-1 rounded-xl mb-8">
-                            <Pressable 
-                                onPress={() => setIsLogin(true)}
-                                className={`flex-1 py-2.5 items-center rounded-lg ${isLogin ? 'bg-slate-700 shadow-sm' : ''}`}
+                    {/* Form Card */}
+                    <View className="bg-[#1e293b]/40 border border-white/10 rounded-[32px] p-8 shadow-2xl">
+                        {/* Selector (Tabs) */}
+                        <View className="flex-row p-1 bg-[#1e293b]/50 rounded-xl mb-8 border border-white/5">
+                            <TouchableOpacity 
+                                onPress={() => { setIsLogin(true); setError(''); }}
+                                className={`flex-1 py-3 items-center rounded-lg ${isLogin ? 'bg-[#334155]' : ''}`}
                             >
-                                <Text className={`text-sm ${isLogin ? 'font-semibold text-white' : 'font-medium text-slate-400'}`}>Iniciar Sesión</Text>
-                            </Pressable>
-                            <Pressable 
-                                onPress={() => setIsLogin(false)}
-                                className={`flex-1 py-2.5 items-center rounded-lg ${!isLogin ? 'bg-slate-700 shadow-sm' : ''}`}
+                                <Text style={{ fontSize: 12 * fontScale }} className={`font-semibold ${isLogin ? 'text-white' : 'text-slate-400'}`}>Iniciar Sesión</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                onPress={() => { setIsLogin(false); setError(''); }}
+                                className={`flex-1 py-3 items-center rounded-lg ${!isLogin ? 'bg-[#334155]' : ''}`}
                             >
-                                <Text className={`text-sm ${!isLogin ? 'font-semibold text-white' : 'font-medium text-slate-400'}`}>Registrarse</Text>
-                            </Pressable>
+                                <Text style={{ fontSize: 12 * fontScale }} className={`font-semibold ${!isLogin ? 'text-white' : 'text-slate-400'}`}>Registrarse</Text>
+                            </TouchableOpacity>
                         </View>
 
+                        {/* Error */}
+                        {error && (
+                            <View className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl mb-6 flex-row items-center gap-3">
+                                <Ionicons name="alert-circle" size={18} color="#f43f5e" />
+                                <Text className="text-rose-400 text-xs font-medium flex-1">{error}</Text>
+                            </View>
+                        )}
+
                         {/* Form */}
-                        <View className="space-y-6">
+                        <View className="gap-6">
                             {!isLogin && (
-                                <View className="gap-1 mb-6">
-                                    <Text className="text-slate-300 text-sm font-medium">Nombre Completo</Text>
-                                    <View className="relative justify-center">
-                                        <View className="absolute left-3 z-10">
-                                            <MaterialIcons name="person" size={20} color="#64748b" />
-                                        </View>
+                                <View>
+                                    <Text className="text-slate-300 text-sm font-medium mb-2 ml-1">Nombre completo</Text>
+                                    <View className="bg-[#1e293b] border border-[#334155] p-3.5 rounded-xl flex-row items-center">
+                                        <MaterialIcons name="person" size={20} color="#64748b" />
                                         <TextInput 
-                                            placeholder="Juan Pérez"
-                                            placeholderTextColor="#64748b"
-                                            className="bg-[#1e293b] border border-[#334155] text-white pl-10 pr-3 py-3 rounded-xl text-sm focus:border-[#2196F3]"
+                                            placeholder="Juan Pérez" 
+                                            placeholderTextColor="#475569" 
+                                            className="flex-1 ml-3 text-white font-medium"
+                                            value={name} 
+                                            onChangeText={setName} 
                                         />
                                     </View>
                                 </View>
                             )}
-
-                            <View className="gap-1 mb-6">
-                                <Text className="text-slate-300 text-sm font-medium">Email</Text>
-                                <View className="relative justify-center">
-                                    <View className="absolute left-3 z-10">
-                                        <MaterialIcons name="mail" size={20} color="#64748b" />
-                                    </View>
+                            <View>
+                                <Text className="text-slate-300 text-sm font-medium mb-2 ml-1">Email</Text>
+                                <View className="bg-[#1e293b] border border-[#334155] p-3.5 rounded-xl flex-row items-center">
+                                    <MaterialIcons name="mail" size={20} color="#64748b" />
                                     <TextInput 
-                                        placeholder="tu@ejemplo.com"
-                                        placeholderTextColor="#64748b"
-                                        keyboardType="email-address"
-                                        autoCapitalize="none"
-                                        className="bg-[#1e293b] border border-[#334155] text-white pl-10 pr-3 py-3 rounded-xl text-sm focus:border-[#2196F3]"
+                                        placeholder="tu@ejemplo.com" 
+                                        placeholderTextColor="#475569" 
+                                        keyboardType="email-address" 
+                                        autoCapitalize="none" 
+                                        className="flex-1 ml-3 text-white font-medium"
+                                        value={email} 
+                                        onChangeText={setEmail} 
                                     />
                                 </View>
                             </View>
-
-                            <View className="gap-1 mb-6">
-                                <Text className="text-slate-300 text-sm font-medium">Contraseña</Text>
-                                <View className="relative justify-center">
-                                    <View className="absolute left-3 z-10">
-                                        <MaterialIcons name="lock" size={20} color="#64748b" />
-                                    </View>
+                            <View>
+                                <Text className="text-slate-300 text-sm font-medium mb-2 ml-1">Contraseña</Text>
+                                <View className="bg-[#1e293b] border border-[#334155] p-3.5 rounded-xl flex-row items-center">
+                                    <MaterialIcons name="lock" size={20} color="#64748b" />
                                     <TextInput 
-                                        placeholder="••••••••"
-                                        placeholderTextColor="#64748b"
-                                        secureTextEntry
-                                        className="bg-[#1e293b] border border-[#334155] text-white pl-10 pr-3 py-3 rounded-xl text-sm focus:border-[#2196F3]"
+                                        placeholder="••••••••" 
+                                        placeholderTextColor="#475569" 
+                                        secureTextEntry={!showPassword} 
+                                        className="flex-1 ml-3 text-white font-medium"
+                                        value={password} 
+                                        onChangeText={setPassword} 
                                     />
+                                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                        <Feather name={showPassword ? "eye-off" : "eye"} size={18} color="#64748b" />
+                                    </TouchableOpacity>
                                 </View>
                             </View>
 
-                            {isLogin && (
-                                <View className="flex-row items-center justify-between mb-6">
-                                    <View className="flex-row items-center gap-2">
-                                        <View className="w-4 h-4 rounded bg-[#1e293b] border border-[#334155]" />
-                                        <Text className="text-slate-400 text-xs">Recordarme</Text>
+                            <View className="flex-row items-center justify-between">
+                                <TouchableOpacity className="flex-row items-center">
+                                    <View className="w-4 h-4 rounded border border-slate-600 bg-slate-800 mr-2 items-center justify-center">
+                                        <Ionicons name="checkmark" size={10} color="#2196F3" />
                                     </View>
-                                    <Pressable onPress={() => router.push('/password-recovery')}>
-                                        <Text className="text-[#64B5F6] text-xs font-medium">¿Olvidaste tu contraseña?</Text>
-                                    </Pressable>
-                                </View>
-                            )}
+                                    <Text className="text-slate-400 text-xs">Recordarme</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => router.push('/password-recovery')}>
+                                    <Text className="text-[#64B5F6] text-xs font-semibold">¿Olvidaste tu contraseña?</Text>
+                                </TouchableOpacity>
+                            </View>
 
-                            <Pressable 
-                                onPress={() => router.push('/create-group')}
-                                className="bg-[#2196F3] py-3.5 rounded-xl items-center shadow-lg active:bg-[#1976D2] mb-[32px]"
+                            <TouchableOpacity 
+                                onPress={handleAuth}
+                                disabled={loading}
+                                className="mt-2 overflow-hidden rounded-xl"
                             >
-                                <Text className="text-white font-bold text-sm">
-                                    {isLogin ? 'Entrar' : 'Registrarse'}
-                                </Text>
-                            </Pressable>
+                                <LinearGradient
+                                    colors={['#2196F3', '#0D47A1']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    className="p-4 items-center"
+                                >
+                                    {loading ? <ActivityIndicator color="white" size="small" /> : (
+                                        <Text style={{ fontSize: 14 * fontScale }} className="text-white font-bold">
+                                            {isLogin ? 'Entrar' : 'Crear Cuenta'}
+                                        </Text>
+                                    )}
+                                </LinearGradient>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity 
+                                onPress={() => router.push('/auth-phone')}
+                                className="items-center py-2"
+                            >
+                                <Text className="text-[#64B5F6] text-xs font-semibold">Usar número de teléfono</Text>
+                            </TouchableOpacity>
                         </View>
 
-                        {/* Social Auth */}
-                        <View className="mt-8">
-                            <View className="relative mb-6">
-                                <View className="absolute inset-0 flex items-center justify-center">
-                                    <View className="w-full border-t border-slate-700" />
-                                </View>
-                                <View className="flex-row justify-center relative z-10">
-                                    <Text className="text-slate-500 text-xs px-2 bg-transparent" style={{ backgroundColor: '#1e293b' }}>O continúa con</Text>
-                                </View>
-                            </View>
-                            
-                            <View className="flex-row gap-3">
-                                <Pressable className="flex-1 border border-slate-700 bg-slate-800 py-2.5 rounded-xl justify-center items-center shadow-sm active:bg-slate-700">
-                                    <FontAwesome5 name="google" size={18} color="#ef4444" />
-                                </Pressable>
-                                <Pressable className="flex-1 border border-slate-700 bg-slate-800 py-2.5 rounded-xl justify-center items-center shadow-sm active:bg-slate-700">
-                                    <FontAwesome5 name="facebook" size={20} color="#3b5998" />
-                                </Pressable>
-                            </View>
+                        {/* Social Buttons */}
+                        <View className="items-center mt-8 mb-6">
+                            <View className="w-full h-[1px] bg-slate-700/50 absolute top-2" />
+                            <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest bg-[#1a2536] px-3 z-10">O continúa con</Text>
                         </View>
-
+                        <View className="flex-row gap-4">
+                            <TouchableOpacity className="flex-1 h-12 bg-[#1e293b] border border-slate-700 rounded-xl items-center justify-center">
+                                <FontAwesome5 name="google" size={18} color="#cbd5e1" />
+                            </TouchableOpacity>
+                            <TouchableOpacity className="flex-1 h-12 bg-[#1e293b] border border-slate-700 rounded-xl items-center justify-center">
+                                <FontAwesome5 name="apple" size={20} color="#cbd5e1" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
 
-                    {/* Guest Login */}
-                    <View className="items-center mt-8 z-10">
-                        <Pressable 
-                            onPress={() => router.push('/(tabs)/dashboard')}
-                            className="flex-row items-center px-6 py-2 border border-slate-600 rounded-full active:bg-white/5 active:border-slate-400"
-                        >
-                            <Text className="text-slate-300 font-medium text-sm">Continuar como Invitado</Text>
-                            <MaterialIcons name="arrow-forward" size={18} color="#cbd5e1" style={{ marginLeft: 4 }} />
-                        </Pressable>
+                    {/* Footer Links */}
+                    <View className="items-center mt-10">
+                         <TouchableOpacity 
+                            onPress={() => router.push('/(tabs)/dashboard')} 
+                            className="flex-row items-center gap-2 px-6 py-2.5 border border-slate-600 rounded-full"
+                         >
+                            <Text className="text-slate-300 font-semibold text-sm">Continuar como Invitado</Text>
+                            <MaterialIcons name="arrow-forward" size={18} color="#94a3b8" />
+                         </TouchableOpacity>
                     </View>
-                    
-                    {/* Decorative stars / particles (simplified) */}
-                    <View className="absolute top-10 left-10 w-2 h-2 bg-blue-300 rounded-full opacity-50 z-0" />
-                    <View className="absolute bottom-40 left-10 w-1.5 h-1.5 bg-white rounded-full opacity-20 z-0" />
-                    <View className="absolute top-20 right-10 w-1 h-1 bg-blue-400 rounded-full opacity-30 z-0" />
                 </ScrollView>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </View>
     );
 }
+
+const styles = StyleSheet.create({
+    blob: {
+        position: 'absolute',
+        width: width,
+        height: width,
+        borderRadius: width / 2,
+        opacity: 0.5,
+    }
+});

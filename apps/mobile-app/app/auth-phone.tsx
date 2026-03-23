@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, Text, TextInput, Pressable, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { MotiView } from 'moti';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function AuthPhoneScreen() {
 
@@ -11,86 +13,101 @@ export default function AuthPhoneScreen() {
         <SafeAreaView className="flex-1 bg-[#0f172a]" edges={['top', 'bottom']}>
             <StatusBar style="light" />
 
-            {/* Background effects */}
+            {/* Background effects (Matching Stitch radial gradient) */}
             <View className="absolute top-0 w-full h-full pointer-events-none z-0 overflow-hidden">
-                <View className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px]" />
-                <View className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-800/20 rounded-full blur-[120px]" />
+                <View className="absolute -top-[10%] -left-[10%] w-[80%] h-[80%] bg-[#1976D2]/10 rounded-full blur-[100px]" />
+                <View className="absolute -bottom-[10%] -right-[10%] w-[80%] h-[80%] bg-[#0D47A1]/15 rounded-full blur-[100px]" />
             </View>
 
-            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>
+            <ScrollView 
+                contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
+                showsVerticalScrollIndicator={false}
+            >
                 <View className="w-full max-w-md mx-auto z-10">
-                    <View className="flex flex-col items-center mb-8">
-                        <View className="w-16 h-16 bg-blue-400/10 rounded-2xl items-center justify-center mb-4 border border-blue-400/20 shadow-lg shadow-blue-500/20">
-                            <MaterialIcons name="smartphone" size={36} color="#60a5fa" />
+                    <MotiView 
+                        from={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex flex-col items-center mb-8"
+                    >
+                        <View className="w-16 h-16 bg-[#64B5F6]/10 rounded-2xl items-center justify-center mb-4 border border-[#64B5F6]/20 shadow-glow">
+                            <MaterialIcons name="smartphone" size={36} color="#64B5F6" />
                         </View>
                         <Text className="text-3xl font-bold tracking-tight text-white">Easy-Pay</Text>
                         <Text className="text-slate-400 mt-2 text-sm">Acceso rápido y seguro</Text>
-                    </View>
+                    </MotiView>
 
-                    <View className="bg-slate-800/40 border border-white/10 p-8 rounded-3xl shadow-2xl w-full">
+                    <MotiView 
+                        from={{ opacity: 0, translateY: 20 }}
+                        animate={{ opacity: 1, translateY: 0 }}
+                        transition={{ delay: 200 }}
+                        className="bg-[#1e293b]/40 border border-white/10 p-8 rounded-[32px] shadow-2xl w-full"
+                    >
                         <Text className="text-xl font-semibold text-center mb-6 text-slate-200">Ingresa con tu móvil</Text>
                         
                         <View className="space-y-6">
                             <View className="mb-6">
-                                <Text className="block text-sm font-medium text-slate-300 mb-1">Número de teléfono</Text>
+                                <Text className="text-sm font-medium text-slate-300 mb-2 ml-1">Número de teléfono</Text>
                                 <View className="flex-row">
-                                    <View className="bg-[#1e293b] border border-[#334155] border-r-0 rounded-l-xl flex-row items-center px-3 w-28">
-                                        <Text className="text-slate-300 flex-1">+34 🇪🇸</Text>
+                                    <View className="bg-[#1e293b] border border-[#334155] border-r-0 rounded-l-xl flex-row items-center px-3 w-28 h-[52px]">
+                                        <Text className="text-slate-300 flex-1 font-medium">+34 🇪🇸</Text>
                                         <MaterialIcons name="expand-more" size={16} color="#94a3b8" />
                                     </View>
                                     <TextInput
-                                        className="bg-[#1e293b] border-l border-[#334155] text-slate-200 flex-1 pl-4 pr-3 py-3 rounded-r-xl"
+                                        className="bg-[#1e293b] border border-[#334155] text-slate-200 flex-1 pl-4 pr-3 py-3 rounded-r-xl font-medium h-[52px]"
                                         placeholder="600 000 000"
-                                        placeholderTextColor="#64748b"
+                                        placeholderTextColor="#475569"
                                         keyboardType="phone-pad"
                                     />
                                 </View>
-                                <Text className="text-xs text-slate-500 mt-1 pl-1">Te enviaremos un código de verificación.</Text>
+                                <Text className="text-xs text-slate-500 mt-2 pl-1 italic">Te enviaremos un código de verificación.</Text>
                             </View>
 
-                            <Pressable 
+                            <TouchableOpacity 
                                 onPress={() => router.push('/security-2fa')}
-                                className="bg-[#2196F3] py-3.5 rounded-xl shadow-lg shadow-blue-500/40 active:scale-[0.98] items-center mb-4"
+                                className="active:scale-[0.98] mb-4 overflow-hidden rounded-xl"
                             >
-                                <Text className="text-white font-bold text-sm">Enviar Código</Text>
-                            </Pressable>
-
-                            <View className="items-center mb-6">
-                                <Pressable 
-                                    onPress={() => router.back()}
-                                    className="flex-row items-center active:opacity-70"
+                                <LinearGradient
+                                    colors={['#2196F3', '#0D47A1']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    className="p-4 items-center"
                                 >
-                                    <MaterialIcons name="arrow-back" size={16} color="#64b5f6" className="mr-1" />
-                                    <Text className="text-[#64b5f6] text-sm font-medium ml-1">Volver al login con email</Text>
-                                </Pressable>
-                            </View>
+                                    <Text className="text-white font-bold text-sm">Enviar Código</Text>
+                                </LinearGradient>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity 
+                                onPress={() => router.back()}
+                                className="flex-row items-center justify-center py-2 active:opacity-70"
+                            >
+                                <MaterialIcons name="arrow-back" size={16} color="#64b5f6" />
+                                <Text className="text-[#64b5f6] text-sm font-semibold ml-2">Volver al login con email</Text>
+                            </TouchableOpacity>
                             
-                            <View className="mb-6">
-                                <View className="relative flex items-center justify-center">
-                                    <View className="absolute w-full border-t border-slate-700"></View>
-                                    <Text className="bg-[#1e293b] px-2 text-xs text-slate-500 relative z-10">O continúa con</Text>
-                                </View>
+                            <View className="items-center mt-6 mb-6">
+                                <View className="w-full h-[1px] bg-slate-700/50 absolute top-2" />
+                                <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest bg-[#141f30] px-3 z-10">O continúa con</Text>
                             </View>
 
                             <View className="flex-row gap-3">
-                                <Pressable className="flex-1 py-2.5 border border-slate-700 rounded-xl bg-slate-800 items-center justify-center active:bg-slate-700">
+                                <TouchableOpacity className="flex-1 py-3 border border-slate-700 rounded-xl bg-[#1e293b] items-center justify-center active:bg-slate-700">
                                     <FontAwesome5 name="google" size={18} color="#cbd5e1" />
-                                </Pressable>
-                                <Pressable className="flex-1 py-2.5 border border-slate-700 rounded-xl bg-slate-800 items-center justify-center active:bg-slate-700">
+                                </TouchableOpacity>
+                                <TouchableOpacity className="flex-1 py-3 border border-slate-700 rounded-xl bg-[#1e293b] items-center justify-center active:bg-slate-700">
                                     <FontAwesome5 name="apple" size={20} color="#cbd5e1" />
-                                </Pressable>
+                                </TouchableOpacity>
                             </View>
                         </View>
-                    </View>
+                    </MotiView>
 
                     <View className="mt-8 items-center">
-                        <Pressable 
+                        <TouchableOpacity 
                             onPress={() => router.push('/(tabs)/dashboard')}
-                            className="flex-row items-center px-6 py-2 border border-slate-600 rounded-full active:border-slate-400 active:bg-white/5"
+                            className="flex-row items-center px-6 py-2.5 border border-slate-600 rounded-full active:bg-white/5"
                         >
-                            <Text className="text-slate-300 font-medium text-sm mr-1">Continuar como Invitado</Text>
-                            <MaterialIcons name="arrow-forward" size={18} color="#cbd5e1" />
-                        </Pressable>
+                            <Text className="text-slate-300 font-semibold text-sm mr-2">Continuar como Invitado</Text>
+                            <MaterialIcons name="arrow-forward" size={18} color="#94a3b8" />
+                        </TouchableOpacity>
                     </View>
                 </View>
             </ScrollView>

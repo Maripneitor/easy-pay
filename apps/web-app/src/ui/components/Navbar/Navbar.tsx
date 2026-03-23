@@ -31,7 +31,7 @@ export const Navbar = () => {
                 </button>
                 <button
                     className={styles.profileBtn}
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => navigate('/auth')}
                 >
                     <User size={18} />
                 </button>

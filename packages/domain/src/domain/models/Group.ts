@@ -16,6 +16,7 @@ export interface Group {
     tip: number;            // Tip amount
     total: number;          // subtotal + tip
     leaderId: string;       // Member id of the group leader
+    version: number;        // Sequence number for synchronization
     createdAt?: string;     // ISO 8601 date string
 }
 

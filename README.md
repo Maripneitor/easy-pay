@@ -1,115 +1,62 @@
-# 🚀 EASY-PAY (v2) - Guía de Operación
+# 💸 EASY-PAY: Gestión de Gastos Compartidos
 
-Bienvenido a **EASY-PAY**. Este monorepositorio te permite trabajar de dos formas: usando Docker para una configuración rápida o de forma local para un desarrollo ágil en móviles.
-
----
-
-## 📋 Requisitos Previos
-
-- **Git**: Control de versiones.
-- **pnpm**: Gestor de paquetes (`npm install -g pnpm`).
-- **Node.js (v18+)**: Entorno de ejecución.
-- **Docker Desktop**: Para servicios backend y bases de datos.
-- **Expo Go**: App en tu móvil para previsualizar la app nativa.
+¡Bienvenido a **EASY-PAY**! Esta es una plataforma integral (Móvil, Web y API) diseñada para facilitar el registro y la liquidación de gastos entre amigos y grupos, al estilo de Splitwise pero con un enfoque moderno y rápido.
 
 ---
 
-## 🛠️ Instalación Inicial
-
-Desde la raíz del proyecto, instala todas las dependencias del monorepo:
-
-```bash
-npx pnpm install
-```
-
----
-
-## 🏗️ OPCIÓN 1: Ejecución con Docker (Ecosistema Completo)
-
-Ideal para probar el proyecto completo (Backend, Web y Mobile) con un solo comando.
-
-1. **Levantar todo:**
-   ```bash
-   docker-compose up --build
-   ```
-2. **Servicios disponibles:**
-   - **App Móvil (Web Mode)**: [http://localhost:8081](http://localhost:8081)
-   - **Web App**: [http://localhost:5173](http://localhost:5173)
-   - **Backend API**: [http://localhost:8000](http://localhost:8000)
-   - **API Docs (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-3. **Apagar todo:**
-   ```bash
-   docker-compose down
-   ```
+## 🌟 ¿Qué es EASY-PAY?
+EASY-PAY permite:
+- **Registrar gastos** rápidamente desde el móvil.
+- **Escanear tickets** físicos usando OCR (Inteligencia Artificial).
+- **Gestionar deudas** y saldos en tiempo real.
+- **Liquidar deudas** con flujos de pago intuitivos.
+- **Seguridad avanzada** con autenticación de dos factores (2FA).
 
 ---
 
-## 💻 OPCIÓN 2: Ejecución Local (Recomendado para Desarrollo Móvil)
+## 🚦 Guía de Inicio Rápido
 
-Esta opción es la más rápida para editar la app móvil y ver los cambios al instante en tu teléfono físico o simulador.
+Si acabas de descargar el proyecto, elige tu camino:
 
-### Pasos para la App Móvil (Sin Docker):
+### 1. Instrucciones para Mac (Silicon/Intel)
+Si estás en una Mac, estos son los comandos recomendados:
+1. **Instalar dependencias**: `pnpm install`
+2. **Lanzar Web**: `pnpm run dev:web` (luego abre `http://localhost:5173`)
+3. **Lanzar Mobile**: `pnpm --filter mobile-app run start` (luego presiona `i` para iOS o `a` para Android)
 
-1. **Entra a la carpeta:**
-   ```bash
-   cd apps/mobile-app
-   ```
-2. **Inicia Expo con limpieza de caché:**
-   ```bash
-   npx expo start --clear
-   ```
-3. **Controles:**
-   - Presiona `i` para abrir el simulador de iOS.
-   - Presiona `a` para Android.
-   - Escanea el código QR desde la app **Expo Go** en tu celular.
+### 2. Solo quiero probarlo rápido (Docker)
+Si tienes Docker instalado y quieres ver la app corriendo sin configurar nada:
+👉 [**Guía de Docker**](./docs/DOCKER_USAGE.md)
 
-### Pasos para el Backend (Sin Docker):
-
-Si quieres correr el API de Python localmente:
-
-1. **Entra a la carpeta:**
-   ```bash
-   cd apps/api-backend
-   ```
-2. **Instala dependencias y corre:**
-   ```bash
-   pip install -r requirements.txt
-   uvicorn main:app --reload --port 8000
-   ```
+### 3. Quiero programar y hacer cambios (WSL + Emulador)
+Si vas a desarrollar en Windows, esta es la guía específica:
+👉 [**Guía de Entorno de Desarrollo**](./GUIA_ENTORNO.md)
 
 ---
 
-## 📂 Estructura del Proyecto
+## 📚 Documentación por Categoría
 
-```
-easy-pay/
-├── apps/
-│   ├── api-backend/      # Backend (Python / FastAPI)
-│   ├── web-app/          # Frontend Web (React / Vite)
-│   └── mobile-app/       # App Móvil (React Native / Expo / SDK 54)
-├── packages/             # Librerías compartidas (domain, ui)
-└── docker-compose.yml    # Configuración de Docker
-```
+Para entender mejor el proyecto, consulta estas guías:
+
+| Categoría | Documento | Descripción |
+| :--- | :--- | :--- |
+| **Arquitectura** | [**Mapa del Proyecto**](./docs/PROJECT_MAP.md) | Estructura de vistas y pantallas. |
+| **Desarrollo** | [**Reglas de Código**](./docs/CODING_GUIDELINES.md) | Cómo evitar errores comunes y estándares. |
+| **Entorno** | [**Configuración WSL**](./docs/ENVIRONMENT_WSL.md) | Detalles técnicos de la terminal en Ubuntu. |
 
 ---
 
-## 🆘 Solución de Problemas
+## 📁 Estructura del Monorepositorio
 
-- **Error de Worklets (Pantalla Roja)**: Asegúrate de que `package.json` en `mobile-app` use `react-native-reanimated: ~3.16.1`. Si acabas de actualizar, corre `npx expo start --clear`.
-- **Navegación bloqueada**: Los botones necesitan que el `package.json` tenga `"main": "expo-router/entry"`.
-- **Limpiar procesos colgados (Mac/Linux)**:
-  ```bash
-  lsof -ti:8081,8000,5173 | xargs kill -9
-  ```
-- **Reset del monorepo**:
-  ```bash
-  rm -rf node_modules **/node_modules pnpm-lock.yaml
-  pnpm install
-  ```
+- `apps/mobile-app`: Aplicación móvil desarrollada con Expo y React Native.
+- `apps/web-app`: Panel administrativo web con React y Vite.
+- `apps/api-backend`: Servidor y lógica de negocio.
+- `packages/`: Componentes y tipos compartidos entre todas las apps.
 
 ---
 
-## 🤝 Contribución
-
-Haz `git pull` antes de empezar. Si añades un paquete, hazlo desde la raíz con `pnpm add <package> --filter <app-name>`.
+## 🛠️ Tecnologías Principales
+- **Móvil**: Expo, React Native, NativeWind (Tailwind CSS).
+- **Web**: React, Vite, Tailwind CSS.
+- **Backend**: FastAPI (Python) / Node.js.
+- **Base de Datos**: PostgreSQL.

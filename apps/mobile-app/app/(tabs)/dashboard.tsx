@@ -1,206 +1,296 @@
-import React, { useState } from 'react';
-import { ScrollView, View, Text, Pressable, Image } from 'react-native';
+import React, { useState, useRef, useCallback } from 'react';
+import { 
+    ScrollView, 
+    View, 
+    Text, 
+    Pressable, 
+    Dimensions, 
+    Image, 
+    Animated, 
+    TouchableOpacity, 
+    StyleSheet,
+    RefreshControl
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { MaterialIcons, Ionicons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../../src/infrastructure/context/ThemeContext';
+import { MotiView, MotiText } from 'moti';
 
+import { SHARED_USER } from '../../src/infrastructure/constants/MockUser';
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.82;
+const CARD_SPACING = (width - CARD_WIDTH) / 2;
+
+// --- Dashboard Component ---
 export default function DashboardScreen() {
-    const [activeTab, setActiveTab] = useState<'activos' | 'inactivos'>('activos');
+    const { theme, fontScale, cycleTheme } = useTheme();
+    
+    // Define STATS dynamically to reflect the theme
+    const STATS = [
+        { id: '1', label: 'Saldo Total', amount: 8450.00, color: [theme.primary, `${theme.primary}80`, `${theme.primary}40`], icon: 'account-balance-wallet', trend: '+12%' },
+        { id: '2', label: 'Me Deben', amount: 480.00, color: ['#06b6d4', '#3b82f6'], icon: 'call-made', trend: '3 personas' },
+        { id: '3', label: 'Debes', amount: 320.00, color: ['#f43f5e', '#fb7185'], icon: 'call-received', trend: '2 deudas' },
+    ];
+    const router = useRouter();
+    const [refreshing, setRefreshing] = useState(false);
+    const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+    const scrollX = useRef(new Animated.Value(0)).current;
+
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        setTimeout(() => setRefreshing(false), 2000);
+    }, []);
+
+    const QUICK_ACTIONS = [
+        { id: 'group', label: 'Nuevo Grupo', icon: 'group-add', route: '/create-group', color: theme.primary },
+        { id: 'settle', label: 'Liquidar', icon: 'handshake', route: '/settle-up', color: '#a855f7' },
+        { id: 'join', label: 'Unirse', icon: 'qr-code-scanner', route: '/(tabs)/qr', color: '#10b981' },
+    ];
+
+    const renderHeader = () => (
+        <View style={{ backgroundColor: theme.bg }} className="px-6 py-8 flex-row justify-between items-center">
+            <TouchableOpacity 
+                activeOpacity={0.7}
+                onPress={() => router.push('/(tabs)/dashboard')}
+                onLongPress={cycleTheme}
+                className="flex-row items-center gap-3"
+            >
+                <View style={{ backgroundColor: theme.primary }} className="w-10 h-10 rounded-xl items-center justify-center shadow-lg shadow-pink-500/20 overflow-hidden">
+                    <Image source={require('../../assets/images/logo-ep.png')} className="w-full h-full" resizeMode="contain" />
+                </View>
+                <View>
+                    <Text style={{ fontSize: 20 * fontScale, color: theme.text }} className="font-black tracking-tighter">Easy-Pay</Text>
+                    <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-[3px]">Dashboard</Text>
+                </View>
+            </TouchableOpacity>
+            <View className="flex-row gap-3">
+                <TouchableOpacity 
+                    onPress={() => setIsBalanceVisible(!isBalanceVisible)}
+                    style={{ backgroundColor: theme.glassBg, borderColor: theme.border }}
+                    className="w-12 h-12 rounded-[18px] items-center justify-center border"
+                >
+                    <MaterialIcons name={isBalanceVisible ? "visibility" : "visibility-off"} size={22} color={theme.textSecondary} />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                    onPress={() => router.push('/settings')}
+                    style={{ backgroundColor: theme.glassBg, borderColor: theme.border }}
+                    className="w-12 h-12 rounded-[18px] items-center justify-center border overflow-hidden"
+                >
+                    <Image source={{ uri: SHARED_USER.avatar }} className="w-full h-full" />
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
 
     return (
-        <SafeAreaView className="flex-1 bg-[#0f172a]" edges={['top']}>
-            <StatusBar style="light" />
-            
-            {/* Background Effects */}
-            <View className="absolute top-0 w-full h-full pointer-events-none z-0">
-                <View className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]" />
-                <View className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-purple-600/10 rounded-full blur-[120px]" />
-            </View>
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
+            <StatusBar style={theme.isDark ? "light" : "dark"} />
+            <Stack.Screen options={{ headerShown: false }} />
 
-            {/* Header */}
-            <View className="px-6 py-4 flex-row justify-between items-center border-b border-white/5 bg-[#1e293b]/40 z-50">
-                <View>
-                    <Text className="text-slate-400 text-xs font-medium uppercase tracking-wider">Bienvenido</Text>
-                    <Text className="text-white text-2xl font-bold tracking-tight">Hola, Juan</Text>
-                </View>
-                <View className="flex-row items-center gap-4">
-                    <Pressable className="relative p-2 rounded-full active:bg-white/5">
-                        <MaterialIcons name="notifications" size={24} color="#94a3b8" />
-                        <View className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
-                    </Pressable>
-                    <View className="w-10 h-10 rounded-full bg-slate-700 items-center justify-center border-2 border-[#0f172a] shadow-lg shadow-[#0f172a]">
-                        <MaterialIcons name="person" size={20} color="white" />
-                    </View>
-                </View>
-            </View>
+            {renderHeader()}
 
             <ScrollView 
-                className="flex-1 px-4 lg:px-6"
-                contentContainerStyle={{ paddingVertical: 24, paddingBottom: 120 }}
                 showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 150 }}
+                refreshControl={
+                    <RefreshControl 
+                        refreshing={refreshing} 
+                        onRefresh={onRefresh} 
+                        tintColor={theme.primary}
+                        colors={[theme.primary]}
+                    />
+                }
             >
-                {/* Active Groups Section */}
-                <View className="mb-10 w-full max-w-4xl mx-auto z-10">
-                    <View className="flex-row justify-between items-end mb-6">
-                        <Text className="text-sm font-bold text-slate-400 tracking-widest uppercase">Mis Grupos Activos</Text>
+                {/* 1. Resumen Financiero */}
+                <View className="mt-4">
+                    <Animated.ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        snapToInterval={CARD_WIDTH + 14}
+                        decelerationRate="fast"
+                        contentContainerStyle={{ paddingHorizontal: CARD_SPACING }}
+                        onScroll={Animated.event(
+                            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                            { useNativeDriver: true }
+                        )}
+                        scrollEventThrottle={16}
+                    >
+                        {STATS.map((item, index) => {
+                            const inputRange = [
+                                (index - 1) * (CARD_WIDTH + 14),
+                                index * (CARD_WIDTH + 14),
+                                (index + 1) * (CARD_WIDTH + 14)
+                            ];
+                            const scale = scrollX.interpolate({
+                                inputRange,
+                                outputRange: [0.95, 1, 0.95],
+                                extrapolate: 'clamp'
+                            });
+
+                            return (
+                                <Animated.View key={item.id} style={{ width: CARD_WIDTH, transform: [{ scale }] }} className="mr-3.5">
+                                    <LinearGradient
+                                        colors={item.color as any}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 1 }}
+                                        className="h-44 rounded-[50px] p-7 justify-between shadow-2xl shadow-black/40 relative overflow-hidden"
+                                    >
+                                        <View className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
+                                        <View className="flex-row items-center justify-between">
+                                            <View className="flex-row items-center gap-2.5">
+                                                <View className="w-9 h-9 bg-white/20 rounded-xl items-center justify-center">
+                                                    <MaterialIcons name={item.icon as any} size={20} color="white" />
+                                                </View>
+                                                <Text style={{ fontSize: 10 * fontScale }} className="text-white/80 font-black uppercase tracking-wider">{item.label}</Text>
+                                            </View>
+                                        </View>
+                                        <View>
+                                            <MotiText 
+                                                animate={{ opacity: 1 }} 
+                                                style={{ fontSize: 40 * fontScale }} 
+                                                className="text-white font-black"
+                                            >
+                                                {isBalanceVisible ? `$${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `$ ***.**`}
+                                            </MotiText>
+                                            <View style={{ backgroundColor: theme.glassBg }} className="px-2 py-0.5 rounded-full self-start mt-2">
+                                                <Text style={{ fontSize: 10 * fontScale }} className="text-white font-bold">{item.trend}</Text>
+                                            </View>
+                                        </View>
+                                    </LinearGradient>
+                                </Animated.View>
+                            );
+                        })}
+                    </Animated.ScrollView>
+                </View>
+
+                {/* 2. Acciones Rápidas */}
+                <View className="px-6 mt-10">
+                    <Text style={{ fontSize: 10 * fontScale, color: theme.textSecondary }} className="font-black uppercase tracking-[3px] mb-6">Operaciones Rápidas</Text>
+                    <View className="flex-row justify-between">
+                        {QUICK_ACTIONS.map(action => (
+                            <TouchableOpacity 
+                                key={action.id}
+                                onPress={() => router.push(action.route as any)}
+                                style={{ alignItems: 'center' }}
+                                activeOpacity={0.7}
+                            >
+                                <View 
+                                    style={{ backgroundColor: theme.glassBg, borderColor: theme.border }}
+                                    className="w-16 h-16 rounded-[24px] items-center justify-center mb-3 border border-white/5 shadow-sm"
+                                >
+                                    {action.id === 'settle' ? (
+                                        <FontAwesome5 name="handshake" size={24} color={action.color} />
+                                    ) : (
+                                        <MaterialIcons name={action.icon as any} size={28} color={action.color} />
+                                    )}
+                                </View>
+                                <Text style={{ fontSize: 10 * fontScale, color: theme.text }} className="font-bold tracking-tight">{action.label}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+                {/* 3. Actividad Reciente */}
+                <View className="px-6 mt-12 pb-20">
+                    <View className="flex-row justify-between items-center mb-6">
+                        <Text style={{ fontSize: 10 * fontScale, color: theme.textSecondary }} className="font-black uppercase tracking-[3px]">Actividad Reciente</Text>
                         <Pressable 
-                            onPress={() => router.push('/create-group')}
-                            className="flex-row items-center gap-2 bg-blue-500/10 py-2 px-4 rounded-lg active:bg-blue-500/20"
+                            onPress={() => router.push('/(tabs)/payments')}
                         >
-                            <MaterialIcons name="add" size={18} color="#3b82f6" />
-                            <Text className="text-[#3b82f6] text-sm font-semibold">Crear</Text>
+                            {({ pressed }) => (
+                                <MotiView 
+                                    animate={{ 
+                                        scale: pressed ? 0.95 : 1,
+                                        opacity: pressed ? 0.6 : 1
+                                    }}
+                                    transition={{ type: 'spring', damping: 10 }}
+                                >
+                                    <Text style={{ fontSize: 11 * fontScale, color: theme.primary }} className="font-black">VER TODO</Text>
+                                </MotiView>
+                            )}
                         </Pressable>
                     </View>
 
-                    <View className="space-y-4">
-                        {/* Group Card 1 */}
-                        <Pressable className="bg-slate-800/40 border border-white/5 rounded-2xl p-5 mb-4 active:bg-white/5 overflow-hidden shadow-2xl">
-                            <View className="absolute top-3 right-3 bg-blue-500/20 px-2 py-1 rounded-full border border-blue-500/20">
-                                <Text className="text-[#3b82f6] text-[10px] font-bold uppercase tracking-wide">Administrador</Text>
-                            </View>
-
-                            <View className="flex-row items-start justify-between">
-                                <View className="flex-row gap-4 flex-1">
-                                    <View className="w-14 h-14 rounded-xl bg-orange-500/10 justify-center items-center border border-orange-500/20 shadow-lg shadow-orange-900/20">
-                                        <MaterialIcons name="restaurant" size={28} color="#f97316" />
-                                    </View>
-                                    <View className="flex-1 pr-2">
-                                        <Text className="text-lg font-bold text-white mb-1">Cena viernes</Text>
-                                        <Text className="text-slate-400 text-xs mb-3">Última act. hace 2 horas</Text>
-                                        
-                                        {/* Avatars */}
-                                        <View className="flex-row -space-x-2">
-                                            <View className="w-7 h-7 rounded-full border-2 border-[#1e293b] bg-slate-600 justify-center items-center"><MaterialIcons name="person" size={16} color="white" /></View>
-                                            <View className="w-7 h-7 rounded-full border-2 border-[#1e293b] bg-slate-500 justify-center items-center"><MaterialIcons name="person" size={16} color="white" /></View>
-                                            <View className="w-7 h-7 rounded-full border-2 border-[#1e293b] bg-slate-700 items-center justify-center">
-                                                <Text className="text-[10px] text-white font-medium">+2</Text>
+                    <View className="gap-4">
+                        {[
+                            { id: '1', title: 'Cena Amigos', group: 'Mesa #4', date: 'Hoy, 2:30 PM', amount: 320.0, type: 'owe', status: 'Pendiente', icon: 'restaurant' },
+                            { id: '2', title: 'Uber Fiesta', group: 'Personal', date: 'Ayer', amount: 15.50, type: 'receive', status: 'Completado', icon: 'directions-car' },
+                            { id: '3', title: 'Súper Semanal', group: 'Roomies', date: 'Hace 2 días', amount: 1200.0, type: 'total', status: 'Completado', icon: 'shopping-basket' },
+                        ].length > 0 ? (
+                            [
+                                { id: '1', title: 'Cena Amigos', group: 'Mesa #4', date: 'Hoy, 2:30 PM', amount: 320.0, type: 'owe', status: 'Pendiente', icon: 'restaurant' },
+                                { id: '2', title: 'Uber Fiesta', group: 'Personal', date: 'Ayer', amount: 15.50, type: 'receive', status: 'Completado', icon: 'directions-car' },
+                                { id: '3', title: 'Súper Semanal', group: 'Roomies', date: 'Hace 2 días', amount: 1200.0, type: 'total', status: 'Completado', icon: 'shopping-basket' },
+                            ].map(item => (
+                                <Pressable 
+                                    key={item.id}
+                                    onPress={() => {
+                                        if (item.status === 'Pendiente') {
+                                            router.push('/new-mesa');
+                                        } else {
+                                            router.push({ pathname: '/expense/receipt/[id]', params: { id: item.id } } as any);
+                                        }
+                                    }}
+                                >
+                                    {({ pressed }: { pressed: boolean }) => (
+                                        <MotiView 
+                                            animate={{ 
+                                                scale: pressed ? 0.98 : 1,
+                                                backgroundColor: pressed ? `${theme.cardSecondary}ef` : theme.cardSecondary 
+                                            }}
+                                            transition={{ type: 'timing', duration: 100 }}
+                                            style={{ borderColor: theme.border }}
+                                            className="border rounded-[32px] p-5 flex-row items-center gap-4"
+                                        >
+                                            <View style={{ backgroundColor: theme.glassBg }} className="w-14 h-14 rounded-[20px] items-center justify-center">
+                                                <MaterialIcons name={item.icon as any} size={26} color={theme.primary} />
                                             </View>
-                                        </View>
-                                    </View>
-                                </View>
-
-                                <View className="items-end min-w-[100px] mt-2 sm:mt-0">
-                                    <Text className="text-slate-400 text-xs font-medium mb-1">Total del grupo</Text>
-                                    <Text className="text-white font-semibold mb-2">$1,240.00</Text>
-                                    <View className="bg-red-500/10 border border-red-500/20 px-2 py-1.5 rounded-lg w-full items-end">
-                                        <Text className="text-[10px] text-red-300 uppercase font-bold tracking-wide">Tu deuda</Text>
-                                        <Text className="text-red-500 font-bold text-base">-$320.00</Text>
-                                    </View>
-                                </View>
-                            </View>
-                        </Pressable>
-
-                        {/* Group Card 2 */}
-                        <Pressable className="bg-slate-800/40 border border-white/5 rounded-2xl p-5 mb-4 active:bg-white/5 overflow-hidden shadow-2xl">
-                            <View className="flex-row items-start justify-between">
-                                <View className="flex-row gap-4 flex-1">
-                                    <View className="w-14 h-14 rounded-xl bg-purple-500/10 justify-center items-center border border-purple-500/20 shadow-lg shadow-purple-900/20">
-                                        <MaterialIcons name="school" size={28} color="#c084fc" />
-                                    </View>
-                                    <View className="flex-1 pr-2">
-                                        <Text className="text-lg font-bold text-white mb-1">Facultad - Comida rapida</Text>
-                                        <Text className="text-slate-400 text-xs mb-3">Última act. ayer</Text>
-                                        
-                                        {/* Avatars */}
-                                        <View className="flex-row -space-x-2">
-                                            <View className="w-7 h-7 rounded-full border-2 border-[#1e293b] bg-indigo-500 items-center justify-center"><Text className="text-xs text-white">JD</Text></View>
-                                            <View className="w-7 h-7 rounded-full border-2 border-[#1e293b] bg-slate-600 justify-center items-center"><MaterialIcons name="person" size={16} color="white" /></View>
-                                        </View>
-                                    </View>
-                                </View>
-
-                                <View className="items-end min-w-[100px] mt-2 sm:mt-0">
-                                    <Text className="text-slate-400 text-xs font-medium mb-1">Total del grupo</Text>
-                                    <Text className="text-white font-semibold mb-2">$850.00</Text>
-                                    <View className="bg-green-500/10 border border-green-500/20 px-2 py-1.5 rounded-lg w-full items-end">
-                                        <Text className="text-[10px] text-green-300 uppercase font-bold tracking-wide">Te deben</Text>
-                                        <Text className="text-green-400 font-bold text-base">+$280.00</Text>
-                                    </View>
-                                </View>
-                            </View>
-                        </Pressable>
-
-                        {/* Group Card 3 - Liquidado */}
-                        <Pressable className="bg-slate-800/40 border border-white/5 rounded-2xl p-5 mb-4 active:bg-white/5 overflow-hidden shadow-2xl opacity-70">
-                            <View className="absolute top-3 right-3 bg-slate-700/50 flex-row items-center gap-1 px-2 py-1 rounded-full border border-slate-600/30">
-                                <MaterialIcons name="check-circle" size={10} color="#94a3b8" />
-                                <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-wide">Liquidado</Text>
-                            </View>
-
-                            <View className="flex-row items-start justify-between">
-                                <View className="flex-row gap-4 flex-1">
-                                    <View className="w-14 h-14 rounded-xl bg-slate-700/30 justify-center items-center border border-slate-600/20">
-                                        <MaterialIcons name="celebration" size={28} color="#94a3b8" />
-                                    </View>
-                                    <View className="flex-1 pr-2">
-                                        <Text className="text-lg font-bold text-slate-300 mb-1">Fiesta de Pedro</Text>
-                                        <Text className="text-slate-400 text-xs mb-3">Finalizado el 12 Oct</Text>
-                                        
-                                        {/* Avatars */}
-                                        <View className="flex-row -space-x-2 grayscale opacity-60">
-                                            <View className="w-7 h-7 rounded-full border-2 border-[#1e293b] bg-slate-600 justify-center items-center"><MaterialIcons name="person" size={16} color="white" /></View>
-                                            <View className="w-7 h-7 rounded-full border-2 border-[#1e293b] bg-pink-600 items-center justify-center"><Text className="text-xs text-white">S</Text></View>
-                                            <View className="w-7 h-7 rounded-full border-2 border-[#1e293b] bg-blue-600 items-center justify-center"><Text className="text-xs text-white">M</Text></View>
-                                            <View className="w-7 h-7 rounded-full border-2 border-[#1e293b] bg-slate-700 items-center justify-center">
-                                                <Text className="text-[10px] text-white font-medium">+5</Text>
+                                            <View className="flex-1">
+                                                <Text style={{ fontSize: 15 * fontScale, color: theme.text }} className="font-black tracking-tight">{item.title}</Text>
+                                                <View className="flex-row items-center gap-2 mt-1">
+                                                    <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-widest">{item.group}</Text>
+                                                    <Text style={{ fontSize: 10 * fontScale }} className="text-slate-500 font-medium">• {item.date}</Text>
+                                                </View>
                                             </View>
-                                        </View>
-                                    </View>
+                                            <View className="items-end">
+                                                <Text style={{ 
+                                                    fontSize: 15 * fontScale, 
+                                                    color: item.type === 'owe' ? '#f43f5e' : item.type === 'receive' ? '#10b981' : theme.text 
+                                                }} className="font-black">
+                                                    {isBalanceVisible ? (
+                                                        item.type === 'owe' ? `- $${item.amount.toFixed(2)}` :
+                                                        item.type === 'receive' ? `+ $${item.amount.toFixed(2)}` :
+                                                        `$${item.amount.toFixed(2)}`
+                                                    ) : `$ ***.**`}
+                                                </Text>
+                                                <View style={{ backgroundColor: item.status === 'Pendiente' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
+                                                    <Text style={{ fontSize: 8 * fontScale, color: item.status === 'Pendiente' ? '#f59e0b' : '#10b981' }} className="font-black uppercase">{item.status}</Text>
+                                                </View>
+                                            </View>
+                                        </MotiView>
+                                    )}
+                                </Pressable>
+                            ))
+                        ) : (
+                            <MotiView 
+                                from={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="items-center justify-center py-10 opacity-60"
+                            >
+                                <View style={{ backgroundColor: theme.glassBg }} className="w-20 h-20 rounded-full items-center justify-center mb-4 border border-white/5">
+                                    <MaterialCommunityIcons name="ghost" size={40} color={theme.textSecondary} />
                                 </View>
-
-                                <View className="items-end min-w-[100px] mt-2 sm:mt-0 pt-6 sm:pt-0">
-                                    <Text className="text-slate-400 text-xs font-medium mb-1">Total final</Text>
-                                    <Text className="text-slate-400 font-semibold mb-2">$5,400.00</Text>
-                                    <View className="flex-row items-center gap-1">
-                                        <MaterialIcons name="check" size={14} color="#94a3b8" />
-                                        <Text className="text-sm font-medium text-slate-400">Pagado</Text>
-                                    </View>
-                                </View>
-                            </View>
-                        </Pressable>
+                                <Text style={{ color: theme.text, fontSize: 14 * fontScale }} className="font-black text-center mb-1">¡Aún no hay actividad!</Text>
+                                <Text style={{ color: theme.textSecondary, fontSize: 11 * fontScale }} className="text-center px-10 font-bold">Crea tu primera mesa para empezar a dividir gastos.</Text>
+                            </MotiView>
+                        )}
                     </View>
                 </View>
-
-                {/* Invitaciones Pendientes Section */}
-                <View className="w-full max-w-4xl mx-auto z-10">
-                    <Text className="text-sm font-bold text-slate-400 tracking-widest uppercase mb-4 mt-2">Invitaciones Pendientes</Text>
-                    
-                    <View className="bg-slate-800/40 border border-white/5 rounded-2xl p-5 border-l-4 border-l-blue-500 overflow-hidden relative shadow-2xl">
-                        <View className="absolute -right-10 -top-10 w-32 h-32 bg-blue-500/20 rounded-full blur-[40px] pointer-events-none" />
-                        
-                        <View className="flex-row flex-wrap sm:flex-nowrap items-center justify-between gap-6 z-10">
-                            <View className="flex-row items-center gap-4 min-w-[200px]">
-                                <View className="w-12 h-12 rounded-full bg-blue-500/20 items-center justify-center border border-blue-500/30 shrink-0">
-                                    <MaterialIcons name="flight" size={24} color="#60a5fa" />
-                                </View>
-                                <View>
-                                    <Text className="text-base font-bold text-white">Viaje a la playa</Text>
-                                    <Text className="text-sm text-slate-400">Invitado por <Text className="text-blue-400 font-medium">María G.</Text></Text>
-                                </View>
-                            </View>
-
-                            <View className="flex-row flex-1 sm:flex-none items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
-                                <Pressable className="flex-1 sm:flex-none py-2 px-4 rounded-lg border border-white/10 active:bg-white/5 items-center">
-                                    <Text className="text-sm font-medium text-slate-400">Rechazar</Text>
-                                </Pressable>
-                                <Pressable className="flex-1 sm:flex-none py-2 px-6 rounded-lg bg-[#2196F3] active:bg-[#1976D2] items-center shadow-lg shadow-blue-900/40">
-                                    <Text className="text-sm font-bold text-white">Aceptar</Text>
-                                </Pressable>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-
             </ScrollView>
-
-            {/* Floating Action Button */}
-            <Pressable 
-                onPress={() => router.push('/create-group')}
-                className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-[#2196F3] justify-center items-center shadow-lg shadow-blue-500/50 active:scale-95 z-50"
-            >
-                <MaterialIcons name="add" size={24} color="white" />
-            </Pressable>
         </SafeAreaView>
     );
 }
+
+const styles = StyleSheet.create({});
