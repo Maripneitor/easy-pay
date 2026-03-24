@@ -141,9 +141,18 @@ importers:
 
   apps/web-app:
     dependencies:
+      '@easy-pay/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@easy-pay/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@tanstack/react-query':
         specifier: ^5.0.0
         version: 5.90.21(react@19.1.0)
+      axios:
+        specifier: ^1.13.6
+        version: 1.13.6
       clsx:
         specifier: ^2.1.1
         version: 2.1.1

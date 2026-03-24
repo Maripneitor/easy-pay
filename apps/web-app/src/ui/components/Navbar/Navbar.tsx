@@ -1,16 +1,30 @@
 import React from 'react';
-import { Receipt, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import styles from './Navbar.module.css';
 import { useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../../context/AuthContext';
 
 export const Navbar = () => {
     const navigate = useNavigate();
+    const { isAuthenticated } = useAuthContext();
+
+    const handleProfile = () => {
+        if (isAuthenticated) {
+            navigate('/profile');
+        } else {
+            navigate('/auth');
+        }
+    };
 
     return (
         <nav className={styles.navbar}>
             <div className={styles.logoContainer} onClick={() => navigate('/')}>
                 <div className={styles.iconWrapper}>
-                    <Receipt className={styles.logoIcon} size={24} />
+                    <img 
+                        src="/assets/images/logo-ep.png"
+                        alt="Easy-Pay Logo"
+                        className={styles.logoImage}
+                    />
                 </div>
                 <span className={styles.logoText}>Easy-Pay</span>
             </div>
@@ -23,15 +37,18 @@ export const Navbar = () => {
             </div>
 
             <div className={styles.actions}>
-                <button
-                    className={styles.loginBtn}
-                    onClick={() => navigate('/auth')}
-                >
-                    Entrar
-                </button>
+                {!isAuthenticated && (
+                    <button
+                        className={styles.loginBtn}
+                        onClick={() => navigate('/auth')}
+                    >
+                        Entrar
+                    </button>
+                )}
                 <button
                     className={styles.profileBtn}
-                    onClick={() => navigate('/auth')}
+                    onClick={handleProfile}
+                    title={isAuthenticated ? "Mi Perfil" : "Iniciar Sesión"}
                 >
                     <User size={18} />
                 </button>

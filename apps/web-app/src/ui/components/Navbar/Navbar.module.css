@@ -28,8 +28,10 @@
     box-shadow: 0 10px 15px -3px rgba(255, 255, 255, 0.1);
 }
 
-.logoIcon {
-    color: #2196F3;
+.logoImage {
+    width: 2rem;
+    height: 2rem;
+    object-fit: contain;
 }
 
 .logoText {

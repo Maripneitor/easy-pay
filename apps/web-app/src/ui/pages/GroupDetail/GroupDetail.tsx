@@ -2,7 +2,7 @@ import {
     Share2,
     Settings,
     Plus,
-    Receipt,
+    Wallet,
     PieChart,
     CheckCircle,
     ArrowUpRight
@@ -53,7 +53,7 @@ export const GroupDetail = () => {
                         {/* Total Grupo */}
                         <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-2xl p-5 relative overflow-hidden shadow-sm border-t-4 border-t-[var(--primary)] shadow-[0_-5px_15px_-5px_var(--primary)]/20">
                             <div className="absolute top-0 right-0 p-4 opacity-5">
-                                <Receipt size={64} className="text-[var(--text-primary)]" />
+                                <Wallet size={64} className="text-[var(--text-primary)]" />
                             </div>
                             <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-1">Total Grupo</p>
                             <p className="text-2xl font-black text-[var(--text-primary)]">${totalSpent.toFixed(2)}</p>

@@ -52,12 +52,14 @@ const queryClient = new QueryClient({
 export const App = () => {
     return (
         <QueryClientProvider client={queryClient}>
-            <ThemeProvider>
-                <BrowserRouter>
-                    <AnimatedRoutes />
-                </BrowserRouter>
-                <Toaster position="top-center" richColors />
-            </ThemeProvider>
+            <AuthProvider>
+                <ThemeProvider>
+                    <BrowserRouter>
+                        <AnimatedRoutes />
+                    </BrowserRouter>
+                    <Toaster position="top-center" richColors />
+                </ThemeProvider>
+            </AuthProvider>
         </QueryClientProvider>
     );
 };
