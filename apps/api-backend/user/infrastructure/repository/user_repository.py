@@ -37,17 +37,38 @@ class MongoUserRepository:
         user = await self.collection.find_one({"_id": ObjectId(user_id)})
         return user
 
-    async def update_2fa_secret(self, user_id: str, secret: str):
-        # Guardamos el secreto dentro del objeto anidado 'two_factor'
-        # Usamos la notación de punto para entrar al objeto
+    async def save_otp_code(self, user_id: str, code: str, expires_at):
+        """Guarda el código de 6 dígitos y su expiración"""
         await self.collection.update_one(
             {"_id": ObjectId(user_id)},
-            {"$set": {"two_factor.secret": secret}}
+            {"$set": {
+                "two_factor.otp_code": code,
+                "two_factor.otp_expires": expires_at,
+                "two_factor.enabled": True 
+            }}
         )
 
+    async def get_otp_data(self, user_id: str):
+        """Obtiene el código guardado para comparar"""
+        user = await self.get_user_by_id(user_id)
+        if user and "two_factor" in user:
+            return user["two_factor"]
+        return None
+    
     async def enable_2fa(self, user_id: str):
-        # Activamos el booleano 'enabled' y podríamos limpiar códigos de recuperación
+        """
+        Activa formalmente el 2FA en el perfil del usuario 
+        y limpia los códigos temporales de la base de datos.
+        """
+        from bson import ObjectId
         await self.collection.update_one(
             {"_id": ObjectId(user_id)},
-            {"$set": {"two_factor.enabled": True}}
+            {
+                "$set": {"two_factor.enabled": True},
+                "$unset": {
+                    "two_factor.otp_code": "", 
+                    "two_factor.otp_expires": ""
+                }
+            }
         )
+        return True

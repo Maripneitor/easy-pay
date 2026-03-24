@@ -22,6 +22,25 @@ class LoginUserUseCase:
         ):
            return{"status": "error", "message": "Credenciales incorrectas"}
         
+        #Validacion de que este verificado el usuasrio
+        if not user_data.get("is_verified", False):
+            return {
+                "status": "not_verified", 
+                "message": "Debes verificar tu correo antes de iniciar sesión.",
+                "user_id": str(user_data["_id"]),
+                "email": user_data["email"]
+            }
+        
+        #Validacion si el 2FA esta activo
+        two_factor = user_data.get("two_factor", {})
+        if two_factor.get("enabled", False):
+            # No generamos el token final aún, pedimos el segundo paso
+            return {
+                "status": "2fa_required",
+                "message": "Autenticación de dos pasos requerida",
+                "user_id": str(user_data["_id"])
+            }
+
         #Definicion de la infomarcion para el token(Payload)
         payload = {
             "sub": str(user_data["_id"]),

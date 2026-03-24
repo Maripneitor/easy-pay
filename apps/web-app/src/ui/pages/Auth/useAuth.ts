@@ -19,13 +19,11 @@ export const useAuth = () => {
             });
 
             const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || 'Error en el registro');
 
-            if (!response.ok) {
-                throw new Error(data.detail || 'Error en el registro');
-            }
-
+            // Después del registro, lo mandamos a login para que inicie su verificación
             setMode('login');
-            alert("¡Registro exitoso! Ya puedes entrar.");
+            alert("¡Registro exitoso! Por seguridad, verifica tu correo al entrar.");
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -45,15 +43,36 @@ export const useAuth = () => {
 
             const data = await response.json();
 
+            // MANEJO DE ESTADOS DE SEGURIDAD
+            if (response.ok && data.status === 'success') {
+                // CASO 1: Login Directo
+                localStorage.setItem('token', data.access_token);
+                localStorage.setItem('userId', data.user.id);
+                localStorage.setItem('userName', data.user.nombre);
+                localStorage.setItem('userEmail', data.user.email);
+                navigate('/dashboard');
+                return;
+            }
+
+            if (data.status === '2fa_required') {
+                // CASO 2: Requiere código de 6 dígitos
+                localStorage.setItem('temp_userId', data.user_id);
+                navigate('/2fa-verify');
+                return;
+            }
+
+            if (data.status === 'not_verified') {
+                // CASO 3: Correo no verificado aún
+                localStorage.setItem('temp_userId', data.user_id);
+                localStorage.setItem('userEmail', data.email); // Para mostrarlo en la pantalla de setup
+                alert("Debes verificar tu correo institucional.");
+                navigate('/2fa-setup');
+                return;
+            }
+
+            // Si llegamos aquí y no es OK, es un error de credenciales
             if (!response.ok) throw new Error(data.detail || 'Credenciales incorrectas');
 
-            // ✅ GUARDAMOS TODO LO NECESARIO PARA EL PERFIL Y LA ACTUALIZACIÓN
-            localStorage.setItem('token', data.access_token);
-            localStorage.setItem('userId', data.user.id);       // Vital para el PUT de actualización
-            localStorage.setItem('userName', data.user.nombre);
-            localStorage.setItem('userEmail', data.user.email);
-
-            navigate('/dashboard');
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -62,24 +81,9 @@ export const useAuth = () => {
     };
 
     const logout = () => {
-        // ✅ LIMPIEZA TOTAL
-        localStorage.removeItem('token');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('userName');
-        localStorage.removeItem('userEmail');
+        localStorage.clear(); // Limpia todo de una vez
         navigate('/auth');
     };
 
-    return {
-        mode,
-        setMode,
-        loginType,
-        setLoginType,
-        loading,
-        error,
-        register,
-        login,
-        logout,
-        navigate
-    };
+    return { mode, setMode, loginType, setLoginType, loading, error, setError, register, login, logout, navigate };
 };
