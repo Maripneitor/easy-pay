@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from user.infrastructure.routes.route_user import user_router
+# IMPORTANTE: Asegúrate de importar el router de usuarios también
+from user.infrastructure.routes.route_user import user_router 
+from group.infrastructure.routes.route_group import group_router
 
 app = FastAPI(
     title="Easy-Pay API",
@@ -22,9 +24,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 2. Registramos el router de Usuarios (Auth)
-# Esto habilitará automáticamente los endpoints /api/auth/register y /api/auth/login
+# Registramos los routers
 app.include_router(user_router)
+app.include_router(group_router)
 
 @app.get("/")
 def read_root():
@@ -36,11 +38,4 @@ def read_root():
 
 @app.get("/api/health")
 def health_check():
-    # Aquí podrías agregar un check real de la conexión a Mongo
     return {"status": "ok", "system": "Easy Pay Backend", "version": "1.0.0"}
-
-# --- Endpoints de Grupos (Provisionales hasta moverlos a su microservicio) ---
-# Nota: Eventualmente estos deben ir en un router separado como el de User
-@app.get("/api/groups", tags=["Groups"])
-async def get_groups():
-    return {"message": "Módulo de grupos en construcción para MongoDB"}

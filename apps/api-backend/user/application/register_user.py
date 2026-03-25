@@ -21,8 +21,10 @@ class RegisterUser:
             email = user_data.email,
             password_hash = hash_pw.decode('utf-8')
         )
-
-        #Conversion a diccionario
-        await self.repository.save_user(nuevo_usuario.model_dump())
-        return {"status": "success", "message": "Usuario registrado exitosamente"}
+        user_id = await self.repository.save_user(nuevo_usuario.model_dump())
         
+        return {
+            "status": "success", 
+            "message": "Usuario registrado exitosamente",
+            "user_id": user_id 
+        }

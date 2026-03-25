@@ -1,29 +1,42 @@
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
-from pydantic import EmailStr
 import os
 
 conf = ConnectionConfig(
     MAIL_USERNAME = os.getenv("MAIL_USERNAME", "tu_correo@gmail.com"),
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "tu_clave_de_aplicacion"),
     MAIL_FROM = os.getenv("MAIL_FROM", "tu_correo@gmail.com"),
-    MAIL_PORT = 587,
     MAIL_SERVER = "smtp.gmail.com",
-    MAIL_STARTTLS = True,
-    MAIL_SSL_TLS = False,
-    USE_CREDENTIALS = True
+    # --- CAMBIOS PARA EVITAR EL NETWORK UNREACHABLE ---
+    MAIL_PORT = 465,           # Puerto SSL
+    MAIL_STARTTLS = False,     # Para 465 esto va en False
+    MAIL_SSL_TLS = True,       # Para 465 esto va en True
+    USE_CREDENTIALS = True,
+    VALIDATE_CERTS = True
 )
 
 class EmailService:
     async def send_otp(self, email_to: str, code: str):
-        message = MessageSchema(
-            subject="🔐 Código de Seguridad - Easy-Pay",
-            recipients=[email_to],
-            body=f"""
-                <h3>Verificación de Identidad</h3>
-                <p>Te damos la Bienvenida a GP Easy-Pay tu código de seguridad para Easy-Pay es: <b>{code}</b></p>
-                <p>Este código expirará en 5 minutos.</p>
-            """,
-            subtype="html"
-        )
-        fm = FastMail(conf)
-        await fm.send_message(message)
+        try:
+            message = MessageSchema(
+                subject="🔐 Código de Seguridad - Easy-Pay",
+                recipients=[email_to],
+                body=f"""
+                    <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                        <h2 style="color: #4f46e5;">Verificación de Identidad</h2>
+                        <p>Te damos la bienvenida a <b>GP Easy-Pay</b>.</p>
+                        <p>Tu código de seguridad es:</p>
+                        <div style="background: #f3f4f6; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #1f2937; border-radius: 8px;">
+                            {code}
+                        </div>
+                        <p style="color: #6b7280; font-size: 12px; margin-top: 20px;">Este código expirará en 5 minutos.</p>
+                    </div>
+                """,
+                subtype="html"
+            )
+            fm = FastMail(conf)
+            await fm.send_message(message)
+            return True
+        except Exception as e:
+            # Imprimimos el error en la consola de Docker para que lo veas
+            print(f"❌ Error al enviar correo: {e}")
+            raise e

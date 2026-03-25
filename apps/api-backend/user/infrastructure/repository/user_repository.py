@@ -1,19 +1,22 @@
-from user.database import db_instance
+from database import db_instance
 from bson import ObjectId
 from user.domain.models.user import User
 
 class MongoUserRepository:
     def __init__(self):
-        self.collection = db_instance.get_collection("Users")
-    
-    #Metodo para guardar el usuario
-    async def save_user(self, user_data: dict):
-        #Insetamos el json en MongoDB
-        result = await self.collection.insert_one(user_data)
-        return str(result.inserted_id)#Retomamos el ID como string para facilitar lectura en front
+        # Conexión a la base de datos y colección
+        self.db = db_instance.get_db("EasyPay_Auth") 
+        self.collection = self.db.get_collection("Users")
 
-    #Metodo para cargar Login por Nombre/Email
+    # --- MÉTODO PARA GUARDAR EL USUARIO (REGISTRO) ---
+    async def save_user(self, user_data: dict):
+        """Inserta el JSON del usuario en MongoDB"""
+        result = await self.collection.insert_one(user_data)
+        return str(result.inserted_id)
+
+    # --- MÉTODO PARA LOGIN (BÚSQUEDA POR EMAIL O NOMBRE) ---
     async def find_by_identifier(self, identifier: str):
+        """Busca un usuario que coincida con el email o el nombre de usuario"""
         user = await self.collection.find_one({
             "$or":[
                 {"email": identifier},
@@ -22,53 +25,62 @@ class MongoUserRepository:
         })
         return user
 
+    # --- MÉTODO PARA ACTUALIZACIONES GENERALES ---
     async def update_user(self, user_id: str, update_data: dict):
-        
+        """Actualiza campos específicos de un usuario por su ID"""
+        if not ObjectId.is_valid(user_id):
+            return False
         result = await self.collection.update_one(
             {"_id": ObjectId(user_id)},
             {"$set": update_data}
         )
         return result.modified_count > 0
     
+    # --- MÉTODO PARA BUSCAR POR ID ---
     async def get_user_by_id(self, user_id: str):
-        # Validar el formato antes de buscar
+        """Recupera un usuario completo validando el formato del ObjectId"""
         if not ObjectId.is_valid(user_id):
             return None
         user = await self.collection.find_one({"_id": ObjectId(user_id)})
         return user
 
+    # --- GESTIÓN DE CÓDIGOS OTP (2FA) ---
     async def save_otp_code(self, user_id: str, code: str, expires_at):
-        """Guarda el código de 6 dígitos y su expiración"""
+        """Guarda el código de 6 dígitos y su fecha de expiración"""
         await self.collection.update_one(
             {"_id": ObjectId(user_id)},
             {"$set": {
                 "two_factor.otp_code": code,
-                "two_factor.otp_expires": expires_at,
-                "two_factor.enabled": True 
+                "two_factor.otp_expires": expires_at
             }}
         )
 
     async def get_otp_data(self, user_id: str):
-        """Obtiene el código guardado para comparar"""
+        """Obtiene la sección de two_factor para comparar el código"""
         user = await self.get_user_by_id(user_id)
         if user and "two_factor" in user:
             return user["two_factor"]
         return None
     
+    # --- ACTIVACIÓN FINAL Y VERIFICACIÓN ---
     async def enable_2fa(self, user_id: str):
         """
-        Activa formalmente el 2FA en el perfil del usuario 
-        y limpia los códigos temporales de la base de datos.
+        CORRECCIÓN PARA EL PROYECTO EASY-PAY:
+        1. Marca la cuenta como verificada (is_verified: True).
+        2. Mantiene el enabled en False para que el LoginUserUseCase no entre en bucle.
+        3. Limpia los códigos temporales usados.
         """
-        from bson import ObjectId
-        await self.collection.update_one(
+        result = await self.collection.update_one(
             {"_id": ObjectId(user_id)},
             {
-                "$set": {"two_factor.enabled": True},
+                "$set": {
+                    "is_verified": True,           # ✅ Permite que el Login pase la validación
+                    "two_factor.enabled": False    # 🔓 Evita que el Login pida 2FA infinitamente
+                },
                 "$unset": {
                     "two_factor.otp_code": "", 
                     "two_factor.otp_expires": ""
                 }
             }
         )
-        return True
+        return result.modified_count > 0

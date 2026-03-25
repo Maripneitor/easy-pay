@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@ui/components/PageHeader';
@@ -18,28 +18,45 @@ export const TwoFactorSetup = () => {
     const [error, setError] = useState('');
     const [codeSent, setCodeSent] = useState(false);
 
-    const goBack = () => window.history.back();
-
-    // Obtenemos los datos del usuario logueado
-    const userId = localStorage.getItem('userId');
+    // 1. CORRECCIÓN CRÍTICA: Priorizamos temp_userId que viene del registro
+    // Si no hay userId (login), buscamos temp_userId (registro)
+    const userId = localStorage.getItem('userId') || localStorage.getItem('temp_userId');
     const userEmail = localStorage.getItem('userEmail') || "tu correo";
 
+    // 2. Seguridad: Si el usuario entra aquí sin ningún ID, lo regresamos al auth
+    useEffect(() => {
+        if (!userId || userId === 'null') {
+            console.error("No se detectó ID de usuario. Regresando...");
+            navigate('/auth');
+        }
+    }, [userId, navigate]);
+
+    const goBack = () => navigate('/auth');
+
     const handleRequestCode = async () => {
+        if (!userId || userId === 'null') {
+            setError('Error de sesión: No se encontró el ID del usuario.');
+            return;
+        }
+
         try {
             setLoading(true);
             setError('');
-            // Llamamos al nuevo endpoint que genera el OTP y lo "envía" (por ahora imprime en consola del backend)
+
+            // Llamamos al endpoint de setup usando el ID correcto
             await axios.post(`http://localhost:8000/api/auth/2fa/setup/${userId}`);
 
             setCodeSent(true);
-            // Pequeña espera para que el usuario vea el éxito antes de pasar a verificar
+
+            // Pequeña espera para feedback visual antes de ir a verificar
             setTimeout(() => {
                 navigate('/2fa-verify');
             }, 2000);
 
-        } catch (err) {
-            setError('No pudimos enviar el código. Revisa tu conexión.');
-            console.error(err);
+        } catch (err: any) {
+            console.error("Error en Setup 2FA:", err);
+            const message = err.response?.data?.detail || 'No pudimos enviar el código. Revisa tu conexión.';
+            setError(message);
         } finally {
             setLoading(false);
         }

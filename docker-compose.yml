@@ -2,7 +2,7 @@ services:
   # --- BASE DE DATOS LOCAL (Tu salvavidas para la UNACH/Redes Públicas) ---
   mongodb_local:
     image: mongo:latest
-    container_name: mongodb_local
+    container_name: mongodb_local_pruebas
     ports:
       - "27017:27017"
     volumes:
@@ -13,7 +13,7 @@ services:
     build:
       context: ./apps/api-backend
       dockerfile: Dockerfile
-    container_name: easy-pay-backend
+    container_name: easy-pay-backend_pruebas
     volumes:
       # Mapeamos la carpeta para que el --reload detecte cambios en caliente
       - ./apps/api-backend:/app
@@ -31,7 +31,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: easy-pay-frontend
+    container_name: easy-pay-frontend_pruebas
     volumes:
       - .:/app
       - /app/node_modules
