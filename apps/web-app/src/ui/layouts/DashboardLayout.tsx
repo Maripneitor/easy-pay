@@ -1,40 +1,31 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar/Sidebar';
-
+import { useAuth } from '../pages/Auth/useAuth'; // Importamos tu nuevo hook
 
 export const DashboardLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const { logout } = useAuth(); // Extraemos la función de cerrar sesión
+
+    // Recuperamos el nombre del usuario para pasarlo a la Sidebar si es necesario
+    const userName = localStorage.getItem('userName') || 'Usuario';
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
     return (
-        /* Usamos var(--bg-body) para que el fondo sea global según el tema seleccionado */
         <div className="flex h-screen bg-[var(--bg-body)] text-[var(--text-primary)] overflow-hidden transition-colors duration-300 font-display">
-            {/* Sidebar Navigation */}
-            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+            {/* Sidebar Navigation - Le pasamos el logout y el nombre */}
+            <Sidebar
+                isOpen={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+                onLogout={logout}
+                userName={userName}
+            />
 
-            {/* Main Content Area */}
             <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-                {/* Page Header is usually specific to the page, but we can have a default one or just rely on pages.
-                    However, the request was to use a Layout to avoid re-rendering Sidebar.
-                    If we put PageHeader here, it stays static unless we pass props.
-                    Since existing pages have their own PageHeader, we should probably NOT render it here, 
-                    OR we should refactor pages to NOT render it.
-                    
-                    Refactoring all pages is a big task. 
-                    Better approach: 
-                    The Layout stays, Sidebar stays. 
-                    The `Outlet` renders the page, which renders the `PageHeader`.
-                    BUT the `PageHeader` needs to open the sidebar.
-                    
-                    So we need to pass `toggleSidebar` to the Outlet context.
-                */}
-
-                {/* Scrollable Content */}
                 <main className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-700">
                     <div className="max-w-7xl mx-auto w-full space-y-6">
-                        {/* Pasamos toggleSidebar a través del Outlet para que todas las páginas puedan abrir la Sidebar */}
+                        {/* Mantenemos el toggleSidebar para los PageHeaders de cada página */}
                         <Outlet context={{ toggleSidebar }} />
                     </div>
                 </main>

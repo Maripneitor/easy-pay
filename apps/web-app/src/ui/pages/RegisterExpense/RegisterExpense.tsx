@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import {
-    ArrowLeft,
+    Plus,
     DollarSign,
     Utensils,
     Car,
@@ -12,7 +12,8 @@ import {
     Coffee,
     MoreHorizontal,
     Check,
-    Calendar
+    Calendar,
+    Camera
 } from 'lucide-react';
 import { cn } from '@infrastructure/utils';
 import { PageHeader } from '@ui/components/PageHeader';
@@ -81,6 +82,12 @@ export const RegisterExpense = () => {
                                 placeholder="¿Qué compraste?"
                                 className="flex-1 bg-transparent text-lg font-bold text-[var(--text-primary)] placeholder:text-slate-400 focus:outline-none"
                             />
+                            <button 
+                                className="p-2 text-slate-400 hover:text-[var(--primary)] transition-colors"
+                                onClick={() => navigate('/ocr-scanner')}
+                            >
+                                <Camera size={20} />
+                            </button>
                         </div>
 
                         <div className="h-px bg-[var(--border-color)] mx-14"></div>
@@ -140,7 +147,7 @@ export const RegisterExpense = () => {
                                 <p className="text-xs text-[var(--text-secondary)] font-medium">Entre todos los miembros</p>
                             </div>
                         </div>
-                        <ArrowLeft size={16} className="rotate-180 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                        <Check size={16} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
                     </div>
 
                     {/* Botón Inferior Adaptable */}

@@ -14,49 +14,49 @@ EASY-PAY permite:
 
 ---
 
-## 🚦 Guía de Inicio Rápido
+## 🚦 Guía de Inicio Rápido con Docker (Mac)
 
-Si acabas de descargar el proyecto, elige tu camino:
+Si quieres correr todo el sistema (Web, Mobile, API y DB) rápidamente en tu Mac, utiliza estos comandos:
 
-### 1. Instrucciones para Mac (Silicon/Intel)
-Si estás en una Mac, estos son los comandos recomendados:
-1. **Instalar dependencias**: `pnpm install`
-2. **Lanzar Web**: `pnpm run dev:web` (luego abre `http://localhost:5173`)
-3. **Lanzar Mobile**: `pnpm --filter mobile-app run start` (luego presiona `i` para iOS o `a` para Android)
+### 1. Encender el Sistema
+Para encender todos los servicios en segundo plano:
+```bash
+docker compose up -d
+```
 
-### 2. Solo quiero probarlo rápido (Docker)
-Si tienes Docker instalado y quieres ver la app corriendo sin configurar nada:
-👉 [**Guía de Docker**](./docs/DOCKER_USAGE.md)
+### 2. Ver que todo esté bien (Logs)
+Para ver si la Web y el Mobile ya cargaron (espera a que veas el código QR):
+```bash
+docker compose logs -f frontend mobile
+```
+*Tip: Para ver logs del Backend (errores de login, etc.): `docker compose logs -f backend`*
 
-### 3. Quiero programar y hacer cambios (WSL + Emulador)
-Si vas a desarrollar en Windows, esta es la guía específica:
-👉 [**Guía de Entorno de Desarrollo**](./GUIA_ENTORNO.md)
+### 3. Abrir la App Mobile
+En Docker, Expo no es interactivo. Sigue estos pasos:
+- **Simulador iOS**: Abre **Safari** dentro del simulador e ingresa: `exp://localhost:8081`
+- **Android/Celular Físico**: Escanea el código QR que aparece en los logs.
+- **Web App**: Entra a `http://localhost:5173`.
 
----
-
-## 📚 Documentación por Categoría
-
-Para entender mejor el proyecto, consulta estas guías:
-
-| Categoría | Documento | Descripción |
-| :--- | :--- | :--- |
-| **Arquitectura** | [**Mapa del Proyecto**](./docs/PROJECT_MAP.md) | Estructura de vistas y pantallas. |
-| **Desarrollo** | [**Reglas de Código**](./docs/CODING_GUIDELINES.md) | Cómo evitar errores comunes y estándares. |
-| **Entorno** | [**Configuración WSL**](./docs/ENVIRONMENT_WSL.md) | Detalles técnicos de la terminal en Ubuntu. |
+### 4. Apagar el Sistema
+Para detener todos los contenedores y liberar memoria:
+```bash
+docker compose down
+```
 
 ---
 
 ## 📁 Estructura del Monorepositorio
 
-- `apps/mobile-app`: Aplicación móvil desarrollada con Expo y React Native.
-- `apps/web-app`: Panel administrativo web con React y Vite.
-- `apps/api-backend`: Servidor y lógica de negocio.
-- `packages/`: Componentes y tipos compartidos entre todas las apps.
+- `apps/mobile-app`: Aplicación móvil con Expo y React Native.
+- `apps/web-app`: Panel administrativo con React y Vite.
+- `apps/api-backend`: Servidor FastAPI (Python).
+- `packages/`: Lógica compartida.
 
 ---
 
 ## 🛠️ Tecnologías Principales
-- **Móvil**: Expo, React Native, NativeWind (Tailwind CSS).
+- **Móvil**: Expo, React Native, NativeWind.
 - **Web**: React, Vite, Tailwind CSS.
-- **Backend**: FastAPI (Python) / Node.js.
-- **Base de Datos**: PostgreSQL.
+- **Backend**: FastAPI (Python).
+- **Base de Datos**: MongoDB (Local en Docker o Atlas).
+

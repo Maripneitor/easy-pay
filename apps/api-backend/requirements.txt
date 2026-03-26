@@ -1,12 +1,10 @@
-
-fastapi # Framework para crear APIs
-uvicorn # Servidor ASGI para ejecutar FastAPI
-motor  # Piloto asíncrono para MongoDB
-pydantic[email] # Validación de datos
-bcrypt # Para el hash de contraseñas de seguridad
-pyjwt # Generación de tokens JWT 
-
-
 fastapi
 uvicorn[standard]
-
+motor
+pydantic[email]
+bcrypt
+pyjwt
+python-dotenv
+pyotp==2.9.0
+qrcode==7.4.2
+fastapi-mail==1.4.1

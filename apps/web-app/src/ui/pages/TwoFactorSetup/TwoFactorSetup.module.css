@@ -216,3 +216,30 @@
     letter-spacing: 0.1em;
     color: #475569;
 }
+
+.otpContainer {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin: 2rem 0;
+}
+
+.otpInput {
+    width: 3.5rem;
+    height: 4rem;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: rgba(15, 23, 42, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    color: #10b981;
+    /* Verde esmeralda para que combine */
+    transition: all 0.2s;
+}
+
+.otpInput:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+    outline: none;
+}

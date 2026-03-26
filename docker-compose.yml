@@ -1,9 +1,36 @@
 services:
-  # --- FRONTEND (Vite) ---
-  dev-env:
+  # --- DATABASE (Local MongoDB) ---
+  mongodb:
+    image: mongo:latest
+    container_name: easy-pay-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # --- BACKEND (Python FastAPI) ---
+  backend:
+    build:
+      context: ./apps/api-backend
+      dockerfile: Dockerfile
+      network: host
+    container_name: easy-pay-backend
+    volumes:
+      - ./apps/api-backend:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./apps/api-backend/.env
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - mongodb
+
+  # --- FRONTEND (React / Vite) ---
+  frontend:
     build:
       context: .
       dockerfile: Dockerfile.dev
+      network: host
     container_name: easy-pay-frontend
     volumes:
       - .:/app
@@ -15,27 +42,16 @@ services:
     stdin_open: true
     tty: true
     command: >
-      sh -c "CI=true pnpm install && npm run dev:web"
+      sh -c "pnpm install --no-frozen-lockfile --node-linker=hoisted --config.package-import-method=copy && npm run dev:web"
     depends_on:
       - backend
-
-  # --- BACKEND (Python FastAPI) ---
-  backend:
-    build:
-      context: ./apps/api-backend
-      dockerfile: Dockerfile
-    container_name: easy-pay-backend
-    volumes:
-      - ./apps/api-backend:/app
-    ports:
-      - "8000:8000"
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
   # --- MOBILE APP (Expo Go) ---
   mobile:
     build:
       context: .
       dockerfile: apps/mobile-app/Dockerfile
+      network: host
     container_name: easy-pay-mobile
     volumes:
       - .:/app
@@ -49,15 +65,15 @@ services:
       - "19002:19002"
     environment:
       - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
-      #- REACT_NATIVE_PACKAGER_HOSTNAME=${LOCAL_IP:-localhost}
-      #- EXPO_PACKAGER_PROXY_URL=http://${LOCAL_IP:-localhost}:8081
-      - EXPO_PUBLIC_API_URL=http://${LOCAL_IP:-localhost}:8000
+      - EXPO_PUBLIC_API_URL=http://backend:8000
+      - REACT_NATIVE_PACKAGER_HOSTNAME=host.docker.internal
     stdin_open: true
     tty: true
     command: >
-      sh -c "CI=true pnpm install && cd apps/mobile-app && npx expo start --tunnel --clear"
+      sh -c "pnpm install --no-frozen-lockfile --node-linker=hoisted --config.package-import-method=copy && cd apps/mobile-app && npx expo start --host lan --clear"
 
 volumes:
+  mongo_data:
   node_modules:
   web_modules:
   mobile_modules:

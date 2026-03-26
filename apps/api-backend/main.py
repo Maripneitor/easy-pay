@@ -1,15 +1,20 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import json
-import os
-from typing import List, Dict, Any
+# IMPORTANTE: Asegúrate de importar el router de usuarios también
+from user.infrastructure.routes.route_user import user_router
+from group.infrastructure.routes.route_group import group_router
 
-app = FastAPI()
+app = FastAPI(
+    title="Easy-Pay API",
+    description="Sistema de gestión de gastos compartidos - UNACH 2026",
+    version="1.0.0"
+)
 
-# Configurar CORS para permitir que el Frontend (puerto 5173) nos hable
+# Configurar CORS (Puerto del Frontend: 5173)
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:8081", # Added for mobile local dev
 ]
 
 app.add_middleware(
@@ -20,43 +25,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DATA_FILE = "data.json"
-
-def load_data():
-    if not os.path.exists(DATA_FILE):
-        return {"groups": []}
-    try:
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except:
-        return {"groups": []}
-
-def save_data(data):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
+# Registramos los routers
+app.include_router(user_router)
+app.include_router(group_router)
 
 @app.get("/")
 def read_root():
-    return {"mensaje": "Hola desde el Hexágono Backend con FastAPI 🐍"}
+    return {
+        "mensaje": "Bienvenido a la API de Easy-Pay 🐍",
+        "docs": "/docs",
+        "status": "active"
+    }
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok", "system": "Easy Pay Backend"}
-
-@app.get("/api/groups")
-def get_groups():
-    data = load_data()
-    return data["groups"]
-
-@app.post("/api/groups")
-def create_group(group: Dict[Any, Any] = Body(...)):
-    data = load_data()
-    data["groups"].append(group)
-    save_data(data)
-    return {"status": "success", "group": group}
-
-@app.delete("/api/groups")
-def clear_groups():
-    if os.path.exists(DATA_FILE):
-        os.remove(DATA_FILE)
-    return {"status": "cleared"}
+    return {"status": "ok", "system": "Easy Pay Backend", "version": "1.0.0"}

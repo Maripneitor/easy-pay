@@ -6,7 +6,7 @@ import { useTheme } from '../../context/ThemeContext';
 
 export const RecoverPasswordPage = () => {
     const navigate = useNavigate();
-    const { theme, toggleTheme } = useTheme();
+    const { isDark, toggleTheme } = useTheme();
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
 
@@ -24,7 +24,7 @@ export const RecoverPasswordPage = () => {
     return (
         <div className={styles.authPage}>
             <button className={styles.themeToggle} onClick={toggleTheme} aria-label="Toggle theme">
-                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
             <div className={styles.floatingCircle1} />
             <div className={styles.floatingCircle2} />
@@ -32,7 +32,7 @@ export const RecoverPasswordPage = () => {
             <main className={styles.container}>
                 <div className={styles.header}>
                     <div className={styles.logoWrapper}>
-                        <Ticket className={styles.logoIcon} size={40} />
+                        <img src="/assets/images/logo-ep.png" alt="Logo" className={styles.logoImage} />
                     </div>
                     <h1 className={styles.title}>Easy-Pay</h1>
                 </div>

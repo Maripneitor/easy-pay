@@ -135,14 +135,6 @@ body {
 .animate-item-left { animation: item-separate-left 4s ease-out infinite; animation-fill-mode: forwards; }
 .animate-item-right { animation: item-separate-right 4s ease-out infinite; animation-fill-mode: forwards; }
 .animate-item-center { animation: item-separate-center 4s ease-out infinite; animation-fill-mode: forwards; }
-
-.bg-radial-gradient { background: radial-gradient(circle at center, #1E88E5 0%, #0D47A1 100%); }
-.grid-pattern { background-image: linear-gradient(rgba(144, 202, 249, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(144, 202, 249, 0.05) 1px, transparent 1px); background-size: 40px 40px; }
-.dots-pattern { background-image: radial-gradient(rgba(144, 202, 249, 0.1) 1px, transparent 1px); background-size: 20px 20px; }
-
-@keyframes fadeInSlideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-.page-enter { animation: fadeInSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
 /* Limpieza de fondos y textos para temas oscuros y personalizados */
 .dark, .vibrant, .serene, .earth, .pink {
     [class*="bg-white"], 
