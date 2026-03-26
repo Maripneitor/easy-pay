@@ -10,7 +10,8 @@ import {
     Dimensions,
     ActivityIndicator,
     TouchableOpacity,
-    StyleSheet
+    StyleSheet,
+    Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
@@ -34,21 +35,58 @@ export default function AuthScreen() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const handleAuth = () => {
+    const handleAuth = async () => {
         if (!email || !password || (!isLogin && !name)) {
             setError('Por favor completa todos los campos.');
             return;
         }
         setError('');
         setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
+
+        const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+
+        try {
             if (isLogin) {
-                router.replace('/(tabs)/dashboard');
+                // Iniciar Sesión - Si tiene 2FA activado el backend lo diría (pero por ahora vamos directo o implementamos login flow)
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier: email, password })
+                });
+                const data = (await response.json()) as any;
+                
+                if (response.ok && data.status === 'success') {
+                    // Si el login es exitoso, guardamos el token (opcional aquí para simplificar) y vamos al dashboard
+                    router.replace('/(tabs)/dashboard');
+                } else {
+                    setError(data.detail || data.message || 'Error al iniciar sesión');
+                }
             } else {
-                router.replace('/onboarding');
+                // Registrar Cuenta
+                const response = await fetch(`${API_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre: name, email, password })
+                });
+                const data = (await response.json()) as any;
+
+                if (response.ok && data.status === 'success') {
+                    // Registro exitoso -> Ir a configurar 2FA (como en la web)
+                    router.push({
+                        pathname: '/security-2fa',
+                        params: { userId: data.user_id, email: email, name: name }
+                    });
+                } else {
+                    setError(data.detail || data.message || 'Error en el registro');
+                }
             }
-        }, 1500);
+        } catch (err) {
+            console.error('Auth error:', err);
+            setError('No se pudo conectar con el servidor.');
+        } finally {
+            setLoading(true); // Mantener cargando un momento para feedback visual
+            setTimeout(() => setLoading(false), 500);
+        }
     };
 
     // Safe ROOT pattern to avoid NativeWind v4 + React 19 + Navigation Context bug
@@ -71,11 +109,16 @@ export default function AuthScreen() {
                 >
                     {/* Header */}
                     <View className="items-center mb-10">
-                        <View className="w-16 h-16 bg-[#64B5F6]/10 rounded-2xl flex items-center justify-center mb-4 border border-[#64B5F6]/20">
-                            <MaterialIcons name="confirmation-number" size={32} color="#64B5F6" />
+                        <View className="w-24 h-24 mb-4 items-center justify-center">
+                            <Image 
+                                source={require('../assets/images/logo-ep.png')} 
+                                style={{ width: 100, height: 100 }}
+                                resizeMode="contain"
+                            />
                         </View>
                         <Text style={{ fontSize: 32 * fontScale, color: 'white' }} className="font-bold tracking-tight">Easy-Pay</Text>
-                        <Text style={{ fontSize: 13 * fontScale }} className="text-slate-400 mt-2 font-medium">Sin matemáticas, sin dramas</Text>
+                        <View className="h-[2px] w-12 bg-blue-500/50 mt-1 mb-2 rounded-full" />
+                        <Text style={{ fontSize: 13 * fontScale }} className="text-slate-400 font-medium">Sin matemáticas, sin dramas</Text>
                     </View>
 
                     {/* Form Card */}
@@ -169,18 +212,24 @@ export default function AuthScreen() {
                             <TouchableOpacity 
                                 onPress={handleAuth}
                                 disabled={loading}
-                                className="mt-2 overflow-hidden rounded-xl"
+                                className="mt-4 overflow-hidden rounded-[20px] shadow-lg shadow-blue-500/30"
+                                activeOpacity={0.85}
                             >
                                 <LinearGradient
-                                    colors={['#2196F3', '#0D47A1']}
+                                    colors={['#3B82F6', '#1D4ED8']}
                                     start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 0 }}
-                                    className="p-4 items-center"
+                                    end={{ x: 1, y: 1 }}
+                                    className="py-5 items-center justify-center border border-white/10"
                                 >
-                                    {loading ? <ActivityIndicator color="white" size="small" /> : (
-                                        <Text style={{ fontSize: 14 * fontScale }} className="text-white font-bold">
-                                            {isLogin ? 'Entrar' : 'Crear Cuenta'}
-                                        </Text>
+                                    {loading ? (
+                                        <ActivityIndicator color="white" size="small" />
+                                    ) : (
+                                        <View className="flex-row items-center gap-2">
+                                            <Text style={{ fontSize: 16 * fontScale }} className="text-white font-extra-bold uppercase tracking-wider">
+                                                {isLogin ? 'Entrar' : 'Crear Cuenta'}
+                                            </Text>
+                                            <Feather name="arrow-right" size={20} color="white" />
+                                        </View>
                                     )}
                                 </LinearGradient>
                             </TouchableOpacity>

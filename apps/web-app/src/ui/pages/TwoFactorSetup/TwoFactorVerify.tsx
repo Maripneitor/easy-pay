@@ -104,47 +104,82 @@ export const TwoFactorVerify = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[var(--bg-body)]">
-            <PageHeader title="VERIFICAR CÓDIGO" subtitle="Seguridad Easy-Pay" onBack={() => navigate('/auth')} />
-            <main className="max-w-md mx-auto px-6 py-12 relative">
-                <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-3xl p-8 shadow-2xl relative z-10">
+        <div className="min-h-screen bg-[var(--bg-body)] flex flex-col">
+            <PageHeader title="VERIFICACIÓN DE SEGURIDAD" subtitle="Easy-Pay Security Protocol" onBack={() => navigate('/auth')} />
+            
+            <main className="flex-1 flex items-center justify-center px-6 py-12 relative overflow-hidden">
+                {/* Background Decor */}
+                <div className="absolute top-0 left-0 w-full h-full -z-0 opacity-20 pointer-events-none">
+                    <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[var(--primary)] rounded-full blur-[120px]"></div>
+                    <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[40%] bg-blue-600 rounded-full blur-[100px]"></div>
+                </div>
+
+                <div className="w-full max-w-lg bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[2.5rem] p-10 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] relative z-10 backdrop-blur-xl">
                     <div className="text-center mb-10">
-                        <div className="w-16 h-16 bg-[var(--primary)]/10 text-[var(--primary)] rounded-2xl flex items-center justify-center mx-auto mb-4 border border-[var(--primary)]/20">
-                            <Smartphone size={32} />
+                        <div className="w-20 h-20 bg-[var(--primary)]/10 text-[var(--primary)] rounded-3xl flex items-center justify-center mx-auto mb-6 border border-[var(--primary)]/20 shadow-inner">
+                            <Smartphone size={40} className="drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" />
                         </div>
-                        <h2 className="text-2xl font-bold text-[var(--text-primary)]">Introduce el código</h2>
-                        <p className="text-[var(--text-secondary)] text-sm mt-2">Escribe los 6 dígitos enviados a tu correo.</p>
+                        <h2 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">Verificación de Seguridad</h2>
+                        <p className="text-[var(--text-secondary)] text-sm mt-3 leading-relaxed">
+                            Se ha enviado un código de verificación a tu correo. <br/> Por favor, introdúcelo a continuación para continuar.
+                        </p>
+                        
+                        <div className="mt-6 inline-flex px-4 py-1.5 bg-[var(--primary)]/10 rounded-full border border-[var(--primary)]/20">
+                            <span className="text-[10px] text-[var(--primary)] font-bold uppercase tracking-[0.15em] whitespace-nowrap">
+                                Easy-Pay Security Protocol v4.0
+                            </span>
+                        </div>
                     </div>
 
-                    <div className="flex justify-between gap-2 mb-8">
+                    <div className="flex justify-between gap-3 mb-10">
                         {otp.map((data, index) => (
                             <input
                                 key={index}
                                 type="text"
                                 maxLength={1}
-                                ref={(el) => (inputRefs.current[index] = el)}
+                                ref={(el) => { inputRefs.current[index] = el; }}
                                 value={data}
                                 onChange={(e) => handleChange(e.target, index)}
                                 onKeyDown={(e) => handleKeyDown(e, index)}
-                                className="w-12 h-14 text-center text-2xl font-bold bg-[var(--bg-body)] border-2 border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:border-[var(--primary)] outline-none transition-all"
+                                className="w-full aspect-[4/5] text-center text-3xl font-bold bg-[var(--bg-body)] border-2 border-[var(--border-color)] rounded-2xl text-[var(--text-primary)] focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary)]/10 outline-none transition-all shadow-lg"
                             />
                         ))}
                     </div>
 
                     {error && (
-                        <div className="flex items-center gap-3 text-red-500 text-sm bg-red-500/10 p-4 rounded-xl border border-red-500/20 mb-6">
-                            <AlertCircle size={18} />
-                            <span>{error}</span>
+                        <div className="flex items-center gap-3 text-red-400 text-sm bg-red-500/10 p-5 rounded-2xl border border-red-500/20 mb-8 animate-in fade-in slide-in-from-top-4">
+                            <AlertCircle size={20} className="shrink-0" />
+                            <span className="font-medium">{error}</span>
                         </div>
                     )}
 
-                    <button
-                        onClick={handleVerify}
-                        disabled={loading || otp.join("").length !== 6}
-                        className="w-full py-4 bg-[var(--primary)] text-white rounded-2xl font-bold uppercase hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                        {loading ? <Loader2 className="animate-spin" size={18} /> : "Verificar Cuenta"}
-                    </button>
+                    <div className="space-y-4">
+                        <button
+                            onClick={handleVerify}
+                            disabled={loading || otp.join("").length !== 6}
+                            className="w-full py-5 bg-[var(--primary)] hover:bg-blue-500 text-white rounded-2xl font-bold text-lg uppercase shadow-[0_12px_24px_-8px_rgba(59,130,246,0.3)] hover:shadow-[0_20px_40px_-12px_rgba(59,130,246,0.4)] transition-all active:scale-[0.98] disabled:opacity-40 disabled:grayscale flex items-center justify-center gap-3"
+                        >
+                            {loading ? <Loader2 className="animate-spin" size={24} /> : (
+                                <>
+                                    <span>Verificar Cuenta</span>
+                                    <CheckCircle2 size={24} />
+                                </>
+                            )}
+                        </button>
+                        
+                        <button
+                            onClick={() => navigate('/auth')}
+                            className="w-full py-3 text-[var(--text-secondary)] font-medium hover:text-[var(--text-primary)] transition-colors text-sm"
+                        >
+                            Volver al inicio
+                        </button>
+                    </div>
+
+                    <div className="mt-10 pt-6 border-t border-[var(--border-color)] text-center">
+                        <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-widest font-semibold opacity-50">
+                            © 2026 Easy-Pay Security Systems. UNACH.
+                        </p>
+                    </div>
                 </div>
             </main>
         </div>

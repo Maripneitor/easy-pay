@@ -18,7 +18,7 @@
     "lib": [
       "ESNext"
     ],
-    "module": "esnext",
+    "module": "ESNext",
     "moduleResolution": "bundler",
 
 
