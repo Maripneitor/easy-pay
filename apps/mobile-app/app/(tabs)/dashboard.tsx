@@ -18,6 +18,7 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { MotiView, MotiText } from 'moti';
+import { useAuth } from '../../context/AuthContext';
 
 import { SHARED_USER } from '../../src/infrastructure/constants/MockUser';
 const { width } = Dimensions.get('window');
@@ -27,6 +28,7 @@ const CARD_SPACING = (width - CARD_WIDTH) / 2;
 // --- Dashboard Component ---
 export default function DashboardScreen() {
     const { theme, fontScale, cycleTheme } = useTheme();
+    const { user } = useAuth();
     
     // Define STATS dynamically to reflect the theme
     const STATS = [
@@ -54,16 +56,17 @@ export default function DashboardScreen() {
         <View style={{ backgroundColor: theme.bg }} className="px-6 py-8 flex-row justify-between items-center">
             <TouchableOpacity 
                 activeOpacity={0.7}
-                onPress={() => router.push('/(tabs)/dashboard')}
-                onLongPress={cycleTheme}
+                onPress={cycleTheme}
                 className="flex-row items-center gap-3"
             >
                 <View style={{ backgroundColor: theme.primary }} className="w-10 h-10 rounded-xl items-center justify-center shadow-lg shadow-pink-500/20 overflow-hidden">
                     <Image source={require('../../assets/images/logo-ep.png')} className="w-full h-full" resizeMode="contain" />
                 </View>
                 <View>
-                    <Text style={{ fontSize: 20 * fontScale, color: theme.text }} className="font-black tracking-tighter">Easy-Pay</Text>
-                    <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-[3px]">Dashboard</Text>
+                    <Text style={{ fontSize: 20 * fontScale, color: theme.text }} className="font-black tracking-tighter">
+                        Hola, {user?.nombre?.split(' ')[0] || 'Usuario'}
+                    </Text>
+                    <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-[3px]">Easy-Pay Dashboard</Text>
                 </View>
             </TouchableOpacity>
             <View className="flex-row gap-3">

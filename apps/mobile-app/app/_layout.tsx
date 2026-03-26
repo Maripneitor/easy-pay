@@ -11,6 +11,7 @@ import { DependenciesProvider } from '../src/infrastructure/context/Dependencies
 import { ThemeProvider as AppThemeProvider } from '../src/infrastructure/context/ThemeContext';
 import { NotificationProvider } from '../src/infrastructure/context/NotificationContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '../context/AuthContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -31,6 +32,7 @@ export default function RootLayout() {
   if (!loaded && !error) return null;
   return (
     <SafeAreaProvider>
+      <AuthProvider>
       <AppThemeProvider>
         <NotificationProvider>
           <QueryClientProvider client={queryClient}>
@@ -51,6 +53,7 @@ export default function RootLayout() {
           </QueryClientProvider>
         </NotificationProvider>
       </AppThemeProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

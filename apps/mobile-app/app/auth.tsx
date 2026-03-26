@@ -20,12 +20,14 @@ import { StatusBar } from 'expo-status-bar';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 export default function AuthScreen() {
     console.log('AuthScreen rendering...');
     const { theme, fontScale, cycleTheme } = useTheme();
+    const { saveSession } = useAuth();
     const router = useRouter(); // Use the hook instead of singleton
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
@@ -56,11 +58,33 @@ export default function AuthScreen() {
                 const data = (await response.json()) as any;
                 
                 if (response.ok && data.status === 'success') {
-                    // Si el login es exitoso, guardamos el token (opcional aquí para simplificar) y vamos al dashboard
+                    // Si el login es exitoso, guardamos la sesión
+                    await saveSession(data.access_token, {
+                        id: data.user?.id || data.user?._id || 'unknown',
+                        nombre: data.user?.nombre || 'Usuario',
+                        email: data.user?.email || email
+                    });
+                    
                     router.replace('/(tabs)/dashboard');
-                } else {
-                    setError(data.detail || data.message || 'Error al iniciar sesión');
+                    return;
                 }
+
+                if (data.status === '2fa_required' || data.status === 'not_verified') {
+                    if (data.status === 'not_verified') {
+                        router.push({
+                            pathname: '/security-setup',
+                            params: { userId: data.user_id, email: data.email || email, name: data.nombre || name }
+                        });
+                    } else {
+                        router.push({
+                            pathname: '/security-2fa',
+                            params: { userId: data.user_id, email: data.email || email, name: data.nombre || name }
+                        });
+                    }
+                    return;
+                }
+
+                setError(data.detail || data.message || 'Error al iniciar sesión');
             } else {
                 // Registrar Cuenta
                 const response = await fetch(`${API_URL}/api/auth/register`, {
@@ -71,9 +95,9 @@ export default function AuthScreen() {
                 const data = (await response.json()) as any;
 
                 if (response.ok && data.status === 'success') {
-                    // Registro exitoso -> Ir a configurar 2FA (como en la web)
+                    // Registro exitoso -> Ir a configurar 2FA (Pasando por el Setup como en la Web)
                     router.push({
-                        pathname: '/security-2fa',
+                        pathname: '/security-setup',
                         params: { userId: data.user_id, email: email, name: name }
                     });
                 } else {
@@ -212,26 +236,20 @@ export default function AuthScreen() {
                             <TouchableOpacity 
                                 onPress={handleAuth}
                                 disabled={loading}
-                                className="mt-4 overflow-hidden rounded-[20px] shadow-lg shadow-blue-500/30"
-                                activeOpacity={0.85}
+                                className="mt-6 rounded-2xl overflow-hidden shadow-lg shadow-blue-500/40"
+                                activeOpacity={0.8}
                             >
-                                <LinearGradient
-                                    colors={['#3B82F6', '#1D4ED8']}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 1 }}
-                                    className="py-5 items-center justify-center border border-white/10"
+                                <View 
+                                    className="bg-[#2196F3] py-5 items-center justify-center"
                                 >
                                     {loading ? (
                                         <ActivityIndicator color="white" size="small" />
                                     ) : (
-                                        <View className="flex-row items-center gap-2">
-                                            <Text style={{ fontSize: 16 * fontScale }} className="text-white font-extra-bold uppercase tracking-wider">
-                                                {isLogin ? 'Entrar' : 'Crear Cuenta'}
-                                            </Text>
-                                            <Feather name="arrow-right" size={20} color="white" />
-                                        </View>
+                                        <Text style={{ fontSize: 16 * fontScale }} className="text-white font-bold tracking-wide">
+                                            {isLogin ? 'Entrar' : 'Crear Cuenta'}
+                                        </Text>
                                     )}
-                                </LinearGradient>
+                                </View>
                             </TouchableOpacity>
 
                             <TouchableOpacity 

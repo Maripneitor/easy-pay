@@ -14,34 +14,45 @@ EASY-PAY permite:
 
 ---
 
-## 🚦 Guía de Inicio Rápido con Docker (Mac)
+## 🚦 Flujo de Trabajo Local (Eficiente)
 
-Si quieres correr todo el sistema (Web, Mobile, API y DB) rápidamente en tu Mac, utiliza estos comandos:
+Para trabajar con **Easy-Pay** de forma 100% local, sigue este flujo cada vez que empieces o termines una sesión de desarrollo:
 
-### 1. Encender el Sistema
-Para encender todos los servicios en segundo plano:
-```bash
-docker compose up -d
-```
+### 1. Flujo de Encendido (Startup)
+Sigue este orden para que todos los servicios se comuniquen correctamente:
 
-### 2. Ver que todo esté bien (Logs)
-Para ver si la Web y el Mobile ya cargaron (espera a que veas el código QR):
-```bash
-docker compose logs -f frontend mobile
-```
-*Tip: Para ver logs del Backend (errores de login, etc.): `docker compose logs -f backend`*
+1.  **Encender la DB y Backend (Docker):**
+    En la raíz del proyecto ejecuta:
+    ```bash
+    docker compose up -d
+    ```
 
-### 3. Abrir la App Mobile
-En Docker, Expo no es interactivo. Sigue estos pasos:
-- **Simulador iOS**: Abre **Safari** dentro del simulador e ingresa: `exp://localhost:8081`
-- **Android/Celular Físico**: Escanea el código QR que aparece en los logs.
-- **Web App**: Entra a `http://localhost:5173`.
+2.  **Verificar Variables (Si cambias de Red/WiFi):**
+    Asegúrate de actualizar tu IP en el archivo `.env` de la raíz si el simulador no conecta:
+    ```env
+    EXPO_PUBLIC_API_URL=http://192.168.X.X:8000
+    ```
 
-### 4. Apagar el Sistema
-Para detener todos los contenedores y liberar memoria:
-```bash
-docker compose down
-```
+3.  **Encender la App Mobile (Metro):**
+    En otra terminal:
+    ```bash
+    cd apps/mobile-app
+    npx expo run:ios  # O npx expo start
+    ```
+
+### 2. Flujo de Apagado (Shutdown)
+Para liberar memoria y procesos de red:
+
+1.  **Detener Metro Bundler:** `Ctrl + C` en la terminal de Expo/Metro.
+2.  **Apagar Contenedores:**
+    ```bash
+    docker compose down
+    ```
+
+### 3. Tips de Desarrollo
+*   **Logs del Backend:** `docker compose logs -f backend` (para ver errores de 2FA o Login).
+*   **Reiniciar Backend:** `docker compose restart backend`.
+*   **Limpieza Profunda:** `docker compose down -v` (borra la DB local si hay datos corruptos).
 
 ---
 

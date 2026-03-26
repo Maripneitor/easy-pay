@@ -7,7 +7,8 @@ import {
     Dimensions, 
     Image, 
     StyleSheet,
-    Animated
+    Animated,
+    ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
@@ -15,6 +16,8 @@ import { useRouter, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { MotiView, MotiText } from 'moti';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -35,9 +38,13 @@ const MOCK_CONSUMPTION = [
 
 export default function NewMesaScreen() {
     const { theme, fontScale } = useTheme();
+    const { user } = useAuth();
     const router = useRouter();
     const [consumption, setConsumption] = useState(MOCK_CONSUMPTION);
-    const [participants, setParticipants] = useState(MOCK_PARTICIPANTS);
+    const [participants, setParticipants] = useState([
+        { id: user?.id || '1', name: 'Tú', avatar: `https://ui-avatars.com/api/?name=${user?.nombre || 'U'}&background=random`, color: '#3b82f6' },
+        ...MOCK_PARTICIPANTS.slice(1)
+    ]);
     const [isClosing, setIsClosing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [status, setStatus] = useState<'progress' | 'review' | 'closed'>('progress');
@@ -187,13 +194,22 @@ export default function NewMesaScreen() {
             <StatusBar style={theme.isDark ? "light" : "dark"} />
             <Stack.Screen options={{ headerShown: false }} />
 
+            <LinearGradient
+                colors={theme.isDark ? ['#0f172a', '#1e293b'] : ['#f8fafc', '#f1f5f9']}
+                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            />
+
             {/* CABECERA (Header) */}
-            <View className="px-6 py-4 flex-row items-center justify-between">
-                <TouchableOpacity onPress={() => router.back()}>
-                    <MaterialIcons name="arrow-back-ios" size={24} color={theme.text} />
+            <View style={{ backgroundColor: 'transparent' }} className="px-6 py-4 flex-row items-center justify-between">
+                <TouchableOpacity 
+                    onPress={() => router.back()}
+                    style={{ backgroundColor: theme.cardSecondary }}
+                    className="w-10 h-10 rounded-xl items-center justify-center border border-white/5"
+                >
+                    <MaterialIcons name="arrow-back-ios" size={20} color={theme.text} style={{ marginLeft: 6 }} />
                 </TouchableOpacity>
                 <View className="items-center">
-                    <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-black">Cena en Sonora Grill</Text>
+                    <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black">Cena en Sonora Grill</Text>
                     <View className="flex-row items-center gap-1.5 mt-0.5">
                         <View style={{ backgroundColor: status === 'progress' ? '#10b981' : '#f59e0b' }} className="w-2 h-2 rounded-full" />
                         <Text style={{ color: status === 'progress' ? '#10b981' : '#f59e0b' }} className="text-[10px] font-black uppercase tracking-widest">
@@ -201,7 +217,12 @@ export default function NewMesaScreen() {
                         </Text>
                     </View>
                 </View>
-                <View className="w-10" />
+                <TouchableOpacity 
+                    style={{ backgroundColor: theme.cardSecondary }}
+                    className="w-10 h-10 rounded-xl items-center justify-center border border-white/5"
+                >
+                    <MaterialIcons name="more-vert" size={20} color={theme.text} />
+                </TouchableOpacity>
             </View>
 
             {/* EL GRAN TOTAL */}
@@ -218,31 +239,35 @@ export default function NewMesaScreen() {
             </View>
 
             {/* PARTICIPANTES (Carousel) */}
-            <View className="mb-8">
-                <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="px-6 mb-4 font-black uppercase tracking-[3px]">Participantes</Text>
+            <View className="mb-4">
+                <View className="flex-row items-center justify-between px-6 mb-4">
+                    <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-[3px]">Participantes</Text>
+                    <Text style={{ color: theme.primary, fontSize: 10 * fontScale }} className="font-black uppercase">{participants.length} Miembros</Text>
+                </View>
                 <ScrollView 
                     horizontal 
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ paddingHorizontal: 24, gap: 16 }}
+                    contentContainerStyle={{ paddingHorizontal: 24, gap: 12 }}
                 >
                     {participants.map((p) => (
                         <MotiView 
                             key={p.id}
-                            from={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
+                            from={{ opacity: 0, translateX: -20 }}
+                            animate={{ opacity: 1, translateX: 0 }}
                             className="items-center"
                         >
-                            <View style={{ borderColor: p.color }} className="w-16 h-16 rounded-[24px] border-2 p-1 mb-2">
-                                <Image source={{ uri: p.avatar }} className="w-full h-full rounded-[20px]" />
+                            <View style={{ borderColor: p.color }} className="w-14 h-14 rounded-2xl border-2 p-0.5 mb-1.5 shadow-lg">
+                                <Image source={{ uri: p.avatar }} className="w-full h-full rounded-[14px]" />
+                                <View style={{ backgroundColor: p.color }} className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border border-white/20" />
                             </View>
-                            <Text style={{ color: theme.text, fontSize: 10 * fontScale }} className="font-black text-center">{p.name}</Text>
+                            <Text style={{ color: theme.text, fontSize: 9 * fontScale }} className="font-bold text-center opacity-80">{p.name}</Text>
                         </MotiView>
                     ))}
                     <TouchableOpacity 
                         style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
-                        className="w-16 h-16 rounded-[24px] border border-dashed items-center justify-center"
+                        className="w-14 h-14 rounded-2xl border border-dashed items-center justify-center"
                     >
-                        <MaterialIcons name="add" size={24} color={theme.primary} />
+                        <MaterialIcons name="add" size={20} color={theme.primary} />
                     </TouchableOpacity>
                 </ScrollView>
             </View>
@@ -361,20 +386,20 @@ export default function NewMesaScreen() {
                         disabled={!isReadyToClose || isLoading}
                         onPress={handleCloseMesa}
                         style={{ 
-                            backgroundColor: isReadyToClose ? theme.primary : theme.cardSecondary,
+                            backgroundColor: '#2196F3',
+                            shadowColor: '#2196F3',
                             opacity: isReadyToClose ? 1 : 0.5
                         }}
-                        className="w-full h-18 rounded-[24px] items-center justify-center shadow-2xl shadow-blue-500/40"
+                        className="w-full h-18 rounded-[24px] items-center justify-center shadow-lg shadow-blue-500/40"
                     >
                         {isLoading ? (
                             <View className="flex-row items-center gap-3">
-                                <MaterialIcons name="sync" size={24} color="black" className="animate-spin" />
-                                <Text className="text-slate-900 font-black text-base uppercase tracking-[4px]">Sincronizando...</Text>
+                                <ActivityIndicator color="white" />
+                                <Text className="text-white font-black text-base uppercase tracking-[4px]">Sincronizando...</Text>
                             </View>
                         ) : (
                             <View className="flex-row items-center gap-3">
-                                <MaterialIcons name={isReadyToClose ? "lock-outline" : "info-outline"} size={22} color="black" />
-                                <Text className="text-slate-900 font-black text-base uppercase tracking-[4px]">
+                                <Text className="text-white font-black text-base uppercase tracking-[4px]">
                                     {isReadyToClose ? 'Cerrar y Dividir' : 'Faltan Items'}
                                 </Text>
                             </View>

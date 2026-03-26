@@ -4,20 +4,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { useAuth } from '../context/AuthContext';
 
 export default function Security2FAScreen() {
     const { userId, email, name } = useLocalSearchParams<{ userId: string; email: string; name: string }>();
+    const { saveSession } = useAuth();
     const [code, setCode] = useState(['', '', '', '', '', '']);
     const [loading, setLoading] = useState(false);
     const [verifying, setVerifying] = useState(false);
     const inputs = useRef<Array<TextInput | null>>([]);
     const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 
+    // Ya no enviamos automáticamente en el mount, se hace en la pantalla de Setup anterior (como en la web)
+    /*
     useEffect(() => {
         if (userId && email) {
             handleSetup2FA();
         }
     }, [userId, email]);
+    */
 
     const handleSetup2FA = async () => {
         setLoading(true);
@@ -53,8 +58,13 @@ export default function Security2FAScreen() {
             const data = (await response.json()) as any;
 
             if (response.ok && data.status === 'success') {
-                // Verificación exitosa
-                // Podríamos guardar el access_token en el storage aquí (TODO: storage util)
+                // Verificación exitosa - Guardamos la sesión
+                await saveSession(data.access_token, {
+                    id: userId || 'unknown',
+                    nombre: name || data.user_name || 'Usuario',
+                    email: email || data.user_email || ''
+                });
+                
                 router.replace('/(tabs)/dashboard');
             } else {
                 Alert.alert('Falló la verificación', data.message || 'El código es incorrecto.');
@@ -146,7 +156,11 @@ export default function Security2FAScreen() {
                                 <Ionicons name="mail-unread" size={60} color="#60a5fa" />
                             </View>
                             {loading && <ActivityIndicator color="#3b82f6" style={{ marginBottom: 10 }} />}
-                            <Pressable onPress={handleSetup2FA} className="active:opacity-70">
+                            <Pressable 
+                                onPress={handleSetup2FA}
+                                disabled={loading}
+                                className="active:opacity-70"
+                             >
                                 <Text className="text-blue-400 text-xs font-semibold">¿No recibiste el código? Reenviar</Text>
                             </Pressable>
                         </View>
@@ -178,13 +192,12 @@ export default function Security2FAScreen() {
                             <Pressable 
                                 onPress={handleVerify2FA}
                                 disabled={verifying}
-                                className="w-full py-3.5 px-4 bg-[#2196F3] rounded-lg shadow-lg shadow-blue-500/25 flex-row items-center justify-center gap-2 active:scale-[0.98]"
+                                className="w-full py-5 px-4 bg-[#2196F3] rounded-2xl shadow-lg shadow-blue-500/40 flex-row items-center justify-center active:scale-[0.98]"
                             >
                                 {verifying ? <ActivityIndicator color="white" size="small" /> : (
-                                    <>
-                                        <Text className="text-white font-bold">Verificar Cuenta</Text>
-                                        <MaterialIcons name="verified-user" size={18} color="white" />
-                                    </>
+                                    <Text className="text-white font-bold text-base tracking-wide uppercase">
+                                        Verificar Cuenta
+                                    </Text>
                                 )}
                             </Pressable>
                             <Pressable 
