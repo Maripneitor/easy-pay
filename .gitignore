@@ -42,7 +42,8 @@ thumbs.db
 apps/api-backend/data.json
 .pnpm-store
 .expo
-__pycache__
+**/__pycache__/
+**/*.pyc
 _archive_google_dashboard
 
 # Stitch and temporary files
