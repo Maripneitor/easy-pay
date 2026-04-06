@@ -164,10 +164,10 @@ export default function OCRScannerScreen() {
 
                                 <View className="gap-4">
                                     <Pressable 
-                                        onPress={() => router.replace('/(tabs)/dashboard')}
+                                        onPress={() => router.replace('/ocr-review')}
                                         className="bg-blue-600 py-6 rounded-[25px] items-center shadow-2xl shadow-blue-500/40 active:scale-95"
                                     >
-                                        <Text className="text-white font-black text-lg">CONFIRMAR MESA</Text>
+                                        <Text className="text-white font-black text-lg">REVISAR RESULTADOS</Text>
                                     </Pressable>
                                     
                                     <Pressable 

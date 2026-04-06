@@ -12,6 +12,7 @@ import { ThemeProvider as AppThemeProvider } from '../src/infrastructure/context
 import { NotificationProvider } from '../src/infrastructure/context/NotificationContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../context/AuthContext';
+import { MesaProvider } from '../context/MesaContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -33,6 +34,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
+      <MesaProvider>
       <AppThemeProvider>
         <NotificationProvider>
           <QueryClientProvider client={queryClient}>
@@ -53,6 +55,7 @@ export default function RootLayout() {
           </QueryClientProvider>
         </NotificationProvider>
       </AppThemeProvider>
+      </MesaProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

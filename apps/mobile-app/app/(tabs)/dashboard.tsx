@@ -19,6 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { MotiView, MotiText } from 'moti';
 import { useAuth } from '../../context/AuthContext';
+import { useMesa } from '../../context/MesaContext';
 
 import { SHARED_USER } from '../../src/infrastructure/constants/MockUser';
 const { width } = Dimensions.get('window');
@@ -29,27 +30,33 @@ const CARD_SPACING = (width - CARD_WIDTH) / 2;
 export default function DashboardScreen() {
     const { theme, fontScale, cycleTheme } = useTheme();
     const { user } = useAuth();
-    
+    const { activeMesa, createMesa } = useMesa();
+    const router = useRouter();
+    const [refreshing, setRefreshing] = useState(false);
+    const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+    const scrollX = useRef(new Animated.Value(0)).current;
+
     // Define STATS dynamically to reflect the theme
     const STATS = [
         { id: '1', label: 'Saldo Total', amount: 8450.00, color: [theme.primary, `${theme.primary}80`, `${theme.primary}40`], icon: 'account-balance-wallet', trend: '+12%' },
         { id: '2', label: 'Me Deben', amount: 480.00, color: ['#06b6d4', '#3b82f6'], icon: 'call-made', trend: '3 personas' },
         { id: '3', label: 'Debes', amount: 320.00, color: ['#f43f5e', '#fb7185'], icon: 'call-received', trend: '2 deudas' },
     ];
-    const router = useRouter();
-    const [refreshing, setRefreshing] = useState(false);
-    const [isBalanceVisible, setIsBalanceVisible] = useState(true);
-    const scrollX = useRef(new Animated.Value(0)).current;
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
         setTimeout(() => setRefreshing(false), 2000);
     }, []);
 
+    const handleCreateMesa = async () => {
+        await createMesa('Mesa Sonora Grill', user?.id || '1');
+        router.push('/new-mesa');
+    };
+
     const QUICK_ACTIONS = [
-        { id: 'group', label: 'Nuevo Grupo', icon: 'group-add', route: '/create-group', color: theme.primary },
+        { id: 'group', label: 'Nueva Mesa', icon: 'restaurant', action: handleCreateMesa, color: theme.primary },
+        { id: 'join', label: 'Unirse mesa', icon: 'qr-code-scanner', route: '/(tabs)/qr', color: '#10b981' },
         { id: 'settle', label: 'Liquidar', icon: 'handshake', route: '/settle-up', color: '#a855f7' },
-        { id: 'join', label: 'Unirse', icon: 'qr-code-scanner', route: '/(tabs)/qr', color: '#10b981' },
     ];
 
     const renderHeader = () => (
@@ -169,14 +176,40 @@ export default function DashboardScreen() {
                     </Animated.ScrollView>
                 </View>
 
-                {/* 2. Acciones Rápidas */}
+                {/* 2. Mesa Activa (Si existe) */}
+                {activeMesa && (
+                    <MotiView 
+                        from={{ opacity: 0, translateY: 20 }}
+                        animate={{ opacity: 1, translateY: 0 }}
+                        className="px-6 mt-8"
+                    >
+                        <TouchableOpacity 
+                            onPress={() => router.push('/new-mesa')}
+                            style={{ backgroundColor: theme.primary }}
+                            className="p-6 rounded-[32px] flex-row items-center justify-between shadow-xl shadow-blue-500/20"
+                        >
+                            <View className="flex-row items-center gap-4">
+                                <View className="w-12 h-12 bg-white/20 rounded-2xl items-center justify-center">
+                                    <MaterialIcons name="restaurant" size={24} color="black" />
+                                </View>
+                                <View>
+                                    <Text className="text-black font-black text-lg">{activeMesa.nombre}</Text>
+                                    <Text className="text-black/60 font-bold text-[10px] uppercase tracking-widest">Mesa en curso • {activeMesa.participantes.length + 1} pers.</Text>
+                                </View>
+                            </View>
+                            <Ionicons name="arrow-forward-circle" size={32} color="black" />
+                        </TouchableOpacity>
+                    </MotiView>
+                )}
+
+                {/* 3. Acciones Rápidas */}
                 <View className="px-6 mt-10">
                     <Text style={{ fontSize: 10 * fontScale, color: theme.textSecondary }} className="font-black uppercase tracking-[3px] mb-6">Operaciones Rápidas</Text>
                     <View className="flex-row justify-between">
                         {QUICK_ACTIONS.map(action => (
                             <TouchableOpacity 
                                 key={action.id}
-                                onPress={() => router.push(action.route as any)}
+                                onPress={() => action.action ? action.action() : router.push(action.route as any)}
                                 style={{ alignItems: 'center' }}
                                 activeOpacity={0.7}
                             >

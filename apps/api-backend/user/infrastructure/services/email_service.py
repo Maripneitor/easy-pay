@@ -5,14 +5,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 conf = ConnectionConfig(
-    MAIL_USERNAME = os.getenv("MAIL_USERNAME", "tu_correo@gmail.com"),
-    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "tu_clave_de_aplicacion"),
-    MAIL_FROM = os.getenv("MAIL_FROM", "tu_correo@gmail.com"),
-    MAIL_SERVER = "smtp.gmail.com",
-    # --- CAMBIOS PARA EVITAR EL NETWORK UNREACHABLE ---
-    MAIL_PORT = 465,           # Puerto SSL
-    MAIL_STARTTLS = False,     # Para 465 esto va en False
-    MAIL_SSL_TLS = True,       # Para 465 esto va en True
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME"),
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD"),
+    MAIL_FROM = os.getenv("MAIL_FROM"),
+    MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com"),
+    MAIL_PORT = int(os.getenv("MAIL_PORT", 587)),
+    MAIL_STARTTLS = True if os.getenv("MAIL_PORT") == "587" else False,
+    MAIL_SSL_TLS = True if os.getenv("MAIL_PORT") == "465" else False,
     USE_CREDENTIALS = True,
     VALIDATE_CERTS = True
 )
