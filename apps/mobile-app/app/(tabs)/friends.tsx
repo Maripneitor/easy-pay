@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, Dimensions, Pressable } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, FlatList, TextInput, Image, Dimensions, Pressable, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -20,6 +20,7 @@ const FRIENDS = [
 
 export default function FriendsScreen() {
     const { theme, fontScale } = useTheme();
+    const insets = useSafeAreaInsets();
     const [searchQuery, setSearchQuery] = useState('');
     const [filter, setFilter] = useState('Todos'); // Todos, Me deben, Les debo, Al día
 
@@ -46,7 +47,7 @@ export default function FriendsScreen() {
     }, [searchQuery, filter]);
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
+        <View style={{ flex: 1, backgroundColor: theme.bg, paddingTop: insets.top, paddingBottom: insets.bottom }}>
             <StatusBar style="light" />
             <Stack.Screen options={{ headerShown: false }} />
 
@@ -56,14 +57,17 @@ export default function FriendsScreen() {
                     <Text style={{ color: theme.text, fontSize: 32 * fontScale }} className="font-black tracking-tight leading-none">Amigos</Text>
                     <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-[3px] mt-2">Gestión Social</Text>
                 </View>
-                <TouchableOpacity 
+                <Pressable 
                     onPress={() => router.push('/friends/add')}
-                    style={{ backgroundColor: theme.primary, shadowColor: theme.primary }}
+                    style={({ pressed }) => ({
+                        backgroundColor: theme.primary, 
+                        shadowColor: theme.primary,
+                        opacity: pressed ? 0.8 : 1
+                    })}
                     className="w-12 h-12 rounded-[18px] items-center justify-center shadow-lg shadow-pink-500/20"
-                    activeOpacity={0.7}
                 >
                     <MaterialIcons name="person-add-alt-1" size={24} color="white" />
-                </TouchableOpacity>
+                </Pressable>
             </View>
 
             {/* Summary Banner */}
@@ -92,99 +96,101 @@ export default function FriendsScreen() {
                         onChangeText={setSearchQuery}
                     />
                     {searchQuery.length > 0 && (
-                        <TouchableOpacity onPress={() => setSearchQuery('')}>
+                        <Pressable onPress={() => setSearchQuery('')} className="active:opacity-50">
                             <MaterialIcons name="cancel" size={18} color="#475569" />
-                        </TouchableOpacity>
+                        </Pressable>
                     )}
                 </View>
 
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
                     {['Todos', 'Me deben', 'Les debo', 'Al día'].map(f => (
-                        <TouchableOpacity 
+                        <Pressable 
                             key={f}
                             onPress={() => setFilter(f)}
-                            style={{ 
+                            style={({ pressed }) => ({ 
                                 backgroundColor: filter === f ? theme.primary : 'rgba(255,255,255,0.05)',
-                                borderColor: filter === f ? theme.primary : theme.border 
-                            }}
+                                borderColor: filter === f ? theme.primary : theme.border,
+                                opacity: pressed ? 0.7 : 1
+                            })}
                             className={`px-5 py-2.5 rounded-full border shadow-sm`}
                         >
                             <Text style={{ fontSize: 10 * fontScale }} className={`font-black uppercase tracking-wider ${filter === f ? 'text-white' : 'text-slate-500'}`}>{f}</Text>
-                        </TouchableOpacity>
+                        </Pressable>
                     ))}
                 </ScrollView>
             </View>
 
             {/* Friends List */}
-            <ScrollView 
+            <FlatList 
                 className="flex-1 px-6 mt-8" 
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 150 }}
-            >
-                <AnimatePresence>
-                    {filteredFriends.length > 0 ? (
-                        filteredFriends.map((friend, index) => (
-                            <MotiView 
-                                key={friend.id}
-                                from={{ opacity: 0, translateY: 20 }}
-                                animate={{ opacity: 1, translateY: 0 }}
-                                transition={{ delay: index * 50 }}
-                            >
-                                <TouchableOpacity 
-                                    onPress={() => router.push({ pathname: `/friends/[id]`, params: { id: friend.id } } as any)}
-                                    activeOpacity={0.8}
-                                    style={{ backgroundColor: 'rgba(30, 41, 59, 0.4)', borderColor: theme.border }}
-                                    className="border rounded-[32px] p-5 flex-row items-center mb-4"
-                                >
-                                    {/* Avatar with Status Ring */}
-                                    <View style={{ borderColor: friend.balance > 0 ? '#10b981' : friend.balance < 0 ? '#f43f5e' : 'transparent', borderWidth: 2 }} className="p-0.5 rounded-full mr-4">
-                                        <Image 
-                                            source={{ uri: friend.avatar }} 
-                                            className="w-14 h-14 rounded-full bg-slate-800"
-                                        />
-                                    </View>
-
-                                    <View className="flex-1">
-                                        <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-black tracking-tight">{friend.name}</Text>
-                                        <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-widest mt-0.5">{friend.username}</Text>
-                                    </View>
-
-                                    <View className="items-end mr-2">
-                                        <Text style={{ 
-                                            color: friend.balance > 0 ? '#10b981' : friend.balance < 0 ? '#f43f5e' : theme.textSecondary,
-                                            fontSize: 14 * fontScale
-                                        }} className="font-black">
-                                            {friend.balance === 0 ? 'AL DÍA' : `${friend.balance > 0 ? 'TE DEBE' : 'DEBES'} $${Math.abs(friend.balance).toFixed(2)}`}
-                                        </Text>
-                                        <Text style={{ color: '#334155', fontSize: 9 * fontScale }} className="font-black uppercase mt-1">{friend.lastActivity}</Text>
-                                    </View>
-                                    <MaterialIcons name="chevron-right" size={20} color="#334155" />
-                                </TouchableOpacity>
-                            </MotiView>
-                        ))
-                    ) : (
-                        <MotiView 
-                            from={{ opacity: 0, scale: 0.9 }} 
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="items-center justify-center py-20"
+                data={filteredFriends}
+                keyExtractor={(item) => item.id}
+                ListEmptyComponent={() => (
+                    <MotiView 
+                        from={{ opacity: 0, scale: 0.9 }} 
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="items-center justify-center py-20"
+                    >
+                        <View className="w-24 h-24 rounded-[32px] bg-slate-800/50 items-center justify-center mb-8 border border-white/5">
+                            <MaterialCommunityIcons name="account-search-outline" size={48} color={theme.textSecondary} />
+                        </View>
+                        <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black uppercase tracking-widest">¿Buscando a alguien?</Text>
+                        <Text style={{ color: theme.textSecondary, fontSize: 12 * fontScale }} className="text-center mt-3 px-10 font-bold leading-5">
+                            No encontramos a nadie bajo esos criterios. Prueba buscando otro nombre o invita a un nuevo amigo.
+                        </Text>
+                        <Pressable 
+                            style={({ pressed }) => ({ backgroundColor: theme.primary, opacity: pressed ? 0.8 : 1 })}
+                            className="mt-10 px-10 py-4 rounded-full shadow-lg shadow-pink-500/20"
                         >
-                            <View className="w-24 h-24 rounded-[32px] bg-slate-800/50 items-center justify-center mb-8 border border-white/5">
-                                <MaterialCommunityIcons name="account-search-outline" size={48} color={theme.textSecondary} />
+                            <Text className="text-white font-black uppercase tracking-widest">Invitar Amigos</Text>
+                        </Pressable>
+                    </MotiView>
+                )}
+                renderItem={({ item: friend, index }) => (
+                    <MotiView 
+                        key={friend.id}
+                        from={{ opacity: 0, translateY: 20 }}
+                        animate={{ opacity: 1, translateY: 0 }}
+                        transition={{ delay: index * 50 }}
+                    >
+                        <Pressable 
+                            onPress={() => router.push({ pathname: `/friends/[id]`, params: { id: friend.id } } as any)}
+                            style={({ pressed }) => ({ 
+                                backgroundColor: 'rgba(30, 41, 59, 0.4)', 
+                                borderColor: theme.border,
+                                opacity: pressed ? 0.8 : 1 
+                            })}
+                            className="border rounded-[32px] p-5 flex-row items-center mb-4"
+                        >
+                            {/* Avatar with Status Ring */}
+                            <View style={{ borderColor: friend.balance > 0 ? '#10b981' : friend.balance < 0 ? '#f43f5e' : 'transparent', borderWidth: 2 }} className="p-0.5 rounded-full mr-4">
+                                <Image 
+                                    source={{ uri: friend.avatar }} 
+                                    className="w-14 h-14 rounded-full bg-slate-800"
+                                />
                             </View>
-                            <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black uppercase tracking-widest">¿Buscando a alguien?</Text>
-                            <Text style={{ color: theme.textSecondary, fontSize: 12 * fontScale }} className="text-center mt-3 px-10 font-bold leading-5">
-                                No encontramos a nadie bajo esos criterios. Prueba buscando otro nombre o invita a un nuevo amigo.
-                            </Text>
-                            <TouchableOpacity 
-                                style={{ backgroundColor: theme.primary }}
-                                className="mt-10 px-10 py-4 rounded-full shadow-lg shadow-pink-500/20"
-                            >
-                                <Text className="text-white font-black uppercase tracking-widest">Invitar Amigos</Text>
-                            </TouchableOpacity>
-                        </MotiView>
-                    )}
-                </AnimatePresence>
-            </ScrollView>
-        </SafeAreaView>
+
+                            <View className="flex-1">
+                                <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-black tracking-tight">{friend.name}</Text>
+                                <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-widest mt-0.5">{friend.username}</Text>
+                            </View>
+
+                            <View className="items-end mr-2">
+                                <Text style={{ 
+                                    color: friend.balance > 0 ? '#10b981' : friend.balance < 0 ? '#f43f5e' : theme.textSecondary,
+                                    fontSize: 14 * fontScale
+                                }} className="font-black">
+                                    {friend.balance === 0 ? 'AL DÍA' : `${friend.balance > 0 ? 'TE DEBE' : 'DEBES'} $${Math.abs(friend.balance).toFixed(2)}`}
+                                </Text>
+                                <Text style={{ color: '#334155', fontSize: 9 * fontScale }} className="font-black uppercase mt-1">{friend.lastActivity}</Text>
+                            </View>
+                            <MaterialIcons name="chevron-right" size={20} color="#334155" />
+                        </Pressable>
+                    </MotiView>
+                )}
+            />
+        </View>
     );
 }

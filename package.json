@@ -7,12 +7,12 @@
     "packages/*"
   ],
   "scripts": {
-    "install:all": "pnpm install",
+    "install:all": "npm install",
     "dev:backend": "docker-compose up backend",
-    "dev:mobile": "pnpm --filter mobile-app start",
-    "dev:web": "pnpm --filter web-app dev",
-    "dev": "pnpm run /^dev:*/",
-    "clean": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' + && pnpm install",
+    "dev:mobile": "cd apps/mobile-app && npm start",
+    "dev:web": "npm run dev --workspace=apps/web-app",
+    "dev": "npm run /^dev:*/",
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules package-lock.json && npm install",
     "android": "expo run:android",
     "ios": "expo run:ios"
   },
@@ -25,15 +25,12 @@
     "react": "19.1.0",
     "react-native": "0.81.5"
   },
-  "pnpm": {
-    "overrides": {
-      "react": "19.1.0",
-      "react-dom": "19.1.0",
-      "react-native-worklets-core": "1.6.3",
-      "react-native-reanimated": "4.2.2",
-      "@react-navigation/native": "7.1.33",
-      "@react-navigation/core": "7.16.1"
-    },
-    "ignoredBuiltDependencies": []
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native-worklets-core": "1.6.3",
+    "react-native-reanimated": "4.2.2",
+    "@react-navigation/native": "7.1.33",
+    "@react-navigation/core": "7.16.1"
   }
 }
