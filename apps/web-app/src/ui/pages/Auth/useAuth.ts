@@ -57,7 +57,7 @@ export const useAuth = () => {
         console.log("🛰️ Enviando petición de login al servidor...");
 
         try {
-            const response = await fetch('http://localhost:8000/api/auth/login', {
+            const response = await fetch('http://localhost:8001/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ identifier, password }),

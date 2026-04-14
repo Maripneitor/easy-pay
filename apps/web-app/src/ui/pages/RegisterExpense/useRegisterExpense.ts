@@ -1,110 +1,114 @@
-import { useState, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { SplitType, TipMode, Participant } from '@easy-pay/shared';
-
-const MOCK_PARTICIPANTS: Participant[] = [
-    { id: 'p1', name: 'Ana Pérez', initials: 'AP', color: 'pink', isSelected: true },
-    { id: 'p2', name: 'Carlos López', initials: 'CL', color: 'emerald', isSelected: true },
-    { id: 'p3', name: 'Tú (Juan)', initials: 'TÚ', color: 'blue', isSelected: true, isCurrentUser: true },
-    { id: 'p4', name: 'Luis Martínez', initials: 'LM', color: 'amber', isSelected: false },
-];
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 export const useRegisterExpense = () => {
+    const { groupId } = useParams<{ groupId: string }>();
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+    const [integrantes, setIntegrantes] = useState<{ id: string, nombre: string }[]>([]);
 
-    // ─── Form state ───
-    const [description, setDescription] = useState('');
-    const [amount, setAmount] = useState('');
-    const [dateTime, setDateTime] = useState(() => {
-        const now = new Date();
-        return now.toISOString().slice(0, 16);
+    const [formData, setFormData] = useState({
+        nombre: '',
+        precio: '',
+        cantidad: 1,
+        comprador_id: '',
+        participantes_ids: [] as string[]
     });
-    const [splitType, setSplitType] = useState<SplitType>('equally');
-    const [participants, setParticipants] = useState<Participant[]>(MOCK_PARTICIPANTS);
-    const [tipMode, setTipMode] = useState<TipMode>('percentage');
-    const [tipValue, setTipValue] = useState('');
 
-    const groupName = 'Cena viernes';
+    const fetchGroupDetails = useCallback(async () => {
+        const userId = localStorage.getItem('userId');
+        // Eliminamos cualquier caracter raro del ID de la URL
+        const cleanGroupId = groupId?.replace(/[#?:]/g, '');
 
-    // ─── Derived values ───
-    const parsedAmount = useMemo(() => {
-        const cleaned = amount.replace(/[,$\s]/g, '');
-        return parseFloat(cleaned) || 0;
-    }, [amount]);
+        if (!userId || !cleanGroupId) return;
 
-    const selectedCount = useMemo(
-        () => participants.filter((p) => p.isSelected).length,
-        [participants],
-    );
+        try {
+            console.log("🔍 Buscando datos para el grupo:", cleanGroupId);
+            const res = await fetch(`http://localhost:8002/api/groups/user/${userId}`);
 
-    const tipAmount = useMemo(() => {
-        const val = parseFloat(tipValue) || 0;
-        if (tipMode === 'percentage') return parsedAmount * (val / 100);
-        return val;
-    }, [parsedAmount, tipMode, tipValue]);
+            if (res.ok) {
+                const groups = await res.json();
+                console.log("📦 Grupos recibidos del servidor:", groups);
 
-    const perPerson = useMemo(() => {
-        if (selectedCount === 0) return 0;
-        return (parsedAmount + tipAmount) / selectedCount;
-    }, [parsedAmount, tipAmount, selectedCount]);
+                // Buscamos coincidencia exacta o por ID
+                const currentGroup = groups.find((g: any) => g.id === cleanGroupId || g._id === cleanGroupId);
 
-    // ─── Handlers ───
-    const goBack = () => navigate(-1);
+                if (currentGroup) {
+                    console.log("✅ Grupo encontrado:", currentGroup);
 
-    const toggleParticipant = useCallback((id: string) => {
-        setParticipants((prev) =>
-            prev.map((p) => (p.id === id ? { ...p, isSelected: !p.isSelected } : p)),
-        );
-    }, []);
+                    // Combinamos creador e integrantes
+                    const allIds: string[] = [...new Set([
+                        currentGroup.creador_id,
+                        ...(currentGroup.integrantes || [])
+                    ])].filter(id => id); // Eliminamos nulos
 
-    const selectAll = useCallback(() => {
-        setParticipants((prev) => prev.map((p) => ({ ...p, isSelected: true })));
-    }, []);
+                    const listaFormateada = allIds.map(id => ({
+                        id,
+                        nombre: id === userId ? "Yo (Tú)" : `Usuario ${id.slice(-4).toUpperCase()}`
+                    }));
 
-    const handleSubmit = useCallback(() => {
-        console.log('Submit expense:', {
-            description,
-            amount: parsedAmount,
-            dateTime,
-            splitType,
-            participants: participants.filter((p) => p.isSelected),
-            tipMode,
-            tipValue: tipAmount,
-        });
-        navigate('/dashboard');
-    }, [description, parsedAmount, dateTime, splitType, participants, tipMode, tipAmount, navigate]);
+                    setIntegrantes(listaFormateada);
 
-    const formatCurrency = (value: number) =>
-        value.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+                    // Seteamos valores iniciales
+                    setFormData(prev => ({
+                        ...prev,
+                        comprador_id: userId,
+                        participantes_ids: allIds
+                    }));
+                } else {
+                    console.warn("⚠️ No se encontró el grupo con ID:", cleanGroupId, "en la lista del usuario.");
+                }
+            }
+        } catch (error) {
+            console.error("❌ Error en el fetch de integrantes:", error);
+        }
+    }, [groupId]);
 
-    return {
-        // State
-        description,
-        setDescription,
-        amount,
-        setAmount,
-        dateTime,
-        setDateTime,
-        splitType,
-        setSplitType,
-        participants,
-        tipMode,
-        setTipMode,
-        tipValue,
-        setTipValue,
-        groupName,
+    useEffect(() => {
+        fetchGroupDetails();
+    }, [fetchGroupDetails]);
 
-        // Derived
-        parsedAmount,
-        selectedCount,
-        tipAmount,
-        perPerson,
-
-        // Actions
-        goBack,
-        toggleParticipant,
-        selectAll,
-        handleSubmit,
-        formatCurrency,
+    const toggleParticipante = (id: string) => {
+        setFormData(prev => ({
+            ...prev,
+            participantes_ids: prev.participantes_ids.includes(id)
+                ? prev.participantes_ids.filter(p => p !== id)
+                : [...prev.participantes_ids, id]
+        }));
     };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        if (e) e.preventDefault();
+        setLoading(true);
+
+        try {
+            const payload = {
+                group_id: groupId?.replace(/[#?:]/g, ''),
+                nombre: formData.nombre.trim(),
+                precio: parseFloat(formData.precio),
+                cantidad: Number(formData.cantidad),
+                comprador_id: formData.comprador_id,
+                participantes_ids: formData.participantes_ids
+            };
+
+            const response = await fetch(`http://localhost:8002/api/groups/add-item`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                navigate(-1);
+            } else {
+                const err = await response.json();
+                alert(`Error: ${err.detail || 'Fallo en el registro'}`);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { formData, setFormData, integrantes, handleSubmit, loading, toggleParticipante };
 };

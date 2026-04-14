@@ -80,6 +80,7 @@ const AnimatedRoutes = () => {
                             <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
                             <Route path="/create-group" element={<PageTransition><CreateGroup /></PageTransition>} />
                             <Route path="/group/:id" element={<PageTransition><GroupDetail /></PageTransition>} />
+                            <Route path="/group/:groupId/register-expense" element={<PageTransition><RegisterExpense /></PageTransition>} />
                             <Route path="/my-payments" element={<PageTransition><MyPayments /></PageTransition>} />
                             <Route path="/ocr-scanner" element={<PageTransition><OCRScanner /></PageTransition>} />
                             <Route path="/register-expense" element={<PageTransition><RegisterExpense /></PageTransition>} />
