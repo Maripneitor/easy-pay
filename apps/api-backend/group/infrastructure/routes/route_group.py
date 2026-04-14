@@ -9,18 +9,18 @@ from group.application.get_balance import GetGroupBalancesUseCase
 from group.application.join_group import JoinGroupUseCase 
 from group.domain.models.group import GroupJoin
 
-# 1. Definimos el router UNA SOLA VEZ al inicio
+# 1. Definimos el router
 group_router = APIRouter(prefix="/api/groups", tags=["Groups"], redirect_slashes=False)
 
 # 2. Instanciamos los repositorios
 group_repo = MongoGroupRepository()
 item_repo = MongoItemRepository()
-join_group_uc = JoinGroupUseCase(group_repo)
 
 # 3. Casos de Uso
 create_group_uc = CreateGroupUseCase(group_repo)
 add_item_uc = AddItemUseCase(item_repo, group_repo)
 get_balances_uc = GetGroupBalancesUseCase(item_repo, group_repo)
+join_group_uc = JoinGroupUseCase(group_repo)
 
 
 # --- ENDPOINTS ---
@@ -35,8 +35,6 @@ async def add_item(data: ItemCreate):
     """Agrega un ticket/gasto a un grupo específico"""
     result = await add_item_uc.execute(data)
     if result.get("status") == "error":
-        # Si el error es que no encontró el grupo, el 404 está bien, 
-        # pero si es error de lógica, podrías usar 400.
         raise HTTPException(status_code=400, detail=result["message"])
     return result
 
@@ -66,8 +64,16 @@ async def get_user_groups(user_id: str):
 async def join_group(data: GroupJoin):
     """Endpoint para unirse a un grupo vía código"""
     result = await join_group_uc.execute(data.codigo, data.user_id)
-    
     if result["status"] == "error":
         raise HTTPException(status_code=400, detail=result["message"])
-        
     return result
+
+# 🚩 CAMBIO CLAVE AQUÍ:
+@group_router.get("/{group_id}")
+async def get_group_by_id(group_id: str):
+    """Retorna el detalle del grupo con los NOMBRES reales de los integrantes"""
+    # Usamos find_by_id_detailed para que haga el cruce con EasyPay_Auth
+    group = await group_repo.find_by_id_detailed(group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail="Grupo no encontrado")
+    return group
