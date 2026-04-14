@@ -1,28 +1,42 @@
 services:
-  # --- BASE DE DATOS LOCAL (Tu salvavidas para la UNACH/Redes Públicas) ---
+  # --- BASE DE DATOS LOCAL ---
   mongodb_local:
     image: mongo:latest
     container_name: mongodb_local_pruebas
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db # Persistencia para que no pierdas tus usuarios al apagar
+      - mongo_data:/data/db
 
-  # --- BACKEND (FastAPI / Python) ---
-  backend:
+  # --- MICROSERVICIO DE USUARIOS (Puerto 8001) ---
+  user-service:
     build:
-      context: ./apps/api-backend
+      context: ./apps/api-backend # Ajusta si tienes carpetas separadas
       dockerfile: Dockerfile
-    container_name: easy-pay-backend_pruebas
+    container_name: easy-pay-user-service
     volumes:
-      # Mapeamos la carpeta para que el --reload detecte cambios en caliente
       - ./apps/api-backend:/app
     ports:
-      - "8000:8000"
-    # 🔥 Esta línea lee las variables directamente de tu .env del backend
+      - "8001:8000" # Mapeamos el 8000 interno al 8001 externo
     env_file:
       - ./apps/api-backend/.env
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - mongodb_local
+
+  # --- MICROSERVICIO DE GRUPOS (Puerto 8002) ---
+  group-service:
+    build:
+      context: ./apps/api-backend # Aquí iría la carpeta de la lógica de grupos
+      dockerfile: Dockerfile
+    container_name: easy-pay-group-service
+    volumes:
+      - ./apps/api-backend:/app
+    ports:
+      - "8002:8000" # Mapeamos el 8000 interno al 8002 externo
+    env_file:
+      - ./apps/api-backend/.env
+    command: uvicorn main_groups:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
       - mongodb_local
 
@@ -37,12 +51,12 @@ services:
       - /app/node_modules
     ports:
       - "5173:5173"
-    stdin_open: true # Equivalente a -i
-    tty: true # Equivalente a -t
+    stdin_open: true
+    tty: true
     command: sh -c "npm install && npm run dev:web"
     depends_on:
-      - backend
+      - user-service
+      - group-service
 
-# --- VOLÚMENES ---
 volumes:
-  mongo_data: # Espacio en tu disco para la base de datos local
+  mongo_data:
