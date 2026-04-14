@@ -15,3 +15,7 @@ class GroupCreate(BaseModel):
     nombre: str
     descripcion: Optional[str] = None
     admin_id: str
+
+class GroupJoin(BaseModel):
+    codigo: str
+    user_id: str

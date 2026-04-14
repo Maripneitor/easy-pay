@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-# IMPORTANTE: Asegúrate de importar el router de usuarios también
-from user.infrastructure.routes.route_user import user_router 
+# Asegúrate de que esta carpeta y archivo existan para que no truene el import
+from group.infrastructure.routes.route_group import group_router
+
 
 app = FastAPI(
-    title="Easy-Pay API",
-    description="Sistema de gestión de gastos compartidos",
+    title="Easy-Pay Group API",
+    description="Microservicio para la gestión de grupos y saldos",
     version="1.0.0"
 )
 
@@ -15,6 +16,7 @@ origins = [
     "http://127.0.0.1:5173",
 ]
 
+# ✅ CORREGIDO: 'app' en lugar de 'add'
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -23,18 +25,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Registramos los routers
-app.include_router(user_router)
-
+# Registramos el router de grupos
+app.include_router(group_router)
 
 @app.get("/")
 def read_root():
     return {
-        "mensaje": "Bienvenido a la API de Easy-Pay 🐍",
+        "mensaje": "Bienvenido al Microservicio de Grupos 👥",
         "docs": "/docs",
         "status": "active"
     }
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok", "system": "Easy Pay Backend", "version": "1.0.0"}
+    return {"status": "ok", "system": "Easy Pay Group Service"}
