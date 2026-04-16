@@ -39,7 +39,7 @@ export default function PasswordRecoveryScreen() {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 className="flex-1"
             >
-                {/* Background Decor (Matching Stitch) */}
+                {/* Background Decor */}
                 <View className="absolute top-0 left-0 w-80 h-80 bg-[#1976D2]/10 blur-[100px] rounded-full -translate-x-1/2 -translate-y-1/2" />
                 <View className="absolute bottom-0 right-0 w-[30rem] h-[30rem] bg-[#0D47A1]/15 blur-[120px] rounded-full translate-x-1/3 translate-y-1/3" />
                 

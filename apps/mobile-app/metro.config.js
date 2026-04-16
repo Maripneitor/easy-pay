@@ -16,7 +16,7 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, "node_modules"),
 ];
 
-// 3. Soporte para symlinks (vital para pnpm)
+// 3. Soporte para symlinks (vital para npm workspaces)
 config.resolver.unstable_enableSymlinks = true;
 
 // 4. Mapeo de paquetes locales (Mapping)

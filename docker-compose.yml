@@ -42,4 +42,3 @@ volumes:
   node_modules:
   web_modules:
   mobile_modules:
-  pnpm-store:

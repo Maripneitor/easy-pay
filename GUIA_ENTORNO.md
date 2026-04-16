@@ -38,7 +38,7 @@ Abre siempre dos pestañas de terminal en Ubuntu:
     Úsala para no interrumpir el servidor. Aquí instalas paquetes, creas archivos o usas Git.
     ```bash
     cd ~/Proyectos/EASY-PAY
-    pnpm install <paquete>
+    npm install <paquete>
     ```
 
 ---
@@ -60,4 +60,4 @@ cp /mnt/c/Users/mario/AppData/Local/Android/Sdk/platform-tools/adb.exe /mnt/c/Us
 ```
 
 **Error: Dispatcher is null (React Query)**
-Ocurre si hay versiones duplicadas de React. Se soluciona borrando `node_modules`, forzando la resolución en el `package.json` raíz (`"overrides": { "react": "18.2.0" }`), y corriendo `pnpm install` de nuevo.
+Ocurre si hay versiones duplicadas de React. Se soluciona borrando `node_modules`, forzando la resolución en el `package.json` raíz (`"overrides": { "react": "18.2.0" }`), y corriendo `npm install` de nuevo.

@@ -44,7 +44,7 @@ export default function SettingsScreen() {
             <StatusBar style={theme.isDark ? "light" : "dark"} />
             <Stack.Screen options={{ headerShown: false }} />
 
-            {/* Header (Matching Stitch) */}
+            {/* Header */}
             <View style={{ borderBottomColor: theme.border, height: 80 }} className="px-6 flex-row items-center justify-between border-b">
                 <TouchableOpacity 
                     onPress={() => router.back()}

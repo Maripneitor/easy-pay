@@ -4,8 +4,6 @@ FROM node:20-alpine
 # Instalamos herramientas básicas para el sistema operativo del contenedor
 RUN apk add --no-cache git bash
 
-# Instalamos pnpm globalmente
-RUN npm install -g pnpm
 
 # Establecemos el directorio de trabajo
 WORKDIR /app

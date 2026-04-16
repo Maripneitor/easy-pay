@@ -12,7 +12,7 @@
     "dev:mobile": "cd apps/mobile-app && npm start",
     "dev:web": "npm run dev --workspace=apps/web-app",
     "dev": "npm run /^dev:*/",
-    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules package-lock.json && npm install",
+    "clean": "npx rimraf node_modules apps/*/node_modules packages/*/node_modules package-lock.json && npm install",
     "android": "expo run:android",
     "ios": "expo run:ios"
   },

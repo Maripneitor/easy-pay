@@ -13,7 +13,7 @@ export default function AuthPhoneScreen() {
         <SafeAreaView className="flex-1 bg-[#0f172a]" edges={['top', 'bottom']}>
             <StatusBar style="light" />
 
-            {/* Background effects (Matching Stitch radial gradient) */}
+            {/* Background effects (Radial gradient) */}
             <View className="absolute top-0 w-full h-full pointer-events-none z-0 overflow-hidden">
                 <View className="absolute -top-[10%] -left-[10%] w-[80%] h-[80%] bg-[#1976D2]/10 rounded-full blur-[100px]" />
                 <View className="absolute -bottom-[10%] -right-[10%] w-[80%] h-[80%] bg-[#0D47A1]/15 rounded-full blur-[100px]" />
