@@ -4,7 +4,8 @@ import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { useNotifications } from '../../src/infrastructure/context/NotificationContext';
-import { MotiView } from 'moti';
+// import { MotiView } from 'moti';
+const MotiView = View as any;
 
 const CustomTabBarButton = ({ children, onPress, theme }: any) => {
   const [isExpanding, setIsExpanding] = React.useState(false);
@@ -103,13 +104,13 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="dashboard"
+        name="index"
         options={{
           title: 'Inicio',
           tabBarIcon: ({ color, focused }) => (
-            <MotiView animate={{ scale: focused ? 1.2 : 1, translateY: focused ? -2 : 0 }}>
+            <View>
               <MaterialIcons name="grid-view" size={26} color={color} />
-            </MotiView>
+            </View>
           ),
         }}
       />
@@ -118,9 +119,9 @@ export default function TabLayout() {
         options={{
           title: 'Grupos',
           tabBarIcon: ({ color, focused }) => (
-            <MotiView animate={{ scale: focused ? 1.2 : 1, translateY: focused ? -2 : 0 }}>
+            <View>
               <MaterialIcons name="group-work" size={26} color={color} />
-            </MotiView>
+            </View>
           ),
         }}
       />
@@ -140,9 +141,9 @@ export default function TabLayout() {
         options={{
           title: 'Cartera',
           tabBarIcon: ({ color, focused }) => (
-            <MotiView animate={{ scale: focused ? 1.2 : 1, translateY: focused ? -2 : 0 }}>
+            <View>
               <MaterialIcons name="account-balance-wallet" size={26} color={color} />
-            </MotiView>
+            </View>
           ),
         }}
       />
@@ -151,14 +152,14 @@ export default function TabLayout() {
         options={{
           title: 'Alertas',
           tabBarIcon: ({ color, focused }) => (
-            <MotiView animate={{ scale: focused ? 1.2 : 1, translateY: focused ? -2 : 0 }}>
+            <View>
               <View>
                 <MaterialIcons name="notifications-none" size={26} color={color} />
                 {hasAlerts && (
                   <View className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#050a15]" />
                 )}
               </View>
-            </MotiView>
+            </View>
           ),
         }}
       />

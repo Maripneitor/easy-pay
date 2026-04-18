@@ -17,7 +17,10 @@ import { useRouter, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { MotiView, MotiText } from 'moti';
+// // import { MotiView, MotiText, AnimatePresence } from 'moti';
+const AnimatePresence = ({ children }: any) => children;
+const MotiView = View as any;
+const MotiText = Text as any;
 import { useAuth } from '../../context/AuthContext';
 import { useMesa } from '../../context/MesaContext';
 

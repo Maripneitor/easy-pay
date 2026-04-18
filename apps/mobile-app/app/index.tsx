@@ -5,8 +5,10 @@ import { useRouter, Stack } from 'expo-router';
 import { Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MotiView, MotiText } from 'moti';
-import { Skeleton } from 'moti/skeleton';
+// import { MotiView, MotiText } from 'moti';
+// import { Skeleton } from 'moti/skeleton';
+const MotiView = View as any;
+const MotiText = Text as any;
 
 const { width } = Dimensions.get('window');
 

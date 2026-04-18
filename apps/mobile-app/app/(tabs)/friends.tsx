@@ -5,7 +5,10 @@ import { MaterialIcons, Ionicons, Feather, MaterialCommunityIcons } from '@expo/
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { MotiView, MotiText, AnimatePresence } from 'moti';
+// import { MotiView, MotiText, AnimatePresence } from 'moti';
+const MotiView = View as any;
+const MotiText = Text as any;
+const AnimatePresence = ({ children }: any) => children;
 
 const { width } = Dimensions.get('window');
 
