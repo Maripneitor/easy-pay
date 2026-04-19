@@ -17,47 +17,38 @@ export const useRegisterExpense = () => {
 
     const fetchGroupDetails = useCallback(async () => {
         const userId = localStorage.getItem('userId');
-        // Eliminamos cualquier caracter raro del ID de la URL
         const cleanGroupId = groupId?.replace(/[#?:]/g, '');
 
         if (!userId || !cleanGroupId) return;
 
         try {
-            console.log("🔍 Buscando datos para el grupo:", cleanGroupId);
-            const res = await fetch(`http://localhost:8002/api/groups/user/${userId}`);
+            const res = await fetch(`http://localhost:8002/api/groups/${cleanGroupId}`);
 
             if (res.ok) {
-                const groups = await res.json();
-                console.log("📦 Grupos recibidos del servidor:", groups);
+                const currentGroup = await res.json();
 
-                // Buscamos coincidencia exacta o por ID
-                const currentGroup = groups.find((g: any) => g.id === cleanGroupId || g._id === cleanGroupId);
+                // 🚩 MEJORA 1: Formato "Yo (Nombre Real)"
+                const listaFormateada = currentGroup.integrantes.map((m: any) => {
+                    const isMe = m.id === userId;
+                    return {
+                        id: m.id,
+                        nombre: isMe
+                            ? `Yo (${m.nombre || 'Usuario'})`
+                            : (m.nombre || `Usuario ${m.id.slice(-4).toUpperCase()}`)
+                    };
+                });
 
-                if (currentGroup) {
-                    console.log("✅ Grupo encontrado:", currentGroup);
+                setIntegrantes(listaFormateada);
 
-                    // Combinamos creador e integrantes
-                    const allIds: string[] = [...new Set([
-                        currentGroup.creador_id,
-                        ...(currentGroup.integrantes || [])
-                    ])].filter(id => id); // Eliminamos nulos
+                // 🚩 MEJORA 2: El comprador es FIJO (El usuario actual/admin)
+                // Inicializamos participantes_ids con todos los miembros por defecto
+                const allIds = listaFormateada.map((m: any) => m.id);
 
-                    const listaFormateada = allIds.map(id => ({
-                        id,
-                        nombre: id === userId ? "Yo (Tú)" : `Usuario ${id.slice(-4).toUpperCase()}`
-                    }));
-
-                    setIntegrantes(listaFormateada);
-
-                    // Seteamos valores iniciales
-                    setFormData(prev => ({
-                        ...prev,
-                        comprador_id: userId,
-                        participantes_ids: allIds
-                    }));
-                } else {
-                    console.warn("⚠️ No se encontró el grupo con ID:", cleanGroupId, "en la lista del usuario.");
-                }
+                setFormData(prev => ({
+                    ...prev,
+                    comprador_id: userId, // Ya no cambiará
+                    participantes_ids: allIds
+                }));
             }
         } catch (error) {
             console.error("❌ Error en el fetch de integrantes:", error);
@@ -79,6 +70,13 @@ export const useRegisterExpense = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         if (e) e.preventDefault();
+
+        // 🚩 VALIDACIÓN: Ahora permite que haya solo 1 participante (tú mismo)
+        if (!formData.nombre || !formData.precio || formData.participantes_ids.length === 0) {
+            alert("Por favor rellena todos los campos.");
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -105,6 +103,7 @@ export const useRegisterExpense = () => {
             }
         } catch (error) {
             console.error(error);
+            alert("Error de conexión.");
         } finally {
             setLoading(false);
         }
