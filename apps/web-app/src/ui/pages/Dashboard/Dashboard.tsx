@@ -1,10 +1,8 @@
 import React from 'react';
-import { Plus, Users } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { PageHeader } from '@ui/components/PageHeader';
 import { useDashboard } from './useDashboard';
 import { GroupCard } from './components/GroupCard';
-import { SettledGroupCard } from './components/SettledGroupCard';
-import { InvitationCard } from './components/InvitationCard';
 import { DashboardSkeleton } from './components/DashboardSkeleton';
 
 export const Dashboard: React.FC = () => {
@@ -12,14 +10,12 @@ export const Dashboard: React.FC = () => {
         toggleSidebar,
         navigate,
         allActiveGroups = [],
-        settledGroups = [],
         isLoading
     } = useDashboard();
 
     const userName = localStorage.getItem('userName') || 'Usuario';
     const welcomeTitle = `HOLA, ${userName.toUpperCase()}`;
 
-    // Generador de apariencia dinámica para los iconos
     const getAppearance = (name: string) => {
         const hash = name.split('').reduce((acc, char) => char.charCodeAt(0) + acc, 0);
         const colors = [
@@ -30,12 +26,9 @@ export const Dashboard: React.FC = () => {
             { bg: 'bg-rose-500/10', text: 'text-rose-600' },
             { bg: 'bg-cyan-500/10', text: 'text-cyan-600' },
         ];
-
         const style = colors[hash % colors.length];
-        const initial = name.charAt(0).toUpperCase();
-
         return {
-            icon: <span className="text-xl font-black">{initial}</span>,
+            icon: <span className="text-xl font-black">{name.charAt(0).toUpperCase()}</span>,
             bg: style.bg,
             color: style.text
         };
@@ -52,7 +45,6 @@ export const Dashboard: React.FC = () => {
                 />
 
                 <main className="relative flex-grow px-4 py-8 md:px-8">
-                    {/* Decoración de fondo */}
                     <div className="pointer-events-none absolute -left-[10%] -top-[20%] h-[500px] w-[500px] rounded-full bg-[var(--primary)]/10 blur-[120px]" />
 
                     <div className="relative z-10 mx-auto max-w-5xl space-y-10">
@@ -74,20 +66,21 @@ export const Dashboard: React.FC = () => {
                                 <DashboardSkeleton />
                             ) : (
                                 <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
-                                    {(allActiveGroups?.length ?? 0) > 0 ? (
+                                    {allActiveGroups.length > 0 ? (
                                         allActiveGroups.map((group: any) => {
-                                            const groupName = group.nombre || group.name || "Sin nombre";
-                                            const appearance = getAppearance(groupName);
+                                            const gName = group.nombre || "Sin nombre";
+                                            const appearance = getAppearance(gName);
 
-                                            // Traducción de datos de Python a React
+                                            // 🚩 MAPEO CORRECTO HACIA LOS COMPONENTES:
                                             const mappedGroup = {
                                                 id: group.id,
-                                                name: groupName,
-                                                lastAct: group.descripcion || "Sin actividad reciente",
+                                                name: gName,
+                                                lastAct: group.descripcion || "Activo ahora",
                                                 members: group.integrantes || [],
-                                                total: group.total || 0,
-                                                userBalance: group.userBalance || 0,
-                                                isAdmin: group.admin_id === localStorage.getItem('userId')
+                                                // Usamos los nombres que vienen del Hook con balances
+                                                total: group.total_gastado || 0,
+                                                userBalance: group.mi_balance || 0,
+                                                isAdmin: group.creador_id === localStorage.getItem('userId')
                                             };
 
                                             return (
@@ -100,19 +93,12 @@ export const Dashboard: React.FC = () => {
                                             );
                                         })
                                     ) : (
-                                        <div className="col-span-full py-10 text-center border-2 border-dashed border-[var(--border-color)] rounded-2xl">
-                                            <p className="text-[var(--text-secondary)]">Aún no tienes grupos. ¡Crea uno!</p>
+                                        <div className="col-span-full py-16 text-center border-2 border-dashed border-[var(--border-color)] rounded-[2rem] opacity-50">
+                                            <p className="text-sm font-bold uppercase tracking-widest">No hay grupos activos</p>
                                         </div>
                                     )}
                                 </div>
                             )}
-                        </section>
-
-                        <section>
-                            <h2 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]">
-                                Invitaciones Pendientes
-                            </h2>
-                            <InvitationCard />
                         </section>
                     </div>
                 </main>
