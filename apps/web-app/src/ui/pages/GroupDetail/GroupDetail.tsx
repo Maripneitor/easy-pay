@@ -5,12 +5,13 @@ import {
     Wallet,
     PieChart,
     CheckCircle,
-    ArrowUpRight
+    ArrowUpRight,
 } from 'lucide-react';
 import { cn } from '../../../infrastructure/utils';
 import { useGroupDetail } from './useGroupDetail';
 import { PageHeader } from '@ui/components/PageHeader';
 import { useOutletContext } from 'react-router-dom';
+import { SettleView } from './components/SettleView';
 
 export const GroupDetail = () => {
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
@@ -23,7 +24,6 @@ export const GroupDetail = () => {
         userShare,
         userOwed,
         activities,
-        balances
     } = useGroupDetail();
 
     return (
@@ -87,19 +87,22 @@ export const GroupDetail = () => {
                     </div>
 
                     {/* Tabs Estilo "UNACH" */}
-                    <div className="flex border-b border-[var(--border-color)]">
-                        {['activity', 'balances', 'settings'].map((tab) => (
+                    <div className="flex border-b border-[var(--border-color)] overflow-x-auto scrollbar-hide">
+                        {['activity', 'balances', 'settle', 'settings'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab as any)}
                                 className={cn(
-                                    "px-6 py-4 text-xs font-black uppercase tracking-widest transition-all relative",
+                                    "px-6 py-4 text-xs font-black uppercase tracking-widest transition-all relative whitespace-nowrap",
                                     activeTab === tab
                                         ? "text-[var(--primary)]"
                                         : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                                 )}
                             >
-                                {tab === 'activity' ? 'Actividad' : tab === 'balances' ? 'Saldos' : 'Configuración'}
+                                {tab === 'activity' ? 'Actividad' 
+                                 : tab === 'balances' ? 'Saldos' 
+                                 : tab === 'settle' ? 'Liquidar'
+                                 : 'Configuración'}
                                 {activeTab === tab && (
                                     <div className="absolute bottom-[-1px] left-0 w-full h-[3px] bg-[var(--primary)] shadow-[0_0_10px_var(--primary)] rounded-t-full" />
                                 )}
@@ -107,39 +110,51 @@ export const GroupDetail = () => {
                         ))}
                     </div>
 
-                    {/* Content: Actividad con estilo de Cards adaptable */}
-                    {activeTab === 'activity' && (
-                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-sm font-black uppercase tracking-widest text-[var(--text-secondary)]">Actividad Reciente</h2>
-                                <button 
-                                    onClick={() => navigate('/register-expense')}
-                                    className="p-2 bg-[var(--primary)] text-white rounded-full shadow-lg shadow-[var(--primary)]/30 hover:scale-110 active:scale-95 transition-all"
-                                >
-                                    <Plus size={20} />
-                                </button>
+                    {/* Content Logic */}
+                    <div className="min-h-[400px]">
+                        {activeTab === 'activity' && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-sm font-black uppercase tracking-widest text-[var(--text-secondary)]">Actividad Reciente</h2>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                    {activities.map(activity => (
+                                        <div key={activity.id} className="bg-[var(--bg-card)] border border-[var(--border-color)] border-l-4 border-l-[var(--primary)] rounded-xl p-4 flex items-center gap-4 hover:bg-[var(--hover-bg)] transition-all cursor-pointer group shadow-sm">
+                                            <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shadow-inner", activity.bg, activity.color)}>
+                                                <activity.icon size={20} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-bold text-[var(--text-primary)] truncate">{activity.title}</h3>
+                                                <p className="text-xs font-medium text-[var(--text-secondary)]">
+                                                    <span className="text-[var(--text-primary)]">{activity.paidBy}</span> pagó ${activity.amount.toFixed(2)} • {activity.date}
+                                                </p>
+                                            </div>
+                                            <div className="text-[var(--text-secondary)] group-hover:text-[var(--primary)] transition-colors">
+                                                <ArrowUpRight size={18} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                            
-                            <div className="space-y-3">
-                                {activities.map(activity => (
-                                    <div key={activity.id} className="bg-[var(--bg-card)] border border-[var(--border-color)] border-l-4 border-l-[var(--primary)] rounded-xl p-4 flex items-center gap-4 hover:bg-[var(--hover-bg)] transition-all cursor-pointer group shadow-sm">
-                                        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shadow-inner", activity.bg, activity.color)}>
-                                            <activity.icon size={20} />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="font-bold text-[var(--text-primary)] truncate">{activity.title}</h3>
-                                            <p className="text-xs font-medium text-[var(--text-secondary)]">
-                                                <span className="text-[var(--text-primary)]">{activity.paidBy}</span> pagó ${activity.amount.toFixed(2)} • {activity.date}
-                                            </p>
-                                        </div>
-                                        <div className="text-[var(--text-secondary)] group-hover:text-[var(--primary)] transition-colors">
-                                            <ArrowUpRight size={18} />
-                                        </div>
-                                    </div>
-                                ))}
+                        )}
+
+                        {activeTab === 'settle' && (
+                            <SettleView userShare={userShare} />
+                        )}
+
+                        {activeTab === 'balances' && (
+                            <div className="text-center py-20 opacity-30 italic text-sm">
+                                Vista de saldos en construcción...
                             </div>
-                        </div>
-                    )}
+                        )}
+
+                        {activeTab === 'settings' && (
+                            <div className="text-center py-20 opacity-30 italic text-sm">
+                                Configuración del grupo en construcción...
+                            </div>
+                        )}
+                    </div>
                 </main>
             </div>
         </div>

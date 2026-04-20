@@ -8,7 +8,7 @@ import { upsertGroupInStorage } from '../../../infrastructure/localStorage/group
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = 'activity' | 'balances' | 'settings';
+type Tab = 'activity' | 'balances' | 'settle' | 'settings';
 
 const calculateShares = new CalculateSharesUseCase();
 

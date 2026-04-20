@@ -73,7 +73,7 @@ export const useDashboard = () => {
     return {
         toggleSidebar,
         navigate,
-        allActiveGroups: activeGroups,
+        allActiveGroups,
         settledGroups,
         getGroupIcon,
         isLoading

@@ -23,8 +23,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, userName }) => {
         { icon: <Home size={22} />, label: 'Inicio', path: '/dashboard' },
         { icon: <PlusSquare size={22} />, label: 'Crear Grupo', path: '/create-group' },
         { icon: <CreditCard size={22} />, label: 'Mis Pagos', path: '/my-payments' },
-        { icon: <Camera size={22} />, label: 'Escáner OCR', path: '/ocr-scanner' },
-        { icon: <FileText size={22} />, label: 'Registrar Gasto', path: '/register-expense' },
         { icon: <Bell size={22} />, label: 'Notificaciones', path: '/notifications' },
     ];
 

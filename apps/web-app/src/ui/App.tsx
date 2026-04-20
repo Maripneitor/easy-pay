@@ -18,8 +18,6 @@ const Dashboard = lazy(() => import('./pages/Dashboard').then(module => ({ defau
 const CreateGroup = lazy(() => import('./pages/CreateGroup').then(module => ({ default: module.CreateGroup })));
 const GroupDetail = lazy(() => import('./pages/GroupDetail').then(module => ({ default: module.GroupDetail })));
 const MyPayments = lazy(() => import('./pages/MyPayments').then(module => ({ default: module.MyPayments })));
-// const OCRScanner = lazy(() => import('./pages/OCRScanner').then(module => ({ default: module.OCRScanner })));
-const RegisterExpense = lazy(() => import('./pages/RegisterExpense').then(module => ({ default: module.RegisterExpense })));
 const NotificationsPage = lazy(() => import('./pages/Notifications').then(module => ({ default: module.NotificationsPage })));
 const ProfilePage = lazy(() => import('./pages/Profile').then(module => ({ default: module.ProfilePage })));
 const PersonalData = lazy(() => import('./pages/Profile/PersonalData').then(module => ({ default: module.PersonalData })));
@@ -86,8 +84,6 @@ const AnimatedRoutes = () => {
                             <Route path="/create-group" element={<PageTransition><CreateGroup /></PageTransition>} />
                             <Route path="/group/:id" element={<PageTransition><GroupDetail /></PageTransition>} />
                             <Route path="/my-payments" element={<PageTransition><MyPayments /></PageTransition>} />
-{/* <Route path="/ocr-scanner" element={<PageTransition><OCRScanner /></PageTransition>} /> */}
-                            <Route path="/register-expense" element={<PageTransition><RegisterExpense /></PageTransition>} />
                             <Route path="/notifications" element={<PageTransition><NotificationsPage /></PageTransition>} />
 
                             {/* 2FA Flow */}

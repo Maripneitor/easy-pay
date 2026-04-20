@@ -40,7 +40,7 @@ export default function RootLayout() {
           <QueryClientProvider client={queryClient}>
             <DependenciesProvider>
               <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-                <Stack screenOptions={{ headerShown: false }}>
+                <Stack screenOptions={{ headerShown: false }} initialRouteName="index">
                   <Stack.Screen name="index" />
                   <Stack.Screen name="auth" />
                   <Stack.Screen name="friends/add" options={{ presentation: 'modal' }} />
