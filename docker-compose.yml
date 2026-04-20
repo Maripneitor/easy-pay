@@ -23,7 +23,7 @@ services:
       - ./apps/api-backend/.env
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
-      - mongodb
+      - mongodb_local
 
   # --- MICROSERVICIO DE GRUPOS (Puerto 8002) ---
   group-service:
