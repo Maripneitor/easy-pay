@@ -21,6 +21,7 @@ const MyPayments = lazy(() => import('./pages/MyPayments').then(module => ({ def
 const NotificationsPage = lazy(() => import('./pages/Notifications').then(module => ({ default: module.NotificationsPage })));
 const ProfilePage = lazy(() => import('./pages/Profile').then(module => ({ default: module.ProfilePage })));
 const PersonalData = lazy(() => import('./pages/Profile/PersonalData').then(module => ({ default: module.PersonalData })));
+const SettleUp = lazy(() => import('./pages/SettleUp').then(module => ({ default: module.SettleUp })));
 const JoinGroup = lazy(() => import('./pages/JoinGroup').then(module => ({ default: module.JoinGroup })));
 
 // 2FA Components (Importados desde el index.ts de su carpeta)
@@ -84,6 +85,7 @@ const AnimatedRoutes = () => {
                             <Route path="/create-group" element={<PageTransition><CreateGroup /></PageTransition>} />
                             <Route path="/group/:id" element={<PageTransition><GroupDetail /></PageTransition>} />
                             <Route path="/group/:groupId/register-expense" element={<PageTransition><RegisterExpense /></PageTransition>} />
+                            <Route path="/group/:id/settle-up" element={<PageTransition><SettleUp /></PageTransition>} />
                             <Route path="/my-payments" element={<PageTransition><MyPayments /></PageTransition>} />
                             <Route path="/notifications" element={<PageTransition><NotificationsPage /></PageTransition>} />
 

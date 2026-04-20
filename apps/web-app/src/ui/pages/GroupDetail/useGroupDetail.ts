@@ -6,6 +6,7 @@ export const useGroupDetail = (group_id: string) => {
     const [groupName, setGroupName] = useState('');
     const [groupCode, setGroupCode] = useState('');
     const [members, setMembers] = useState<any[]>([]);
+    const [integrantes_data, setIntegrantesData] = useState<any[]>([]);
     const [totalSpent, setTotalSpent] = useState(0);
     const [userShare, setUserShare] = useState(0);
     const [userOwed, setUserOwed] = useState(0);
@@ -28,10 +29,22 @@ export const useGroupDetail = (group_id: string) => {
                 const gData = await resGroup.json();
                 setGroupName(gData.nombre || "Grupo");
                 setGroupCode(gData.codigo_invitacion || "---");
-                setMembers(gData.integrantes || []);
+                
+                // Si integrantes viene como array de IDs, y hay otra propiedad con la data
+                // O si integrantes ya trae la data completa
+                const rawIntegrantes = gData.integrantes || [];
+                if (rawIntegrantes.length > 0 && typeof rawIntegrantes[0] === 'object') {
+                    setIntegrantesData(rawIntegrantes);
+                    setMembers(rawIntegrantes.map((i: any) => i.id));
+                } else {
+                    setMembers(rawIntegrantes);
+                    // Si solo son IDs, por ahora usamos un mock o esperamos a que se carguen de otra forma
+                    // pero para evitar el error 'find' inicializamos como vacio
+                    setIntegrantesData([]);
+                }
             }
-
-            // 2. Obtener ACTIVIDADES (Gastos)
+            
+            // ... resto del código ...
             const resItems = await fetch(`http://localhost:8002/api/groups/${group_id}/items`);
             let itemsList: any[] = [];
             if (resItems.ok) {
@@ -40,7 +53,6 @@ export const useGroupDetail = (group_id: string) => {
                 setActivities(itemsList);
             }
 
-            // 3. Obtener BALANCES del Backend (Para la pestaña de Saldos)
             const resBalances = await fetch(`http://localhost:8002/api/groups/${group_id}/balances`);
             if (resBalances.ok) {
                 const bData = await resBalances.json();
@@ -48,7 +60,6 @@ export const useGroupDetail = (group_id: string) => {
                 setTotalSpent(bData.total_gastado_en_grupo || 0);
             }
 
-            // 🚩 LÓGICA DE CÁLCULO MANUAL (Para tarjetas de Resumen)
             if (itemsList.length > 0 && myId) {
                 let miConsumoTotal = 0;
                 let miGastoEfectuado = 0;
@@ -56,23 +67,14 @@ export const useGroupDetail = (group_id: string) => {
                 itemsList.forEach(item => {
                     const monto = item.monto || item.precio || 0;
                     const participantes = item.participantes_ids || [];
-
-                    // A) ¿Cuánto consumí de este ticket?
                     if (participantes.includes(myId)) {
                         miConsumoTotal += monto / participantes.length;
                     }
-
-                    // B) ¿Cuánto pagué de mi bolsa en este ticket?
                     if (item.comprador_id === myId) {
                         miGastoEfectuado += monto;
                     }
                 });
-
-                // Tu Gasto Individual (Lo que te comiste/usaste)
                 setUserShare(miConsumoTotal);
-
-                // Balance Final (Lo que pagaste - Lo que consumiste)
-                // Si da positivo: Te deben | Si da negativo: Debes
                 setUserOwed(miGastoEfectuado - miConsumoTotal);
             } else {
                 setUserShare(0);
@@ -92,7 +94,7 @@ export const useGroupDetail = (group_id: string) => {
 
     return {
         activeTab, setActiveTab,
-        groupName, groupCode, members,
+        groupName, groupCode, members, integrantes_data,
         totalSpent, userShare, userOwed,
         activities, balances,
         loading,
