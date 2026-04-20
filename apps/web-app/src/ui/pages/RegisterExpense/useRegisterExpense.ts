@@ -1,119 +1,113 @@
-import { useState, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-export type SplitType = 'equally' | 'individual' | 'exact';
-export type TipMode = 'percentage' | 'fixed';
-export interface Participant {
-    id: string;
-    name: string;
-    initials: string;
-    color: string;
-    isSelected: boolean;
-    isCurrentUser?: boolean;
-}
-
-const MOCK_PARTICIPANTS: Participant[] = [
-    { id: 'p1', name: 'Ana Pérez', initials: 'AP', color: 'pink', isSelected: true },
-    { id: 'p2', name: 'Carlos López', initials: 'CL', color: 'emerald', isSelected: true },
-    { id: 'p3', name: 'Tú (Juan)', initials: 'TÚ', color: 'blue', isSelected: true, isCurrentUser: true },
-    { id: 'p4', name: 'Luis Martínez', initials: 'LM', color: 'amber', isSelected: false },
-];
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 export const useRegisterExpense = () => {
+    const { groupId } = useParams<{ groupId: string }>();
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+    const [integrantes, setIntegrantes] = useState<{ id: string, nombre: string }[]>([]);
 
-    // ─── Form state ───
-    const [description, setDescription] = useState('');
-    const [amount, setAmount] = useState('');
-    const [dateTime, setDateTime] = useState(() => {
-        const now = new Date();
-        return now.toISOString().slice(0, 16);
+    const [formData, setFormData] = useState({
+        nombre: '',
+        precio: '',
+        cantidad: 1,
+        comprador_id: '',
+        participantes_ids: [] as string[]
     });
-    const [splitType, setSplitType] = useState<SplitType>('equally');
-    const [participants, setParticipants] = useState<Participant[]>(MOCK_PARTICIPANTS);
-    const [tipMode, setTipMode] = useState<TipMode>('percentage');
-    const [tipValue, setTipValue] = useState('');
 
-    const groupName = 'Cena viernes';
+    const fetchGroupDetails = useCallback(async () => {
+        const userId = localStorage.getItem('userId');
+        const cleanGroupId = groupId?.replace(/[#?:]/g, '');
 
-    // ─── Derived values ───
-    const parsedAmount = useMemo(() => {
-        const cleaned = amount.replace(/[,$\s]/g, '');
-        return parseFloat(cleaned) || 0;
-    }, [amount]);
+        if (!userId || !cleanGroupId) return;
 
-    const selectedCount = useMemo(
-        () => participants.filter((p) => p.isSelected).length,
-        [participants],
-    );
+        try {
+            const res = await fetch(`http://localhost:8002/api/groups/${cleanGroupId}`);
 
-    const tipAmount = useMemo(() => {
-        const val = parseFloat(tipValue) || 0;
-        if (tipMode === 'percentage') return parsedAmount * (val / 100);
-        return val;
-    }, [parsedAmount, tipMode, tipValue]);
+            if (res.ok) {
+                const currentGroup = await res.json();
 
-    const perPerson = useMemo(() => {
-        if (selectedCount === 0) return 0;
-        return (parsedAmount + tipAmount) / selectedCount;
-    }, [parsedAmount, tipAmount, selectedCount]);
+                // 🚩 MEJORA 1: Formato "Yo (Nombre Real)"
+                const listaFormateada = currentGroup.integrantes.map((m: any) => {
+                    const isMe = m.id === userId;
+                    return {
+                        id: m.id,
+                        nombre: isMe
+                            ? `Yo (${m.nombre || 'Usuario'})`
+                            : (m.nombre || `Usuario ${m.id.slice(-4).toUpperCase()}`)
+                    };
+                });
 
-    // ─── Handlers ───
-    const goBack = () => navigate(-1);
+                setIntegrantes(listaFormateada);
 
-    const toggleParticipant = useCallback((id: string) => {
-        setParticipants((prev) =>
-            prev.map((p) => (p.id === id ? { ...p, isSelected: !p.isSelected } : p)),
-        );
-    }, []);
+                // 🚩 MEJORA 2: El comprador es FIJO (El usuario actual/admin)
+                // Inicializamos participantes_ids con todos los miembros por defecto
+                const allIds = listaFormateada.map((m: any) => m.id);
 
-    const selectAll = useCallback(() => {
-        setParticipants((prev) => prev.map((p) => ({ ...p, isSelected: true })));
-    }, []);
+                setFormData(prev => ({
+                    ...prev,
+                    comprador_id: userId, // Ya no cambiará
+                    participantes_ids: allIds
+                }));
+            }
+        } catch (error) {
+            console.error("❌ Error en el fetch de integrantes:", error);
+        }
+    }, [groupId]);
 
-    const handleSubmit = useCallback(() => {
-        console.log('Submit expense:', {
-            description,
-            amount: parsedAmount,
-            dateTime,
-            splitType,
-            participants: participants.filter((p) => p.isSelected),
-            tipMode,
-            tipValue: tipAmount,
-        });
-        navigate('/dashboard');
-    }, [description, parsedAmount, dateTime, splitType, participants, tipMode, tipAmount, navigate]);
+    useEffect(() => {
+        fetchGroupDetails();
+    }, [fetchGroupDetails]);
 
-    const formatCurrency = (value: number) =>
-        value.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
-
-    return {
-        // State
-        description,
-        setDescription,
-        amount,
-        setAmount,
-        dateTime,
-        setDateTime,
-        splitType,
-        setSplitType,
-        participants,
-        tipMode,
-        setTipMode,
-        tipValue,
-        setTipValue,
-        groupName,
-
-        // Derived
-        parsedAmount,
-        selectedCount,
-        tipAmount,
-        perPerson,
-
-        // Actions
-        goBack,
-        toggleParticipant,
-        selectAll,
-        handleSubmit,
-        formatCurrency,
+    const toggleParticipante = (id: string) => {
+        setFormData(prev => ({
+            ...prev,
+            participantes_ids: prev.participantes_ids.includes(id)
+                ? prev.participantes_ids.filter(p => p !== id)
+                : [...prev.participantes_ids, id]
+        }));
     };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        if (e) e.preventDefault();
+
+        // 🚩 VALIDACIÓN: Ahora permite que haya solo 1 participante (tú mismo)
+        if (!formData.nombre || !formData.precio || formData.participantes_ids.length === 0) {
+            alert("Por favor rellena todos los campos.");
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const payload = {
+                group_id: groupId?.replace(/[#?:]/g, ''),
+                nombre: formData.nombre.trim(),
+                precio: parseFloat(formData.precio),
+                cantidad: Number(formData.cantidad),
+                comprador_id: formData.comprador_id,
+                participantes_ids: formData.participantes_ids
+            };
+
+            const response = await fetch(`http://localhost:8002/api/groups/add-item`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                navigate(-1);
+            } else {
+                const err = await response.json();
+                alert(`Error: ${err.detail || 'Fallo en el registro'}`);
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Error de conexión.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { formData, setFormData, integrantes, handleSubmit, loading, toggleParticipante };
 };

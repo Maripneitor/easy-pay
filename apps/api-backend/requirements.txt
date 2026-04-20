@@ -6,5 +6,4 @@ bcrypt
 pyjwt
 python-dotenv
 pyotp==2.9.0
-qrcode==7.4.2
 fastapi-mail==1.4.1

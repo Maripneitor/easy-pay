@@ -1,81 +1,73 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Plane, Utensils, Home, PartyPopper, Users } from 'lucide-react';
-import type { Group } from '../../../types';
-
-type DashboardContextType = {
-    toggleSidebar: () => void;
-};
+import { useState, useEffect, useCallback } from 'react';
 
 export const useDashboard = () => {
-    const navigate = useNavigate();
-    const { toggleSidebar } = useOutletContext<DashboardContextType>();
-
-    // Mock data for groups
-    const allActiveGroups: Group[] = [
-        {
-            id: '1',
-            name: 'Viaje a Cancún',
-            icon: <Plane size={24} />,
-            iconBg: 'bg-blue-100',
-            iconColor: 'text-blue-600',
-            isAdmin: true,
-            lastAct: 'Hace 2 horas',
-            members: ['https://ui-avatars.com/api/?name=Juan', 'https://ui-avatars.com/api/?name=Maria'],
-            extraMembers: 0,
-            total: 15400.50,
-            userBalance: 1200.00
-        },
-        {
-            id: '2',
-            name: 'Cena de Navidad',
-            icon: <Utensils size={24} />,
-            iconBg: 'bg-red-100',
-            iconColor: 'text-red-600',
-            isAdmin: false,
-            lastAct: 'Ayer',
-            members: ['https://ui-avatars.com/api/?name=Ana', 'https://ui-avatars.com/api/?name=Luis', 'https://ui-avatars.com/api/?name=Carlos'],
-            extraMembers: 2,
-            total: 3400.00,
-            userBalance: -500.00
-        }
-    ];
-
-    const settledGroups: Group[] = [
-        {
-            id: '3',
-            name: 'Regalo Mamá',
-            icon: <PartyPopper size={24} />,
-            date: '15 Oct 2023',
-            members: ['https://ui-avatars.com/api/?name=Yo', 'https://ui-avatars.com/api/?name=Hermanos'],
-            extraMembers: 0,
-            total: 2500.00
-        }
-    ];
-
-    // Helper for group icons
-    const getGroupIcon = (name: string) => {
-        const lowerName = name.toLowerCase();
-        if (lowerName.includes('viaje')) return { icon: <Plane size={24} />, bg: 'bg-blue-100', color: 'text-blue-600' };
-        if (lowerName.includes('cena') || lowerName.includes('comida')) return { icon: <Utensils size={24} />, bg: 'bg-orange-100', color: 'text-orange-600' };
-        if (lowerName.includes('casa')) return { icon: <Home size={24} />, bg: 'bg-green-100', color: 'text-green-600' };
-        if (lowerName.includes('fiesta')) return { icon: <PartyPopper size={24} />, bg: 'bg-purple-100', color: 'text-purple-600' };
-        return { icon: <Users size={24} />, bg: 'bg-slate-100', color: 'text-slate-600' };
-    };
-
+    const [allActiveGroups, setAllActiveGroups] = useState<any[]>([]);
+    const [settledGroups, setSettledGroups] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const userId = localStorage.getItem('userId');
+
+    const fetchGroups = useCallback(async () => {
+        if (!userId) {
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:8002/api/groups/user/${userId}`);
+            const data = await response.json();
+
+            if (Array.isArray(data)) {
+                // Obtenemos balances reales para cada grupo
+                const groupsWithBalances = await Promise.all(data.map(async (group: any) => {
+                    try {
+                        const resBalance = await fetch(`http://localhost:8002/api/groups/${group.id}/balances`);
+                        if (resBalance.ok) {
+                            const bData = await resBalance.json();
+
+                            // Buscamos el balance detallado del usuario actual
+                            const bList = bData.balance_detallado || bData.balances || [];
+                            const myInfo = bList.find((b: any) => b.usuario_id === userId);
+
+                            return {
+                                ...group,
+                                total_gastado: bData.total_gastado_en_grupo || 0,
+                                mi_balance: myInfo?.balance || 0
+                            };
+                        }
+                    } catch (e) {
+                        console.error(`Error balance grupo ${group.id}:`, e);
+                    }
+                    return { ...group, total_gastado: 0, mi_balance: 0 };
+                }));
+
+                setAllActiveGroups(groupsWithBalances.filter((g: any) => !g.is_settled));
+                setSettledGroups(groupsWithBalances.filter((g: any) => g.is_settled));
+            }
+        } catch (error) {
+            console.error("Error al obtener grupos:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [userId]);
 
     useEffect(() => {
-        const timer = setTimeout(() => setIsLoading(false), 1500);
-        return () => clearTimeout(timer);
-    }, []);
+        fetchGroups();
+
+        // Actualizar cuando el usuario vuelve a la pestaña
+        window.addEventListener('focus', fetchGroups);
+        return () => window.removeEventListener('focus', fetchGroups);
+    }, [fetchGroups]);
+
+    // Funciones de utilidad necesarias para el Dashboard
+    const toggleSidebar = () => console.log("Sidebar toggled");
+    const navigate = (path: string) => { window.location.href = path; };
 
     return {
-        toggleSidebar,
-        navigate,
         allActiveGroups,
         settledGroups,
-        getGroupIcon,
-        isLoading
+        isLoading,
+        toggleSidebar,
+        navigate,
+        refresh: fetchGroups
     };
 };

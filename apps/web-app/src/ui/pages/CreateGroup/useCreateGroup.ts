@@ -1,109 +1,96 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-interface Member {
-    id: number;
-    name: string;
-    email: string;
-    role: 'Administrador' | 'Miembro';
-    avatar: string;
-    isAdmin: boolean;
-}
-
 export const useCreateGroup = () => {
     const navigate = useNavigate();
+    const [activeTab, setActiveTab] = useState<'create' | 'join'>('create');
+    const [loading, setLoading] = useState(false);
+
+    // Estados para CREAR
     const [groupName, setGroupName] = useState('');
     const [groupDesc, setGroupDesc] = useState('');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [activeTab, setActiveTab] = useState<'create' | 'join'>('create');
 
-    // Mock initial members match the Stitch design
-    const [members, setMembers] = useState<Member[]>([
-        {
-            id: 1,
-            name: 'Ana Pérez',
-            email: 'ana.perez@example.com',
-            role: 'Administrador',
-            avatar: 'https://ui-avatars.com/api/?name=Ana+Perez&background=random',
-            isAdmin: true
-        },
-        {
-            id: 2,
-            name: 'Carlos López',
-            email: 'carlos.lopez@example.com',
-            role: 'Miembro',
-            avatar: 'https://ui-avatars.com/api/?name=Carlos+Lopez&background=random',
-            isAdmin: false
-        }
-    ]);
+    // Estados para UNIRSE
+    const [joinCode, setJoinCode] = useState('');
 
     const handleCreateGroup = async () => {
-        if (!groupName) return;
+        if (!groupName) return alert("El nombre es obligatorio");
 
-        const newGroup = {
-            id: Date.now(),
-            name: groupName,
-            description: groupDesc,
-            members: members,
-            lastAct: 'Recién creado',
-            total: 0,
-            userBalance: 0,
-            isAdmin: true,
-            createdAt: new Date().toISOString()
-        };
+        const userId = localStorage.getItem('userId');
+        if (!userId) return alert("Sesión expirada. Reingresa.");
 
+        setLoading(true);
         try {
-            // Talking to the backend proxy defined in vite.config.ts
-            await fetch('/api/groups', {
+            const payload = {
+                nombre: groupName,
+                descripcion: groupDesc || "",
+                admin_id: userId,
+                integrantes: [userId]
+            };
+
+            const response = await fetch('http://localhost:8002/api/groups/create', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(newGroup),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
             });
 
-            console.log('Group saved to JSON via backend');
-            navigate('/dashboard');
+            if (response.ok) {
+                navigate('/dashboard');
+            } else {
+                const err = await response.json();
+                console.error("Error 422/400:", err.detail);
+                alert(`Error al crear el grupo.`);
+            }
         } catch (error) {
-            console.error('Error saving group:', error);
-            // Fallback to navigation even if backend is down for frontend demo purposes
-            navigate('/dashboard');
+            console.error(error);
+            alert("Error de conexión con el microservicio");
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleAddMember = (name: string) => {
-        const newMember: Member = {
-            id: Date.now(),
-            name: name || 'Nuevo Usuario',
-            email: 'nuevo@example.com',
-            role: 'Miembro',
-            avatar: `https://ui-avatars.com/api/?name=${name || 'User'}&background=random`,
-            isAdmin: false
-        };
-        setMembers([...members, newMember]);
-        setSearchQuery('');
-    };
+    const handleJoinGroup = async () => {
+        if (joinCode.trim().length < 4) return alert("Ingresa un código válido");
 
-    const handleRemoveMember = (id: number) => {
-        if (members.find((m: Member) => m.id === id)?.isAdmin) return;
-        setMembers(members.filter((m: Member) => m.id !== id));
-    };
+        const userId = localStorage.getItem('userId');
+        if (!userId) return alert("Usuario no identificado. Inicia sesión de nuevo.");
 
-    const goBack = () => navigate(-1);
+        setLoading(true);
+        try {
+            const payload = {
+                codigo: joinCode.trim().toUpperCase(),
+                user_id: userId
+            };
+
+            const response = await fetch(`http://localhost:8002/api/groups/join`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                navigate('/dashboard');
+            } else {
+                const err = await response.json();
+                console.error("Error al unirse:", err);
+                alert(err.detail || "Código inválido o ya estás en el grupo");
+            }
+        } catch (error) {
+            console.error("Error de red:", error);
+            alert("Error al intentar unirse");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return {
-        groupName,
-        setGroupName,
-        groupDesc,
-        setGroupDesc,
-        searchQuery,
-        setSearchQuery,
-        members,
+        activeTab, setActiveTab,
+        groupName, setGroupName,
+        groupDesc, setGroupDesc,
+        joinCode, setJoinCode,
         handleCreateGroup,
-        handleAddMember,
-        handleRemoveMember,
-        goBack,
-        activeTab,
-        setActiveTab
+        handleJoinGroup,
+        loading,
+        goBack: () => navigate(-1)
     };
 };

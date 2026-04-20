@@ -1,6 +1,6 @@
 services:
-  # --- DATABASE (Local MongoDB) ---
-  mongodb:
+  # --- BASE DE DATOS LOCAL ---
+  mongodb_local:
     image: mongo:latest
     container_name: easy-pay-mongodb
     ports:
@@ -8,17 +8,16 @@ services:
     volumes:
       - mongo_data:/data/db
 
-  # --- BACKEND (Python FastAPI) ---
-  backend:
+  # --- MICROSERVICIO DE USUARIOS (Puerto 8001) ---
+  user-service:
     build:
-      context: ./apps/api-backend
+      context: ./apps/api-backend # Ajusta si tienes carpetas separadas
       dockerfile: Dockerfile
-      network: host
-    container_name: easy-pay-backend
+    container_name: easy-pay-user-service
     volumes:
       - ./apps/api-backend:/app
     ports:
-      - "8000:8000"
+      - "8001:8000" # Mapeamos el 8000 interno al 8001 externo
     env_file:
       - .env
       - ./apps/api-backend/.env
@@ -26,19 +25,39 @@ services:
     depends_on:
       - mongodb
 
-  # --- FRONTEND (Desactivado en Docker para evitar conflictos, usar localmente) ---
-  # frontend:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.dev
-  #   ... (omitido para limpieza)
+  # --- MICROSERVICIO DE GRUPOS (Puerto 8002) ---
+  group-service:
+    build:
+      context: ./apps/api-backend # Aquí iría la carpeta de la lógica de grupos
+      dockerfile: Dockerfile
+    container_name: easy-pay-group-service
+    volumes:
+      - ./apps/api-backend:/app
+    ports:
+      - "8002:8000" # Mapeamos el 8000 interno al 8002 externo
+    env_file:
+      - ./apps/api-backend/.env
+    command: uvicorn main_groups:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - mongodb_local
 
-  # --- MOBILE APP (Desactivado en Docker, usar npx expo run:ios localmente) ---
-  # mobile:
-  #   ... (omitido para limpieza)
+  # --- FRONTEND (React / Vite) ---
+  dev-env:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: easy-pay-frontend_pruebas
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    stdin_open: true
+    tty: true
+    command: sh -c "npm install && npm run dev:web"
+    depends_on:
+      - user-service
+      - group-service
 
 volumes:
   mongo_data:
-  node_modules:
-  web_modules:
-  mobile_modules:
