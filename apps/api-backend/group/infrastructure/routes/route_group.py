@@ -8,6 +8,7 @@ from group.domain.models.item import ItemCreate
 from group.application.get_balance import GetGroupBalancesUseCase
 from group.application.join_group import JoinGroupUseCase 
 from group.domain.models.group import GroupJoin
+from group.domain.models.item import ItemUpdate
 
 group_router = APIRouter(prefix="/api/groups", tags=["Groups"], redirect_slashes=False)
 
@@ -64,3 +65,35 @@ async def get_group_by_id(group_id: str):
     if not group:
         raise HTTPException(status_code=404, detail="Grupo no encontrado")
     return group
+
+@group_router.put("/{group_id}/items/{item_id}")
+async def edit_item(group_id: str, item_id: str, item_data: ItemUpdate):
+    """
+    Actualiza un gasto. Se usa group_id por estructura de URL, 
+    pero la edición es directa por item_id.
+    """
+    # Convertimos el esquema a diccionario ignorando los campos que el usuario no envió
+    update_dict = item_data.dict(exclude_unset=True)
+    
+    if not update_dict:
+        raise HTTPException(status_code=400, detail="No se enviaron datos para actualizar")
+    
+    # Llamamos al repositorio (asegúrate de que el repo reciba el dict)
+    success = await item_repo.update_item(item_id, update_dict)
+    
+    if not success:
+        raise HTTPException(status_code=404, detail="Gasto no encontrado")
+        
+    return {"message": "Gasto actualizado correctamente", "status": "success"}
+
+@group_router.delete("/{group_id}/items/{item_id}")
+async def remove_item(group_id: str, item_id: str):
+    """
+    Elimina un gasto de la base de datos.
+    """
+    success = await item_repo.delete_item(item_id)
+    
+    if not success:
+        raise HTTPException(status_code=404, detail="No se pudo eliminar el gasto")
+        
+    return {"message": "Gasto eliminado", "status": "success"}

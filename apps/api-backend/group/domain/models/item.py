@@ -20,3 +20,10 @@ class ItemCreate(BaseModel):
     cantidad: int = 1
     comprador_id: str
     participantes_ids: List[str]
+
+class ItemUpdate(BaseModel):
+    nombre: Optional[str] = None
+    precio: Optional[float] = None
+    cantidad: Optional[int] = None
+    comprador_id: Optional[str] = None
+    participantes_ids: Optional[List[str]] = None

@@ -52,7 +52,7 @@ export const TwoFactorVerify = () => {
         setError("");
 
         try {
-            const response = await axios.post(`http://localhost:8000/api/auth/2fa/verify/${userId}`, {
+            const response = await axios.post(`http://localhost:8001/api/auth/2fa/verify/${userId}`, {
                 code: fullCode
             });
 
@@ -106,7 +106,7 @@ export const TwoFactorVerify = () => {
     return (
         <div className="min-h-screen bg-[var(--bg-body)] flex flex-col">
             <PageHeader title="VERIFICACIÓN DE SEGURIDAD" subtitle="Easy-Pay Security Protocol" onBack={() => navigate('/auth')} />
-            
+
             <main className="flex-1 flex items-center justify-center px-6 py-12 relative overflow-hidden">
                 {/* Background Decor */}
                 <div className="absolute top-0 left-0 w-full h-full -z-0 opacity-20 pointer-events-none">
@@ -121,9 +121,9 @@ export const TwoFactorVerify = () => {
                         </div>
                         <h2 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">Verificación de Seguridad</h2>
                         <p className="text-[var(--text-secondary)] text-sm mt-3 leading-relaxed">
-                            Se ha enviado un código de verificación a tu correo. <br/> Por favor, introdúcelo a continuación para continuar.
+                            Se ha enviado un código de verificación a tu correo. <br /> Por favor, introdúcelo a continuación para continuar.
                         </p>
-                        
+
                         <div className="mt-6 inline-flex px-4 py-1.5 bg-[var(--primary)]/10 rounded-full border border-[var(--primary)]/20">
                             <span className="text-[10px] text-[var(--primary)] font-bold uppercase tracking-[0.15em] whitespace-nowrap">
                                 Easy-Pay Security Protocol v4.0
@@ -166,7 +166,7 @@ export const TwoFactorVerify = () => {
                                 </>
                             )}
                         </button>
-                        
+
                         <button
                             onClick={() => navigate('/auth')}
                             className="w-full py-3 text-[var(--text-secondary)] font-medium hover:text-[var(--text-primary)] transition-colors text-sm"

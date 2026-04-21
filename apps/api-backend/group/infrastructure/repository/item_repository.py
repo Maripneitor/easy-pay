@@ -60,3 +60,22 @@ class MongoItemRepository:
                 item["nombres_participantes"] = []
         
         return items
+
+    async def update_item(self, item_id: str, item_data: dict):
+        """Actualiza un gasto específico en la colección Items"""
+        if not ObjectId.is_valid(item_id):
+            return False
+            
+        result = await self.items_collection.update_one(
+            {"_id": ObjectId(item_id)},
+            {"$set": item_data}
+        )
+        return result.modified_count > 0
+
+    async def delete_item(self, item_id: str):
+        """Elimina un gasto específico de la colección Items"""
+        if not ObjectId.is_valid(item_id):
+            return False
+            
+        result = await self.items_collection.delete_one({"_id": ObjectId(item_id)})
+        return result.deleted_count > 0

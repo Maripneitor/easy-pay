@@ -44,7 +44,7 @@ export const TwoFactorSetup = () => {
             setError('');
 
             // Llamamos al endpoint de setup usando el ID correcto
-            await axios.post(`http://localhost:8000/api/auth/2fa/setup/${userId}`);
+            await axios.post(`http://localhost:8001/api/auth/2fa/setup/${userId}`);
 
             setCodeSent(true);
 
@@ -114,8 +114,8 @@ export const TwoFactorSetup = () => {
                             onClick={handleRequestCode}
                             disabled={loading || codeSent}
                             className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 shadow-lg ${codeSent
-                                    ? "bg-emerald-500 text-white"
-                                    : "bg-[var(--primary)] text-white hover:brightness-110 shadow-[var(--primary)]/20"
+                                ? "bg-emerald-500 text-white"
+                                : "bg-[var(--primary)] text-white hover:brightness-110 shadow-[var(--primary)]/20"
                                 }`}
                         >
                             {loading ? (

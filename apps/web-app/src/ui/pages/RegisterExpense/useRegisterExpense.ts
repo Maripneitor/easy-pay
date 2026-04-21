@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export const useRegisterExpense = () => {
-    const { groupId } = useParams<{ groupId: string }>();
+    // 🚩 Capturamos groupId e itemId para saber si estamos editando
+    const { groupId, itemId } = useParams<{ groupId: string; itemId: string }>();
+    const isEditing = Boolean(itemId);
+
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [integrantes, setIntegrantes] = useState<{ id: string, nombre: string }[]>([]);
@@ -15,49 +19,61 @@ export const useRegisterExpense = () => {
         participantes_ids: [] as string[]
     });
 
-    const fetchGroupDetails = useCallback(async () => {
+    const fetchGroupAndExpenseData = useCallback(async () => {
         const userId = localStorage.getItem('userId');
         const cleanGroupId = groupId?.replace(/[#?:]/g, '');
 
         if (!userId || !cleanGroupId) return;
 
         try {
-            const res = await fetch(`http://localhost:8002/api/groups/${cleanGroupId}`);
+            // 1. Obtener integrantes del grupo
+            const resGroup = await fetch(`http://localhost:8002/api/groups/${cleanGroupId}`);
+            let allMembersIds: string[] = [];
 
-            if (res.ok) {
-                const currentGroup = await res.json();
-
-                // 🚩 MEJORA 1: Formato "Yo (Nombre Real)"
-                const listaFormateada = currentGroup.integrantes.map((m: any) => {
-                    const isMe = m.id === userId;
-                    return {
-                        id: m.id,
-                        nombre: isMe
-                            ? `Yo (${m.nombre || 'Usuario'})`
-                            : (m.nombre || `Usuario ${m.id.slice(-4).toUpperCase()}`)
-                    };
-                });
-
+            if (resGroup.ok) {
+                const currentGroup = await resGroup.json();
+                const listaFormateada = currentGroup.integrantes.map((m: any) => ({
+                    id: m.id,
+                    nombre: m.id === userId ? `Yo (${m.nombre})` : m.nombre
+                }));
                 setIntegrantes(listaFormateada);
+                allMembersIds = listaFormateada.map((m: any) => m.id);
+            }
 
-                // 🚩 MEJORA 2: El comprador es FIJO (El usuario actual/admin)
-                // Inicializamos participantes_ids con todos los miembros por defecto
-                const allIds = listaFormateada.map((m: any) => m.id);
+            // 2. Si estamos EDITANDO, cargar los datos del gasto específico
+            if (isEditing && itemId) {
+                const resItems = await fetch(`http://localhost:8002/api/groups/${cleanGroupId}/items`);
+                if (resItems.ok) {
+                    const items = await resItems.json();
+                    // Buscamos el item en la lista (o puedes crear un endpoint GET /items/{id} en el backend)
+                    const itemToEdit = items.find((i: any) => (i.id || i._id) === itemId);
 
+                    if (itemToEdit) {
+                        setFormData({
+                            nombre: itemToEdit.nombre || itemToEdit.concepto || '',
+                            precio: String(itemToEdit.precio || itemToEdit.monto || ''),
+                            cantidad: itemToEdit.cantidad || 1,
+                            comprador_id: itemToEdit.comprador_id || userId,
+                            participantes_ids: itemToEdit.participantes_ids || []
+                        });
+                    }
+                }
+            } else {
+                // Si es NUEVO, valores por defecto
                 setFormData(prev => ({
                     ...prev,
-                    comprador_id: userId, // Ya no cambiará
-                    participantes_ids: allIds
+                    comprador_id: userId,
+                    participantes_ids: allMembersIds
                 }));
             }
         } catch (error) {
-            console.error("❌ Error en el fetch de integrantes:", error);
+            console.error("❌ Error cargando datos:", error);
         }
-    }, [groupId]);
+    }, [groupId, itemId, isEditing]);
 
     useEffect(() => {
-        fetchGroupDetails();
-    }, [fetchGroupDetails]);
+        fetchGroupAndExpenseData();
+    }, [fetchGroupAndExpenseData]);
 
     const toggleParticipante = (id: string) => {
         setFormData(prev => ({
@@ -71,17 +87,17 @@ export const useRegisterExpense = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         if (e) e.preventDefault();
 
-        // 🚩 VALIDACIÓN: Ahora permite que haya solo 1 participante (tú mismo)
         if (!formData.nombre || !formData.precio || formData.participantes_ids.length === 0) {
-            alert("Por favor rellena todos los campos.");
+            toast.error("Por favor rellena todos los campos.");
             return;
         }
 
         setLoading(true);
+        const cleanGroupId = groupId?.replace(/[#?:]/g, '');
 
         try {
             const payload = {
-                group_id: groupId?.replace(/[#?:]/g, ''),
+                group_id: cleanGroupId,
                 nombre: formData.nombre.trim(),
                 precio: parseFloat(formData.precio),
                 cantidad: Number(formData.cantidad),
@@ -89,21 +105,28 @@ export const useRegisterExpense = () => {
                 participantes_ids: formData.participantes_ids
             };
 
-            const response = await fetch(`http://localhost:8002/api/groups/add-item`, {
-                method: 'POST',
+            // 🚩 LÓGICA DINÁMICA: PUT para editar, POST para crear
+            const url = isEditing
+                ? `http://localhost:8002/api/groups/${cleanGroupId}/items/${itemId}`
+                : `http://localhost:8002/api/groups/add-item`;
+
+            const method = isEditing ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
             if (response.ok) {
-                navigate(-1);
+                toast.success(isEditing ? "Gasto actualizado" : "Gasto registrado");
+                navigate(`/group/${cleanGroupId}`);
             } else {
                 const err = await response.json();
-                alert(`Error: ${err.detail || 'Fallo en el registro'}`);
+                toast.error(`Error: ${err.detail || 'Error en la operación'}`);
             }
         } catch (error) {
-            console.error(error);
-            alert("Error de conexión.");
+            toast.error("Error de conexión con el servidor.");
         } finally {
             setLoading(false);
         }

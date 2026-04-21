@@ -11,13 +11,13 @@ services:
   # --- MICROSERVICIO DE USUARIOS (Puerto 8001) ---
   user-service:
     build:
-      context: ./apps/api-backend # Ajusta si tienes carpetas separadas
+      context: ./apps/api-backend
       dockerfile: Dockerfile
     container_name: easy-pay-user-service
     volumes:
       - ./apps/api-backend:/app
     ports:
-      - "8001:8000" # Mapeamos el 8000 interno al 8001 externo
+      - "8001:8000"
     env_file:
       - .env
       - ./apps/api-backend/.env
@@ -28,13 +28,13 @@ services:
   # --- MICROSERVICIO DE GRUPOS (Puerto 8002) ---
   group-service:
     build:
-      context: ./apps/api-backend # Aquí iría la carpeta de la lógica de grupos
+      context: ./apps/api-backend
       dockerfile: Dockerfile
     container_name: easy-pay-group-service
     volumes:
       - ./apps/api-backend:/app
     ports:
-      - "8002:8000" # Mapeamos el 8000 interno al 8002 externo
+      - "8002:8000"
     env_file:
       - ./apps/api-backend/.env
     command: uvicorn main_groups:app --host 0.0.0.0 --port 8000 --reload
@@ -49,12 +49,25 @@ services:
     container_name: easy-pay-frontend_pruebas
     volumes:
       - .:/app
+      # 🚩 ESTOS VOLÚMENES SON VITALES PARA EVITAR EL ERROR DE HOOKS
       - /app/node_modules
+      - /app/apps/web-app/node_modules
+      - /app/apps/mobile-app/node_modules
     ports:
       - "5173:5173"
+    environment:
+      # Definimos la URL del backend para que Vite la reconozca
+      - VITE_API_URL=http://localhost:8000
+      - NODE_ENV=development
     stdin_open: true
     tty: true
-    command: sh -c "npm install && npm run dev:web"
+    # Forzamos instalación limpia y borrado de caché de Vite en cada arranque crítico
+    command: >
+      sh -c "npm install --legacy-peer-deps && 
+             rm -rf apps/web-app/node_modules/react && 
+             rm -rf apps/web-app/node_modules/react-dom && 
+             rm -rf apps/web-app/node_modules/.vite && 
+             npm run dev:web"
     depends_on:
       - user-service
       - group-service

@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
@@ -10,7 +10,7 @@ import { ProtectedRoute } from './auth/ProtectedRoute';
 import { AnimatePresence, motion } from 'framer-motion';
 import './global.css';
 
-// --- Lazy load pages ---
+// --- Lazy load de páginas ---
 const LandingPage = lazy(() => import('./pages/LandingPage').then(module => ({ default: module.LandingPage })));
 const Auth = lazy(() => import('./pages/Auth').then(module => ({ default: module.Auth })));
 const RecoverPasswordPage = lazy(() => import('./pages/RecoverPassword').then(module => ({ default: module.RecoverPasswordPage })));
@@ -25,11 +25,11 @@ const SettleUp = lazy(() => import('./pages/SettleUp').then(module => ({ default
 const RegisterExpense = lazy(() => import('./pages/RegisterExpense').then(module => ({ default: module.RegisterExpense })));
 const JoinGroup = lazy(() => import('./pages/JoinGroup').then(module => ({ default: module.JoinGroup })));
 
-// 2FA Components (Importados desde el index.ts de su carpeta)
+// 2FA
 const TwoFactorSetup = lazy(() => import('./pages/TwoFactorSetup').then(module => ({ default: module.TwoFactorSetup })));
 const TwoFactorVerify = lazy(() => import('./pages/TwoFactorSetup').then(module => ({ default: module.TwoFactorVerify })));
 
-// HOC for Page Transitions
+// --- HOC para Transiciones de Página ---
 const PageTransition = ({ children }: { children: React.ReactNode }) => (
     <motion.div
         className="page-enter min-h-screen flex flex-col w-full"
@@ -42,14 +42,69 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => (
     </motion.div>
 );
 
+// ✅ Configuración de React Query (Evita spam al backend de Python en UNACH)
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            staleTime: 1000 * 60 * 5, // 5 minutes
+            staleTime: 1000 * 60 * 5,
             retry: 1,
+            refetchOnWindowFocus: false,
         },
     },
 });
+
+// Componente de Rutas Animadas (necesario para useLocation)
+const AnimatedRoutes = () => {
+    const location = useLocation();
+
+    return (
+        <AnimatePresence mode="wait">
+            <Suspense fallback={<Loader />}>
+                <Routes location={location} key={location.pathname}>
+                    {/* --- RUTAS PÚBLICAS --- */}
+                    <Route path="/" element={<PageTransition><LandingPage /></PageTransition>} />
+                    <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
+                    <Route path="/recover-password" element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
+                    <Route path="/qr-scanner" element={<PageTransition><JoinGroup /></PageTransition>} />
+
+                    {/* --- RUTAS PROTEGIDAS --- */}
+                    <Route element={<ProtectedRoute />}>
+                        <Route element={<DashboardLayout />}>
+                            <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
+                            <Route path="/create-group" element={<PageTransition><CreateGroup /></PageTransition>} />
+
+                            {/* Detalle del Grupo */}
+                            <Route path="/group/:id" element={<PageTransition><GroupDetail /></PageTransition>} />
+
+                            {/* Gestión de Gastos */}
+                            <Route path="/group/:groupId/register-expense" element={<PageTransition><RegisterExpense /></PageTransition>} />
+
+                            {/* ✅ NUEVA RUTA: Editar Gasto (usa el mismo componente de registro) */}
+                            <Route path="/group/:groupId/edit-item/:itemId" element={<PageTransition><RegisterExpense /></PageTransition>} />
+
+                            {/* Liquidación de Deudas */}
+                            <Route path="/group/:id/settle-up" element={<PageTransition><SettleUp /></PageTransition>} />
+
+                            <Route path="/my-payments" element={<PageTransition><MyPayments /></PageTransition>} />
+                            <Route path="/notifications" element={<PageTransition><NotificationsPage /></PageTransition>} />
+
+                            {/* Configuración de Seguridad */}
+                            <Route path="/2fa-setup" element={<PageTransition><TwoFactorSetup /></PageTransition>} />
+                            <Route path="/2fa-verify" element={<PageTransition><TwoFactorVerify /></PageTransition>} />
+
+                            {/* Perfil */}
+                            <Route path="/profile" element={<PageTransition><ProfilePage /></PageTransition>} />
+                            <Route path="/profile/personal-data" element={<PageTransition><PersonalData /></PageTransition>} />
+                        </Route>
+                    </Route>
+
+                    {/* Redirección por defecto */}
+                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+            </Suspense>
+        </AnimatePresence>
+    );
+};
 
 export const App = () => {
     return (
@@ -59,50 +114,9 @@ export const App = () => {
                     <BrowserRouter>
                         <AnimatedRoutes />
                     </BrowserRouter>
-                    <Toaster position="top-center" richColors />
+                    <Toaster position="top-center" richColors closeButton />
                 </ThemeProvider>
             </AuthProvider>
         </QueryClientProvider>
-    );
-};
-
-const AnimatedRoutes = () => {
-    const location = useLocation();
-
-    return (
-        <AnimatePresence mode="wait">
-            <Suspense fallback={<Loader />}>
-                <Routes location={location} key={location.pathname}>
-                    {/* Public Routes */}
-                    <Route path="/" element={<PageTransition><LandingPage /></PageTransition>} />
-                    <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
-                    <Route path="/recover-password" element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
-                    <Route path="/qr-scanner" element={<PageTransition><JoinGroup /></PageTransition>} />
-
-                    {/* Protected Routes */}
-                    <Route element={<ProtectedRoute />}>
-                        <Route element={<DashboardLayout />}>
-                            <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
-                            <Route path="/create-group" element={<PageTransition><CreateGroup /></PageTransition>} />
-                            <Route path="/group/:id" element={<PageTransition><GroupDetail /></PageTransition>} />
-                            <Route path="/group/:groupId/register-expense" element={<PageTransition><RegisterExpense /></PageTransition>} />
-                            <Route path="/group/:id/settle-up" element={<PageTransition><SettleUp /></PageTransition>} />
-                            <Route path="/my-payments" element={<PageTransition><MyPayments /></PageTransition>} />
-                            <Route path="/notifications" element={<PageTransition><NotificationsPage /></PageTransition>} />
-
-                            {/* 2FA Flow */}
-                            <Route path="/2fa-setup" element={<PageTransition><TwoFactorSetup /></PageTransition>} />
-                            <Route path="/2fa-verify" element={<PageTransition><TwoFactorVerify /></PageTransition>} />
-
-                            <Route path="/profile" element={<PageTransition><ProfilePage /></PageTransition>} />
-                            <Route path="/profile/personal-data" element={<PageTransition><PersonalData /></PageTransition>} />
-                        </Route>
-                    </Route>
-
-                    {/* Fallback */}
-                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                </Routes>
-            </Suspense>
-        </AnimatePresence>
     );
 };
