@@ -1,4 +1,3 @@
-import os
 from database import db_instance
 from bson import ObjectId
 from user.domain.models.user import User
@@ -6,8 +5,7 @@ from user.domain.models.user import User
 class MongoUserRepository:
     def __init__(self):
         # Conexión a la base de datos y colección
-        db_name = os.getenv("DB_NAME_AUTH", "EasyPay_Auth")
-        self.db = db_instance.get_db(db_name) 
+        self.db = db_instance.get_db("EasyPay_Auth") 
         self.collection = self.db.get_collection("Users")
 
     # --- MÉTODO PARA GUARDAR EL USUARIO (REGISTRO) ---
