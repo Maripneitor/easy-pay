@@ -46,10 +46,10 @@ export const useAuth = () => {
     const login = async (identifier: string, password: string) => {
         setLoading(true);
         setError(null);
-        console.log("🛰️ Enviando petición de login al servidor...");
+        console.log("🛰️ Enviando petición de login al servidor (Port 8000)...");
 
         try {
-            const response = await fetch('http://localhost:8001/api/auth/login', {
+            const response = await fetch('http://localhost:8000/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ identifier, password }),
@@ -59,7 +59,7 @@ export const useAuth = () => {
 
             if (response.ok && data.status === 'success') {
                 localStorage.setItem('token', data.access_token);
-                localStorage.setItem('userId', data.user?.id || data.user?._id);
+                localStorage.setItem('userId', data.user?.id || data.user?._id || data.user_id);
                 localStorage.setItem('userName', data.user?.nombre || identifier);
                 localStorage.setItem('userEmail', data.user?.email || identifier);
                 localStorage.removeItem('temp_userId');
@@ -78,8 +78,9 @@ export const useAuth = () => {
 
         } catch (err: any) {
             console.warn("⚠️ Bypass: Procediendo con modo demo debido a fallo en API:", err.message);
-            // MOCK BYPASS: Si falla el backend, mandamos a verificar (como pidió el usuario)
+            // MOCK BYPASS: Si falla el backend, mandamos a verificar
             localStorage.setItem('temp_userId', 'demo-user-id');
+            localStorage.setItem('userId', 'demo-user-id'); // Persistimos también aquí para evitar el "Sesión expirada"
             localStorage.setItem('userEmail', identifier || "demo@easypay.com");
             localStorage.setItem('userName', identifier.split('@')[0] || "Usuario");
             navigate('/2fa-verify');

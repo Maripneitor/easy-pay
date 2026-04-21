@@ -59,19 +59,23 @@ export const TwoFactorVerify = () => {
             if (response.data.status === 'success') {
                 setSuccess(true);
 
-                // ✅ PASO CRUCIAL: Guardar el token para que ProtectedRoute nos deje pasar
+                // ✅ PASO CRUCIAL: Guardar el token y el ID para que el resto de la app funcione
                 if (response.data.access_token) {
                     localStorage.setItem('token', response.data.access_token);
                 }
 
-                // Guardamos datos opcionales del usuario si vienen en la respuesta
+                // Guardar el userId real si viene en la respuesta, si no el que ya teníamos
+                const finalUserId = response.data.user?.id || response.data.user?._id || userId;
+                localStorage.setItem('userId', finalUserId);
+
                 if (response.data.user) {
                     localStorage.setItem('userName', response.data.user.nombre);
+                    localStorage.setItem('userEmail', response.data.user.email);
                 }
 
                 setTimeout(() => {
                     localStorage.removeItem('temp_userId'); // Limpiamos rastro temporal
-                    navigate('/dashboard'); // 🚀 ¡Directo al Dashboard!
+                    navigate('/dashboard'); 
                 }, 2000);
             }
         } catch (err: any) {

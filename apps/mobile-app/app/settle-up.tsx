@@ -12,7 +12,7 @@ import {
     Dimensions,
     Pressable
 } from 'react-native';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { MotiView } from 'moti';
@@ -24,9 +24,14 @@ const TOTAL_DEBT = 1500.00;
 
 export default function SettleUpScreen() {
     const { theme, fontScale } = useTheme();
-    const [amount, setAmount] = useState('');
-    const [isTotalPayment, setIsTotalPayment] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState('Efectivo');
+    const params = useLocalSearchParams<{ amount: string, method: string }>();
+    
+    const initialAmount = params.amount || '';
+    const initialMethod = params.method === 'card' ? 'Tarjeta' : 'Efectivo';
+
+    const [amount, setAmount] = useState(initialAmount);
+    const [isTotalPayment, setIsTotalPayment] = useState(parseFloat(initialAmount) === TOTAL_DEBT);
+    const [paymentMethod, setPaymentMethod] = useState(initialMethod);
     const [showMethods, setShowMethods] = useState(false);
     const [loading, setLoading] = useState(false);
     const [note, setNote] = useState('');

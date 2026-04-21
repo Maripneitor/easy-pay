@@ -31,54 +31,61 @@ export default function OnboardingScreen() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#0d1425' }} edges={['top']}>
-            <StatusBar style="light" />
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#F7F9FB' }} edges={['top']}>
+            <StatusBar style="dark" />
+            
+            {/* Header / Stepper from Stitch */}
+            <View className="px-6 py-4 flex-row justify-between items-center bg-[#F7F9FB]">
+                <TouchableOpacity onPress={() => step > 1 ? setStep(step - 1) : router.back()}>
+                    <Ionicons name="arrow-back" size={24} color="#64748B" />
+                </TouchableOpacity>
+                <Text className="font-bold text-xl tracking-tight text-[#191C1E]">Easy-Pay</Text>
+                <View className="w-10" />
+            </View>
+            
+            {/* Onboarding Progress Stepper */}
+            <View className="flex-row items-center justify-center space-x-2 py-4">
+                <View className={`h-2 rounded-full ${step === 1 ? 'w-6 bg-[#0061a4]' : 'w-2 bg-[#0061a4]'}`} />
+                <View className={`h-2 rounded-full ${step === 2 ? 'w-6 bg-[#0061a4]' : (step > 2 ? 'w-2 bg-[#0061a4]' : 'w-2 bg-[#E0E3E5]')}`} />
+                <View className={`h-2 rounded-full ${step === 3 ? 'w-6 bg-[#0061a4]' : 'w-2 bg-[#E0E3E5]'}`} />
+            </View>
 
-            <View className="flex-1 px-8 py-10">
-                {/* Stepper Indicator */}
-                <View className="flex-row gap-2 mb-16 justify-center">
-                    {[1, 2, 3].map((s) => (
-                        <View 
-                            key={s} 
-                            className={`h-1.5 rounded-full ${step >= s ? 'w-8 bg-blue-600' : 'w-4 bg-slate-800'}`} 
-                        />
-                    ))}
-                </View>
-
+            <ScrollView className="flex-1 px-6 pt-4" showsVerticalScrollIndicator={false}>
                 <AnimatePresence exitBeforeEnter>
                     {step === 1 && (
                         <MotiView 
                             key="step1"
-                            from={{ opacity: 0, translateX: 50 }}
-                            animate={{ opacity: 1, translateX: 0 }}
-                            exit={{ opacity: 0, translateX: -50 }}
+                            from={{ opacity: 0, translateY: 10 }}
+                            animate={{ opacity: 1, translateY: 0 }}
+                            exit={{ opacity: 0, translateY: -10 }}
                             className="flex-1"
                         >
-                            <Text className="text-white text-4xl font-black tracking-tight mb-4">Completemos tu perfil</Text>
-                            <Text className="text-slate-500 text-sm font-bold mb-12">¿Cómo prefieres que te llamen tus amigos?</Text>
+                            <View className="items-center mb-10 text-center">
+                                <Text className="font-bold text-3xl tracking-tight text-[#191C1E] mb-2">Completemos tu perfil</Text>
+                                <Text className="text-[#404752] text-base">¿Cómo prefieres que te llamen?</Text>
+                            </View>
                             
-                            <View className="items-center mb-12">
-                                <View className="w-32 h-32 bg-white/5 rounded-[40px] items-center justify-center border border-white/10 relative">
-                                    <Image 
-                                        source={{ uri: 'https://lh3.googleusercontent.com/a/ACg8ocL_FmR_pB6M86B8xH9H_R_W_K_K_K_K_K_K_K_K_K_K=s288-c-no' }} 
-                                        className="w-full h-full rounded-[40px]"
-                                    />
-                                    <View className="absolute -bottom-2 -right-2 w-10 h-10 bg-blue-600 rounded-2xl items-center justify-center border-4 border-[#0d1425]">
-                                        <MaterialIcons name="camera-alt" size={16} color="white" />
-                                    </View>
+                            <View className="items-center mb-10">
+                                <View className="relative w-32 h-32 rounded-full bg-[#E0E3E5] flex items-center justify-center shadow-sm">
+                                    <MaterialIcons name="person" size={50} color="#707883" />
+                                    <TouchableOpacity className="absolute bottom-0 right-0 w-10 h-10 bg-[#2196F3] rounded-full flex items-center justify-center shadow-md border-2 border-white">
+                                        <MaterialIcons name="photo-camera" size={20} color="white" />
+                                    </TouchableOpacity>
                                 </View>
                             </View>
 
-                            <View>
-                                <Text className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-3 ml-4">Nombre Público</Text>
-                                <View className="bg-white/5 border border-white/10 p-5 rounded-2xl">
-                                    <TextInput 
-                                        value={name}
-                                        onChangeText={setName}
-                                        className="text-white font-bold text-lg"
-                                        placeholder="Tu nombre"
-                                        placeholderTextColor="#334155"
-                                    />
+                            <View className="space-y-6">
+                                <View className="space-y-1.5">
+                                    <Text className="text-sm font-medium text-[#404752] px-1">Nombre Público</Text>
+                                    <View className="bg-white rounded-xl px-4 py-4 shadow-sm border border-[#bfc7d4]/30">
+                                        <TextInput 
+                                            value={name}
+                                            onChangeText={setName}
+                                            className="text-[#191C1E] font-medium text-base"
+                                            placeholder="Ej. Alex"
+                                            placeholderTextColor="#bfc7d4"
+                                        />
+                                    </View>
                                 </View>
                             </View>
                         </MotiView>
@@ -87,24 +94,25 @@ export default function OnboardingScreen() {
                     {step === 2 && (
                         <MotiView 
                             key="step2"
-                            from={{ opacity: 0, translateX: 50 }}
-                            animate={{ opacity: 1, translateX: 0 }}
-                            exit={{ opacity: 0, translateX: -50 }}
+                            from={{ opacity: 0, translateY: 10 }}
+                            animate={{ opacity: 1, translateY: 0 }}
+                            exit={{ opacity: 0, translateY: -10 }}
                             className="flex-1"
                         >
-                            <Text className="text-white text-4xl font-black tracking-tight mb-4">Ajustes financieros</Text>
-                            <Text className="text-slate-500 text-sm font-bold mb-12">Configura tu moneda local para los cálculos de deudas.</Text>
+                            <View className="items-center mb-10 text-center">
+                                <Text className="font-bold text-3xl tracking-tight text-[#191C1E] mb-2">Ajustes financieros</Text>
+                                <Text className="text-[#404752] text-base">Configura tu moneda principal</Text>
+                            </View>
                             
-                            <Text className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-6 ml-4">Elige tu moneda</Text>
-                            <View className="gap-3">
-                                {['MXN (Pesos Mexicanos)', 'USD (Dólares)', 'EUR (Euros)'].map((curr) => (
+                            <View className="space-y-3">
+                                {['MXN', 'USD', 'EUR'].map((curr) => (
                                     <TouchableOpacity 
                                         key={curr}
-                                        onPress={() => setCurrency(curr.split(' ')[0])}
-                                        className={`p-6 rounded-[28px] border flex-row items-center justify-between ${currency === curr.split(' ')[0] ? 'bg-blue-600/10 border-blue-500/40' : 'bg-white/5 border-white/10'}`}
+                                        onPress={() => setCurrency(curr)}
+                                        className={`p-5 rounded-2xl border-2 flex-row items-center justify-between ${currency === curr ? 'bg-[#2196F3]/5 border-[#2196F3]' : 'bg-white border-transparent shadow-sm'}`}
                                     >
-                                        <Text className={`font-bold ${currency === curr.split(' ')[0] ? 'text-white' : 'text-slate-400'}`}>{curr}</Text>
-                                        {currency === curr.split(' ')[0] && <Ionicons name="checkmark-circle" size={20} color="#3b82f6" />}
+                                        <Text className={`font-bold text-lg ${currency === curr ? 'text-[#0061a4]' : 'text-[#404752]'}`}>{curr}</Text>
+                                        {currency === curr && <Ionicons name="checkmark-circle" size={24} color="#0061a4" />}
                                     </TouchableOpacity>
                                 ))}
                             </View>
@@ -114,54 +122,48 @@ export default function OnboardingScreen() {
                     {step === 3 && (
                         <MotiView 
                             key="step3"
-                            from={{ opacity: 0, translateX: 50 }}
-                            animate={{ opacity: 1, translateX: 0 }}
-                            exit={{ opacity: 0, translateX: -50 }}
+                            from={{ opacity: 0, translateY: 10 }}
+                            animate={{ opacity: 1, translateY: 0 }}
+                            exit={{ opacity: 0, translateY: -10 }}
                             className="flex-1"
                         >
-                            <Text className="text-white text-4xl font-black tracking-tight mb-4">Todo listo para empezar</Text>
-                            <Text className="text-slate-500 text-sm font-bold mb-12">¡Bienvenido a EasyPay! Ya puedes crear tu primer grupo o registrar un gasto.</Text>
+                            <View className="items-center mb-10 text-center">
+                                <Text className="font-bold text-3xl tracking-tight text-[#191C1E] mb-2">Todo listo</Text>
+                                <Text className="text-[#404752] text-base">¡Bienvenido a EasyPay!</Text>
+                            </View>
                             
-                            <View className="bg-emerald-500/5 border border-emerald-500/10 rounded-[40px] p-8 items-center">
-                                <View className="w-20 h-20 bg-emerald-500 rounded-[30px] items-center justify-center mb-6 shadow-xl shadow-emerald-500/40">
+                            <View className="bg-emerald-50 rounded-3xl p-8 items-center border border-emerald-100">
+                                <View className="w-20 h-20 bg-emerald-500 rounded-3xl items-center justify-center mb-6 shadow-lg shadow-emerald-500/20">
                                     <MaterialIcons name="celebration" size={40} color="white" />
                                 </View>
-                                <Text className="text-white font-black text-2xl text-center mb-2">¡Configuración Exitosa!</Text>
-                                <Text className="text-slate-500 text-center text-xs leading-relaxed">
-                                    Tus deudas ahora serán calculadas en {currency}. Puedes cambiar esto en ajustes.
+                                <Text className="text-[#191C1E] font-bold text-2xl text-center mb-2">¡Configuración Exitosa!</Text>
+                                <Text className="text-[#404752] text-center text-sm leading-relaxed">
+                                    Tu perfil ha sido configurado correctamente.
                                 </Text>
-                            </View>
-
-                            <View className="bg-blue-600/5 border border-blue-500/10 rounded-[40px] p-6 mt-6 flex-row items-center gap-4">
-                                <View className="w-10 h-10 bg-blue-600 rounded-full items-center justify-center">
-                                    <MaterialIcons name="security" size={20} color="white" />
-                                </View>
-                                <Text className="text-blue-200 text-[10px] font-black uppercase flex-1">Tus datos están protegidos por cifrado Easy-ID</Text>
                             </View>
                         </MotiView>
                     )}
                 </AnimatePresence>
+            </ScrollView>
 
-                {/* Footer Actions */}
-                <View className="mt-auto">
+            {/* Footer Actions (Sticky bottom style from Stitch) */}
+            <View className="px-6 pb-10 pt-4 bg-[#F7F9FB]">
+                <View className="space-y-3">
                     <TouchableOpacity 
                         onPress={nextStep}
-                        className="bg-blue-600 p-6 rounded-[28px] items-center justify-center shadow-2xl shadow-blue-500/40 overflow-hidden"
+                        className="w-full bg-[#0061a4] py-4 rounded-2xl items-center justify-center shadow-lg active:scale-[0.98]"
                     >
-                        <Text className="text-white font-black uppercase tracking-widest text-[13px]">
+                        <Text className="text-white font-bold text-lg">
                             {step === 3 ? 'Comenzar ahora' : 'Siguiente Paso'}
                         </Text>
-                        <View className="absolute right-8 top-1/2 -mt-2">
-                             <Ionicons name="arrow-forward" size={20} color="white" />
-                        </View>
                     </TouchableOpacity>
                     
                     {step < 3 && (
                         <TouchableOpacity 
                             onPress={nextStep}
-                            className="mt-6 self-center"
+                            className="w-full py-3 items-center"
                         >
-                            <Text className="text-slate-600 font-bold text-[10px] uppercase tracking-widest">Omitir por ahora</Text>
+                            <Text className="text-[#707883] font-bold text-sm">Omitir por ahora</Text>
                         </TouchableOpacity>
                     )}
                 </View>

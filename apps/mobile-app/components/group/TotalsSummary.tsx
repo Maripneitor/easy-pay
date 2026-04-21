@@ -25,65 +25,60 @@ export const TotalsSummary: React.FC<TotalsSummaryProps> = ({
             from={{ opacity: 0, translateY: 20 }} 
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: 'timing', duration: 500 }}
-            className="gap-y-8 px-5 pt-4 pb-10"
+            className="gap-y-8 px-6 pt-4 pb-10"
         >
-            {/* Breakdown Card */}
+            {/* Summary Card (Bento-style) */}
             <View 
-                style={{ backgroundColor: theme.card, borderColor: theme.border }} 
-                className="rounded-[2.5rem] p-7 border shadow-xl overflow-hidden"
+                style={{ backgroundColor: theme.card, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.02, shadowRadius: 32 }} 
+                className="rounded-[1.5rem] p-6 flex-col gap-5 relative overflow-hidden"
             >
-                <Text style={{ color: theme.text, fontSize: 20 * fontScale }} className="font-black mb-6 tracking-tight">Desglose de Cuenta</Text>
+                {/* Subtle glow effect */}
+                <View className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
                 
-                <View className="gap-y-5 mb-4">
-                    <View className="flex-row justify-between items-center">
-                        <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale }} className="font-bold uppercase tracking-wider opacity-70">Subtotal</Text>
-                        <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-black">${subtotal.toFixed(2)}</Text>
+                <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-extrabold tracking-tight mb-2">Desglose de Cuenta</Text>
+                
+                <View className="gap-y-3">
+                    <View className="flex-row justify-between items-center px-1">
+                        <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale }} className="font-medium">Subtotal</Text>
+                        <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-bold">${subtotal.toFixed(2)}</Text>
                     </View>
-                    <View className="flex-row justify-between items-center">
-                        <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale }} className="font-bold uppercase tracking-wider opacity-70">IVA (12%)</Text>
-                        <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-black">${tax.toFixed(2)}</Text>
+                    <View className="flex-row justify-between items-center px-1">
+                        <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale }} className="font-medium">IVA (12%)</Text>
+                        <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-bold">${tax.toFixed(2)}</Text>
                     </View>
-                    <View className="flex-row justify-between items-center">
-                        <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale }} className="font-bold uppercase tracking-wider opacity-70">Servicio (5%)</Text>
-                        <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-black">${service.toFixed(2)}</Text>
+                    <View className="flex-row justify-between items-center px-1">
+                        <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale }} className="font-medium">Servicio (5%)</Text>
+                        <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-bold">${service.toFixed(2)}</Text>
                     </View>
-                    <View className="flex-row justify-between items-center">
-                        <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale }} className="font-bold uppercase tracking-wider opacity-70">Propina</Text>
-                        <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-black">${tip.toFixed(2)}</Text>
+                    <View className="flex-row justify-between items-center px-1">
+                        <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale }} className="font-medium">Propina (Opcional)</Text>
+                        <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-bold">${tip.toFixed(2)}</Text>
                     </View>
                 </View>
 
-                {/* Total Section with different background */}
+                {/* Total General Callout */}
                 <View 
-                    style={{ backgroundColor: theme.cardSecondary, borderBottomLeftRadius: 36, borderBottomRightRadius: 36 }} 
-                    className="-mx-7 -mb-7 p-7 mt-6 flex-row justify-between items-end border-t"
-                    style={{ borderTopColor: theme.border + '20', backgroundColor: theme.cardSecondary }}
+                    style={{ backgroundColor: theme.cardSecondary }} 
+                    className="mt-2 -mx-6 -mb-6 px-6 py-6 flex-row justify-between items-end rounded-b-[1.5rem]"
                 >
-                    <View>
-                        <Text style={{ color: theme.textSecondary, fontSize: 12 * fontScale }} className="font-black uppercase tracking-[0.2em] mb-1">Total General</Text>
-                        <Text style={{ color: theme.primary, fontSize: 36 * fontScale }} className="font-black tracking-tighter">${total.toFixed(2)}</Text>
-                    </View>
-                    <View className="bg-emerald-500/10 px-3 py-1.5 rounded-xl mb-1">
-                        <Text className="text-emerald-500 text-[10px] font-black uppercase tracking-widest">Verificado</Text>
-                    </View>
+                    <Text style={{ color: theme.textSecondary, fontSize: 16 * fontScale }} className="font-bold">Total General</Text>
+                    <Text style={{ color: theme.primary, fontSize: 32 * fontScale }} className="font-black tracking-tight">${total.toFixed(2)}</Text>
                 </View>
             </View>
 
             {/* Aportes Section */}
             <View>
-                <Text style={{ color: theme.text, fontSize: 19 * fontScale }} className="font-black mb-5 tracking-tight px-1">Resumen de Aportes</Text>
+                <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-extrabold mb-4 tracking-tight px-1">Aportes de Miembros</Text>
                 <View className="flex-row gap-x-4">
-                    {/* Paid Card */}
+                    {/* Pagado Card */}
                     <View 
-                        style={{ backgroundColor: theme.card, borderColor: theme.border }} 
-                        className="flex-1 rounded-[2rem] p-6 border shadow-sm"
+                        style={{ backgroundColor: theme.card, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.02, shadowRadius: 16 }} 
+                        className="flex-1 rounded-[1.25rem] p-5 flex-col gap-1.5 relative overflow-hidden"
                     >
-                        <View className="flex-row items-center mb-3">
-                            <View className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />
-                            <Text style={{ color: theme.textSecondary, fontSize: 11 * fontScale }} className="uppercase tracking-widest font-black opacity-60">Pagado</Text>
-                        </View>
-                        <Text style={{ color: theme.text, fontSize: 24 * fontScale }} className="font-black tracking-tight">${paidAmount.toFixed(2)}</Text>
-                        <View style={{ backgroundColor: theme.cardSecondary }} className="w-full h-2 rounded-full mt-4 overflow-hidden">
+                        <View className="absolute top-0 left-0 w-1.5 h-full bg-blue-500 opacity-80" />
+                        <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="uppercase tracking-wider font-semibold">Pagado</Text>
+                        <Text style={{ color: theme.text, fontSize: 22 * fontScale }} className="font-bold tracking-tight">${paidAmount.toFixed(2)}</Text>
+                        <View style={{ backgroundColor: theme.cardSecondary }} className="w-full h-1 rounded-full mt-2 overflow-hidden">
                             <MotiView 
                                 from={{ width: '0%' }}
                                 animate={{ width: `${paidProgress}%` }}
@@ -94,17 +89,15 @@ export const TotalsSummary: React.FC<TotalsSummaryProps> = ({
                         </View>
                     </View>
 
-                    {/* Pending Card */}
+                    {/* Pendiente Card */}
                     <View 
-                        style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} 
-                        className="flex-1 rounded-[2rem] p-6 border"
+                        style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border + '15' }} 
+                        className="flex-1 rounded-[1.25rem] p-5 flex-col gap-1.5 relative overflow-hidden border"
                     >
-                        <View className="flex-row items-center mb-3">
-                            <View className="w-2 h-2 rounded-full bg-amber-500 mr-2" />
-                            <Text style={{ color: '#F59E0B', fontSize: 11 * fontScale }} className="uppercase tracking-widest font-black opacity-80">Pendiente</Text>
-                        </View>
-                        <Text style={{ color: theme.text, fontSize: 24 * fontScale }} className="font-black tracking-tight">${pendingAmount.toFixed(2)}</Text>
-                        <View style={{ backgroundColor: theme.card }} className="w-full h-2 rounded-full mt-4 overflow-hidden">
+                        <View className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
+                        <Text style={{ color: '#D97706', fontSize: 10 * fontScale }} className="uppercase tracking-wider font-semibold">Pendiente</Text>
+                        <Text style={{ color: theme.text, fontSize: 22 * fontScale }} className="font-bold tracking-tight">${pendingAmount.toFixed(2)}</Text>
+                        <View style={{ backgroundColor: theme.card }} className="w-full h-1 rounded-full mt-2 overflow-hidden">
                             <MotiView 
                                 from={{ width: '0%' }}
                                 animate={{ width: `${pendingProgress}%` }}

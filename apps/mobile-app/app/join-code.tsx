@@ -18,7 +18,7 @@ export default function JoinCodeScreen() {
 
     const handleJoin = async () => {
         if (code.length < 4) {
-            setError('El código debe tener al menos 4 caracteres');
+            setError('Ingresa un código de 4 a 6 dígitos');
             return;
         }
         setLoading(true);
@@ -28,7 +28,7 @@ export default function JoinCodeScreen() {
             if (success) {
                 router.replace('/new-mesa');
             } else {
-                setError('No se pudo encontrar ninguna mesa con ese código');
+                setError('Código inválido o mesa cerrada');
             }
         } catch (e) {
             setError('Error de conexión. Intenta de nuevo.');
@@ -38,82 +38,94 @@ export default function JoinCodeScreen() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
-            <StatusBar style={theme.isDark ? "light" : "dark"} />
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#F7F9FB' }} edges={['top']}>
+            <StatusBar style="dark" />
             <Stack.Screen options={{ headerShown: false }} />
 
-            <View className="px-6 py-4 flex-row items-center">
-                <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
-                    <Ionicons name="chevron-back" size={24} color={theme.text} />
+            {/* Top AppBar from Stitch */}
+            <View className="px-6 h-16 flex-row items-center justify-between bg-[#F7F9FB]">
+                <TouchableOpacity onPress={() => router.back()} className="p-2 rounded-full active:scale-95">
+                    <Ionicons name="arrow-back" size={24} color="#0061a4" />
                 </TouchableOpacity>
-                <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-bold ml-2">Unirse por Código</Text>
+                <Text className="font-bold text-xl tracking-tight text-[#191C1E]">Join Table</Text>
+                <View className="w-10" />
             </View>
 
             <KeyboardAvoidingView 
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                className="flex-1 px-8 justify-center"
+                className="flex-1 px-6 items-center justify-center"
             >
-                <MotiView 
-                    from={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="items-center mb-12"
-                >
-                    <View style={{ backgroundColor: theme.primary + '15' }} className="w-24 h-24 rounded-3xl items-center justify-center mb-6">
-                        <MaterialIcons name="vpn-key" size={48} color={theme.primary} />
-                    </View>
-                    <Text style={{ color: theme.text }} className="text-2xl font-black text-center">Ingresa el código</Text>
-                    <Text style={{ color: theme.textSecondary }} className="text-center mt-2 font-medium">Pide el código al líder de la mesa</Text>
-                </MotiView>
+                {/* Icon Container from Stitch */}
+                <View className="mb-8 p-4 bg-white rounded-full shadow-sm relative">
+                    <View className="absolute inset-0 bg-[#2196F3]/10 rounded-full blur-xl" />
+                    <MaterialIcons name="dialpad" size={48} color="#2196F3" />
+                </View>
 
-                <View className="gap-6">
-                    <View>
-                        <TextInput 
-                            value={code}
-                            onChangeText={(val) => { setCode(val.toUpperCase()); setError(''); }}
-                            placeholder="Ej. AB12"
-                            placeholderTextColor={theme.textSecondary + '60'}
-                            maxLength={6}
-                            autoFocus
-                            style={{ 
-                                backgroundColor: theme.cardSecondary, 
-                                color: theme.text,
-                                borderBottomColor: error ? '#f43f5e' : theme.primary,
-                                borderBottomWidth: 3,
-                                fontSize: 32 * fontScale,
-                                textAlign: 'center',
-                                paddingVertical: 20,
-                                borderRadius: 16
-                            }}
-                            className="font-black"
-                        />
-                        <AnimatePresence>
-                            {error && (
-                                <MotiView 
-                                    from={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="mt-2 items-center"
-                                >
-                                    <Text className="text-rose-500 font-bold text-xs">{error}</Text>
-                                </MotiView>
-                            )}
-                        </AnimatePresence>
-                    </View>
+                {/* Typography Context */}
+                <View className="text-center mb-10 items-center">
+                    <Text className="font-bold text-3xl text-[#191C1E] mb-3">Ingresa el código</Text>
+                    <Text className="text-sm text-[#404752] text-center max-w-[280px] leading-relaxed">
+                        Pídele al líder de la mesa el código numérico de 4 a 6 dígitos para unirte a la cuenta compartida.
+                    </Text>
+                </View>
 
-                    <TouchableOpacity 
-                        onPress={handleJoin}
-                        disabled={loading}
-                        style={{ backgroundColor: code.length >= 4 ? theme.primary : theme.border }}
-                        className="w-full py-5 rounded-2xl items-center shadow-xl shadow-blue-500/20"
-                    >
-                        {loading ? (
-                            <ActivityIndicator color="black" />
-                        ) : (
-                            <Text style={{ color: code.length >= 4 ? 'black' : theme.textSecondary }} className="font-black uppercase tracking-widest">Entrar a Mesa</Text>
+                {/* OTP Input Area Simulado */}
+                <View className="w-full max-w-md items-center">
+                    <View className="flex-row space-x-2 mb-4">
+                        {[0, 1, 2, 3, 4, 5].map((idx) => (
+                            <View 
+                                key={idx}
+                                className={`w-12 h-14 items-center justify-center bg-white border rounded-xl shadow-sm ${code.length === idx ? 'border-[#2196F3] border-2 bg-[#F7F9FB]' : 'border-[#bfc7d4]/30'}`}
+                            >
+                                <Text className="text-2xl font-bold text-[#191C1E]">
+                                    {code[idx] || ''}
+                                </Text>
+                            </View>
+                        ))}
+                    </View>
+                    
+                    {/* Hidden input to capture focus */}
+                    <TextInput 
+                        value={code}
+                        onChangeText={(val) => { setCode(val.replace(/[^0-9]/g, '')); setError(''); }}
+                        keyboardType="numeric"
+                        maxLength={6}
+                        autoFocus
+                        style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%' }}
+                    />
+
+                    {/* Error State Indicator */}
+                    <AnimatePresence>
+                        {error && (
+                            <MotiView 
+                                from={{ opacity: 0, translateY: -10 }}
+                                animate={{ opacity: 1, translateY: 0 }}
+                                className="flex-row items-center space-x-1 mt-2"
+                            >
+                                <MaterialIcons name="error" size={16} color="#ba1a1a" />
+                                <Text className="text-[12px] font-medium text-[#ba1a1a]">{error}</Text>
+                            </MotiView>
                         )}
-                    </TouchableOpacity>
+                    </AnimatePresence>
                 </View>
             </KeyboardAvoidingView>
+
+            {/* Footer Action from Stitch */}
+            <View className="p-6 bg-white/80 border-t border-[#bfc7d4]/15">
+                <TouchableOpacity 
+                    onPress={handleJoin}
+                    disabled={loading || code.length < 4}
+                    className={`w-full py-4 rounded-xl shadow-md flex-row justify-center items-center active:scale-[0.95] ${code.length >= 4 ? 'bg-[#0061a4]' : 'bg-[#bfc7d4]/30'}`}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="white" />
+                    ) : (
+                        <Text className={`font-bold text-lg ${code.length >= 4 ? 'text-white' : 'text-[#707883]'}`}>
+                            Validar y Unirse
+                        </Text>
+                    )}
+                </TouchableOpacity>
+            </View>
         </SafeAreaView>
     );
 }
