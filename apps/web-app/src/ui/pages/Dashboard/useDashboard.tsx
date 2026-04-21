@@ -35,7 +35,7 @@ export const useDashboard = () => {
                             };
                         }
                     } catch (e) {
-                        console.error(`Error balance grupo ${group.id}:`, e);
+                        // Error balance
                     }
                     return { ...group, total_gastado: 0, mi_balance: 0 };
                 }));
@@ -44,10 +44,11 @@ export const useDashboard = () => {
                 setSettledGroups(groupsWithBalances.filter((g: any) => g.is_settled));
             }
         } catch (error) {
-            console.error("Error al obtener grupos:", error);
+            // Error al obtener grupos
         } finally {
             setIsLoading(false);
         }
+
     }, [userId, navigate]);
 
     useEffect(() => {

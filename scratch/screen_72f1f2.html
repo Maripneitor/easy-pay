@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Easy-Pay - Unirse a Mesa</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb77b",
+                    "tertiary": "#904d00",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-fixed": "#001d36",
+                    "inverse-on-surface": "#eff1f3",
+                    "on-tertiary-container": "#452200",
+                    "on-background": "#191c1e",
+                    "surface": "#f7f9fb",
+                    "on-tertiary-fixed-variant": "#6d3900",
+                    "surface-dim": "#d8dadc",
+                    "error": "#ba1a1a",
+                    "surface-tint": "#0061a4",
+                    "secondary-container": "#b4d4fe",
+                    "surface-variant": "#e0e3e5",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-tertiary": "#ffffff",
+                    "primary-container": "#2196f3",
+                    "on-surface-variant": "#404752",
+                    "on-error": "#ffffff",
+                    "inverse-surface": "#2d3133",
+                    "background": "#f7f9fb",
+                    "on-error-container": "#93000a",
+                    "on-secondary": "#ffffff",
+                    "primary-fixed": "#d1e4ff",
+                    "on-surface": "#191c1e",
+                    "on-primary-fixed": "#001d36",
+                    "tertiary-fixed": "#ffdcc2",
+                    "surface-bright": "#f7f9fb",
+                    "secondary": "#416084",
+                    "primary-fixed-dim": "#9ecaff",
+                    "surface-container": "#eceef0",
+                    "on-secondary-container": "#3c5c7f",
+                    "primary": "#0061a4",
+                    "tertiary-container": "#db7900",
+                    "outline": "#707883",
+                    "on-tertiary-fixed": "#2e1500",
+                    "surface-container-low": "#f2f4f6",
+                    "secondary-fixed-dim": "#a9c9f2",
+                    "secondary-fixed": "#d1e4ff",
+                    "outline-variant": "#bfc7d4",
+                    "on-primary-fixed-variant": "#00497d",
+                    "on-secondary-fixed-variant": "#28496b",
+                    "on-primary-container": "#002c4f",
+                    "surface-container-high": "#e6e8ea",
+                    "error-container": "#ffdad6",
+                    "inverse-primary": "#9ecaff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {},
+            "fontFamily": {
+                    "headline": [
+                            "Manrope"
+                    ],
+                    "body": [
+                            "Inter"
+                    ],
+                    "label": [
+                            "Inter"
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .bg-gradient-primary { background: linear-gradient(135deg, #0061a4 0%, #2196f3 100%); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface h-full flex flex-col antialiased">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 border-none bg-surface-container-low flex items-center justify-between px-6 h-16">
+<button aria-label="Go back" class="text-primary hover:bg-surface-container-high transition-colors duration-200 p-2 rounded-full active:scale-95 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline font-extrabold text-on-background text-xl tracking-tight absolute left-1/2 transform -translate-x-1/2">Join Table</h1>
+<div class="w-10"></div> <!-- Placeholder to balance flex-between -->
+</header>
+<!-- Main Content -->
+<main class="flex-grow flex flex-col justify-center items-center px-6 pt-16 pb-24">
+<!-- Icon/Illustration Container -->
+<div class="mb-8 p-4 bg-surface-container-lowest rounded-full shadow-sm relative" style="box-shadow: 0px 8px 32px 0px rgba(25, 28, 30, 0.06);">
+<div class="absolute inset-0 bg-primary-fixed-dim opacity-20 rounded-full blur-xl"></div>
+<span class="material-symbols-outlined text-5xl text-primary-container relative z-10" data-icon="dialpad">dialpad</span>
+</div>
+<!-- Typography Context -->
+<div class="text-center mb-10 max-w-sm">
+<h2 class="font-headline font-bold text-[2.25rem] leading-tight text-on-surface mb-3">Ingresa el código</h2>
+<p class="font-body text-[0.875rem] text-on-surface-variant leading-relaxed">Pídele al líder de la mesa el código numérico de 4 a 6 dígitos para unirte a la cuenta compartida.</p>
+</div>
+<!-- OTP Input Area -->
+<div class="flex flex-col items-center w-full max-w-md">
+<div class="flex space-x-2 mb-4">
+<input class="w-12 h-14 text-center font-headline font-bold text-2xl bg-surface-container-lowest border border-outline-variant rounded-xl focus:border-transparent focus:ring-2 focus:ring-primary-container focus:bg-surface-bright text-on-surface shadow-sm" maxlength="1" type="text" value="4"/>
+<input class="w-12 h-14 text-center font-headline font-bold text-2xl bg-surface-container-lowest border border-outline-variant rounded-xl focus:border-transparent focus:ring-2 focus:ring-primary-container focus:bg-surface-bright text-on-surface shadow-sm" maxlength="1" type="text" value="8"/>
+<input autofocus="" class="w-12 h-14 text-center font-headline font-bold text-2xl bg-surface-container-lowest border-2 border-primary-container rounded-xl bg-surface-bright text-on-surface shadow-sm focus:outline-none" maxlength="1" type="text" value=""/>
+<input class="w-12 h-14 text-center font-headline font-bold text-2xl bg-surface-container-lowest border border-outline-variant rounded-xl focus:border-transparent focus:ring-2 focus:ring-primary-container focus:bg-surface-bright text-on-surface shadow-sm" maxlength="1" type="text" value=""/>
+<input class="w-12 h-14 text-center font-headline font-bold text-2xl bg-surface-container-lowest border border-outline-variant rounded-xl focus:border-transparent focus:ring-2 focus:ring-primary-container focus:bg-surface-bright text-on-surface shadow-sm" maxlength="1" type="text" value=""/>
+<input class="w-12 h-14 text-center font-headline font-bold text-2xl bg-surface-container-lowest border border-outline-variant rounded-xl focus:border-transparent focus:ring-2 focus:ring-primary-container focus:bg-surface-bright text-on-surface shadow-sm" maxlength="1" type="text" value=""/>
+</div>
+<!-- Error State Indicator -->
+<div class="flex items-center space-x-1 mt-2 text-error h-6">
+<!-- Example Error Message, visually hidden by default but present in DOM for structure -->
+<span class="material-symbols-outlined text-[1rem]" data-icon="error">error</span>
+<span class="font-label text-[0.75rem] font-medium">Código inválido o mesa cerrada</span>
+</div>
+</div>
+</main>
+<!-- Footer Action -->
+<footer class="fixed bottom-0 w-full p-6 bg-surface/80 backdrop-blur-[20px] z-40" style="box-shadow: 0px -4px 32px 0px rgba(25, 28, 30, 0.04);">
+<button class="w-full bg-gradient-primary text-on-primary font-headline font-bold text-[1.125rem] py-4 rounded-xl active:scale-95 transition-transform duration-150 shadow-md">
+            Validar y Unirse
+        </button>
+</footer>
+</body></html>

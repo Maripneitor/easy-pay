@@ -26,13 +26,12 @@ export const Auth = () => {
 
     const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log("🚀 Iniciando proceso de login...");
         try {
             await login(identifier, password);
-            console.log("✅ Proceso de login finalizado.");
         } catch (err: any) {
             setError("Error inesperado al intentar iniciar sesión.");
         }
+
     };
 
     const handleRegisterSubmit = async (e: React.FormEvent) => {

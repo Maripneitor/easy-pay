@@ -51,3 +51,9 @@ _archive_google_dashboard
 logs2.txt
 mobile_logs.txt
 *.log
+
+# Auditoría Local
+BACKEND_AUDIT.md
+WEB_VIEWS_AUDIT.md
+MOBILE_VIEWS_AUDIT.md
+

@@ -35,8 +35,8 @@ export const MemberList: React.FC<MemberListProps> = ({ members }) => {
             {members.map((m) => (
                 <View 
                     key={m.id} 
-                    style={{ backgroundColor: theme.card, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8 }} 
-                    className="rounded-2xl p-4 flex-col gap-3"
+                    style={{ backgroundColor: theme.card }} 
+                    className="rounded-xl p-4 flex-col gap-3 shadow-xs"
                 >
                     <View className="flex-row items-center gap-4">
                         {m.isMe ? (
@@ -44,7 +44,7 @@ export const MemberList: React.FC<MemberListProps> = ({ members }) => {
                                 style={{ backgroundColor: theme.primary + '15' }} 
                                 className="w-12 h-12 rounded-full items-center justify-center overflow-hidden"
                             >
-                                <Text style={{ color: theme.primary, fontSize: 16 * fontScale }} className="font-black">TÚ</Text>
+                                <Text style={{ color: theme.primary, fontSize: 16 * fontScale, fontFamily: 'Manrope' }} className="font-black">TÚ</Text>
                             </View>
                         ) : (
                             <Image 
@@ -54,20 +54,20 @@ export const MemberList: React.FC<MemberListProps> = ({ members }) => {
                         )}
                         <View className="flex-1">
                             <View className="flex-row justify-between items-start">
-                                <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-bold">{m.name}</Text>
-                                <View className={`px-2 py-0.5 rounded-md ${m.isMe ? 'bg-emerald-50' : (m.paidBgClass ? 'bg-amber-50' : 'bg-emerald-50')}`}>
-                                    <Text style={{ fontSize: 12 * fontScale }} className={`font-medium ${m.isMe ? 'text-emerald-600' : (m.paidTextClass || 'text-emerald-600')}`}>
+                                <Text style={{ color: theme.text, fontSize: 16 * fontScale, fontFamily: 'Manrope' }} className="font-bold">{m.name}</Text>
+                                <View className={`px-2 py-0.5 rounded-md ${m.isMe ? 'bg-[#10B981]/10' : (m.paidBgClass ? 'bg-amber-500/10' : 'bg-[#10B981]/10')}`}>
+                                    <Text style={{ fontSize: 11 * fontScale, fontFamily: 'Inter' }} className={`font-medium ${m.isMe ? 'text-[#10B981]' : (m.paidTextClass || 'text-[#10B981]')}`}>
                                         {m.paidText}
                                     </Text>
                                 </View>
                             </View>
-                            <Text style={{ color: theme.textSecondary, fontSize: 12 * fontScale }} className="mt-0.5 opacity-70">
+                            <Text style={{ color: theme.textSecondary, fontSize: 12 * fontScale, fontFamily: 'Inter' }} className="mt-0.5 opacity-70">
                                 {m.pendingText}
                             </Text>
                         </View>
                     </View>
                     
-                    <View className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mt-1 overflow-hidden">
+                    <View style={{ backgroundColor: theme.cardSecondary }} className="w-full rounded-full h-1 mt-1 overflow-hidden">
                         <MotiView 
                             from={{ width: '0%' }}
                             animate={{ width: `${m.progress}%` }}
@@ -77,10 +77,10 @@ export const MemberList: React.FC<MemberListProps> = ({ members }) => {
                         />
                     </View>
                     <View className="flex-row justify-between">
-                        <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="uppercase tracking-widest font-semibold opacity-60">
+                        <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale, fontFamily: 'Inter' }} className="uppercase tracking-widest font-semibold opacity-60">
                             Progreso de cuota
                         </Text>
-                        <Text style={{ color: theme.text, fontSize: 10 * fontScale }} className="font-bold">
+                        <Text style={{ color: theme.text, fontSize: 10 * fontScale, fontFamily: 'Inter' }} className="font-bold">
                             {m.progress}%
                         </Text>
                     </View>

@@ -32,11 +32,7 @@ export const useAuth = () => {
                 navigate('/2fa-setup');
             }
         } catch (err: any) {
-            console.warn("⚠️ Bypass: Procediendo con modo demo debido a fallo en API:", err.message);
-            // MOCK BYPASS: Si falla el backend, igual dejamos pasar al setup
-            localStorage.setItem('temp_userId', 'demo-user-id');
-            localStorage.setItem('userEmail', userData.email || "demo@easypay.com");
-            navigate('/2fa-setup');
+            setError(err.message || 'Error en la conexión');
         } finally {
             setLoading(false);
         }
@@ -46,7 +42,6 @@ export const useAuth = () => {
     const login = async (identifier: string, password: string) => {
         setLoading(true);
         setError(null);
-        console.log("🛰️ Enviando petición de login al servidor (Port 8000)...");
 
         try {
             const response = await fetch('http://localhost:8000/api/auth/login', {
@@ -77,13 +72,7 @@ export const useAuth = () => {
             if (!response.ok) throw new Error(data.detail || 'Credenciales incorrectas');
 
         } catch (err: any) {
-            console.warn("⚠️ Bypass: Procediendo con modo demo debido a fallo en API:", err.message);
-            // MOCK BYPASS: Si falla el backend, mandamos a verificar
-            localStorage.setItem('temp_userId', 'demo-user-id');
-            localStorage.setItem('userId', 'demo-user-id'); // Persistimos también aquí para evitar el "Sesión expirada"
-            localStorage.setItem('userEmail', identifier || "demo@easypay.com");
-            localStorage.setItem('userName', identifier.split('@')[0] || "Usuario");
-            navigate('/2fa-verify');
+            setError(err.message || 'Error al conectar con el servidor');
         } finally {
             setLoading(false);
         }
@@ -92,9 +81,9 @@ export const useAuth = () => {
     // --- LOGOUT ---
     const logout = () => {
         localStorage.clear();
-        console.log("👋 Sesión cerrada.");
         navigate('/auth');
     };
+
 
     return {
         mode,

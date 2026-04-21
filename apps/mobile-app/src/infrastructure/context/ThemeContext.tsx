@@ -29,15 +29,15 @@ const THEMES: Record<ColorTheme, Theme> = {
         glassBg: 'rgba(255, 255, 255, 0.05)'
     },
     light: {
-        bg: '#F8FAFC',
+        bg: '#F7F9FB',
         card: '#FFFFFF',
-        cardSecondary: 'rgba(241, 245, 249, 0.8)',
-        primary: '#2196F3',
-        text: '#0f172a',
-        textSecondary: '#64748b',
-        border: 'rgba(33, 150, 243, 0.1)',
+        cardSecondary: '#F2F4F6',
+        primary: '#0061A4',
+        text: '#191C1E',
+        textSecondary: '#404752',
+        border: '#BFC7D4',
         isDark: false,
-        glassBg: 'rgba(0, 0, 0, 0.03)'
+        glassBg: 'rgba(247, 249, 251, 0.8)'
     },
     vibrant: {
         bg: '#1a0a0a',

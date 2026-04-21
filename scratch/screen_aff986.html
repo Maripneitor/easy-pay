@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Group Details - Miembros</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "on-secondary-fixed": "#001d36",
+                  "error": "#ba1a1a",
+                  "background": "#f7f9fb",
+                  "on-tertiary": "#ffffff",
+                  "on-primary-fixed-variant": "#00497d",
+                  "secondary": "#416084",
+                  "on-primary-fixed": "#001d36",
+                  "surface-variant": "#e0e3e5",
+                  "secondary-fixed-dim": "#a9c9f2",
+                  "on-surface-variant": "#404752",
+                  "primary": "#0061a4",
+                  "tertiary": "#904d00",
+                  "inverse-on-surface": "#eff1f3",
+                  "error-container": "#ffdad6",
+                  "tertiary-fixed-dim": "#ffb77b",
+                  "surface": "#f7f9fb",
+                  "on-tertiary-fixed-variant": "#6d3900",
+                  "on-primary": "#ffffff",
+                  "inverse-primary": "#9ecaff",
+                  "surface-container": "#eceef0",
+                  "surface-tint": "#0061a4",
+                  "tertiary-fixed": "#ffdcc2",
+                  "secondary-fixed": "#d1e4ff",
+                  "outline-variant": "#bfc7d4",
+                  "primary-fixed-dim": "#9ecaff",
+                  "on-secondary-container": "#3c5c7f",
+                  "on-error": "#ffffff",
+                  "surface-container-lowest": "#ffffff",
+                  "surface-container-low": "#f2f4f6",
+                  "surface-bright": "#f7f9fb",
+                  "on-background": "#191c1e",
+                  "primary-fixed": "#d1e4ff",
+                  "outline": "#707883",
+                  "surface-container-highest": "#e0e3e5",
+                  "on-primary-container": "#002c4f",
+                  "on-tertiary-container": "#452200",
+                  "on-tertiary-fixed": "#2e1500",
+                  "surface-container-high": "#e6e8ea",
+                  "on-secondary": "#ffffff",
+                  "primary-container": "#2196f3",
+                  "secondary-container": "#b4d4fe",
+                  "surface-dim": "#d8dadc",
+                  "tertiary-container": "#db7900",
+                  "on-error-container": "#93000a",
+                  "inverse-surface": "#2d3133",
+                  "on-surface": "#191c1e",
+                  "on-secondary-fixed-variant": "#28496b"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.25rem",
+                  "lg": "0.5rem",
+                  "xl": "0.75rem",
+                  "full": "9999px"
+          },
+          "fontFamily": {
+                  "headline": ["Manrope"],
+                  "body": ["Inter"],
+                  "label": ["Inter"]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body min-h-screen flex flex-col pb-32">
+<!-- TopAppBar -->
+<header class="bg-[#F7F9FB]/80 dark:bg-slate-900/80 backdrop-blur-lg sticky top-0 w-full z-40 bg-[#F2F4F6] dark:bg-slate-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+<div class="flex items-center justify-between px-6 h-16 w-full max-w-screen-xl mx-auto">
+<button class="text-[#2196F3] dark:text-[#64B5F6] hover:bg-[#F2F4F6] dark:hover:bg-slate-800 transition-colors active:scale-[0.97] transition-all duration-200 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<div class="flex flex-col items-center">
+<h1 class="font-manrope font-bold text-lg tracking-tight text-on-surface">Cena con Amigos</h1>
+<div class="flex items-center gap-1.5 mt-0.5">
+<div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+<span class="font-label text-[11px] text-on-surface-variant uppercase tracking-wider font-semibold">Sincronizado</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="text-[#2196F3] dark:text-[#64B5F6] hover:bg-[#F2F4F6] dark:hover:bg-slate-800 transition-colors active:scale-[0.97] transition-all duration-200 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="document_scanner">document_scanner</span>
+</button>
+<button class="text-[#2196F3] dark:text-[#64B5F6] hover:bg-[#F2F4F6] dark:hover:bg-slate-800 transition-colors active:scale-[0.97] transition-all duration-200 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="qr_code_scanner">qr_code_scanner</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Navigation Pill -->
+<div class="px-6 py-4 max-w-screen-xl mx-auto w-full sticky top-16 z-30 bg-background/90 backdrop-blur-md">
+<div class="flex bg-surface-container-low p-1 rounded-xl w-full max-w-md mx-auto relative">
+<button class="flex-1 py-2 px-4 rounded-lg text-sm font-semibold text-on-primary bg-primary-container shadow-sm transition-all text-center">Miembros</button>
+<button class="flex-1 py-2 px-4 rounded-lg text-sm font-medium text-on-surface-variant hover:text-on-surface transition-all text-center">Ítems</button>
+<button class="flex-1 py-2 px-4 rounded-lg text-sm font-medium text-on-surface-variant hover:text-on-surface transition-all text-center">Totales</button>
+</div>
+</div>
+<!-- Content: Miembros List -->
+<main class="flex-1 px-6 max-w-screen-xl mx-auto w-full flex flex-col gap-4 py-2">
+<!-- Member Card 1: Tú -->
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex flex-col gap-3">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center overflow-hidden">
+<span class="font-headline font-bold text-primary-container text-lg">TÚ</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-headline font-semibold text-on-surface">Tú</h3>
+<span class="font-body text-sm font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">Ha pagado $45.00</span>
+</div>
+<p class="font-body text-xs text-on-surface-variant mt-0.5">Pendiente $12.50</p>
+</div>
+</div>
+<div class="w-full bg-surface-container-low rounded-full h-1.5 mt-1 overflow-hidden">
+<div class="bg-primary-container h-1.5 rounded-full" style="width: 78%"></div>
+</div>
+<div class="flex justify-between text-[10px] font-label text-outline uppercase tracking-wider">
+<span>Progreso de cuota</span>
+<span>78%</span>
+</div>
+</div>
+<!-- Member Card 2: Carlos R. -->
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex flex-col gap-3">
+<div class="flex items-center gap-4">
+<img alt="Carlos R. avatar" class="w-12 h-12 rounded-full object-cover" data-alt="close-up portrait of a young man with short dark hair smiling slightly, clear lighting, professional headshot style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcF3_DF6xBBPh6y1AxatqO7wBuo0WVbtthA4oVO5nH8U0xx0t0v9Uld2TUH5RDXh7XUdZBqxzKsYq2HZeSEv5oFgl3ml5pbjMRL7DsQ063hIER6YUi-voFk2jHbaObRA2_1ESMg3dvNp_GcVzDyjY2Yq9Rkm_HiMKswNRWziZ09kIXOZFQam6ukkjetCkVOFRzwChhNW0kD8QtXmcAF1bJgpYzb176Lh9Jzpc_yw6ZpkjZggBsXyz_5i0vh4GkQq3FlxyRNdlfFOVH"/>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-headline font-semibold text-on-surface">Carlos R.</h3>
+<span class="font-body text-sm font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">Pendiente $32.00</span>
+</div>
+<p class="font-body text-xs text-on-surface-variant mt-0.5">Ha pagado $0.00</p>
+</div>
+</div>
+<div class="w-full bg-surface-container-low rounded-full h-1.5 mt-1 overflow-hidden">
+<div class="bg-amber-400 h-1.5 rounded-full" style="width: 0%"></div>
+</div>
+<div class="flex justify-between text-[10px] font-label text-outline uppercase tracking-wider">
+<span>Progreso de cuota</span>
+<span>0%</span>
+</div>
+</div>
+<!-- Member Card 3: Marta L. -->
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex flex-col gap-3">
+<div class="flex items-center gap-4">
+<img alt="Marta L. avatar" class="w-12 h-12 rounded-full object-cover" data-alt="close-up portrait of a young woman with long wavy brown hair, soft natural lighting, gentle smile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxAeiThmApaUZ0oDMj6ZC9iytDn4xIgVlguy5dAMKyyc9uZ5YCrAF4rmvM_uyuhjFzWlGEicCl318VqdZ39GR6SpFwNV4LoSdflSXYXeUQue2bj_Sj0OWyolCqcPTM4mDVKx1run-uFsfc7FZdks6YgDjrfOleTILLAzVMo7b5AqPX_BreY6WPwNxJfaD5JmMKVFkBeWTk-6wHbi0J5cGcsmz1jE8ZyWqLYgokxmcGfrdKV0ZLDHFiTWfcKBRSO76Y93VYqkNaD-AI"/>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-headline font-semibold text-on-surface">Marta L.</h3>
+<span class="font-body text-sm font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">Ha pagado $22.50</span>
+</div>
+<p class="font-body text-xs text-on-surface-variant mt-0.5">Pagado en su totalidad</p>
+</div>
+</div>
+<div class="w-full bg-surface-container-low rounded-full h-1.5 mt-1 overflow-hidden">
+<div class="bg-emerald-500 h-1.5 rounded-full" style="width: 100%"></div>
+</div>
+<div class="flex justify-between text-[10px] font-label text-outline uppercase tracking-wider">
+<span>Progreso de cuota</span>
+<span>100%</span>
+</div>
+</div>
+<!-- Member Card 4: Elena M. -->
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex flex-col gap-3">
+<div class="flex items-center gap-4">
+<img alt="Elena M. avatar" class="w-12 h-12 rounded-full object-cover" data-alt="close-up portrait of a professional woman with brown hair, smiling, natural studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHXzPzP8GzM8wzY_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z"/>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-headline font-semibold text-on-surface">Elena M.</h3>
+<span class="font-body text-sm font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">Pendiente $25.00</span>
+</div>
+<p class="font-body text-xs text-on-surface-variant mt-0.5">Ha pagado $0.00</p>
+</div>
+</div>
+<div class="w-full bg-surface-container-low rounded-full h-1.5 mt-1 overflow-hidden">
+<div class="bg-amber-400 h-1.5 rounded-full" style="width: 0%"></div>
+</div>
+<div class="flex justify-between text-[10px] font-label text-outline uppercase tracking-wider">
+<span>Progreso de cuota</span>
+<span>0%</span>
+</div>
+</div></main>
+<!-- Fixed Footer -->
+<footer class="fixed bottom-0 w-full bg-surface-container-lowest/90 backdrop-blur-2xl rounded-t-[1.5rem] shadow-[0_-8px_32px_rgba(25,28,30,0.06)] z-50 px-6 py-5 border-t-0 pb-safe">
+<div class="max-w-screen-xl mx-auto w-full flex flex-col gap-4">
+<div class="flex justify-between items-end">
+<div class="flex flex-col">
+<span class="font-label text-xs text-on-surface-variant uppercase tracking-wider font-medium">Total Acumulado</span>
+<span class="font-headline font-bold text-2xl text-on-surface">$112.00</span>
+</div>
+<div class="flex flex-col items-end text-right">
+<span class="font-label text-xs text-on-surface-variant uppercase tracking-wider font-medium">Tú debes pagar</span>
+<span class="font-headline font-bold text-2xl text-primary">$12.50</span>
+</div>
+</div>
+<button class="w-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-white font-headline font-bold text-lg py-4 rounded-xl shadow-[0_4px_16px_rgba(16,185,129,0.2)] active:scale-[0.98] transition-transform flex justify-center items-center gap-2">
+<span>Cerrar y Dividir Mesa</span>
+<span class="material-symbols-outlined text-xl" data-icon="receipt_long">receipt_long</span>
+</button>
+</div>
+</footer>
+</body></html>

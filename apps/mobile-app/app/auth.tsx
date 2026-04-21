@@ -25,9 +25,8 @@ import { useAuth } from '../context/AuthContext';
 const { width } = Dimensions.get('window');
 
 export default function AuthScreen() {
-    console.log('AuthScreen rendering...');
     const { theme, fontScale, cycleTheme } = useTheme();
-    const router = useRouter(); // Use the hook instead of singleton
+    const router = useRouter();
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -38,7 +37,6 @@ export default function AuthScreen() {
     const [isGuestPrompt, setIsGuestPrompt] = useState(false);
     const [guestName, setGuestName] = useState('');
     const { saveGuestSession, saveSession } = useAuth();
-
     const handleAuth = async () => {
         if (!email || !password || (!isLogin && !name)) {
             setError('Por favor completa todos los campos.');
@@ -69,7 +67,6 @@ export default function AuthScreen() {
                     router.replace('/(tabs)/dashboard');
                     return;
                 }
-                // ... (rest of logic)
             } else {
                 const response = await fetch(`${API_URL}/api/auth/register`, {
                     method: 'POST',
@@ -88,12 +85,12 @@ export default function AuthScreen() {
                 }
             }
         } catch (err) {
-            console.error('Auth error:', err);
             setError('No se pudo conectar con el servidor.');
         } finally {
             setLoading(false);
         }
     };
+
 
     const handleGuestEntry = async () => {
         if (!guestName.trim()) {

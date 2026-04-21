@@ -82,10 +82,11 @@ export const useGroupDetail = (group_id: string) => {
             }
 
         } catch (error) {
-            console.error("❌ Error cargando el detalle del grupo:", error);
+            // Error cargando el detalle
         } finally {
             setLoading(false);
         }
+
     }, [group_id]);
 
     useEffect(() => {

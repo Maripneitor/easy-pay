@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { 
     ScrollView, 
     View, 
@@ -9,7 +9,8 @@ import {
     Animated, 
     TouchableOpacity, 
     StyleSheet,
-    RefreshControl
+    RefreshControl,
+    ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -22,9 +23,8 @@ const AnimatePresence = ({ children }: any) => children;
 const MotiView = View as any;
 const MotiText = Text as any;
 import { useAuth } from '../../context/AuthContext';
-import { useMesa } from '../../context/MesaContext';
+import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
 
-import { SHARED_USER } from '../../src/infrastructure/constants/MockUser';
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.82;
 const CARD_SPACING = (width - CARD_WIDTH) / 2;
@@ -33,27 +33,49 @@ const CARD_SPACING = (width - CARD_WIDTH) / 2;
 export default function DashboardScreen() {
     const { theme, fontScale, cycleTheme } = useTheme();
     const { user } = useAuth();
-    const { activeMesa, createMesa } = useMesa();
     const router = useRouter();
+
     const [refreshing, setRefreshing] = useState(false);
     const [isBalanceVisible, setIsBalanceVisible] = useState(true);
     const scrollX = useRef(new Animated.Value(0)).current;
 
-    // Define STATS dynamically to reflect the theme
+    // Fetch real data from repository
+    const [userGroups, setUserGroups] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const fetchGroups = useCallback(async () => {
+        if (!user?.id) return;
+        setIsLoading(true);
+        try {
+            const groups = await groupRepository.findByUser(user.id);
+            setUserGroups(Array.isArray(groups) ? groups : []);
+        } catch (err) {
+            // Silently fail for UI cleanup
+        } finally {
+            setIsLoading(false);
+            setRefreshing(false);
+        }
+    }, [user?.id]);
+
+    useEffect(() => {
+        fetchGroups();
+    }, [fetchGroups]);
+
+    // Calculate dynamic stats based on real groups
+    const totalSpent = userGroups.reduce((acc, g) => acc + (g.total_gastado || 0), 0);
     const STATS = [
-        { id: '1', label: 'Saldo Total', amount: 8450.00, color: [theme.primary, `${theme.primary}80`, `${theme.primary}40`], icon: 'account-balance-wallet', trend: '+12%' },
-        { id: '2', label: 'Me Deben', amount: 480.00, color: ['#06b6d4', '#3b82f6'], icon: 'call-made', trend: '3 personas' },
-        { id: '3', label: 'Debes', amount: 320.00, color: ['#f43f5e', '#fb7185'], icon: 'call-received', trend: '2 deudas' },
+        { id: '1', label: 'Consumo Total', amount: totalSpent, color: [theme.primary, `${theme.primary}80`, `${theme.primary}40`], icon: 'account-balance-wallet', trend: `${userGroups.length} grupos` },
+        { id: '2', label: 'Actividad', amount: userGroups.filter(g => !g.is_settled).length, color: ['#06b6d4', '#3b82f6'], icon: 'call-made', trend: 'En curso' },
+        { id: '3', label: 'Liquidado', amount: userGroups.filter(g => g.is_settled).length, color: ['#f43f5e', '#fb7185'], icon: 'call-received', trend: 'Finalizado' },
     ];
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
-        setTimeout(() => setRefreshing(false), 2000);
-    }, []);
+        fetchGroups();
+    }, [fetchGroups]);
 
     const handleCreateMesa = async () => {
-        await createMesa('Mesa Sonora Grill', user?.id || '1');
-        router.push('/new-mesa');
+        router.push('/create-group');
     };
 
     const QUICK_ACTIONS = [
@@ -61,6 +83,7 @@ export default function DashboardScreen() {
         { id: 'join', label: 'Unirse mesa', icon: 'qr-code-scanner', route: '/(tabs)/qr', color: '#10b981' },
         { id: 'settle', label: 'Liquidar', icon: 'handshake', route: '/settle-up', color: '#a855f7' },
     ];
+
 
     const renderHeader = () => (
         <View style={{ backgroundColor: theme.bg }} className="px-6 py-8 flex-row justify-between items-center">
@@ -179,31 +202,7 @@ export default function DashboardScreen() {
                     </Animated.ScrollView>
                 </View>
 
-                {/* 2. Mesa Activa (Si existe) */}
-                {activeMesa && (
-                    <MotiView 
-                        from={{ opacity: 0, translateY: 20 }}
-                        animate={{ opacity: 1, translateY: 0 }}
-                        className="px-6 mt-8"
-                    >
-                        <TouchableOpacity 
-                            onPress={() => router.push('/new-mesa')}
-                            style={{ backgroundColor: theme.primary }}
-                            className="p-6 rounded-[32px] flex-row items-center justify-between shadow-xl shadow-blue-500/20"
-                        >
-                            <View className="flex-row items-center gap-4">
-                                <View className="w-12 h-12 bg-white/20 rounded-2xl items-center justify-center">
-                                    <MaterialIcons name="restaurant" size={24} color="black" />
-                                </View>
-                                <View>
-                                    <Text className="text-black font-black text-lg">{activeMesa.nombre}</Text>
-                                    <Text className="text-black/60 font-bold text-[10px] uppercase tracking-widest">Mesa en curso • {activeMesa.participantes.length + 1} pers.</Text>
-                                </View>
-                            </View>
-                            <Ionicons name="arrow-forward-circle" size={32} color="black" />
-                        </TouchableOpacity>
-                    </MotiView>
-                )}
+
 
                 {/* 3. Acciones Rápidas */}
                 <View className="px-6 mt-10">
@@ -253,25 +252,13 @@ export default function DashboardScreen() {
                     </View>
 
                     <View className="gap-4">
-                        {[
-                            { id: '1', title: 'Cena Amigos', group: 'Mesa #4', date: 'Hoy, 2:30 PM', amount: 320.0, type: 'owe', status: 'Pendiente', icon: 'restaurant' },
-                            { id: '2', title: 'Uber Fiesta', group: 'Personal', date: 'Ayer', amount: 15.50, type: 'receive', status: 'Completado', icon: 'directions-car' },
-                            { id: '3', title: 'Súper Semanal', group: 'Roomies', date: 'Hace 2 días', amount: 1200.0, type: 'total', status: 'Completado', icon: 'shopping-basket' },
-                        ].length > 0 ? (
-                            [
-                                { id: '1', title: 'Cena Amigos', group: 'Mesa #4', date: 'Hoy, 2:30 PM', amount: 320.0, type: 'owe', status: 'Pendiente', icon: 'restaurant' },
-                                { id: '2', title: 'Uber Fiesta', group: 'Personal', date: 'Ayer', amount: 15.50, type: 'receive', status: 'Completado', icon: 'directions-car' },
-                                { id: '3', title: 'Súper Semanal', group: 'Roomies', date: 'Hace 2 días', amount: 1200.0, type: 'total', status: 'Completado', icon: 'shopping-basket' },
-                            ].map(item => (
+                        {isLoading ? (
+                            <ActivityIndicator size="large" color={theme.primary} />
+                        ) : userGroups.length > 0 ? (
+                            userGroups.map(item => (
                                 <Pressable 
                                     key={item.id}
-                                    onPress={() => {
-                                        if (item.status === 'Pendiente') {
-                                            router.push('/new-mesa');
-                                        } else {
-                                            router.push({ pathname: '/expense/receipt/[id]', params: { id: item.id } } as any);
-                                        }
-                                    }}
+                                    onPress={() => router.push({ pathname: '/(tabs)/group/[id]', params: { id: item.id } } as any)}
                                 >
                                     {({ pressed }: { pressed: boolean }) => (
                                         <MotiView 
@@ -284,28 +271,24 @@ export default function DashboardScreen() {
                                             className="border rounded-[32px] p-5 flex-row items-center gap-4"
                                         >
                                             <View style={{ backgroundColor: theme.glassBg }} className="w-14 h-14 rounded-[20px] items-center justify-center">
-                                                <MaterialIcons name={item.icon as any} size={26} color={theme.primary} />
+                                                <MaterialIcons name="restaurant" size={26} color={theme.primary} />
                                             </View>
                                             <View className="flex-1">
-                                                <Text style={{ fontSize: 15 * fontScale, color: theme.text }} className="font-black tracking-tight">{item.title}</Text>
+                                                <Text style={{ fontSize: 15 * fontScale, color: theme.text }} className="font-black tracking-tight">{item.nombre || 'Sin nombre'}</Text>
                                                 <View className="flex-row items-center gap-2 mt-1">
-                                                    <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-widest">{item.group}</Text>
-                                                    <Text style={{ fontSize: 10 * fontScale }} className="text-slate-500 font-medium">• {item.date}</Text>
+                                                    <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-widest">{item.codigo_invitacion}</Text>
+                                                    <Text style={{ fontSize: 10 * fontScale }} className="text-slate-500 font-medium">• {new Date(item.fecha_creacion).toLocaleDateString()}</Text>
                                                 </View>
                                             </View>
                                             <View className="items-end">
                                                 <Text style={{ 
                                                     fontSize: 15 * fontScale, 
-                                                    color: item.type === 'owe' ? '#f43f5e' : item.type === 'receive' ? '#10b981' : theme.text 
+                                                    color: theme.text 
                                                 }} className="font-black">
-                                                    {isBalanceVisible ? (
-                                                        item.type === 'owe' ? `- $${item.amount.toFixed(2)}` :
-                                                        item.type === 'receive' ? `+ $${item.amount.toFixed(2)}` :
-                                                        `$${item.amount.toFixed(2)}`
-                                                    ) : `$ ***.**`}
+                                                    {isBalanceVisible ? `$${(item.total_gastado || 0).toFixed(2)}` : `$ ***.**`}
                                                 </Text>
-                                                <View style={{ backgroundColor: item.status === 'Pendiente' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
-                                                    <Text style={{ fontSize: 8 * fontScale, color: item.status === 'Pendiente' ? '#f59e0b' : '#10b981' }} className="font-black uppercase">{item.status}</Text>
+                                                <View style={{ backgroundColor: item.is_settled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
+                                                    <Text style={{ fontSize: 8 * fontScale, color: item.is_settled ? '#10b981' : '#f59e0b' }} className="font-black uppercase">{item.is_settled ? 'Saldado' : 'Activo'}</Text>
                                                 </View>
                                             </View>
                                         </MotiView>
@@ -313,6 +296,7 @@ export default function DashboardScreen() {
                                 </Pressable>
                             ))
                         ) : (
+
                             <MotiView 
                                 from={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}

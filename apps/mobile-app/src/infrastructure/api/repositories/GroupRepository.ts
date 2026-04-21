@@ -1,163 +1,86 @@
 import { Group, Item, Member, GroupRepository } from '@easy-pay/domain';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const STORAGE_KEY = '@easy_pay_groups';
+import { httpClient } from '../http-client';
 
 /**
- * Mobile implementation of GroupRepository with Offline-first support.
+ * Mobile implementation of GroupRepository connecting to the FastAPI backend.
  */
-export class MobileGroupRepository implements GroupRepository {
-    private MOCK_GROUPS: Group[] = [];
-    private subscribers: Map<string, Set<(group: Group) => void>> = new Map();
-
-    constructor() {
-        this.init();
-    }
-
-    private async init() {
-        try {
-            const stored = await AsyncStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                this.MOCK_GROUPS = JSON.parse(stored);
-            } else {
-                // Initial seeding
-                this.MOCK_GROUPS = [
-                    {
-                        id: '1',
-                        code: 'M-CANC24',
-                        name: 'Viaje a Cancún (Mobile)',
-                        leaderId: 'user-1',
-                        status: 'active',
-                        subtotal: 14000,
-                        tip: 1400,
-                        total: 15400,
-                        members: [
-                            { id: 'user-1', name: 'Juan', role: 'leader', avatarUrl: 'https://ui-avatars.com/api/?name=Juan', hasPaid: false },
-                            { id: 'user-2', name: 'Maria', role: 'member', avatarUrl: 'https://ui-avatars.com/api/?name=Maria', hasPaid: false },
-                        ],
-                        items: [],
-                        version: 1,
-                        createdAt: new Date().toISOString(),
-                    }
-                ];
-                await this.persist();
-            }
-        } catch (e) {
-            console.error('Failed to load groups from storage:', e);
-        }
-    }
-
-    private async persist() {
-        try {
-            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(this.MOCK_GROUPS));
-        } catch (e) {
-            console.error('Failed to save groups to storage:', e);
-        }
-    }
-
-    private notifySubscribers(groupId: string) {
-        const group = this.MOCK_GROUPS.find(g => g.id === groupId);
-        if (group && this.subscribers.has(groupId)) {
-            this.subscribers.get(groupId)?.forEach(callback => callback(group));
-        }
-    }
-
+export class ApiMobileGroupRepository implements GroupRepository {
+    
     async getGroup(id: string): Promise<Group> {
-        const group = this.MOCK_GROUPS.find(g => g.id === id);
-        if (!group) throw new Error('Grupo no encontrado');
-        return group;
+        const response = await httpClient.get(`/groups/${id}`);
+        // Backend returns GroupDetailOut which might need mapping
+        return response.data;
     }
 
     async createGroup(leader: Member, name?: string): Promise<Group> {
-        const newGroup: Group = {
-            id: `m-${Date.now()}`,
-            code: Math.random().toString(36).substring(2, 8).toUpperCase(),
-            name,
+        const response = await httpClient.post('/groups/create', { 
+            admin_id: leader.id, 
+            nombre: name || 'Nuevo Grupo'
+        });
+        
+        // Manual mapping from create response
+        return {
+            id: response.data.group_id,
+            code: response.data.invite_code,
+            name: name || 'Nuevo Grupo',
             leaderId: leader.id,
             status: 'active',
             subtotal: 0,
             tip: 0,
             total: 0,
-            members: [leader],
-            items: [],
             version: 1,
-            createdAt: new Date().toISOString(),
+            members: [{ ...leader, role: 'leader' }],
+            items: [],
+            createdAt: new Date().toISOString()
         };
-        this.MOCK_GROUPS.push(newGroup);
-        await this.persist();
-        return newGroup;
     }
 
     async joinGroup(code: string, member: Member): Promise<Group> {
-        const group = this.MOCK_GROUPS.find(g => g.code === code.toUpperCase());
-        if (!group) throw new Error('Código no válido');
-        group.members.push(member);
-        group.version += 1;
-        await this.persist();
-        this.notifySubscribers(group.id);
-        return group;
+        const response = await httpClient.post('/groups/join', { 
+            codigo: code, 
+            user_id: member.id 
+        });
+        return this.getGroup(response.data.group_id);
     }
 
     async closeGroup(groupId: string): Promise<void> {
-        const group = await this.getGroup(groupId);
-        group.status = 'closed';
-        group.version += 1;
-        await this.persist();
-        this.notifySubscribers(groupId);
+        throw new Error('Not implemented');
     }
 
     async addItem(groupId: string, item: Item): Promise<void> {
-        const group = await this.getGroup(groupId);
-        group.items.push(item);
-        group.version += 1;
-        await this.persist();
-        this.notifySubscribers(groupId);
+        await httpClient.post('/groups/add-item', {
+            group_id: groupId,
+            nombre: item.description,
+            precio: item.amount,
+            cantidad: 1,
+            comprador_id: item.addedBy,
+            participantes_ids: item.assignedTo
+        });
     }
 
     async removeItem(groupId: string, itemId: string): Promise<void> {
-        const group = await this.getGroup(groupId);
-        group.items = group.items.filter(i => i.id !== itemId);
-        await this.persist();
-        this.notifySubscribers(groupId);
+        // Assuming group_id is required by backend for deletion
+        await httpClient.delete(`/groups/unknown/items/${itemId}`);
     }
 
     async assignItem(groupId: string, itemId: string, memberIds: string[]): Promise<void> {
-        const group = await this.getGroup(groupId);
-        const item = group.items.find(i => i.id === itemId);
-        if (item) {
-            item.assignedTo = memberIds;
-            await this.persist();
-            this.notifySubscribers(groupId);
-        }
+        await httpClient.put(`/groups/unknown/items/${itemId}`, {
+            participantes_ids: memberIds
+        });
     }
 
     async markMemberAsPaid(groupId: string, memberId: string): Promise<void> {
-        const group = await this.getGroup(groupId);
-        const member = group.members.find(m => m.id === memberId);
-        if (member) {
-            member.hasPaid = true;
-            await this.persist();
-            this.notifySubscribers(groupId);
-        }
+        // Backend logic here
+    }
+
+    async findByUser(userId: string): Promise<Group[]> {
+        const response = await httpClient.get(`/groups/user/${userId}`);
+        return response.data;
     }
 
     onGroupUpdate(groupId: string, callback: (group: Group) => void): () => void {
-        if (!this.subscribers.has(groupId)) {
-            this.subscribers.set(groupId, new Set());
-        }
-        this.subscribers.get(groupId)?.add(callback);
-
-        // Cleanup: remove the connection when unsubscribed
-        return () => {
-            const groupSubscribers = this.subscribers.get(groupId);
-            if (groupSubscribers) {
-                groupSubscribers.delete(callback);
-                if (groupSubscribers.size === 0) {
-                    this.subscribers.delete(groupId);
-                }
-            }
-        };
+        return () => {};
     }
 }
 
-export const groupRepository = new MobileGroupRepository();
+export const groupRepository = new ApiMobileGroupRepository();

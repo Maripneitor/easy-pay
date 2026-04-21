@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TokenStorage } from '../src/infrastructure/security/TokenStorage';
 import { User } from '../src/domain/types';
 
 interface AuthContextType {
@@ -24,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const loadSession = async () => {
+
         try {
             const savedUser = await AsyncStorage.getItem('user_data');
             
@@ -32,25 +34,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUser(parsedUser);
                 
                 if (!parsedUser.isGuest) {
-                    const savedToken = await SecureStore.getItemAsync('user_token');
+                    const savedToken = await TokenStorage.getToken();
                     if (savedToken) setToken(savedToken);
                 }
             }
         } catch (e) {
-            console.error('Failed to load session', e);
-        } finally {
+            // Error
+        }
+ finally {
             setIsLoading(false);
         }
     };
 
     const saveSession = async (newToken: string, newUser: User) => {
         try {
-            await SecureStore.setItemAsync('user_token', newToken);
+            await TokenStorage.setToken(newToken);
             await AsyncStorage.setItem('user_data', JSON.stringify(newUser));
             setToken(newToken);
             setUser(newUser);
         } catch (e) {
-            console.error('Failed to save session', e);
+            // Error
         }
     };
 
@@ -60,20 +63,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser({ ...newUser, isGuest: true });
             setToken(null);
         } catch (e) {
-            console.error('Failed to save guest session', e);
+            // Error
         }
     };
 
     const logout = async () => {
         try {
-            await SecureStore.deleteItemAsync('user_token');
+            await TokenStorage.clear();
             await AsyncStorage.removeItem('user_data');
             setToken(null);
             setUser(null);
         } catch (e) {
-            console.error('Failed to logout', e);
+            // Error
         }
     };
+
 
     return (
         <AuthContext.Provider value={{ user, token, saveSession, saveGuestSession, logout, isLoading }}>

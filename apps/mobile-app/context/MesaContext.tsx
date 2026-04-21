@@ -55,9 +55,10 @@ export const MesaProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (storedMesa) setActiveMesa(JSON.parse(storedMesa));
             if (storedQueue) setSyncQueue(JSON.parse(storedQueue));
         } catch (error) {
-            console.error('Error loading persisted data:', error);
+            // Error loading persisted data
         }
     };
+
 
     // 2. Persist whenever state changes
     useEffect(() => {
@@ -117,9 +118,9 @@ export const MesaProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const joinMesa = async (codigo: string): Promise<boolean> => {
         // Mock join for now
-        console.log('Joining mesa with code:', codigo);
         return true;
     };
+
 
     const addItem = async (itemData: Omit<Item, 'id'>) => {
         if (!activeMesa) return;
