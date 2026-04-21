@@ -21,9 +21,11 @@ Para trabajar con **Easy-Pay** de forma 100% local, sigue este flujo cada vez qu
 ### 1. Flujo de Encendido (Startup)
 Sigue este orden para que todos los servicios se comuniquen correctamente:
 
-1.  **Desarrollo Rápido (Recomendado):**
-    *   **Dispositivo Físico:** Instala "Expo Go" en tu teléfono. Al ejecutar `npx expo start`, escanea el código QR. Elimina la necesidad de Android Studio y usa tu cámara real.
-    *   **Prototipado en Web:** Presiona la tecla `w` en la terminal para abrir la app en el navegador instantáneamente de forma súper rápida para UI.
+> [!TIP]
+> **Desarrollo Rápido (Recomendado):**
+> *   **Dispositivo Físico:** Instala "Expo Go" en tu teléfono. Al ejecutar `npx expo start`, escanea el código QR. Elimina la necesidad de Android Studio y usa tu cámara real.
+> *   **Prototipado en Web:** Presiona la tecla `w` en la terminal para abrir la app en el navegador instantáneamente de forma súper rápida para UI.
+
 2.  **Guía de Windows (Nativa):** Si necesitas obligatoriamente el simulador de Android Studio, consulta la [Guía de Windows](./README_WINDOWS.md).
 
 2.  **Encender la DB y Backend (Docker):**
@@ -32,11 +34,12 @@ Sigue este orden para que todos los servicios se comuniquen correctamente:
     docker compose up -d
     ```
 
-3.  **Verificar Variables (Si cambias de Red/WiFi):**
-    Asegúrate de actualizar tu IP en el archivo `.env` de la raíz si el simulador no conecta:
-    ```env
-    EXPO_PUBLIC_API_URL=http://192.168.X.X:8000
-    ```
+> [!IMPORTANT]
+> **Verificar Variables (Si cambias de Red/WiFi):**
+> Asegúrate de actualizar tu IP en el archivo `.env` de la raíz si el simulador no conecta (no uses `localhost` para móviles):
+> ```env
+> EXPO_PUBLIC_API_URL=http://192.168.X.X:8000
+> ```
 
 4.  **Encender la App Mobile (Metro):**
     En otra terminal:
@@ -63,7 +66,9 @@ Para liberar memoria y procesos de red:
 ### 3. Tips de Desarrollo
 *   **Logs del Backend:** `docker compose logs -f backend` (para ver errores de 2FA o Login).
 *   **Reiniciar Backend:** `docker compose restart backend`.
-*   **Limpieza Profunda:** `docker compose down -v` (borra la DB local si hay datos corruptos).
+
+> [!CAUTION]
+> **Limpieza Profunda:** `docker compose down -v` borra definitivamente la base de datos local. Úsalo solo si detectas datos corruptos y no te importa perder el historial local.
 
 ---
 

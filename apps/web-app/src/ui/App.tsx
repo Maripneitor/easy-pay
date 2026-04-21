@@ -22,6 +22,7 @@ const NotificationsPage = lazy(() => import('./pages/Notifications').then(module
 const ProfilePage = lazy(() => import('./pages/Profile').then(module => ({ default: module.ProfilePage })));
 const PersonalData = lazy(() => import('./pages/Profile/PersonalData').then(module => ({ default: module.PersonalData })));
 const SettleUp = lazy(() => import('./pages/SettleUp').then(module => ({ default: module.SettleUp })));
+const RegisterExpense = lazy(() => import('./pages/RegisterExpense').then(module => ({ default: module.RegisterExpense })));
 const JoinGroup = lazy(() => import('./pages/JoinGroup').then(module => ({ default: module.JoinGroup })));
 
 // 2FA Components (Importados desde el index.ts de su carpeta)

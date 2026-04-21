@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 export const useGroupDetail = (group_id: string) => {
-    const [activeTab, setActiveTab] = useState<'activity' | 'balances' | 'members'>('activity');
+    const [activeTab, setActiveTab] = useState<'activity' | 'balances' | 'members' | 'payments'>('activity');
     const [loading, setLoading] = useState(true);
     const [groupName, setGroupName] = useState('');
     const [groupCode, setGroupCode] = useState('');

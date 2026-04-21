@@ -17,6 +17,7 @@ export interface ApiGroup {
     subtotal: number;
     tip: number;
     total: number;
+    version?: number;
     created_at?: string;
 }
 
@@ -37,6 +38,7 @@ export const toGroup = (apiGroup: ApiGroup): Group => ({
     subtotal:  apiGroup.subtotal ?? 0,
     tip:       apiGroup.tip ?? 0,
     total:     apiGroup.total ?? 0,
+    version:   apiGroup.version ?? 1,
     createdAt: apiGroup.created_at,
 });
 

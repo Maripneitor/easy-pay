@@ -2,10 +2,11 @@
 
 Esta guía explica cómo correr la aplicación **Easy-Pay** en Windows de forma nativa utilizando el simulador de Android Studio.
 
-> **💡 Nota Alternativa Rápida**: Si tu PC tiene poca memoria o experimentas "congelamientos" con Android Studio, te recomendamos fuertemente **Desarrollar en Dispositivo Físico**:
-> 1. Instala la app "Expo Go" en tu teléfono web/iOS.
-> 2. Ejecuta `npx expo start` y escanea el código QR con tu móvil. ¡Es 10x más rápido y puedes probar cámara u OCR!
-> 3. También puedes usar presionar `w` para probar en la Web de inmediato.
+> [!TIP]
+> **Desarrollo Rápido (Recomendado):** Si tu PC tiene poca memoria o experimentas "congelamientos" con Android Studio, te recomendamos fuertemente **Desarrollar en Dispositivo Físico**:
+> 1. Instala la app "Expo Go" en tu teléfono móvil.
+> 2. Ejecuta `npx expo start` y escanea el código QR. ¡Es 10x más rápido y puedes probar cámara u OCR!
+> 3. También puedes presionar `w` para probar en Web de inmediato.
 
 ## 🛠️ 1. Requisitos Previos
 
@@ -64,13 +65,15 @@ Una vez que la aplicación esté corriendo en el simulador:
 
 ## 🌐 4. Problemas de Conexión (IP)
 
-Si la app no se conecta al backend local, revisa el archivo `.env` en la raíz y asegúrate de que `EXPO_PUBLIC_API_URL` apunte a tu **IP local** (no uses `localhost` en el móvil):
-
-1. Obtén tu IP: `ipconfig` (busca IPv4 de tu adaptador WiFi/Ethernet).
-2. Actualiza el `.env`:
-   ```env
-   EXPO_PUBLIC_API_URL=http://192.168.1.XX:8000
-   ```
+> [!IMPORTANT]
+> **Problemas de Conexión (IP):**
+> Si la app no se conecta al backend local, revisa el archivo `.env` en la raíz y asegúrate de que `EXPO_PUBLIC_API_URL` apunte a tu **IP local**. **No uses `localhost`** en el dispositivo móvil/simulador.
+>
+> 1. Obtén tu IP con `ipconfig`.
+> 2. Actualiza el `.env`:
+>    ```env
+>    EXPO_PUBLIC_API_URL=http://192.168.1.XX:8000
+>    ```
 
 ---
 
@@ -80,4 +83,6 @@ Si algo se queda "pegado" o no reconoce los cambios:
 
 1. Cierra la terminal de Metro (Ctrl + C).
 2. Ejecuta: `npm start` nuevamente y presiona `a`.
-3. Si persiste y necesitas limpiar la caché: `npm start -- -c` (dentro de apps/mobile-app).
+
+> [!TIP]
+> Si los errores persisten, intenta limpiar la caché con: `npm start -- -c` dentro de `apps/mobile-app`.

@@ -34,6 +34,7 @@ const MOCK_GROUPS: Group[] = [
         subtotal: 14_000,
         tip: 1_400,   // 10% (< $3000 rule doesn't apply here — this is total subtotal)
         total: 15_400,
+        version: 1,
         members: [
             { id: 'user-1', name: 'Juan',  role: 'leader', avatarUrl: 'https://ui-avatars.com/api/?name=Juan',  hasPaid: false },
             { id: 'user-2', name: 'María', role: 'member', avatarUrl: 'https://ui-avatars.com/api/?name=Maria', hasPaid: false },
@@ -53,6 +54,7 @@ const MOCK_GROUPS: Group[] = [
         subtotal: 3_200,
         tip: 160,     // 5% (>= $3000)
         total: 3_360,
+        version: 1,
         members: [
             { id: 'user-3', name: 'Ana',    role: 'leader', avatarUrl: 'https://ui-avatars.com/api/?name=Ana',    hasPaid: true  },
             { id: 'user-4', name: 'Luis',   role: 'member', avatarUrl: 'https://ui-avatars.com/api/?name=Luis',   hasPaid: false },
@@ -102,6 +104,7 @@ export class ApiGroupRepository implements GroupRepository {
                     subtotal:  0,
                     tip:       0,
                     total:     0,
+                    version:   1,
                     members:   [{ ...leader, role: 'leader' }],
                     items:     [],
                     createdAt: new Date().toISOString(),
