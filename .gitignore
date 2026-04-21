@@ -48,9 +48,13 @@ _archive_google_dashboard
 
 # Stitch and temporary files
 *stitch*
+stitch/
+stitch_downloads/
+scratch/*.html
 logs2.txt
 mobile_logs.txt
 *.log
+
 
 # Auditoría Local
 BACKEND_AUDIT.md
