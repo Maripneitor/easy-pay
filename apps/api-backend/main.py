@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 # IMPORTANTE: Asegúrate de importar el router de usuarios también
 from user.infrastructure.routes.route_user import user_router 
+from group.infrastructure.routes.route_group import group_router
 
 app = FastAPI(
     title="Easy-Pay API",
@@ -9,10 +10,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configurar CORS (Puerto del Frontend: 5173)
+# Configurar CORS (Puertos locales de desarrollo)
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "http://localhost:8081", # Mobile local dev
+    "http://localhost:19000", # Expo Go
+    "http://localhost:19006", # Web Expo
 ]
 
 app.add_middleware(
@@ -23,16 +29,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Registramos los routers
+# Registramos los routers unificados
 app.include_router(user_router)
+app.include_router(group_router)
 
 
 @app.get("/")
 def read_root():
     return {
-        "mensaje": "Bienvenido a la API de Easy-Pay 🐍",
+        "mensaje": "Bienvenido a la API Unificada de Easy-Pay 🐍",
         "docs": "/docs",
-        "status": "active"
+        "status": "active",
+        "mode": "stable_rollback_v1"
     }
 
 @app.get("/api/health")

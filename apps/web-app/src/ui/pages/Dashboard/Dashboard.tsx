@@ -1,13 +1,14 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
 import { PageHeader } from '@ui/components/PageHeader';
+import { useOutletContext } from 'react-router-dom';
 import { useDashboard } from './useDashboard';
 import { GroupCard } from './components/GroupCard';
 import { DashboardSkeleton } from './components/DashboardSkeleton';
 
 export const Dashboard: React.FC = () => {
+    const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
     const {
-        toggleSidebar,
         navigate,
         allActiveGroups = [],
         isLoading

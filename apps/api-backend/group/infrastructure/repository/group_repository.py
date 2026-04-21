@@ -36,14 +36,23 @@ class MongoGroupRepository:
         integrantes_ids = group.get("integrantes", [])
 
         # 2. Buscar nombres en la base de datos de Auth
-        # Solo traemos los campos que nos interesan: nombre y _id
+        # Filtramos solo los que sean ObjectIds válidos para evitar errores con 'demo-user-id'
+        valid_uids = [ObjectId(uid) for uid in integrantes_ids if ObjectId.is_valid(uid)]
+        
         usuarios_cursor = self.users_collection.find(
-            {"_id": {"$in": [ObjectId(uid) for uid in integrantes_ids]}},
+            {"_id": {"$in": valid_uids}},
             {"nombre": 1}
         )
         
         # 3. Mapear a una lista de objetos {id, nombre}
         miembros_detallados = []
+        
+        # Si incluimos al usuario demo, lo agregamos manualmente si está en la lista
+        if "demo-user-id" in integrantes_ids:
+            miembros_detallados.append({
+                "id": "demo-user-id",
+                "nombre": "Usuario Demo (Tú)"
+            })
         async for user in usuarios_cursor:
             miembros_detallados.append({
                 "id": str(user["_id"]),

@@ -49,7 +49,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         setLoading(true);
         try {
             // Reemplazar localhost por IP si es necesario, pero siguiendo el contrato
-            const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8002';
+            const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
             
             const payload = {
                 group_id: groupId,

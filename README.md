@@ -70,6 +70,44 @@ Para liberar memoria y procesos de red:
 > [!CAUTION]
 > **Limpieza Profunda:** `docker compose down -v` borra definitivamente la base de datos local. Úsalo solo si detectas datos corruptos y no te importa perder el historial local.
 
+## 🪟 Configuración Inicial en Windows (Expo)
+
+Si estás desarrollando desde Windows, sigue estos pasos para asegurar que el entorno de Expo funcione correctamente:
+
+### 1. Requisitos de Software
+*   **Node.js LTS**: Descarga e instala la versión LTS desde [nodejs.org](https://nodejs.org/).
+*   **Git for Windows**: Necesario para clonar y gestionar el repositorio.
+*   **Java JDK 17**: Recomendado para compatibilidad con Android Studio.
+
+### 2. Preparación de la Terminal
+> [!WARNING]
+> **Error de Scripts en PowerShell:**
+> Por defecto, Windows bloquea la ejecución de scripts. Si recibes un error al ejecutar `npm` o `expo`, abre PowerShell como **Administrador** y ejecuta:
+> `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+
+### 3. Pasos para Correr la App
+1.  **Instalar dependencias**:
+    ```powershell
+    npm install --legacy-peer-deps
+    ```
+2.  **Navegar a la carpeta móvil**:
+    ```powershell
+    cd apps/mobile-app
+    ```
+3.  **Iniciar Expo**:
+    ```powershell
+    npx expo start
+    ```
+
+> [!IMPORTANT]
+> **Conectividad y Firewall:**
+> Windows Defender suele bloquear las conexiones entrantes de Expo. 
+> *   Asegúrate de que tu PC y tu teléfono estén en la **misma red WiFi**.
+> *   Si el código QR no carga, intenta cambiar el modo de conexión a **Tunnel** ejecutando: `npx expo start --tunnel`.
+
+### 4. Uso de WSL2 (Opcional pero Recomendado)
+Si prefieres un entorno Linux dentro de Windows, puedes usar WSL2 con Ubuntu. Asegúrate de instalar Node.js dentro de la instancia de WSL y no usar la versión de Windows para evitar conflictos de rutas.
+
 ---
 
 ## 📁 Estructura del Monorepositorio

@@ -47,6 +47,9 @@ class MongoUserRepository:
     # --- GESTIÓN DE CÓDIGOS OTP (2FA) ---
     async def save_otp_code(self, user_id: str, code: str, expires_at):
         """Guarda el código de 6 dígitos y su fecha de expiración"""
+        if not ObjectId.is_valid(user_id):
+            return # Bypass para modo demo
+            
         await self.collection.update_one(
             {"_id": ObjectId(user_id)},
             {"$set": {
@@ -70,6 +73,9 @@ class MongoUserRepository:
         2. Mantiene el enabled en False para que el LoginUserUseCase no entre en bucle.
         3. Limpia los códigos temporales usados.
         """
+        if not ObjectId.is_valid(user_id):
+            return True # Bypass para modo demo
+
         result = await self.collection.update_one(
             {"_id": ObjectId(user_id)},
             {

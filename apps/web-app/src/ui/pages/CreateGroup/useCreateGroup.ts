@@ -17,7 +17,11 @@ export const useCreateGroup = () => {
         if (!groupName) return alert("El nombre es obligatorio");
 
         const userId = localStorage.getItem('userId');
-        if (!userId) return alert("Sesión expirada. Reingresa.");
+        if (!userId) {
+            localStorage.clear();
+            navigate('/auth');
+            return;
+        }
 
         setLoading(true);
         try {
@@ -53,7 +57,11 @@ export const useCreateGroup = () => {
         if (joinCode.trim().length < 4) return alert("Ingresa un código válido");
 
         const userId = localStorage.getItem('userId');
-        if (!userId) return alert("Usuario no identificado. Inicia sesión de nuevo.");
+        if (!userId) {
+            localStorage.clear();
+            navigate('/auth');
+            return;
+        }
 
         setLoading(true);
         try {

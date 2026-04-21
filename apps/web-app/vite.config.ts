@@ -13,7 +13,7 @@ export default defineConfig({
     // 👇 ESTO ES LO NUEVO
     proxy: {
       '/api': {
-        target: 'http://backend:8000', // 'backend' es el nombre del servicio en docker-compose
+        target: 'http://localhost:8000', // Apunta al backend local unificado
         changeOrigin: true,
         // rewrite: (path) => path.replace(/^\/api/, '') // Opcional: si quieres quitar el prefijo /api
       }
@@ -25,6 +25,7 @@ export default defineConfig({
       '@ui': path.resolve(__dirname, './src/ui'),
       '@application': path.resolve(__dirname, './src/application'),
       '@infrastructure': path.resolve(__dirname, './src/infrastructure'),
-    }
+    },
+    dedupe: ['react', 'react-dom']
   }
 })
