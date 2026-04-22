@@ -105,7 +105,7 @@ export default function RegisterExpenseScreen() {
                 <Pressable 
                     onPress={() => {
                         // Logic to save expense
-                        router.push('/(tabs)/dashboard');
+                        router.push('/(tabs)/');
                     }}
                     className="bg-blue-600 w-full py-5 rounded-2xl flex-row items-center justify-center gap-3 shadow-2xl shadow-blue-500/40 active:scale-95"
                 >

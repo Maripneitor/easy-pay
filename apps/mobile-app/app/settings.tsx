@@ -15,7 +15,10 @@ import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { MotiView } from 'moti';
+// \import { MotiView } from 'moti'
+const MotiView = View as any;
+const MotiText = Text as any;
+const AnimatePresence = ({ children }: any) => children;;
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { SHARED_USER } from '../src/infrastructure/constants/MockUser';
 

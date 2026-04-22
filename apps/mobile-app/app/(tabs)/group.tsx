@@ -5,7 +5,9 @@ import { MaterialIcons, Ionicons, MaterialCommunityIcons } from '@expo/vector-ic
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { MotiView, AnimatePresence } from 'moti';
+// import { MotiView, AnimatePresence } from 'moti';
+const MotiView = View as any;
+const AnimatePresence = ({ children }: any) => children;
 
 const { width } = Dimensions.get('window');
 

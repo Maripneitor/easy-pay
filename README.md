@@ -14,6 +14,34 @@ EASY-PAY permite:
 
 ---
 
+## 🚀 Guía Rápida de Inicio (Nuevos Desarrolladores)
+
+¿Acabas de unirte al equipo y tienes 0 experiencia con el setup? Sigue estos 3 pasos exactos:
+
+### Paso 1: Instalación de dependencias
+Abre una terminal en la raíz del proyecto y ejecuta el siguiente comando para preparar todos los entornos:
+```bash
+npm install && cd apps/mobile-app && npm install
+```
+
+### Paso 2: Configuración de la IP en el `.env`
+Tu móvil o emulador necesita saber cómo llegar al servidor backend. Para esto, no puedes usar `localhost`.
+1. Busca tu **Dirección IPv4** (En Windows abre CMD y pon `ipconfig`, en Mac/Linux pon `ifconfig`). Ejemplo: `192.168.1.15`.
+2. Ve al archivo `apps/mobile-app/.env` y configúralo así:
+   `EXPO_PUBLIC_API_URL=http://TUI.P.A.QUI:8000`
+
+### Paso 3: Arranque Mágico
+Ve a la carpeta de la app móvil y usa nuestro script diseñado a prueba de fallos de caché:
+```bash
+cd apps/mobile-app
+npm run start:clean
+```
+**¿Cómo lo veo?**
+- **En tu celular (Recomendado):** Descarga la app "Expo Go", abre la cámara y escanea el código QR gigante que sale en tu terminal.
+- **En la computadora:** Si tienes Android Studio abierto, simplemente presiona la tecla `a` en esa misma terminal y el emulador arrancará solito.
+
+---
+
 ## 🚦 Flujo de Trabajo Local (Eficiente)
 
 Para trabajar con **Easy-Pay** de forma 100% local, sigue este flujo cada vez que empieces o termines una sesión de desarrollo:

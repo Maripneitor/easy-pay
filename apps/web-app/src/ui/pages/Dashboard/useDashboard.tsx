@@ -16,13 +16,15 @@ export const useDashboard = () => {
         }
 
         try {
-            const response = await fetch(`http://localhost:8000/api/groups/user/${userId}`);
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+            const response = await fetch(`${API_URL}/groups/user/${userId}`);
             const data = await response.json();
 
             if (Array.isArray(data)) {
                 const groupsWithBalances = await Promise.all(data.map(async (group: any) => {
                     try {
-                        const resBalance = await fetch(`http://localhost:8000/api/groups/${group.id}/balances`);
+                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+                        const resBalance = await fetch(`${API_URL}/groups/${group.id}/balances`);
                         if (resBalance.ok) {
                             const bData = await resBalance.json();
                             const bList = bData.balance_detallado || bData.balances || [];

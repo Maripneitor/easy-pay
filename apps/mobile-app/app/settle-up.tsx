@@ -15,7 +15,10 @@ import {
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import { MotiView } from 'moti';
+// \import { MotiView } from 'moti'
+const MotiView = View as any;
+const MotiText = Text as any;
+const AnimatePresence = ({ children }: any) => children;;
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 

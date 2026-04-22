@@ -13,7 +13,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import { MotiView, AnimatePresence } from 'moti';
+// import { MotiView, AnimatePresence } from 'moti';
+const MotiView = View as any;
+const AnimatePresence = ({ children }: any) => children;
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { useNotifications } from '../../src/infrastructure/context/NotificationContext';
 

@@ -65,7 +65,7 @@ export default function Security2FAScreen() {
                     email: email || data.user_email || ''
                 });
                 
-                router.replace('/(tabs)/dashboard');
+                router.replace('/(tabs)/');
             } else {
                 Alert.alert('Falló la verificación', data.message || 'El código es incorrecto.');
             }

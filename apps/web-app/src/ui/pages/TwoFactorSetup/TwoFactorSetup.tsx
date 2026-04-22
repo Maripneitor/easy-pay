@@ -44,7 +44,8 @@ export const TwoFactorSetup = () => {
             setError('');
 
             // Llamamos al endpoint de setup usando el ID correcto
-            await axios.post(`http://localhost:8001/api/auth/2fa/setup/${userId}`);
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+            await axios.post(`${API_URL}/auth/2fa/setup/${userId}`);
 
             setCodeSent(true);
 

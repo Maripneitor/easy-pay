@@ -7,7 +7,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { useMesa } from '../context/MesaContext';
-import { MotiView } from 'moti';
+// \import { MotiView } from 'moti'
+const MotiView = View as any;
+const MotiText = Text as any;
+const AnimatePresence = ({ children }: any) => children;;
 
 export default function CreateGroupScreen() {
     const { user } = useAuth();

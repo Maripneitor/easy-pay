@@ -4,7 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, Stack } from 'expo-router';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import { MotiView } from 'moti';
+// \import { MotiView } from 'moti'
+const MotiView = View as any;
+const MotiText = Text as any;
+const AnimatePresence = ({ children }: any) => children;;
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function AuthPhoneScreen() {
@@ -102,7 +105,7 @@ export default function AuthPhoneScreen() {
 
                     <View className="mt-8 items-center">
                         <TouchableOpacity 
-                            onPress={() => router.push('/(tabs)/dashboard')}
+                            onPress={() => router.push('/(tabs)/')}
                             className="flex-row items-center px-6 py-2.5 border border-slate-600 rounded-full active:bg-white/5"
                         >
                             <Text className="text-slate-300 font-semibold text-sm mr-2">Continuar como Invitado</Text>

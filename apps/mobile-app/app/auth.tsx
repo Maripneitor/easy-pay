@@ -17,7 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons, Feather, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import { MotiView } from 'moti';
+// import { MotiView } from 'moti';
+const MotiView = View as any;
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -64,7 +65,7 @@ export default function AuthScreen() {
                         isGuest: false
                     });
                     
-                    router.replace('/(tabs)/dashboard');
+                    router.replace('/(tabs)/');
                     return;
                 }
             } else {
@@ -104,7 +105,7 @@ export default function AuthScreen() {
                 nombre: guestName,
                 isGuest: true
             });
-            router.replace('/(tabs)/dashboard');
+            router.replace('/(tabs)/');
         } catch (e) {
             setError('Error al crear sesión de invitado.');
         } finally {

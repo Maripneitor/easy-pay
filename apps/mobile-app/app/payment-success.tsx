@@ -3,7 +3,10 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { router, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import { MotiView } from 'moti';
+// \import { MotiView } from 'moti'
+const MotiView = View as any;
+const MotiText = Text as any;
+const AnimatePresence = ({ children }: any) => children;;
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -47,7 +50,7 @@ export default function PaymentSuccessScreen() {
                     className="w-full"
                 >
                     <TouchableOpacity
-                        onPress={() => router.replace('/(tabs)/dashboard')}
+                        onPress={() => router.replace('/(tabs)/')}
                         style={{ backgroundColor: theme.primary }}
                         className="h-20 rounded-3xl items-center justify-center shadow-2xl"
                     >

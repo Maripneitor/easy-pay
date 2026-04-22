@@ -6,7 +6,10 @@ import { MaterialIcons, FontAwesome5, Ionicons, Feather, MaterialCommunityIcons 
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { MotiView, MotiText, AnimatePresence } from 'moti';
+// import { MotiView, MotiText, AnimatePresence } from 'moti';
+const MotiView = View as any;
+const MotiText = Text as any;
+const AnimatePresence = ({ children }: any) => children;
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;

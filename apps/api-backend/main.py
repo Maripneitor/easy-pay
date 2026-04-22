@@ -10,16 +10,9 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configurar CORS (Puertos locales de desarrollo)
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:5174",
-    "http://127.0.0.1:5174",
-    "http://localhost:8081", # Mobile local dev
-    "http://localhost:19000", # Expo Go
-    "http://localhost:19006", # Web Expo
-]
+# Configurar CORS (Permitir todo para desarrollo móvil/local)
+origins = ["*"]
+
 
 app.add_middleware(
     CORSMiddleware,

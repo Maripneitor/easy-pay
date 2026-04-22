@@ -52,7 +52,8 @@ export const TwoFactorVerify = () => {
         setError("");
 
         try {
-            const response = await axios.post(`http://localhost:8001/api/auth/2fa/verify/${userId}`, {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+            const response = await axios.post(`${API_URL}/auth/2fa/verify/${userId}`, {
                 code: fullCode
             });
 

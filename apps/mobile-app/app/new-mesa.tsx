@@ -13,7 +13,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { MotiView, MotiText, AnimatePresence } from 'moti';
+// \import { MotiView, MotiText, AnimatePresence } from 'moti'
+const MotiView = View as any;
+const MotiText = Text as any;
+const AnimatePresence = ({ children }: any) => children;;
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useMesa } from '../context/MesaContext';
@@ -39,7 +42,7 @@ export default function NewMesaScreen() {
     // Protective redirect
     useEffect(() => {
         if (!activeMesa && !isLoading) {
-            router.replace('/(tabs)/dashboard');
+            router.replace('/(tabs)/');
         }
     }, [activeMesa]);
 
@@ -140,7 +143,7 @@ export default function NewMesaScreen() {
                         <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-black">Ticket Digital</Text>
                         <Text style={{ color: theme.primary }} className="text-[10px] font-black uppercase tracking-widest">Resumen Final</Text>
                     </View>
-                    <TouchableOpacity onPress={() => router.replace('/(tabs)/dashboard')}>
+                    <TouchableOpacity onPress={() => router.replace('/(tabs)/')}>
                         <MaterialIcons name="home" size={24} color={theme.text} />
                     </TouchableOpacity>
                 </View>

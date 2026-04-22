@@ -10,7 +10,9 @@ module.exports = function (api) {
         "module-resolver",
         {
           alias: {
-            "react-native-worklets/plugin": "react-native-worklets-core/plugin",
+            "@": "./src",
+            "react-native-worklets": "./src/worklets-shim",
+            "moti": "./src/moti-shim"
           },
         },
       ],
