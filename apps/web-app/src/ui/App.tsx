@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-route
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from './context/ThemeContext';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { Loader } from './components/Loader/Loader';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { ProtectedRoute } from './auth/ProtectedRoute';
@@ -56,6 +56,11 @@ const queryClient = new QueryClient({
 // Componente de Rutas Animadas (necesario para useLocation)
 const AnimatedRoutes = () => {
     const location = useLocation();
+    const { isLoading } = useAuthContext();
+
+    if (isLoading) {
+        return <Loader />;
+    }
 
     return (
         <AnimatePresence mode="wait">

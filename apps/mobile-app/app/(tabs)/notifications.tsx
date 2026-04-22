@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
     ScrollView, 
     View, 
@@ -7,73 +7,74 @@ import {
     Image, 
     TouchableOpacity, 
     ActivityIndicator,
-    Dimensions 
+    Dimensions,
+    RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
-import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 // import { MotiView, AnimatePresence } from 'moti';
 const MotiView = View as any;
 const AnimatePresence = ({ children }: any) => children;
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { useNotifications } from '../../src/infrastructure/context/NotificationContext';
-
-const INITIAL_NOTIFICATIONS = [
-    {
-        id: '1',
-        type: 'invitation',
-        title: 'Luis te invitó al grupo',
-        groupName: 'Viaje a Cancún',
-        time: 'Hace 2 horas',
-        unread: true,
-        userName: 'Luis García',
-        avatar: '', // Test empty avatar for initials
-        route: '/(tabs)/group/viaje-a-cancun',
-    },
-    {
-        id: '10',
-        type: 'expense',
-        title: 'Ana te asignó $200.00 por Hamburguesas',
-        amount: '$200.00',
-        time: '09:15 AM',
-        unread: true,
-        icon: 'restaurant',
-        iconColor: '#fb923c',
-        route: '/new-mesa',
-    },
-    {
-        id: '3',
-        type: 'payment',
-        title: 'Carlos te pagó su parte',
-        amount: '+$50.00',
-        time: '4:00 PM',
-        unread: false,
-        icon: 'attach-money',
-        iconColor: '#4ade80',
-        route: '/expense/receipt/3',
-    },
-    {
-        id: '4',
-        type: 'alert',
-        title: 'Inicio de sesión detectado en un nuevo dispositivo',
-        time: 'Martes, 14:00',
-        unread: false,
-        icon: 'security',
-        iconColor: '#2196F3',
-        route: '/settings',
-    },
-];
+import { useAuth } from '../../context/AuthContext';
+import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
 
 const { width } = Dimensions.get('window');
 
 export default function NotificationsScreen() {
     const { theme, fontScale } = useTheme();
+    const { user } = useAuth();
     const { setUnreadCount, setHasAlerts } = useNotifications();
     const router = useRouter();
-    const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+    
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [loadingIds, setLoadingIds] = useState<string[]>([]);
     const [acceptedIds, setAcceptedIds] = useState<string[]>([]);
+
+    const fetchActivity = useCallback(async () => {
+        if (!user?.id) return;
+        setIsLoading(true);
+        try {
+            const groups = await groupRepository.findByUser(user.id);
+            // Derive notifications from groups
+            const activity = groups.map((g: any) => ({
+                id: g.id,
+                type: g.is_settled ? 'payment' : 'expense',
+                title: g.is_settled ? `Grupo ${g.nombre} ha sido liquidado` : `Nueva actividad en ${g.nombre}`,
+                amount: `$${(g.total_gastado || 0).toFixed(2)}`,
+                time: new Date(g.fecha_creacion).toLocaleDateString(),
+                unread: !g.is_settled,
+                icon: g.is_settled ? 'check-circle' : 'restaurant',
+                iconColor: g.is_settled ? '#4ade80' : theme.primary,
+                route: { pathname: '/(tabs)/group/[id]', params: { id: g.id } },
+            }));
+
+            // Sort by ID or date (mocking date sort with ID for now if date is similar)
+            activity.sort((a, b) => b.id.localeCompare(a.id));
+
+            setNotifications(activity);
+            updateContext(activity);
+        } catch (error) {
+            console.error('Error fetching activity:', error);
+        } finally {
+            setIsLoading(false);
+            setRefreshing(false);
+        }
+    }, [user?.id, theme.primary]);
+
+    useEffect(() => {
+        fetchActivity();
+    }, [fetchActivity]);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchActivity();
+    };
 
     const unreadCount = notifications.filter(n => n.unread).length;
 
@@ -88,7 +89,6 @@ export default function NotificationsScreen() {
         setTimeout(() => {
             setLoadingIds(prev => prev.filter(loadingId => loadingId !== id));
             setAcceptedIds(prev => [...prev, id]);
-            // Mark as read too
             const next = notifications.map(n => n.id === id ? { ...n, unread: false } : n);
             setNotifications(next);
             updateContext(next);
@@ -263,7 +263,14 @@ export default function NotificationsScreen() {
                 </TouchableOpacity>
             </View>
 
-            <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }}>
+            <ScrollView 
+                className="flex-1 px-6" 
+                showsVerticalScrollIndicator={false} 
+                contentContainerStyle={{ paddingBottom: 150 }}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
+                }
+            >
                 {notifications.length > 0 ? (
                     <View className="mt-4">
                         {notifications.map(n => renderCard(n))}

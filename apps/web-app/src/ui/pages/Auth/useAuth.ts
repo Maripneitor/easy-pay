@@ -30,7 +30,7 @@ export const useAuth = () => {
                 const actualId = data.user_id || data.id || data._id;
                 localStorage.setItem('temp_userId', actualId);
                 localStorage.setItem('userEmail', userData.email);
-                navigate('/2fa-setup');
+                navigate('/2fa-verify');
             }
         } catch (err: any) {
             setError(err.message || 'Error en la conexión');

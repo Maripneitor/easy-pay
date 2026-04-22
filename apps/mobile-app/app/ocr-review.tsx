@@ -9,7 +9,7 @@ const MotiView = View as any;
 const MotiText = Text as any;
 const AnimatePresence = ({ children }: any) => children;;
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
-import { useMesa } from '../context/MesaContext';
+import { useGrupo } from '../context/GrupoContext';
 
 const { width } = Dimensions.get('window');
 
@@ -22,7 +22,7 @@ const MOCK_COMPARISON = [
 
 export default function OCRReviewScreen() {
     const { theme, fontScale } = useTheme();
-    const { addItem, activeMesa } = useMesa();
+    const { addItem, activeGrupo } = useGrupo();
     const router = useRouter();
     const [items, setItems] = useState(MOCK_COMPARISON);
     const [isLoading, setIsLoading] = useState(false);
@@ -38,12 +38,12 @@ export default function OCRReviewScreen() {
                         nombre: item.nombre,
                         precio: finalPrice,
                         cantidad: 1,
-                        autorId: activeMesa?.liderId || '1',
+                        autorId: activeGrupo?.liderId || '1',
                         asignadoA: []
                     });
                 }
             }
-            router.replace('/new-mesa');
+            router.replace('/new-group');
         } catch (e) {
             console.error(e);
         } finally {

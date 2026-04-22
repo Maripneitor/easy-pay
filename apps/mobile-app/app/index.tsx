@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Dimensions, StyleSheet, Image as RNImage } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView, MotiText } from 'moti';
+
+import { useAuth } from '../context/AuthContext';
+import { useEffect } from 'react';
+import { ActivityIndicator } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -22,11 +26,43 @@ const COLORS = {
 
 export default function LandingScreen() {
   const router = useRouter();
+  const { user, isLoading } = useAuth();
+  const insets = useSafeAreaInsets();
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.replace('/(tabs)/');
+    }
+  }, [user, isLoading]);
 
   const toggleFaq = (index: number) => {
     setExpandedFaq(expandedFaq === index ? null : index);
   };
+
+  const handleProfilePress = () => {
+    if (user) {
+      router.push('/(tabs)/settings');
+    } else {
+      router.push('/login');
+    }
+  };
+
+  const handleActionPress = () => {
+    if (user) {
+      router.push('/create-group');
+    } else {
+      router.push('/login');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: COLORS.backgroundDark, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="white" />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.backgroundDark }}>
@@ -40,19 +76,27 @@ export default function LandingScreen() {
         end={{ x: 0.5, y: 1 }}
       />
 
-      <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.backgroundDark }} edges={['top']}>
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
+        >
           
           {/* Navbar */}
           <View className="px-6 py-6 flex-row justify-between items-center z-50">
             <View className="flex-row items-center gap-2">
-              <View className="w-10 h-10 bg-white rounded-xl items-center justify-center shadow-lg">
-                <MaterialIcons name="receipt-long" size={24} color={COLORS.dodgerBlue} />
-              </View>
+              <RNImage 
+                source={require('../assets/images/logo-ep.png')} 
+                style={{ width: 40, height: 40 }}
+                resizeMode="contain"
+              />
               <Text className="text-2xl font-bold text-white tracking-tight">Easy-Pay</Text>
             </View>
-            <TouchableOpacity className="bg-white/10 px-6 py-2 rounded-full border border-white/20">
-              <Text className="text-white font-bold text-sm">Mi Perfil</Text>
+            <TouchableOpacity 
+              onPress={handleProfilePress}
+              className="bg-white/10 px-6 py-2 rounded-full border border-white/20"
+            >
+              <Text className="text-white font-bold text-sm">{user ? 'Mi Perfil' : 'Iniciar Sesión'}</Text>
             </TouchableOpacity>
           </View>
 
@@ -92,44 +136,19 @@ export default function LandingScreen() {
               transition={{ duration: 1000, delay: 500 }}
               className="text-lg text-white/80 font-light leading-7 mb-10 max-w-[90%]"
             >
-              Cero estrés. Escanea, asigna y paga tu parte. Olvídate de las calculadoras y disfruta de la sobremesa.
+              Cero estrés. Escanea, asigna y paga tu parte. Olvídate de las calculadoras y disfruta de la sobreGrupo.
             </MotiText>
 
-            {/* Action Cards */}
-            <View className="flex-row gap-4 mb-8">
-              <View className="flex-1 bg-white/5 border border-white/20 p-5 rounded-3xl">
-                <View className="flex-row items-center gap-2 mb-3">
-                  <Ionicons name="add-circle" size={24} color={COLORS.coolSky} />
-                  <Text className="text-white font-bold text-base">Nueva Mesa</Text>
-                </View>
-                <Text className="text-white/60 text-xs mb-5">Eres el anfitrión. Crea un código.</Text>
-                <TouchableOpacity 
-                  onPress={() => router.push('/auth')}
-                  className="bg-dodger-blue py-3 rounded-xl items-center shadow-lg shadow-blue-900/40"
-                >
-                  <Text className="text-white font-bold">Crear Mesa</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View className="flex-1 bg-white/5 border border-white/20 p-5 rounded-3xl">
-                <View className="flex-row items-center gap-2 mb-3">
-                  <Ionicons name="people" size={24} color={COLORS.emerald} />
-                  <Text className="text-white font-bold text-base">Unirme</Text>
-                </View>
-                <Text className="text-white/60 text-xs mb-5">¿Tienes código? Únete ya.</Text>
-                <TouchableOpacity 
-                  onPress={() => router.push('/auth')}
-                  className="bg-white py-3 rounded-xl items-center shadow-lg shadow-white/10"
-                >
-                  <Text className="text-dodger-blue font-bold">Unirme</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View className="bg-white/5 border border-white/10 px-5 py-3 rounded-full flex-row items-center gap-3 self-start">
-              <Text className="text-lg">💡</Text>
-              <Text className="text-white/70 text-xs">El anfitrión crea la mesa y comparte el código.</Text>
-            </View>
+            {/* Availability Badge */}
+            <MotiView
+              from={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1200, type: 'spring' }}
+              className="bg-sky-400/10 border border-sky-400/20 px-5 py-2.5 rounded-full flex-row items-center gap-3 self-start mb-8"
+            >
+              <Text className="text-base">✨</Text>
+              <Text style={{ color: COLORS.coolSky }} className="font-bold tracking-wide uppercase text-[10px]">Ahora disponible en Android</Text>
+            </MotiView>
           </View>
 
           {/* Pain Points Section */}
@@ -168,7 +187,7 @@ export default function LandingScreen() {
             
             <View className="gap-12">
               {[
-                { step: '1', title: 'Escanear', desc: 'Sube una foto del ticket o introduce el código QR de la mesa.', icon: 'qr-code-scanner' },
+                { step: '1', title: 'Escanear', desc: 'Sube una foto del ticket o introduce el código QR del grupo.', icon: 'qr-code-scanner' },
                 { step: '2', title: 'Asignar', desc: 'Toca tus platos o divídelos entre varios comensales.', icon: 'touch-app' },
                 { step: '3', title: 'Calcular', desc: 'Impuestos y propinas se calculan al instante.', icon: 'auto-graph' },
                 { step: '4', title: 'Pagar', desc: 'Paga tu parte con un click desde tu móvil.', icon: 'check-circle' }
@@ -259,7 +278,7 @@ export default function LandingScreen() {
             <View className="gap-4">
               {[
                 { q: '¿Es seguro pagar?', a: 'Absolutamente. Utilizamos encriptación de grado bancario para proteger todos tus datos y transacciones. Tu seguridad es nuestra prioridad.' },
-                { q: '¿Necesito la app?', a: 'No necesariamente. Puedes usar nuestra versión web directamente desde tu navegador escaneando el código QR. Sin embargo, la app ofrece funciones adicionales.' },
+                { q: '¿Necesito la app?', a: 'No necesariamente. Puedes usar nuestra versión web directamente desde tu navegador escaneando el código QR del grupo. Sin embargo, la app ofrece funciones adicionales.' },
                 { q: '¿Puedo dividir desigual?', a: '¡Sí! Puedes asignar items específicos a cada persona o dividir el costo de platos compartidos como prefieras.' }
               ].map((item, index) => (
                 <TouchableOpacity 
@@ -298,7 +317,7 @@ export default function LandingScreen() {
                 Únete a miles de comensales felices que ya no sufren con la cuenta.
               </Text>
               <TouchableOpacity 
-                onPress={() => router.push('/auth')}
+                onPress={() => router.push('/login')}
                 className="bg-dodger-blue px-10 py-5 rounded-full shadow-xl shadow-blue-500/40"
               >
                 <Text className="text-white font-black text-lg">COMENZAR GRATIS</Text>

@@ -20,7 +20,6 @@ import { useTheme } from '../../../src/infrastructure/context/ThemeContext';
 import { VirtualTicketCard } from '../../../components/group/VirtualTicketCard';
 import { MemberList } from '../../../components/group/MemberList';
 import { TotalsSummary } from '../../../components/group/TotalsSummary';
-import { AddExpenseModal } from '../../../components/group/AddExpenseModal';
 import { PaymentMethodModal } from '../../../components/group/PaymentMethodModal';
 
 import { groupRepository } from '../../../src/infrastructure/api/repositories/GroupRepository';
@@ -47,7 +46,6 @@ export default function GroupDetailScreen() {
     const [isLoading, setIsLoading] = useState(true);
 
     // UI State for Modals
-    const [isAddExpenseVisible, setIsAddExpenseVisible] = useState(false);
     const [isPaymentVisible, setIsPaymentVisible] = useState(false);
 
     const fetchData = useCallback(async () => {
@@ -114,7 +112,7 @@ export default function GroupDetailScreen() {
 
                 <View className="flex-row items-center gap-1">
                     <TouchableOpacity 
-                        onPress={() => setIsAddExpenseVisible(true)}
+                        onPress={() => router.push({ pathname: '/new-expense', params: { groupId: id } } as any)}
                         className="p-2 rounded-full" 
                         style={{ backgroundColor: theme.cardSecondary }}
                     >
@@ -170,6 +168,7 @@ export default function GroupDetailScreen() {
                     <>
                         {activeTab === 'actividad' && (
                             <VirtualTicketCard 
+                                groupId={id}
                                 items={groupItems.map((i: any) => ({
                                     id: i.id,
                                     name: i.nombre,
@@ -241,18 +240,6 @@ export default function GroupDetailScreen() {
             </View>
 
             {/* MODALES PREMIUM */}
-            <AddExpenseModal 
-                isVisible={isAddExpenseVisible}
-                onClose={() => setIsAddExpenseVisible(false)}
-                groupId={id || ''}
-                members={(groupData?.integrantes || []).map((m: any) => ({
-                    id: m.id || m,
-                    nombre: m.nombre || 'Miembro'
-                }))}
-                onSuccess={() => {
-                    fetchData();
-                }}
-            />
 
 
             <PaymentMethodModal 

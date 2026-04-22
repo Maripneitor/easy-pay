@@ -12,7 +12,7 @@ import {
     RefreshControl,
     ActivityIndicator
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -24,6 +24,7 @@ const MotiView = View as any;
 const MotiText = Text as any;
 import { useAuth } from '../../context/AuthContext';
 import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
+import { SHARED_USER } from '../../src/infrastructure/constants/MockUser';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.82;
@@ -33,6 +34,7 @@ const CARD_SPACING = (width - CARD_WIDTH) / 2;
 export default function DashboardScreen() {
     const { theme, fontScale, cycleTheme } = useTheme();
     const { user } = useAuth();
+    const insets = useSafeAreaInsets();
     const router = useRouter();
 
     const [refreshing, setRefreshing] = useState(false);
@@ -74,48 +76,62 @@ export default function DashboardScreen() {
         fetchGroups();
     }, [fetchGroups]);
 
-    const handleCreateMesa = async () => {
+    const handleCreateGrupo = async () => {
         router.push('/create-group');
     };
 
     const QUICK_ACTIONS = [
-        { id: 'group', label: 'Nueva Mesa', icon: 'restaurant', action: handleCreateMesa, color: theme.primary },
-        { id: 'join', label: 'Unirse mesa', icon: 'qr-code-scanner', route: '/(tabs)/qr', color: '#10b981' },
+        { id: 'group', label: 'Nuevo Grupo', icon: 'group-add', action: handleCreateGrupo, color: theme.primary },
+        { id: 'join', label: 'Unirse a Grupo', icon: 'qr-code-scanner', route: '/(tabs)/qr', color: '#10b981' },
         { id: 'settle', label: 'Liquidar', icon: 'handshake', route: '/settle-up', color: '#a855f7' },
     ];
 
 
     const renderHeader = () => (
-        <View style={{ backgroundColor: theme.bg }} className="px-6 py-8 flex-row justify-between items-center">
-            <TouchableOpacity 
-                activeOpacity={0.7}
-                onPress={cycleTheme}
-                className="flex-row items-center gap-3"
-            >
-                <View style={{ backgroundColor: theme.primary }} className="w-10 h-10 rounded-xl items-center justify-center shadow-lg shadow-pink-500/20 overflow-hidden">
+        <View style={{ backgroundColor: theme.bg }} className="px-6 py-8 flex-row justify-between items-center w-full">
+            <View className="flex-1 flex-row items-center gap-3 pr-2">
+                <TouchableOpacity 
+                    activeOpacity={0.7}
+                    onPress={cycleTheme}
+                    style={{ backgroundColor: theme.primary }} 
+                    className="w-10 h-10 rounded-xl items-center justify-center shadow-lg shadow-pink-500/20 overflow-hidden"
+                >
                     <Image source={require('../../assets/images/logo-ep.png')} className="w-full h-full" resizeMode="contain" />
-                </View>
-                <View>
-                    <Text style={{ fontSize: 20 * fontScale, color: theme.text }} className="font-black tracking-tighter">
+                </TouchableOpacity>
+                <View className="flex-1">
+                    <Text 
+                        numberOfLines={1} 
+                        style={{ fontSize: 20 * fontScale, color: theme.text }} 
+                        className="font-black tracking-tighter"
+                    >
                         Hola, {user?.nombre?.split(' ')[0] || 'Usuario'}
                     </Text>
                     <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-[3px]">Easy-Pay Dashboard</Text>
                 </View>
-            </TouchableOpacity>
-            <View className="flex-row gap-3">
+            </View>
+
+            <View className="flex-row gap-3 items-center">
                 <TouchableOpacity 
                     onPress={() => setIsBalanceVisible(!isBalanceVisible)}
-                    style={{ backgroundColor: theme.glassBg, borderColor: theme.border }}
-                    className="w-12 h-12 rounded-[18px] items-center justify-center border"
+                    activeOpacity={0.7}
+                    style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
+                    className="w-11 h-11 rounded-xl items-center justify-center border"
                 >
-                    <MaterialIcons name={isBalanceVisible ? "visibility" : "visibility-off"} size={22} color={theme.textSecondary} />
+                    <MaterialIcons name={isBalanceVisible ? "visibility" : "visibility-off"} size={20} color={theme.primary} />
                 </TouchableOpacity>
+
                 <TouchableOpacity 
                     onPress={() => router.push('/settings')}
-                    style={{ backgroundColor: theme.glassBg, borderColor: theme.border }}
-                    className="w-12 h-12 rounded-[18px] items-center justify-center border overflow-hidden"
+                    style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
+                    className="w-11 h-11 rounded-full items-center justify-center border overflow-hidden"
                 >
-                    <Image source={{ uri: SHARED_USER.avatar }} className="w-full h-full" />
+                    {user?.nombre ? (
+                        <View style={{ backgroundColor: theme.primary }} className="w-full h-full items-center justify-center">
+                            <Text className="text-white font-black text-xs">{user.nombre.charAt(0).toUpperCase()}</Text>
+                        </View>
+                    ) : (
+                        <MaterialIcons name="person" size={20} color={theme.textSecondary} />
+                    )}
                 </TouchableOpacity>
             </View>
         </View>
@@ -130,7 +146,7 @@ export default function DashboardScreen() {
 
             <ScrollView 
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 150 }}
+                contentContainerStyle={{ paddingBottom: insets.bottom + 150 }}
                 refreshControl={
                     <RefreshControl 
                         refreshing={refreshing} 
@@ -200,6 +216,7 @@ export default function DashboardScreen() {
                             );
                         })}
                     </Animated.ScrollView>
+
                 </View>
 
 
@@ -306,7 +323,7 @@ export default function DashboardScreen() {
                                     <MaterialCommunityIcons name="ghost" size={40} color={theme.textSecondary} />
                                 </View>
                                 <Text style={{ color: theme.text, fontSize: 14 * fontScale }} className="font-black text-center mb-1">¡Aún no hay actividad!</Text>
-                                <Text style={{ color: theme.textSecondary, fontSize: 11 * fontScale }} className="text-center px-10 font-bold">Crea tu primera mesa para empezar a dividir gastos.</Text>
+                                <Text style={{ color: theme.textSecondary, fontSize: 11 * fontScale }} className="text-center px-10 font-bold">Crea tu primer grupo para empezar a dividir gastos.</Text>
                             </MotiView>
                         )}
                     </View>

@@ -48,10 +48,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     useEffect(() => {
         const restoreSession = () => {
             try {
-                // Try to restore a registered user session
+                // Ensure we have both token and user data to restore a session
+                const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
                 const storedUser = localStorage.getItem(STORAGE_KEYS.AUTH_USER);
-                if (storedUser) {
+                
+                if (token && storedUser) {
                     setUser(JSON.parse(storedUser) as Member);
+                    setIsLoading(false);
                     return;
                 }
 
@@ -60,8 +63,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 if (storedGuest) {
                     setGuest(JSON.parse(storedGuest) as GuestSession);
                 }
-            } catch {
+            } catch (err) {
+                console.error('[AuthContext] Error restoring session:', err);
                 // Corrupt storage — start clean
+                localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
                 localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
                 localStorage.removeItem(STORAGE_KEYS.GUEST_SESSION);
             } finally {
@@ -149,6 +154,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.removeItem(STORAGE_KEYS.GUEST_SESSION);
         setUser(null);
         setGuest(null);
+        
+        // Redirect to landing
+        window.location.href = '/';
     }, []);
 
     // ── Private helpers ────────────────────────────────────────────────────────

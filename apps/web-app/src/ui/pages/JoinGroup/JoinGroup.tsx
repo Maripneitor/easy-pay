@@ -33,7 +33,7 @@ export const JoinGroup = () => {
                         <div className={styles.iconWrapper}>
                             <QrCode size={48} className={styles.icon} />
                         </div>
-                        <h1 className={styles.title}>Unirse a Mesa</h1>
+                        <h1 className={styles.title}>Unirse a Grupo</h1>
                         <p className={styles.subtitle}>
                             Escanea el código QR del anfitrión o ingresa el código manual abajo.
                         </p>

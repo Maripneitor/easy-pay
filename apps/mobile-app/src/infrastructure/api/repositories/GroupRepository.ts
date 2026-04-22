@@ -7,13 +7,13 @@ import { httpClient } from '../http-client';
 export class ApiMobileGroupRepository implements GroupRepository {
     
     async getGroup(id: string): Promise<Group> {
-        const response = await httpClient.get(`/groups/${id}`);
+        const response = await httpClient.get(`/api/groups/${id}`);
         // Backend returns GroupDetailOut which might need mapping
         return response.data;
     }
 
     async createGroup(leader: Member, name?: string): Promise<Group> {
-        const response = await httpClient.post('/groups/create', { 
+        const response = await httpClient.post('/api/groups/create', { 
             admin_id: leader.id, 
             nombre: name || 'Nuevo Grupo'
         });
@@ -36,7 +36,7 @@ export class ApiMobileGroupRepository implements GroupRepository {
     }
 
     async joinGroup(code: string, member: Member): Promise<Group> {
-        const response = await httpClient.post('/groups/join', { 
+        const response = await httpClient.post('/api/groups/join', { 
             codigo: code, 
             user_id: member.id 
         });
@@ -48,7 +48,7 @@ export class ApiMobileGroupRepository implements GroupRepository {
     }
 
     async addItem(groupId: string, item: Item): Promise<void> {
-        await httpClient.post('/groups/add-item', {
+        await httpClient.post('/api/groups/add-item', {
             group_id: groupId,
             nombre: item.description,
             precio: item.amount,
@@ -60,11 +60,11 @@ export class ApiMobileGroupRepository implements GroupRepository {
 
     async removeItem(groupId: string, itemId: string): Promise<void> {
         // Assuming group_id is required by backend for deletion
-        await httpClient.delete(`/groups/unknown/items/${itemId}`);
+        await httpClient.delete(`/api/groups/unknown/items/${itemId}`);
     }
 
     async assignItem(groupId: string, itemId: string, memberIds: string[]): Promise<void> {
-        await httpClient.put(`/groups/unknown/items/${itemId}`, {
+        await httpClient.put(`/api/groups/unknown/items/${itemId}`, {
             participantes_ids: memberIds
         });
     }
@@ -74,7 +74,7 @@ export class ApiMobileGroupRepository implements GroupRepository {
     }
 
     async findByUser(userId: string): Promise<Group[]> {
-        const response = await httpClient.get(`/groups/user/${userId}`);
+        const response = await httpClient.get(`/api/groups/user/${userId}`);
         return response.data;
     }
 

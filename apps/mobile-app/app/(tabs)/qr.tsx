@@ -23,7 +23,7 @@ export default function QRScreen() {
                 <TouchableOpacity onPress={() => router.back()}>
                     <MaterialIcons name="arrow-back-ios" size={24} color={theme.text} />
                 </TouchableOpacity>
-                <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black">Unirse a Mesa</Text>
+                <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black">Unirse a Grupo</Text>
                 <View className="w-6" />
             </View>
 
@@ -54,7 +54,7 @@ export default function QRScreen() {
                 </View>
 
                 <Text style={{ color: theme.textSecondary, fontSize: 12 * fontScale }} className="text-center font-bold mb-10 px-6 leading-5">
-                    Apunta con tu cámara al código QR de la mesa o ingresa el código manual abajo.
+                    Apunta con tu cámara al código QR de la Grupo o ingresa el código manual abajo.
                 </Text>
 
                 {/* Manual Code Input */}
@@ -71,7 +71,7 @@ export default function QRScreen() {
                 </View>
 
                 <TouchableOpacity 
-                    onPress={() => router.push('/new-mesa')}
+                    onPress={() => router.push('/new-group')}
                     style={{ backgroundColor: code.length === 6 ? theme.primary : theme.glassBg }}
                     className="w-full py-5 rounded-[24px] items-center mt-6 shadow-xl shadow-blue-500/10"
                 >

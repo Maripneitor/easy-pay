@@ -7,7 +7,7 @@ export const HowItWorks = () => {
         {
             num: 1,
             title: 'Escanear',
-            desc: 'Sube una foto del ticket o introduce el código QR de la mesa.',
+            desc: 'Sube una foto del ticket o introduce el código QR del grupo.',
             visual: (
                 <div className={styles.mockup}>
                     <div className={styles.mockupHeader}><div className={styles.mockupNotch} /></div>

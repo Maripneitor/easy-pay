@@ -1,17 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ScrollView, View, Text, Pressable, TextInput, Alert, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
 export default function Security2FAScreen() {
     const { userId, email, name } = useLocalSearchParams<{ userId: string; email: string; name: string }>();
     const { saveSession } = useAuth();
+    const insets = useSafeAreaInsets();
     const [code, setCode] = useState(['', '', '', '', '', '']);
     const [loading, setLoading] = useState(false);
     const [verifying, setVerifying] = useState(false);
+    const { theme, cycleTheme } = useTheme();
     const inputs = useRef<Array<TextInput | null>>([]);
     const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -91,27 +95,36 @@ export default function Security2FAScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-[#0f172a]" edges={['top']}>
-            <StatusBar style="light" />
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
+            <StatusBar style={theme.isDark ? "light" : "dark"} />
             <Stack.Screen options={{ headerShown: false }} />
             
             {/* Navbar */}
-            <View className="flex-row items-center justify-between border-b border-white/5 bg-[#0f172a]/80 px-6 py-4 z-50">
-                <Pressable onPress={() => router.back()} className="flex-row items-center gap-3 active:opacity-70">
-                    <View className="w-8 h-8 rounded-lg bg-blue-500/10 items-center justify-center">
-                        <MaterialIcons name="account-balance-wallet" size={20} color="#3b82f6" />
-                    </View>
-                    <Text className="text-white text-xl font-bold tracking-tight">Easy-Pay</Text>
+            <View style={{ backgroundColor: theme.bg, borderBottomColor: theme.border }} className="flex-row items-center justify-between border-b px-6 py-4 z-50">
+                <Pressable onPress={() => router.back()} className="flex-row items-center gap-2 active:opacity-70">
+                    <Image 
+                        source={require('../assets/images/logo-ep.png')} 
+                        style={{ width: 28, height: 28 }}
+                        resizeMode="contain"
+                    />
+                    <Text style={{ color: theme.text }} className="text-xl font-bold tracking-tight">Easy-Pay</Text>
                 </Pressable>
                 
                 <View className="flex-row items-center gap-3">
+                    <TouchableOpacity 
+                        onPress={cycleTheme}
+                        style={{ backgroundColor: theme.glassBg, borderColor: theme.border }}
+                        className="w-10 h-10 rounded-xl items-center justify-center border"
+                    >
+                        <Ionicons name={theme.isDark ? "sunny" : "moon"} size={20} color={theme.textSecondary} />
+                    </TouchableOpacity>
                     <View className="flex-row items-center gap-3">
                         <View className="flex-col items-end mr-2">
-                            <Text className="text-sm font-semibold text-white">{name || 'Usuario'}</Text>
-                            <Text className="text-xs text-slate-400">Personal Account</Text>
+                            <Text style={{ color: theme.text }} className="text-sm font-semibold">{name || 'Usuario'}</Text>
+                            <Text style={{ color: theme.textSecondary }} className="text-xs">Personal Account</Text>
                         </View>
-                        <View className="w-10 h-10 rounded-full bg-slate-700 border-2 border-white/10 overflow-hidden items-center justify-center">
-                            <MaterialIcons name="person" size={24} color="#94a3b8" />
+                        <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="w-10 h-10 rounded-full border-2 overflow-hidden items-center justify-center">
+                            <MaterialIcons name="person" size={24} color={theme.textSecondary} />
                         </View>
                     </View>
                 </View>
@@ -120,7 +133,12 @@ export default function Security2FAScreen() {
             {/* Main Content */}
             <ScrollView 
                 className="flex-1 px-4 sm:px-6 lg:px-8"
-                contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 40 }}
+                contentContainerStyle={{ 
+                    flexGrow: 1, 
+                    justifyContent: 'center', 
+                    paddingVertical: 40,
+                    paddingBottom: insets.bottom + 40
+                }}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Background Decorative Elements */}
@@ -179,7 +197,8 @@ export default function Security2FAScreen() {
                                             onChangeText={(v) => updateCode(v, i)}
                                             keyboardType="numeric"
                                             maxLength={1}
-                                            className="w-10 h-11 sm:w-12 sm:h-12 bg-slate-900/50 border border-slate-700 rounded-lg text-center text-xl font-bold text-white focus:border-[#3b82f6]"
+                                            style={{ textAlignVertical: 'center', includeFontPadding: false, padding: 0 }}
+                                            className="w-12 h-14 sm:w-14 sm:h-16 bg-slate-900/50 border border-slate-700 rounded-2xl text-center text-2xl font-black text-white focus:border-[#3b82f6]"
                                             selectionColor="#3b82f6"
                                         />
                                     </React.Fragment>
@@ -192,7 +211,7 @@ export default function Security2FAScreen() {
                             <Pressable 
                                 onPress={handleVerify2FA}
                                 disabled={verifying}
-                                className="w-full py-5 px-4 bg-[#2196F3] rounded-2xl shadow-lg shadow-blue-500/40 flex-row items-center justify-center active:scale-[0.98]"
+                                className="w-full py-5 px-4 bg-[#2196F3] rounded-2xl shadow-lg shadow-blue-500/40 flex-row items-center justify-center"
                             >
                                 {verifying ? <ActivityIndicator color="white" size="small" /> : (
                                     <Text className="text-white font-bold text-base tracking-wide uppercase">
@@ -202,7 +221,7 @@ export default function Security2FAScreen() {
                             </Pressable>
                             <Pressable 
                                 onPress={() => router.back()}
-                                className="w-full py-3 px-4 bg-transparent border border-slate-600 rounded-lg shadow-sm flex-row justify-center items-center active:scale-[0.98] active:border-slate-400"
+                                className="w-full py-3 px-4 bg-transparent border border-slate-600 rounded-lg shadow-sm flex-row justify-center items-center active:border-slate-400"
                             >
                                 <Text className="text-slate-300 font-medium">Volver</Text>
                             </Pressable>

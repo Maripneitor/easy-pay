@@ -28,7 +28,7 @@ export default function LandingScreen() {
             La cuenta,{'\n'}dividida en{'\n'}segundos.
           </Text>
           <Text className="text-lg font-light text-alice-blue/90 mb-10">
-            Cero estrés. Escanea, asigna y paga tu parte. Olvídate de las calculadoras y disfruta de la sobremesa.
+            Cero estrés. Escanea, asigna y paga tu parte. Olvídate de las calculadoras y disfruta de la sobreGrupo.
           </Text>
 
           <View className="w-full gap-4 mb-4">
@@ -36,7 +36,7 @@ export default function LandingScreen() {
               <View>
                 <View className="flex-row items-center gap-2 mb-2">
                   <MaterialIcons name="add-circle" size={24} color="#64B5F6" />
-                  <Text className="text-lg font-bold text-white">Nueva Mesa</Text>
+                  <Text className="text-lg font-bold text-white">Nuevo Grupo</Text>
                 </View>
                 <Text className="text-alice-blue/70">Eres el anfitrión. Crea un código.</Text>
               </View>
@@ -102,7 +102,7 @@ export default function LandingScreen() {
           
           <View className="gap-8">
              {[{
-               n: 1, title: 'Escanear', desc: 'Sube una foto del ticket o introduce el código QR de la mesa.', icon: 'qr-code-scanner'
+               n: 1, title: 'Escanear', desc: 'Sube una foto del ticket o introduce el código QR de la Grupo.', icon: 'qr-code-scanner'
              },
              {
                n: 2, title: 'Asignar', desc: 'Toca tus platos o divídelos entre varios comensales.', icon: 'touch-app'

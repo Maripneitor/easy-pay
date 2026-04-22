@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
+import { router } from 'expo-router';
 
 interface Item {
     id: string;
@@ -15,9 +16,10 @@ interface Item {
 interface VirtualTicketCardProps {
     items: Item[];
     serviceFee: number;
+    groupId?: string;
 }
 
-export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({ items, serviceFee }) => {
+export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({ items, serviceFee, groupId }) => {
     const { theme, fontScale } = useTheme();
 
     return (
@@ -33,6 +35,7 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({ items, ser
                     <Text style={{ color: theme.textSecondary, fontSize: 13 * fontScale, fontFamily: 'Inter' }} className="mt-1 opacity-80">Asigna quién consumió qué.</Text>
                 </View>
                 <TouchableOpacity 
+                    onPress={() => router.push({ pathname: '/new-expense', params: { groupId } } as any)}
                     className="flex-row items-center gap-1 px-4 py-2 rounded-full active:opacity-70"
                 >
                     <Ionicons name="add" size={16} color={theme.primary} />
@@ -45,6 +48,7 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({ items, ser
                     <TouchableOpacity 
                         key={item.id} 
                         activeOpacity={0.7}
+                        onPress={() => router.push({ pathname: '/new-expense', params: { id: item.id, name: item.name, amount: item.amount, groupId } } as any)}
                         style={{ 
                             backgroundColor: theme.card, 
                             borderColor: theme.border + '26', // 15% opacity ghost border

@@ -13,7 +13,7 @@ import {
     StyleSheet,
     Image
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons, Feather, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
@@ -22,11 +22,13 @@ const MotiView = View as any;
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { httpClient } from '../src/infrastructure/api/http-client';
 
 const { width } = Dimensions.get('window');
 
 export default function AuthScreen() {
     const { theme, fontScale, cycleTheme } = useTheme();
+    const insets = useSafeAreaInsets();
     const router = useRouter();
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
@@ -35,9 +37,7 @@ export default function AuthScreen() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [isGuestPrompt, setIsGuestPrompt] = useState(false);
-    const [guestName, setGuestName] = useState('');
-    const { saveGuestSession, saveSession } = useAuth();
+    const { saveSession } = useAuth();
     const handleAuth = async () => {
         if (!email || !password || (!isLogin && !name)) {
             setError('Por favor completa todos los campos.');
@@ -46,18 +46,15 @@ export default function AuthScreen() {
         setError('');
         setLoading(true);
 
-        const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
-
         try {
             if (isLogin) {
-                const response = await fetch(`${API_URL}/api/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ identifier: email, password })
+                const response = await httpClient.post('/api/auth/login', {
+                    identifier: email,
+                    password
                 });
-                const data = (await response.json()) as any;
+                const data = response.data;
                 
-                if (response.ok && data.status === 'success') {
+                if (data.status === 'success') {
                     await saveSession(data.access_token, {
                         id: data.user?.id || data.user?._id || 'unknown',
                         nombre: data.user?.nombre || 'Usuario',
@@ -69,49 +66,27 @@ export default function AuthScreen() {
                     return;
                 }
             } else {
-                const response = await fetch(`${API_URL}/api/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nombre: name, email, password })
+                const response = await httpClient.post('/api/auth/register', {
+                    nombre: name,
+                    email,
+                    password
                 });
-                const data = (await response.json()) as any;
+                const data = response.data;
 
-                if (response.ok && data.status === 'success') {
-                    router.push({
-                        pathname: '/security-setup',
-                        params: { userId: data.user_id, email: email, name: name }
-                    });
+                if (data.status === 'success') {
+                    router.replace('/onboarding/account');
                 } else {
                     setError(data.detail || data.message || 'Error en el registro');
                 }
             }
-        } catch (err) {
-            setError('No se pudo conectar con el servidor.');
+        } catch (err: any) {
+            const errData = err.response?.data;
+            setError(errData?.detail || errData?.message || 'No se pudo conectar con el servidor.');
         } finally {
             setLoading(false);
         }
     };
 
-
-    const handleGuestEntry = async () => {
-        if (!guestName.trim()) {
-            setError('Por favor ingresa tu nombre para continuar.');
-            return;
-        }
-        setLoading(true);
-        try {
-            await saveGuestSession({
-                id: Math.random().toString(36).substring(7),
-                nombre: guestName,
-                isGuest: true
-            });
-            router.replace('/(tabs)/');
-        } catch (e) {
-            setError('Error al crear sesión de invitado.');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <View style={{ flex: 1, backgroundColor: '#0f172a' }}>
@@ -127,11 +102,15 @@ export default function AuthScreen() {
                 
                 <ScrollView 
                     style={{ flex: 1 }}
-                    contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40 }}
+                    contentContainerStyle={{ 
+                        flexGrow: 1, 
+                        justifyContent: 'center', 
+                        paddingHorizontal: 24, 
+                        paddingTop: 40,
+                        paddingBottom: insets.bottom + 40
+                    }}
                     showsVerticalScrollIndicator={false}
                 >
-                    {!isGuestPrompt ? (
-                        <>
                             {/* Header */}
                             <View className="items-center mb-10">
                                 <View className="w-24 h-24 mb-4 items-center justify-center">
@@ -257,60 +236,6 @@ export default function AuthScreen() {
                                 </View>
                             </View>
 
-                            {/* Footer Links */}
-                            <View className="items-center mt-10">
-                                <TouchableOpacity 
-                                    onPress={() => setIsGuestPrompt(true)} 
-                                    className="flex-row items-center gap-2 px-6 py-2.5 border border-slate-600 rounded-full"
-                                >
-                                    <Text className="text-slate-300 font-semibold text-sm">Continuar como Invitado</Text>
-                                    <MaterialIcons name="arrow-forward" size={18} color="#94a3b8" />
-                                </TouchableOpacity>
-                            </View>
-                        </>
-                    ) : (
-                        <MotiView 
-                            from={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="bg-[#1e293b]/60 border border-white/10 rounded-[40px] p-10 shadow-2xl items-center"
-                        >
-                            <View className="w-20 h-20 bg-blue-500/10 rounded-full items-center justify-center mb-6">
-                                <MaterialIcons name="person-add" size={40} color="#3b82f6" />
-                            </View>
-                            <Text style={{ fontSize: 24 * fontScale, color: 'white' }} className="font-black text-center mb-2">¡Hola, invitado!</Text>
-                            <Text style={{ fontSize: 13 * fontScale }} className="text-slate-400 text-center mb-8">Dinos cómo debemos llamarte para asignarte tus consumos en la mesa.</Text>
-                            
-                            <View className="w-full mb-8">
-                                <Text className="text-slate-300 text-sm font-medium mb-2 ml-1">Tu Nombre / Apodo</Text>
-                                <View className="bg-[#1e293b] border border-[#334155] p-4 rounded-2xl flex-row items-center">
-                                    <TextInput 
-                                        placeholder="Ej. Mario" 
-                                        placeholderTextColor="#475569" 
-                                        className="flex-1 text-white font-bold text-lg"
-                                        value={guestName} 
-                                        onChangeText={setGuestName} 
-                                        autoFocus
-                                    />
-                                </View>
-                                {error && <Text className="text-rose-400 text-xs mt-2 ml-1 font-bold">{error}</Text>}
-                            </View>
-
-                            <TouchableOpacity 
-                                onPress={handleGuestEntry}
-                                disabled={loading}
-                                className="w-full bg-[#3b82f6] py-5 rounded-2xl items-center shadow-xl shadow-blue-500/20"
-                            >
-                                {loading ? <ActivityIndicator color="white" /> : <Text className="text-white font-black uppercase tracking-widest">Entrar a Dashboard</Text>}
-                            </TouchableOpacity>
-
-                            <TouchableOpacity 
-                                onPress={() => { setIsGuestPrompt(false); setError(''); }}
-                                className="mt-6"
-                            >
-                                <Text className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Volver</Text>
-                            </TouchableOpacity>
-                        </MotiView>
-                    )}
                 </ScrollView>
             </KeyboardAvoidingView>
         </View>

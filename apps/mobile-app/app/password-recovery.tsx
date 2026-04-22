@@ -128,7 +128,7 @@ export default function PasswordRecoveryScreen() {
                                     Revisa tu bandeja de entrada en <Text className="text-white">{email}</Text>.
                                 </Text>
                                 <TouchableOpacity 
-                                    onPress={() => router.replace('/auth')}
+                                    onPress={() => router.replace('/login')}
                                     className="mt-10 bg-white/5 border border-white/10 px-8 py-3.5 rounded-full"
                                 >
                                     <Text className="text-slate-300 font-bold text-xs uppercase tracking-widest">Volver al Inicio</Text>

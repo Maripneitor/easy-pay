@@ -33,9 +33,9 @@ export interface Item {
     asignadoA: string[]; // Array of participant IDs
 }
 
-export type MesaStatus = 'ACTIVA' | 'CERRANDO' | 'CERRADA';
+export type GrupoStatus = 'ACTIVA' | 'CERRANDO' | 'CERRADA';
 
-export interface Mesa {
+export interface Grupo {
     id: string;
     codigo: string; // 4-6 digit numeric code
     nombre: string;
@@ -45,7 +45,7 @@ export interface Mesa {
     subtotal: number;
     propina: number;
     total: number;
-    status: MesaStatus;
+    status: GrupoStatus;
     creadaEn: string;
 }
 
@@ -53,14 +53,14 @@ export type PaymentStatusType = 'PENDIENTE' | 'PAGANDO' | 'PAGADO' | 'ERROR_PAGO
 
 export interface PaymentStatus {
     participanteId: string;
-    mesaId: string;
+    grupoId: string;
     montoDeuda: number;
     montoPagado: number;
     status: PaymentStatusType;
 }
 
 export interface DigitalTicket {
-    mesaId: string;
+    grupoId: string;
     participanteId: string;
     subtotalIndividual: number;
     propinaIndividual: number;
@@ -68,7 +68,7 @@ export interface DigitalTicket {
     generadoEn: string;
 }
 
-export type SyncActionType = 'ADD_ITEM' | 'EDIT_ITEM' | 'DELETE_ITEM' | 'ASSIGN_ITEM' | 'CLOSE_MESA' | 'JOIN_MESA';
+export type SyncActionType = 'ADD_ITEM' | 'EDIT_ITEM' | 'DELETE_ITEM' | 'ASSIGN_ITEM' | 'CLOSE_GRUPO' | 'JOIN_GRUPO';
 
 export interface SyncQueueItem {
     id: string;

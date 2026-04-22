@@ -42,7 +42,7 @@ export const Hero = () => {
                                 <PlusCircle className={styles.actionIcon} />
                                 <h3>Nuevo Grupo</h3>
                             </div>
-                            <p>Eres el anfitrión. Crea un grupo o mesa.</p>
+                            <p>Eres el anfitrión. Crea un grupo.</p>
                             <button className={styles.primaryBtn}>Crear Grupo</button>
                         </div>
 
@@ -51,14 +51,14 @@ export const Hero = () => {
                                 <Users className={styles.actionIconJoin} />
                                 <h3>Unirme</h3>
                             </div>
-                            <p>¿Tienes código? Únete a la mesa.</p>
+                            <p>¿Tienes código? Únete al grupo.</p>
                             <button className={styles.secondaryBtn}>Unirme</button>
                         </div>
                     </div>
 
                     <div className={styles.hint}>
                         <span className={styles.hintEmoji}>💡</span>
-                        <p>El anfitrión crea la mesa y comparte el código.</p>
+                        <p>El anfitrión crea el grupo y comparte el código.</p>
                     </div>
                 </div>
 

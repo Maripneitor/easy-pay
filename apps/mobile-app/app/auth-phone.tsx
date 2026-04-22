@@ -102,16 +102,6 @@ export default function AuthPhoneScreen() {
                             </View>
                         </View>
                     </MotiView>
-
-                    <View className="mt-8 items-center">
-                        <TouchableOpacity 
-                            onPress={() => router.push('/(tabs)/')}
-                            className="flex-row items-center px-6 py-2.5 border border-slate-600 rounded-full active:bg-white/5"
-                        >
-                            <Text className="text-slate-300 font-semibold text-sm mr-2">Continuar como Invitado</Text>
-                            <MaterialIcons name="arrow-forward" size={18} color="#94a3b8" />
-                        </TouchableOpacity>
-                    </View>
                 </View>
             </ScrollView>
         </SafeAreaView>

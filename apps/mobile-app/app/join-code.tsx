@@ -4,16 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-// \import { MotiView, AnimatePresence } from 'moti'
 const MotiView = View as any;
-const MotiText = Text as any;
 const AnimatePresence = ({ children }: any) => children;;
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
-import { useMesa } from '../context/MesaContext';
+import { useGrupo } from '../context/GrupoContext';
 
 export default function JoinCodeScreen() {
     const { theme, fontScale } = useTheme();
-    const { joinMesa } = useMesa();
+    const { joinGrupo } = useGrupo();
     const router = useRouter();
     const [code, setCode] = useState('');
     const [error, setError] = useState('');
@@ -27,11 +25,11 @@ export default function JoinCodeScreen() {
         setLoading(true);
         setError('');
         try {
-            const success = await joinMesa(code);
+            const success = await joinGrupo(code);
             if (success) {
-                router.replace('/new-mesa');
+                router.replace('/new-group');
             } else {
-                setError('Código inválido o mesa cerrada');
+                setError('Código inválido o grupo cerrado');
             }
         } catch (e) {
             setError('Error de conexión. Intenta de nuevo.');
@@ -45,12 +43,12 @@ export default function JoinCodeScreen() {
             <StatusBar style="dark" />
             <Stack.Screen options={{ headerShown: false }} />
 
-            {/* Top AppBar from Stitch */}
+            {/* Top AppBar */}
             <View className="px-6 h-16 flex-row items-center justify-between bg-[#F7F9FB]">
                 <TouchableOpacity onPress={() => router.back()} className="p-2 rounded-full active:scale-95">
                     <Ionicons name="arrow-back" size={24} color="#0061a4" />
                 </TouchableOpacity>
-                <Text className="font-bold text-xl tracking-tight text-[#191C1E]">Join Table</Text>
+                <Text className="font-bold text-xl tracking-tight text-[#191C1E]">Unirse a Grupo</Text>
                 <View className="w-10" />
             </View>
 
@@ -58,7 +56,7 @@ export default function JoinCodeScreen() {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 className="flex-1 px-6 items-center justify-center"
             >
-                {/* Icon Container from Stitch */}
+                {/* Icon Container */}
                 <View className="mb-8 p-4 bg-white rounded-full shadow-sm relative">
                     <View className="absolute inset-0 bg-[#2196F3]/10 rounded-full blur-xl" />
                     <MaterialIcons name="dialpad" size={48} color="#2196F3" />
@@ -68,11 +66,11 @@ export default function JoinCodeScreen() {
                 <View className="text-center mb-10 items-center">
                     <Text className="font-bold text-3xl text-[#191C1E] mb-3">Ingresa el código</Text>
                     <Text className="text-sm text-[#404752] text-center max-w-[280px] leading-relaxed">
-                        Pídele al líder de la mesa el código numérico de 4 a 6 dígitos para unirte a la cuenta compartida.
+                        Pídele al líder del grupo el código numérico de 4 a 6 dígitos para unirte a la cuenta compartida.
                     </Text>
                 </View>
 
-                {/* OTP Input Area Simulado */}
+                {/* OTP Input Area */}
                 <View className="w-full max-w-md items-center">
                     <View className="flex-row space-x-2 mb-4">
                         {[0, 1, 2, 3, 4, 5].map((idx) => (
@@ -87,7 +85,6 @@ export default function JoinCodeScreen() {
                         ))}
                     </View>
                     
-                    {/* Hidden input to capture focus */}
                     <TextInput 
                         value={code}
                         onChangeText={(val) => { setCode(val.replace(/[^0-9]/g, '')); setError(''); }}
@@ -97,23 +94,16 @@ export default function JoinCodeScreen() {
                         style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%' }}
                     />
 
-                    {/* Error State Indicator */}
-                    <AnimatePresence>
-                        {error && (
-                            <MotiView 
-                                from={{ opacity: 0, translateY: -10 }}
-                                animate={{ opacity: 1, translateY: 0 }}
-                                className="flex-row items-center space-x-1 mt-2"
-                            >
-                                <MaterialIcons name="error" size={16} color="#ba1a1a" />
-                                <Text className="text-[12px] font-medium text-[#ba1a1a]">{error}</Text>
-                            </MotiView>
-                        )}
-                    </AnimatePresence>
+                    {error && (
+                        <View className="flex-row items-center space-x-1 mt-2">
+                            <MaterialIcons name="error" size={16} color="#ba1a1a" />
+                            <Text className="text-[12px] font-medium text-[#ba1a1a]">{error}</Text>
+                        </View>
+                    )}
                 </View>
             </KeyboardAvoidingView>
 
-            {/* Footer Action from Stitch */}
+            {/* Footer Action */}
             <View className="p-6 bg-white/80 border-t border-[#bfc7d4]/15">
                 <TouchableOpacity 
                     onPress={handleJoin}

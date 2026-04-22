@@ -6,26 +6,20 @@ import { useAuthContext } from '../../context/AuthContext';
 
 export const Navbar = () => {
     const navigate = useNavigate();
-    const { isAuthenticated } = useAuthContext();
+    const { isAuthenticated, user } = useAuthContext();
 
     const handleProfile = () => {
-        if (isAuthenticated) {
-            navigate('/profile');
-        } else {
-            navigate('/auth');
-        }
+        navigate('/profile');
     };
 
     return (
         <nav className={styles.navbar}>
             <div className={styles.logoContainer} onClick={() => navigate('/')}>
-                <div className={styles.iconWrapper}>
-                    <img 
-                        src="/assets/images/logo-ep.png"
-                        alt="Easy-Pay Logo"
-                        className={styles.logoImage}
-                    />
-                </div>
+                <img 
+                    src="/assets/images/logo-ep.png"
+                    alt="Easy-Pay Logo"
+                    className={styles.logoImage}
+                />
                 <span className={styles.logoText}>Easy-Pay</span>
             </div>
 
@@ -37,21 +31,27 @@ export const Navbar = () => {
             </div>
 
             <div className={styles.actions}>
-                {!isAuthenticated && (
+                {!isAuthenticated ? (
                     <button
                         className={styles.loginBtn}
                         onClick={() => navigate('/auth')}
                     >
                         Entrar
                     </button>
+                ) : (
+                    <button
+                        className={styles.profileBtn}
+                        onClick={handleProfile}
+                        title="Mi Perfil"
+                    >
+                        {user?.avatarUrl ? (
+                            <img src={user.avatarUrl} alt={user.name} className={styles.avatarMini} />
+                        ) : (
+                            <User size={18} />
+                        )}
+                        <span className={styles.userNameMini}>{user?.name.split(' ')[0]}</span>
+                    </button>
                 )}
-                <button
-                    className={styles.profileBtn}
-                    onClick={handleProfile}
-                    title={isAuthenticated ? "Mi Perfil" : "Iniciar Sesión"}
-                >
-                    <User size={18} />
-                </button>
             </div>
         </nav>
     );

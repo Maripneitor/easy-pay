@@ -1,139 +1,172 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Dimensions, ActivityIndicator, Alert } from 'react-native';
+import { 
+    View, 
+    Text, 
+    TouchableOpacity, 
+    ScrollView, 
+    TextInput,
+    Dimensions,
+    Platform
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons, Ionicons, Feather } from '@expo/vector-icons';
 import { router, Stack } from 'expo-router';
+import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../../../src/infrastructure/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
-export default function NewMethodScreen() {
-    const [cardData, setCardData] = useState({ number: '', expiry: '', cvv: '', holder: '' });
-    const [isSaving, setIsSaving] = useState(false);
-
-    const handleSave = () => {
-        setIsSaving(true);
-        // Simulate payment provider call
-        setTimeout(() => {
-            setIsSaving(false);
-            Alert.alert("Éxito", "Tarjeta agregada correctamente.", [
-                { text: "OK", onPress: () => router.back() }
-            ]);
-        }, 1500);
-    };
+export default function RegisterCardScreen() {
+    const { theme, fontScale } = useTheme();
+    const [cardNumber, setCardNumber] = useState('');
+    const [cardName, setCardName] = useState('');
+    const [expiry, setExpiry] = useState('');
+    const [cvv, setCvv] = useState('');
 
     return (
-        <SafeAreaView className="flex-1 bg-[#0d1425]" edges={['top']}>
-            <StatusBar style="light" />
-            <Stack.Screen options={{ headerShown: false, presentation: 'modal' }} />
-
-            {/* Header */}
-            <View className="px-6 py-4 flex-row items-center justify-between">
-                <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 bg-white/5 rounded-full items-center justify-center border border-white/10">
-                    <Ionicons name="close" size={24} color="white" />
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
+            <StatusBar style={theme.isDark ? "light" : "dark"} />
+            <Stack.Screen options={{ headerShown: false }} />
+            
+            {/* TopAppBar */}
+            <View className="flex-row items-center justify-between px-6 py-4 w-full">
+                <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-full items-center justify-center">
+                    <MaterialIcons name="arrow-back" size={24} color={theme.text} />
                 </TouchableOpacity>
-                <Text className="text-white text-xl font-black">Nuevo Método</Text>
-                <View className="w-10" />
+                <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black tracking-tight flex-1 text-center pr-10">Nueva Tarjeta</Text>
             </View>
 
-            <KeyboardAvoidingView 
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                className="flex-1"
-            >
-                <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
-                    <View className="mt-10 mb-10 items-center">
-                        {/* Fake Card Preview */}
-                        <View className="w-full h-52 bg-slate-800 rounded-[32px] p-8 border border-white/5 relative overflow-hidden">
-                            <View className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16" />
-                            <Image 
-                                source={{ uri: 'https://img.icons8.com/color/96/chip.png' }}
-                                className="w-12 h-10 mb-8 opacity-60"
-                            />
-                            <Text className="text-white/30 font-mono text-xl tracking-[4px] mb-8">
-                                {cardData.number || '**** **** **** ****'}
+            <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150, paddingTop: 10 }}>
+                {/* Virtual Card Preview */}
+                <View className="mb-10 items-center">
+                    <LinearGradient
+                        colors={['#1e293b', '#0f172a']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        className="w-full h-56 rounded-[32px] p-8 justify-between shadow-2xl relative overflow-hidden"
+                    >
+                        <View className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-24 -mt-24" />
+                        
+                        <View className="flex-row justify-between items-start">
+                            <View className="w-12 h-10 bg-amber-400/20 rounded-md items-center justify-center">
+                                <View className="w-8 h-6 bg-amber-400/40 rounded-sm" />
+                            </View>
+                            <FontAwesome5 name="visa" size={32} color="white" />
+                        </View>
+
+                        <View>
+                            <Text className="text-white text-2xl font-black tracking-[4px] mb-6">
+                                {cardNumber || '•••• •••• •••• ••••'}
                             </Text>
                             <View className="flex-row justify-between items-end">
                                 <View>
-                                    <Text className="text-white/20 text-[9px] font-black uppercase tracking-widest mb-1">Titular</Text>
-                                    <Text className="text-white/40 font-black text-sm uppercase">{cardData.holder || 'Luis Gonzalez'}</Text>
+                                    <Text className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Titular</Text>
+                                    <Text className="text-white font-bold text-sm uppercase">{cardName || 'Nombre en la tarjeta'}</Text>
                                 </View>
-                                <View>
-                                    <Text className="text-white/20 text-[9px] font-black uppercase tracking-widest mb-1">Expira</Text>
-                                    <Text className="text-white/40 font-black text-sm">{cardData.expiry || '--/--'}</Text>
+                                <View className="items-end">
+                                    <Text className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Expira</Text>
+                                    <Text className="text-white font-bold text-sm">{expiry || 'MM/YY'}</Text>
                                 </View>
                             </View>
                         </View>
-                    </View>
+                    </LinearGradient>
+                </View>
 
-                    <View className="gap-6 pb-20">
-                        <View>
-                            <Text className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2.5 ml-1">Titular de la tarjeta</Text>
+                {/* Form Section */}
+                <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="rounded-[2.5rem] p-8 border mb-8 gap-6">
+                    <View>
+                        <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-[3px] mb-3 ml-1">Número de Tarjeta</Text>
+                        <View style={{ backgroundColor: theme.bg }} className="flex-row items-center px-5 py-4 rounded-2xl">
+                            <MaterialIcons name="credit-card" size={20} color={theme.textSecondary} className="mr-3" />
                             <TextInput 
-                                placeholder="Nombre completo"
-                                placeholderTextColor="#334155"
-                                className="bg-white/5 border border-white/10 p-5 rounded-2xl text-white font-bold"
-                                onChangeText={(text) => setCardData({...cardData, holder: text})}
-                                value={cardData.holder}
-                            />
-                        </View>
-
-                        <View>
-                            <Text className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2.5 ml-1">Número de tarjeta</Text>
-                            <TextInput 
-                                placeholder="0000 0000 0000 0000"
-                                placeholderTextColor="#334155"
-                                keyboardType="number-pad"
+                                value={cardNumber}
+                                onChangeText={setCardNumber}
+                                keyboardType="numeric"
                                 maxLength={19}
-                                className="bg-white/5 border border-white/10 p-5 rounded-2xl text-white font-mono font-bold"
-                                onChangeText={(text) => setCardData({...cardData, number: text})}
-                                value={cardData.number}
+                                placeholder="4242 4242 4242 4242"
+                                placeholderTextColor="#475569"
+                                style={{ color: theme.text, flex: 1, fontWeight: 'bold' }}
                             />
                         </View>
+                    </View>
 
-                        <View className="flex-row gap-4">
-                            <View className="flex-1">
-                                <Text className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2.5 ml-1">Vencimiento</Text>
+                    <View>
+                        <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-[3px] mb-3 ml-1">Nombre del Titular</Text>
+                        <View style={{ backgroundColor: theme.bg }} className="flex-row items-center px-5 py-4 rounded-2xl">
+                            <MaterialIcons name="person-outline" size={20} color={theme.textSecondary} className="mr-3" />
+                            <TextInput 
+                                value={cardName}
+                                onChangeText={setCardName}
+                                autoCapitalize="words"
+                                placeholder="JUAN PEREZ"
+                                placeholderTextColor="#475569"
+                                style={{ color: theme.text, flex: 1, fontWeight: 'bold' }}
+                            />
+                        </View>
+                    </View>
+
+                    <View className="flex-row gap-4">
+                        <View className="flex-1">
+                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-[3px] mb-3 ml-1">Expiración</Text>
+                            <View style={{ backgroundColor: theme.bg }} className="flex-row items-center px-5 py-4 rounded-2xl">
                                 <TextInput 
-                                    placeholder="MM/YY"
-                                    placeholderTextColor="#334155"
-                                    keyboardType="number-pad"
+                                    value={expiry}
+                                    onChangeText={setExpiry}
+                                    keyboardType="numeric"
                                     maxLength={5}
-                                    className="bg-white/5 border border-white/10 p-5 rounded-2xl text-white font-bold"
-                                    onChangeText={(text) => setCardData({...cardData, expiry: text})}
-                                    value={cardData.expiry}
-                                />
-                            </View>
-                            <View className="flex-1">
-                                <Text className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2.5 ml-1">CVV</Text>
-                                <TextInput 
-                                    placeholder="123"
-                                    placeholderTextColor="#334155"
-                                    keyboardType="number-pad"
-                                    secureTextEntry
-                                    maxLength={3}
-                                    className="bg-white/5 border border-white/10 p-5 rounded-2xl text-white font-bold"
-                                    onChangeText={(text) => setCardData({...cardData, cvv: text})}
-                                    value={cardData.cvv}
+                                    placeholder="MM/YY"
+                                    placeholderTextColor="#475569"
+                                    style={{ color: theme.text, flex: 1, fontWeight: 'bold', textAlign: 'center' }}
                                 />
                             </View>
                         </View>
-
-                        <TouchableOpacity 
-                            onPress={handleSave}
-                            disabled={isSaving}
-                            className="bg-blue-600 p-6 rounded-[28px] items-center justify-center shadow-lg shadow-blue-500/20 mt-6"
-                        >
-                            {isSaving ? (
-                                <ActivityIndicator color="white" />
-                            ) : (
-                                <Text className="text-white font-black uppercase tracking-widest text-[11px]">Validar y Guardar Método</Text>
-                            )}
-                        </TouchableOpacity>
+                        <View className="flex-1">
+                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-[3px] mb-3 ml-1">CVV</Text>
+                            <View style={{ backgroundColor: theme.bg }} className="flex-row items-center px-5 py-4 rounded-2xl">
+                                <TextInput 
+                                    value={cvv}
+                                    onChangeText={setCvv}
+                                    keyboardType="numeric"
+                                    maxLength={3}
+                                    secureTextEntry
+                                    placeholder="•••"
+                                    placeholderTextColor="#475569"
+                                    style={{ color: theme.text, flex: 1, fontWeight: 'bold', textAlign: 'center' }}
+                                />
+                            </View>
+                        </View>
                     </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
+                </View>
+
+                {/* Info Text */}
+                <View className="flex-row items-center gap-3 px-4 opacity-60">
+                    <Ionicons name="shield-checkmark-outline" size={20} color={theme.textSecondary} />
+                    <Text style={{ color: theme.textSecondary }} className="text-[10px] font-medium flex-1">
+                        Tus datos están protegidos bajo estándares PCI-DSS de nivel bancario.
+                    </Text>
+                </View>
+            </ScrollView>
+
+            {/* Footer Action */}
+            <View 
+                style={{ backgroundColor: theme.bg, borderColor: theme.border }} 
+                className="absolute bottom-0 w-full px-6 py-8 border-t"
+            >
+                <TouchableOpacity 
+                    activeOpacity={0.8}
+                    className="w-full h-16 rounded-2xl overflow-hidden shadow-xl shadow-blue-500/20"
+                >
+                    <LinearGradient
+                        colors={[theme.primary, theme.primary + 'CC']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        className="w-full h-full items-center justify-center"
+                    >
+                        <Text className="text-black font-black text-base uppercase tracking-widest">Guardar Tarjeta</Text>
+                    </LinearGradient>
+                </TouchableOpacity>
+            </View>
         </SafeAreaView>
     );
 }
-
-import { Image } from 'react-native';

@@ -9,13 +9,13 @@ const MotiView = View as any;
 const MotiText = Text as any;
 const AnimatePresence = ({ children }: any) => children;;
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
-import { useMesa } from '../context/MesaContext';
+import { useGrupo } from '../context/GrupoContext';
 
 const { width, height } = Dimensions.get('window');
 
 export default function ScanQRScreen() {
     const { theme, fontScale } = useTheme();
-    const { joinMesa } = useMesa();
+    const { joinGrupo } = useGrupo();
     const router = useRouter();
     const [scanned, setScanned] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -23,11 +23,11 @@ export default function ScanQRScreen() {
     const handleScan = async (code: string = 'MOCK123') => {
         setLoading(true);
         try {
-            const success = await joinMesa(code);
+            const success = await joinGrupo(code);
             if (success) {
                 setScanned(true);
                 setTimeout(() => {
-                    router.replace('/new-mesa');
+                    router.replace('/new-group');
                 }, 800);
             }
         } catch (e) {
@@ -46,7 +46,7 @@ export default function ScanQRScreen() {
                 <TouchableOpacity onPress={() => router.back()} className="p-3 bg-white/10 rounded-full border border-white/20">
                     <Ionicons name="close" size={24} color="white" />
                 </TouchableOpacity>
-                <Text style={{ color: 'white', fontSize: 18 * fontScale }} className="font-black ml-4">Escanear Mesa</Text>
+                <Text style={{ color: 'white', fontSize: 18 * fontScale }} className="font-black ml-4">Escanear Grupo</Text>
             </View>
 
             <View className="flex-1 items-center justify-center">
@@ -71,7 +71,7 @@ export default function ScanQRScreen() {
 
                 <View className="mt-12 px-12">
                     <Text style={{ color: 'white' }} className="text-center font-bold text-lg">Apunta al código QR</Text>
-                    <Text style={{ color: 'white' }} className="text-center opacity-60 mt-2">El código se encuentra en la pantalla del líder de la mesa.</Text>
+                    <Text style={{ color: 'white' }} className="text-center opacity-60 mt-2">El código se encuentra en la pantalla del líder de la Grupo.</Text>
                 </View>
 
                 <TouchableOpacity 

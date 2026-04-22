@@ -19,7 +19,7 @@ const CARD_SPACING = (width - CARD_WIDTH) / 2;
 
 const QUICK_CONNECTS = [
     { id: 'apple', label: 'Apple Pay', icon: 'apple', color: '#000000', connected: true },
-    { id: 'google', label: 'G Pay', icon: 'google', color: '#ffffff', connected: false },
+    { id: 'google', label: 'G Pay', icon: 'google', color: '#ffffff', connected: false, isGoogle: true },
     { id: 'paypal', label: 'PayPal', icon: 'paypal', color: '#003087', connected: true },
 ];
 
@@ -177,10 +177,21 @@ export default function PaymentsScreen() {
                             <TouchableOpacity 
                                 key={conn.id}
                                 activeOpacity={0.8}
-                                style={{ backgroundColor: conn.color === '#ffffff' ? theme.glassBg : conn.color }}
-                                className="flex-1 h-20 rounded-[28px] items-center justify-center relative border border-white/5"
+                                style={{ 
+                                    backgroundColor: (conn as any).isGoogle ? '#ffffff' : conn.color,
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 4 },
+                                    shadowOpacity: 0.1,
+                                    shadowRadius: 10,
+                                    elevation: 5
+                                }}
+                                className={`flex-1 h-20 rounded-[28px] items-center justify-center relative border ${(conn as any).isGoogle ? 'border-slate-200' : 'border-white/5'}`}
                             >
-                                <FontAwesome5 name={conn.icon} size={24} color={conn.color === '#ffffff' ? '#ffffff' : 'white'} />
+                                <FontAwesome5 
+                                    name={conn.icon} 
+                                    size={24} 
+                                    color={(conn as any).isGoogle ? '#000000' : 'white'} 
+                                />
                                 {conn.connected && (
                                     <View className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-4 border-[#050a15] items-center justify-center">
                                         <MaterialIcons name="check" size={10} color="white" />
@@ -193,44 +204,56 @@ export default function PaymentsScreen() {
 
                 {/* Transaction History */}
                 <View className="px-6 mb-10">
-                    <SectionHeader title="Historial de Pagos" action="TODO" route="/history/all" />
+                    <SectionHeader title="Historial de Pagos" action={HISTORY.length > 0 ? "TODO" : undefined} route="/history/all" />
 
-                    <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="border rounded-[40px] overflow-hidden p-2">
-                        {HISTORY.map((tx, i) => (
-                            <MotiView 
-                                from={{ opacity: 0, translateX: -10 }}
-                                animate={{ opacity: 1, translateX: 0 }}
-                                transition={{ delay: i * 100 }}
-                                key={tx.id} 
-                            >
-                                <TouchableOpacity 
-                                    activeOpacity={0.8}
-                                    className={`p-5 flex-row items-center justify-between mb-2 rounded-[32px] ${i % 2 === 0 ? 'bg-white/5' : ''}`}
+                    {HISTORY.length > 0 ? (
+                        <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="border rounded-[40px] overflow-hidden p-2">
+                            {HISTORY.map((tx, i) => (
+                                <MotiView 
+                                    from={{ opacity: 0, translateX: -10 }}
+                                    animate={{ opacity: 1, translateX: 0 }}
+                                    transition={{ delay: i * 100 }}
+                                    key={tx.id} 
                                 >
-                                    <View className="flex-row items-center gap-4 flex-1">
-                                        <View style={{ backgroundColor: theme.glassBg }} className="w-14 h-14 rounded-[20px] items-center justify-center">
-                                            <MaterialIcons 
-                                                name={tx.type as any} 
-                                                size={24} 
-                                                color={theme.primary} 
-                                            />
-                                        </View>
-                                        <View className="flex-1">
-                                            <Text style={{ fontSize: 15 * fontScale, color: theme.text }} className="font-black tracking-tight" numberOfLines={1}>{tx.title}</Text>
-                                            <View className="flex-row items-center gap-2 mt-1">
-                                                <Text style={{ fontSize: 8 * fontScale, color: theme.primary }} className="font-black uppercase tracking-widest">{tx.status}</Text>
-                                                <Text style={{ fontSize: 9 * fontScale }} className="text-slate-500 font-bold uppercase">• {tx.date}</Text>
+                                    <TouchableOpacity 
+                                        activeOpacity={0.8}
+                                        className={`p-5 flex-row items-center justify-between mb-2 rounded-[32px] ${i % 2 === 0 ? 'bg-white/5' : ''}`}
+                                    >
+                                        <View className="flex-row items-center gap-4 flex-1">
+                                            <View style={{ backgroundColor: theme.glassBg }} className="w-14 h-14 rounded-[20px] items-center justify-center">
+                                                <MaterialIcons 
+                                                    name={tx.type as any} 
+                                                    size={24} 
+                                                    color={theme.primary} 
+                                                />
+                                            </View>
+                                            <View className="flex-1">
+                                                <Text style={{ fontSize: 15 * fontScale, color: theme.text }} className="font-black tracking-tight" numberOfLines={1}>{tx.title}</Text>
+                                                <View className="flex-row items-center gap-2 mt-1">
+                                                    <Text style={{ fontSize: 8 * fontScale, color: theme.primary }} className="font-black uppercase tracking-widest">{tx.status}</Text>
+                                                    <Text style={{ fontSize: 9 * fontScale }} className="text-slate-500 font-bold uppercase">• {tx.date}</Text>
+                                                </View>
                                             </View>
                                         </View>
-                                    </View>
-                                    <View className="items-end ml-4">
-                                        <Text style={{ fontSize: 16 * fontScale, color: theme.text }} className="font-black mb-1">{tx.amount}</Text>
-                                        <Text style={{ fontSize: 8 * fontScale }} className="text-slate-500 font-black uppercase">{tx.method}</Text>
-                                    </View>
-                                </TouchableOpacity>
-                            </MotiView>
-                        ))}
-                    </View>
+                                        <View className="items-end ml-4">
+                                            <Text style={{ fontSize: 16 * fontScale, color: theme.text }} className="font-black mb-1">{tx.amount}</Text>
+                                            <Text style={{ fontSize: 8 * fontScale }} className="text-slate-500 font-black uppercase">{tx.method}</Text>
+                                        </View>
+                                    </TouchableOpacity>
+                                </MotiView>
+                            ))}
+                        </View>
+                    ) : (
+                        <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="border rounded-[40px] p-10 items-center justify-center">
+                            <View style={{ backgroundColor: theme.glassBg }} className="w-16 h-16 rounded-full items-center justify-center mb-4">
+                                <MaterialIcons name="history" size={32} color={theme.textSecondary} />
+                            </View>
+                            <Text style={{ color: theme.text, fontSize: 15 * fontScale }} className="font-black text-center">Sin actividad</Text>
+                            <Text style={{ color: theme.textSecondary, fontSize: 11 * fontScale }} className="text-center mt-2 font-bold px-4">
+                                Aún no tienes historial de pagos registrados. ¡Empieza a usar Easy-Pay hoy!
+                            </Text>
+                        </View>
+                    )}
                 </View>
             </ScrollView>
         </SafeAreaView>

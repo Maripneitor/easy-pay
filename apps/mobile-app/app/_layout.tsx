@@ -12,7 +12,7 @@ import { ThemeProvider as AppThemeProvider } from '../src/infrastructure/context
 import { NotificationProvider } from '../src/infrastructure/context/NotificationContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../context/AuthContext';
-import { MesaProvider } from '../context/MesaContext';
+import { GrupoProvider } from '../context/GrupoContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,7 +34,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-      <MesaProvider>
+      <GrupoProvider>
       <AppThemeProvider>
         <NotificationProvider>
           <QueryClientProvider client={queryClient}>
@@ -42,7 +42,7 @@ export default function RootLayout() {
               <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
                 <Stack screenOptions={{ headerShown: false }} initialRouteName="index">
                   <Stack.Screen name="index" />
-                  <Stack.Screen name="auth" />
+                  <Stack.Screen name="login" />
                   <Stack.Screen name="friends/add" options={{ presentation: 'modal' }} />
                   <Stack.Screen name="wallet/security" options={{ presentation: 'modal' }} />
                   <Stack.Screen name="wallet/methods/new" options={{ presentation: 'modal' }} />
@@ -55,7 +55,7 @@ export default function RootLayout() {
           </QueryClientProvider>
         </NotificationProvider>
       </AppThemeProvider>
-      </MesaProvider>
+      </GrupoProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

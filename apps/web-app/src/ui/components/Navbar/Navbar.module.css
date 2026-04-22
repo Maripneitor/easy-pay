@@ -91,11 +91,11 @@
     background-color: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(144, 202, 249, 0.2);
     color: #64B5F6;
-    padding: 0.5rem;
-    border-radius: 50%;
+    padding: 0.4rem 0.8rem;
+    border-radius: 9999px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 0.5rem;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -104,3 +104,16 @@
     background-color: rgba(255, 255, 255, 0.1);
     border-color: #64B5F6;
 }
+
+.avatarMini {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.userNameMini {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+}

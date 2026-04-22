@@ -10,13 +10,13 @@ const { width } = Dimensions.get('window');
 
 // --- Mock Data ---
 const HISTORY = [
-    { id: '1', title: 'Cena Sushi', amount: -150.00, date: 'Hoy, 2:30 PM', group: 'Mesa #4', status: 'Pagado por ti' },
+    { id: '1', title: 'Cena Sushi', amount: -150.00, date: 'Hoy, 2:30 PM', group: 'Grupo #4', status: 'Pagado por ti' },
     { id: '2', title: 'Uber a casa', amount: +80.00, date: 'Ayer', group: 'Personal', status: 'Debes recibir' },
     { id: '3', title: 'Regalo María', amount: -60.00, date: '15 Oct', group: 'Cumpleaños', status: 'Dividido 50/50' },
 ];
 
 const SHARED_GROUPS = [
-    { id: 'g2', name: 'Mesa #4', members: 3, bg: '#a855f7' },
+    { id: 'g2', name: 'Grupo #4', members: 3, bg: '#a855f7' },
     { id: 'g3', name: 'Amigos Tech', members: 8, bg: '#10b981' },
 ];
 
@@ -86,7 +86,7 @@ export default function FriendDetailScreen() {
                                 <Text className="text-white text-[10px] font-black uppercase">Liquidar</Text>
                             </TouchableOpacity>
                             <TouchableOpacity 
-                                onPress={() => router.push({ pathname: '/add-expense', params: { friendId: id } } as any)}
+                                onPress={() => router.push({ pathname: '/new-expense', params: { friendId: id } } as any)}
                                 className="items-center"
                             >
                                 <View className="w-14 h-14 bg-white/10 rounded-2xl items-center justify-center mb-2 border border-white/5">

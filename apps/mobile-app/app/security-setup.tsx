@@ -6,12 +6,16 @@ import {
     StyleSheet, 
     Dimensions, 
     ActivityIndicator, 
-    Alert 
+    Alert,
+    ScrollView
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Image } from 'react-native';
+import { useTheme } from '../src/infrastructure/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -19,6 +23,8 @@ export default function SecuritySetupScreen() {
     const router = useRouter();
     const { userId, email, name } = useLocalSearchParams<{ userId: string, email: string, name: string }>();
     const [loading, setLoading] = useState(false);
+    const insets = useSafeAreaInsets();
+    const { theme, cycleTheme } = useTheme();
     
     const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -66,84 +72,111 @@ export default function SecuritySetupScreen() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#F7F9FB' }} edges={['top']}>
-            <StatusBar style="dark" />
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
+            <StatusBar style={theme.isDark ? "light" : "dark"} />
             
-            {/* Top Bar from Stitch */}
-            <View className="px-6 py-4 flex-row justify-between items-center bg-[#F7F9FB]">
-                <TouchableOpacity onPress={() => router.back()} className="p-2 rounded-full active:scale-95 transition-all">
-                    <Ionicons name="arrow-back" size={24} color="#0061a4" />
+            {/* Top Bar */}
+            <View style={{ backgroundColor: theme.bg }} className="px-6 py-4 flex-row justify-between items-center z-50">
+                <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: theme.glassBg, borderColor: theme.border }} className="w-10 h-10 rounded-full items-center justify-center border">
+                    <Ionicons name="arrow-back" size={24} color={theme.text} />
                 </TouchableOpacity>
-                <Text className="font-bold text-xl tracking-tight text-[#0061a4]">Easy-Pay</Text>
-                <View className="w-10" />
+                <View className="flex-row items-center gap-2">
+                    <Image 
+                        source={require('../assets/images/logo-ep.png')} 
+                        style={{ width: 32, height: 32 }}
+                        resizeMode="contain"
+                    />
+                    <Text style={{ color: theme.text }} className="font-black text-xl tracking-tight">Easy-Pay</Text>
+                </View>
+                <TouchableOpacity 
+                    onPress={cycleTheme}
+                    style={{ backgroundColor: theme.primary }}
+                    className="w-10 h-10 rounded-full items-center justify-center shadow-lg shadow-blue-500/20"
+                >
+                    <Ionicons name={theme.isDark ? "sunny" : "moon"} size={20} color="black" />
+                </TouchableOpacity>
             </View>
 
-            <ScrollView className="flex-1 px-6 pb-32" showsVerticalScrollIndicator={false}>
+            <ScrollView 
+                className="flex-1 px-6" 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
+            >
                 {/* Background Glow Effect */}
-                <View className="absolute top-0 right-0 w-64 h-64 bg-[#2196F3]/5 rounded-full blur-3xl" />
+                <View style={{ backgroundColor: theme.primary + '10' }} className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl" />
                 
-                {/* Stepper (Step 2 of Onboarding context) */}
-                <View className="flex-row items-center justify-center space-x-3 my-6">
-                    <View className="w-2 h-2 rounded-full bg-[#E0E3E5]" />
-                    <View className="w-8 h-2 rounded-full bg-[#0061a4]" />
-                    <View className="w-2 h-2 rounded-full bg-[#E0E3E5]" />
+                {/* Stepper */}
+                <View className="flex-row items-center justify-center space-x-3 my-10">
+                    <View style={{ backgroundColor: theme.border }} className="w-2 h-2 rounded-full" />
+                    <View style={{ backgroundColor: theme.primary }} className="w-10 h-2 rounded-full" />
+                    <View style={{ backgroundColor: theme.border }} className="w-2 h-2 rounded-full" />
                 </View>
 
                 {/* Title Section */}
-                <View className="mb-10 text-center">
-                    <Text className="text-3xl font-bold text-[#191C1E] mb-3 tracking-tight">Seguridad Easy-Pay</Text>
-                    <Text className="text-base text-[#404752] leading-relaxed">
+                <View className="mb-10 items-center">
+                    <Text style={{ color: theme.text }} className="text-3xl font-black mb-3 tracking-tight text-center">Seguridad Easy-Pay</Text>
+                    <Text style={{ color: theme.textSecondary }} className="text-base text-center leading-relaxed font-medium px-4">
                         Protege tu cuenta activando la verificación de dos pasos (2FA).
                     </Text>
                 </View>
 
                 {/* Main Card Section */}
-                <View className="bg-white rounded-[2rem] p-8 shadow-sm border border-[#bfc7d4]/15 items-center">
-                    <View className="w-20 h-20 bg-[#2196F3]/10 rounded-3xl items-center justify-center mb-6 border border-[#2196F3]/20">
-                        <MaterialIcons name="shield" size={44} color="#0061a4" />
+                <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="rounded-[40px] p-8 shadow-sm border items-center">
+                    <View style={{ backgroundColor: theme.primary + '15', borderColor: theme.primary + '30' }} className="w-20 h-20 rounded-[30px] items-center justify-center mb-6 border">
+                        <MaterialIcons name="shield" size={44} color={theme.primary} />
                     </View>
 
-                    <Text className="text-xl font-bold text-[#191C1E] text-center mb-3">Verificación por Correo</Text>
-                    <Text className="text-sm text-[#707883] text-center leading-relaxed mb-8">
+                    <Text style={{ color: theme.text }} className="text-xl font-black text-center mb-3">Verificación por Correo</Text>
+                    <Text style={{ color: theme.textSecondary }} className="text-sm text-center leading-relaxed mb-10 font-medium">
                         Te enviaremos un código de seguridad de 6 dígitos para validar tu identidad.
                     </Text>
 
                     {/* Email Info Box */}
-                    <View className="bg-[#F2F4F6] rounded-2xl p-5 w-full flex-row items-center space-x-4">
-                        <View className="w-11 h-11 bg-white rounded-full items-center justify-center shadow-sm">
-                            <MaterialIcons name="alternate-email" size={22} color="#0061a4" />
+                    <View style={{ backgroundColor: theme.glassBg, borderColor: theme.border }} className="rounded-3xl p-6 w-full flex-row items-center border">
+                        <View style={{ backgroundColor: theme.primary }} className="w-12 h-12 rounded-full items-center justify-center shadow-lg shadow-blue-500/20 mr-4">
+                            <MaterialIcons name="alternate-email" size={24} color="black" />
                         </View>
                         <View className="flex-1">
-                            <Text className="text-[10px] font-bold text-[#404752] uppercase tracking-wider mb-0.5">Recibirás el código en:</Text>
-                            <Text className="text-[15px] font-bold text-[#191C1E]">{email || 'tu@ejemplo.com'}</Text>
+                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-widest mb-1">Recibirás el código en:</Text>
+                            <Text style={{ color: theme.text }} className="text-[15px] font-black">{email || 'tu@ejemplo.com'}</Text>
                         </View>
                     </View>
                 </View>
 
                 {/* Security Protocol Indicator */}
-                <View className="mt-8 flex-row items-center justify-center space-x-2">
-                    <MaterialIcons name="verified-user" size={16} color="#0061a4" />
-                    <Text className="text-[10px] font-bold text-[#0061a4] uppercase tracking-widest opacity-60">Protocolo de Seguridad v4.0 Active</Text>
+                <View className="mt-12 flex-row items-center justify-center space-x-3 opacity-50">
+                    <MaterialIcons name="verified-user" size={16} color={theme.primary} />
+                    <Text style={{ color: theme.primary }} className="text-[10px] font-black uppercase tracking-[3px]">Protocolo Activo</Text>
                 </View>
             </ScrollView>
 
             {/* Sticky Footer CTA */}
-            <View className="absolute bottom-0 left-0 right-0 p-6 bg-white/80 border-t border-[#bfc7d4]/15">
+            <View 
+                style={{ 
+                    paddingBottom: insets.bottom + 24,
+                    paddingHorizontal: 24,
+                    paddingTop: 24,
+                    backgroundColor: theme.bg + 'ee',
+                    borderTopColor: theme.border,
+                    borderTopWidth: 1
+                }} 
+                className="absolute bottom-0 left-0 right-0"
+            >
                 <TouchableOpacity 
                     onPress={handleSendCode}
                     disabled={loading}
-                    className="w-full bg-[#0061a4] py-5 rounded-2xl flex-row justify-center items-center shadow-lg active:scale-[0.98]"
+                    style={{ backgroundColor: theme.primary }}
+                    className="w-full py-5 rounded-[28px] flex-row justify-center items-center shadow-xl shadow-blue-500/30"
                 >
                     {loading ? (
-                        <ActivityIndicator color="white" />
+                        <ActivityIndicator color="black" />
                     ) : (
                         <>
-                            <Text className="text-white font-bold text-lg mr-2 uppercase tracking-wide">Activar Seguridad</Text>
-                            <MaterialIcons name="arrow-forward" size={20} color="white" />
+                            <Text className="text-black font-black text-base mr-2 uppercase tracking-widest">Activar Seguridad</Text>
+                            <MaterialIcons name="arrow-forward" size={20} color="black" />
                         </>
                     )}
                 </TouchableOpacity>
-                <View style={{ height: 12 }} />
             </View>
         </SafeAreaView>
     );

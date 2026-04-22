@@ -2,6 +2,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { useNotifications } from '../../src/infrastructure/context/NotificationContext';
 // import { MotiView } from 'moti';
@@ -74,9 +75,17 @@ const CustomTabBarButton = ({ children, onPress, theme }: any) => {
   );
 };
 
+import { Redirect } from 'expo-router';
+import { useAuth } from '../../context/AuthContext';
+
 export default function TabLayout() {
   const { theme } = useTheme();
   const { hasAlerts } = useNotifications();
+  const { token, isLoading } = useAuth();
+  const insets = useSafeAreaInsets();
+
+  if (isLoading) return null;
+  if (!token) return <Redirect href="/" />;
 
   return (
     <Tabs
@@ -87,12 +96,13 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: theme.bg,
           borderTopWidth: 0,
-          height: Platform.OS === 'ios' ? 95 : 75,
-          paddingBottom: Platform.OS === 'ios' ? 30 : 15,
-          paddingTop: 10,
+          height: 60 + (insets.bottom > 0 ? insets.bottom + 5 : 15),
+          paddingBottom: insets.bottom > 0 ? insets.bottom + 5 : 15,
+          paddingTop: 12,
           position: 'absolute',
           elevation: 0,
           borderTopColor: 'transparent',
+          borderBottomWidth: 0,
         },
         tabBarLabelStyle: {
           fontSize: 9,
