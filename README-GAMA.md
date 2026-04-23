@@ -1,32 +1,48 @@
-# 🚀 Easy-Pay: Onboarding Relámpago (Modo Gama)
+# 🚀 Easy-Pay: Onboarding Automático Definitivo
 
-¡Hola Gama! Hemos reducido la fricción a **CERO**. Ya no tienes que buscar tu IP, ni configurar archivos `.env`, ni abrir múltiples terminales. 
+¡Bienvenido al repositorio de Easy-Pay! Hemos automatizado toda la infraestructura para que no pierdas tiempo configurando puertos, IPs o entornos virtuales. 
 
-## ⚡ El Único Comando que Necesitas
-Abre una terminal en la raíz del proyecto y ejecuta:
-
-```bash
-npm run gama
-```
+El proyecto consta de:
+* **Backend:** FastAPI + MongoDB Atlas (Cloud). Dockerizado.
+* **Mobile:** React Native + Expo SDK 54 + NativeWind.
 
 ---
 
-## 🎯 ¿Qué hace este comando por ti?
-1.  **Detecta tu IP Local:** Configura automáticamente la conexión entre tu celular y la PC.
-2.  **Genera el .env:** Crea el archivo en `apps/mobile-app` con la configuración correcta.
-3.  **Levanta Docker:** Inicia el Backend (FastAPI) y la Base de Datos (MongoDB) en segundos.
-4.  **Inicia Expo:** Limpia la caché, instala dependencias y te muestra el **Código QR** en la terminal.
+## 📋 Requisitos Previos
+1. Tener **Docker Desktop** instalado y **abierto** en tu computadora.
+2. Tener Node.js instalado.
+3. Tener la app **Expo Go** en tu celular (conectado al mismo Wi-Fi que tu PC).
 
-## 📱 Pasos Finales
-1.  Espera a que aparezca el **Código QR** en la terminal.
-2.  Escanéalo con la app **Expo Go** en tu celular.
-3.  ¡Empieza a programar!
+---
 
-## 🧹 Limpieza Total (Si algo falla)
-Si quieres resetear todo el entorno, incluyendo los datos de la base de datos:
+## 🛠️ Cómo iniciar el proyecto (Flujo Mágico)
+
+Solo necesitas la terminal de tu editor en la raíz del proyecto:
+
+### Paso 1: Generar tu entorno
+Ejecuta el siguiente comando:
 ```bash
-docker compose down -v
-npm run clean
+npm run gama
 ```
+El script detectará que no tienes un archivo de configuración, creará uno basado en la plantilla y **pausará la ejecución** por seguridad.
 
-¡Cero fricción, 100% código! 🚀
+### Paso 2: Configurar Base de Datos
+1. Localiza el archivo `.env` que se acaba de crear en la **raíz** del proyecto.
+2. Edita la variable `MONGO_URL` con el string de conexión a **MongoDB Atlas** (solicita el password al equipo).
+
+### Paso 3: ¡Todo listo para despegar!
+Vuelve a ejecutar el mismo comando:
+```bash
+npm run gama
+```
+El script ahora actualizará tu IP local automáticamente, levantará los contenedores de Docker y lanzará el entorno de Expo. ¡Escanea el código QR y empieza a codear!
+
+---
+
+## 🔒 Seguridad y Buenas Prácticas
+* **Variables de Entorno:** Nunca subas el archivo `.env` a GitHub. Ya está configurado en el `.gitignore` para tu protección.
+* **IP Local:** No te preocupes por tu IP. El script `setup-gama.js` la detecta e inyecta en el sistema cada vez que inicias el proyecto.
+* **Limpieza Profunda:** Si el sistema falla por caché, usa `npm run clean` para resetear el entorno.
+
+---
+*Easy-Pay Developer Experience Team*

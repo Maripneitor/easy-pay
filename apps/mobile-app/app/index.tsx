@@ -128,7 +128,7 @@ export default function LandingScreen() {
             >
               La cuenta,{'\n'}
               dividida en{'\n'}
-              <Text style={{ color: COLORS.coolSky }}>segundos</Text>.
+              <Text style={{ color: COLORS.coolSky }}>segundos.</Text>
             </MotiText>
             <MotiText
               from={{ opacity: 0 }}

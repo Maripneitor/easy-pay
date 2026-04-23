@@ -12,7 +12,10 @@ build
 
 # Misc
 .DS_Store
+# Local env files
 .env
+apps/mobile-app/.env
+apps/api-backend/.env
 .env.local
 .env.development.local
 .env.test.local

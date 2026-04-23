@@ -16,23 +16,50 @@ for (const name of Object.keys(interfaces)) {
 }
 console.log(`\n🚀 [1/4] IP local detectada: ${localIp}`);
 
-// 2. Crear .env automáticamente desde plantilla
+// 2. Gestión Inteligente de Variables de Env (.env)
+const rootEnvPath = './.env';
 const templatePath = './env.template';
 const envMobilePath = './apps/mobile-app/.env';
 const envBackendPath = './apps/api-backend/.env';
 
-if (fs.existsSync(templatePath)) {
-    const templateContent = fs.readFileSync(templatePath, 'utf8');
-    const finalContent = templateContent.replace(/{{LOCAL_IP}}/g, localIp);
-    fs.writeFileSync(envMobilePath, finalContent);
-    fs.writeFileSync(envBackendPath, finalContent);
-    console.log(`✅ [2/4] Archivos .env distribuidos desde plantilla`);
+if (!fs.existsSync(rootEnvPath)) {
+    // PASO B: Crear .env raíz desde plantilla si no existe
+    console.log(`📝 [2/4] Creando archivo .env principal en la raíz...`);
+    if (fs.existsSync(templatePath)) {
+        let templateContent = fs.readFileSync(templatePath, 'utf8');
+        let finalContent = templateContent.replace(/{{LOCAL_IP}}/g, localIp);
+        fs.writeFileSync(rootEnvPath, finalContent);
+        
+        console.log(`\n🛑 ¡ALTO! He creado tu archivo .env en la raíz del proyecto.`);
+        console.log(`👉 Por favor, ábrelo, coloca tu URL de MongoDB Atlas real y vuelve a ejecutar este comando.`);
+        process.exit(0);
+    } else {
+        console.error('❌ Error: No se encontró env.template en la raíz.');
+        process.exit(1);
+    }
 } else {
-    fs.writeFileSync(envMobilePath, `EXPO_PUBLIC_API_URL=http://${localIp}:8000\n`);
-    console.log(`⚠️ [2/4] Plantilla no encontrada. Generando .env básico`);
+    // PASO C: El .env existe, lo actualizamos y distribuimos
+    console.log(`🔄 [2/4] Actualizando y distribuyendo variables de entorno...`);
+    let envContent = fs.readFileSync(rootEnvPath, 'utf8');
+    
+    // Actualizar dinámicamente la IP por si cambió de red
+    const apiUrLRegex = /^EXPO_PUBLIC_API_URL=.*$/m;
+    const newApiUrl = `EXPO_PUBLIC_API_URL=http://${localIp}:8000`;
+    
+    if (apiUrLRegex.test(envContent)) {
+        envContent = envContent.replace(apiUrLRegex, newApiUrl);
+    } else {
+        envContent += `\n${newApiUrl}`;
+    }
+    
+    // Guardar cambios en el .env raíz y copiar a microservicios
+    fs.writeFileSync(rootEnvPath, envContent);
+    fs.writeFileSync(envMobilePath, envContent);
+    fs.writeFileSync(envBackendPath, envContent);
+    console.log(`✅ Variables sincronizadas en todos los servicios.`);
 }
 
-// 3. Levantar Docker (Backend + BD)
+// 3. Levantar Docker (Backend + BD Cloud)
 console.log(`🐳 [3/4] Levantando contenedores (Docker)...`);
 try {
     execSync('docker compose up -d --build', { stdio: 'inherit' });

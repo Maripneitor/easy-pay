@@ -159,7 +159,7 @@ export default function Security2FAScreen() {
                             <Text className="text-2xl font-bold text-white tracking-tight">Verificación de Seguridad</Text>
                         </View>
                         <Text className="text-slate-400 text-sm leading-relaxed mt-1">
-                            Se ha enviado un código de verificación a su correo: <Text className="text-blue-400 font-bold">{email || 'tu correo'}</Text>. Por favor, introdúcelo a continuación para continuar.
+                            Se ha enviado un código de verificación a su correo: <Text className="text-blue-400 font-bold">{email || 'tu correo'}.</Text> Por favor, introdúcelo a continuación para continuar.
                         </Text>
                         <View className="mt-4 px-3 py-1 bg-blue-500/10 rounded-full self-start border border-blue-500/20">
                             <Text className="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Easy-Pay Security Protocol v4.0</Text>
