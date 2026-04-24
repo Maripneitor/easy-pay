@@ -4,152 +4,120 @@
 
 ---
 
-## 🌟 ¿Qué es EASY-PAY?
-EASY-PAY permite:
-- **Registrar gastos** rápidamente desde el móvil.
-- **Escanear tickets** físicos usando OCR (Inteligencia Artificial).
-- **Gestionar deudas** y saldos en tiempo real.
-- **Liquidar deudas** con flujos de pago intuitivos.
-- **Seguridad avanzada** con autenticación de dos factores (2FA).
+## 🌟 Descripción del Sistema
+EASY-PAY es una solución full-stack que permite:
+- **Gestión de Grupos:** Creación y administración de grupos de gastos.
+- **Registro de Gastos:** Control detallado de quién debe a quién.
+- **Estadísticas Avanzadas:** Visualización de gastos por categoría y actividad mensual.
+- **Seguridad:** Autenticación robusta con soporte para 2FA y cambio de contraseña.
+- **Flexibilidad:** Acceso desde App Móvil nativa o PWA (Web).
 
 ---
 
-## 🚀 Guía Rápida de Inicio (Nuevos Desarrolladores)
+## 🏗️ Arquitectura del Proyecto
+El proyecto utiliza una estructura de **Monorepositorio**:
 
-¿Acabas de unirte al equipo y tienes 0 experiencia con el setup? Sigue estos 3 pasos exactos:
+- **`apps/mobile-app`**: Aplicación móvil desarrollada con **React Native (Expo)** y **NativeWind**.
+- **`apps/web-app`**: Interfaz administrativa y de usuario web construida con **React** y **Vite**.
+- **`apps/api-backend`**: Servidor de API de alto rendimiento desarrollado con **FastAPI (Python)**.
+- **`packages/`**: Contiene lógica de dominio, modelos y componentes de UI compartidos.
+- **Base de Datos**: **MongoDB** gestionada localmente vía Docker o en la nube (Atlas).
 
-### Paso 1: Instalación de dependencias
-Abre una terminal en la raíz del proyecto y ejecuta el siguiente comando para preparar todos los entornos:
+---
+
+## 🚦 Flujo de Trabajo del Equipo
+Para mantener la consistencia y velocidad, seguimos este flujo:
+1. **Sincronización:** Asegurar que el backend y frontend estén alineados (ver `reporte_cambios_gama.md`).
+2. **Desarrollo:** Mobile es la prioridad de diseño; Web sigue sus patrones.
+3. **Documentación:** El `README.md` es la única fuente de verdad operativa.
+4. **Despliegue:** Validar cambios tanto en el emulador como en la versión PWA.
+
+---
+
+## ⚙️ Configuración del Entorno
+
+### 1. Requisitos Previos
+- **Node.js LTS**
+- **Docker Desktop**
+- **Python 3.10+** (para desarrollo local de backend sin Docker)
+- **Expo Go** (instalado en dispositivo móvil)
+
+### 2. Instalación Inicial
 ```bash
-npm install && cd apps/mobile-app && npm install
+# Instalar dependencias del monorepo
+npm install
+
+# Instalar dependencias de la app móvil
+cd apps/mobile-app
+npm install
 ```
 
-### Paso 2: Configuración de la IP en el `.env`
-Tu móvil o emulador necesita saber cómo llegar al servidor backend. Para esto, no puedes usar `localhost`.
-1. Busca tu **Dirección IPv4** (En Windows abre CMD y pon `ipconfig`, en Mac/Linux pon `ifconfig`). Ejemplo: `192.168.1.15`.
-2. Ve al archivo `apps/mobile-app/.env` y configúralo así:
-   `EXPO_PUBLIC_API_URL=http://TUI.P.A.QUI:8000`
+---
 
-### Paso 3: Arranque Mágico
-Ve a la carpeta de la app móvil y usa nuestro script diseñado a prueba de fallos de caché:
+## 🌐 Configuración de Red
+La comunicación entre la App Móvil y el Backend requiere una configuración de red específica:
+
+- **IP Local Detectada:** `192.168.1.10`
+- **Configuración Centralizada:** `apps/mobile-app/src/infrastructure/api/network.config.ts`
+- **Puertos Abiertos:**
+  - `8000`: Backend API (FastAPI)
+  - `8081`: Metro Bundler (Expo)
+  - `3000`: Frontend Web / PWA
+
+### Scripts de Red Disponibles:
+- **ADB Reverse (Android USB):** `powershell ./scripts/adb-reverse.ps1`
+- **Túnel Externo (localtunnel):** `node ./scripts/tunnel-backend.js`
+
+---
+
+## 🚀 Ejecución de Servicios
+
+### Backend (Docker)
+Desde la raíz del proyecto:
+```bash
+docker compose up -d
+```
+*El backend estará disponible en `http://192.168.1.10:8000`*
+
+### Mobile (Expo)
 ```bash
 cd apps/mobile-app
-npm run start:clean
+npm run start:lan
 ```
-**¿Cómo lo veo?**
-- **En tu celular (Recomendado):** Descarga la app "Expo Go", abre la cámara y escanea el código QR gigante que sale en tu terminal.
-- **En la computadora:** Si tienes Android Studio abierto, simplemente presiona la tecla `a` en esa misma terminal y el emulador arrancará solito.
+*Usa `npm run start:clean` si experimentas problemas de caché.*
+
+### Web / PWA
+```bash
+npm run dev:web
+```
 
 ---
 
-## 🚦 Flujo de Trabajo Local (Eficiente)
-
-Para trabajar con **Easy-Pay** de forma 100% local, sigue este flujo cada vez que empieces o termines una sesión de desarrollo:
-
-### 1. Flujo de Encendido (Startup)
-Sigue este orden para que todos los servicios se comuniquen correctamente:
-
-> [!TIP]
-> **Desarrollo Rápido (Recomendado):**
-> *   **Dispositivo Físico:** Instala "Expo Go" en tu teléfono. Al ejecutar `npx expo start`, escanea el código QR. Elimina la necesidad de Android Studio y usa tu cámara real.
-> *   **Prototipado en Web:** Presiona la tecla `w` en la terminal para abrir la app en el navegador instantáneamente de forma súper rápida para UI.
-
-2.  **Guía de Windows (Nativa):** Si necesitas obligatoriamente el simulador de Android Studio, consulta la [Guía de Windows](./README_WINDOWS.md).
-
-2.  **Encender la DB y Backend (Docker):**
-    En la raíz del proyecto ejecuta:
-    ```bash
-    docker compose up -d
-    ```
-
-> [!IMPORTANT]
-> **Verificar Variables (Si cambias de Red/WiFi):**
-> Asegúrate de actualizar tu IP en el archivo `.env` de la raíz si el simulador no conecta (no uses `localhost` para móviles):
-> ```env
-> EXPO_PUBLIC_API_URL=http://192.168.X.X:8000
-> ```
-
-4.  **Encender la App Mobile (Metro):**
-    En otra terminal:
-    ```bash
-    cd apps/mobile-app
-    npm start
-    ```
-    **Atajos útiles en la terminal:**
-    *   **`a`**: Abre la app en el emulador de **Android**.
-    *   **`i`**: Abre la app en el simulador de **iOS** (MacOS).
-    *   **`w`**: Abre el prototipo en la **Web**.
-    *   **`r`**: Fuerza una recarga de la app si se congela.
-    *   **`m`**: Abre el menú de desarrollo (también puedes usar `Ctrl + M` o `Cmd + M` en el emulador).
-
-### 2. Flujo de Apagado (Shutdown)
-Para liberar memoria y procesos de red:
-
-1.  **Detener Metro Bundler:** `Ctrl + C` en la terminal de Expo/Metro.
-2.  **Apagar Contenedores:**
-    ```bash
-    docker compose down
-    ```
-
-### 3. Tips de Desarrollo
-*   **Logs del Backend:** `docker compose logs -f backend` (para ver errores de 2FA o Login).
-*   **Reiniciar Backend:** `docker compose restart backend`.
-
-> [!CAUTION]
-> **Limpieza Profunda:** `docker compose down -v` borra definitivamente la base de datos local. Úsalo solo si detectas datos corruptos y no te importa perder el historial local.
-
-## 🪟 Configuración Inicial en Windows (Expo)
-
-Si estás desarrollando desde Windows, sigue estos pasos para asegurar que el entorno de Expo funcione correctamente:
-
-### 1. Requisitos de Software
-*   **Node.js LTS**: Descarga e instala la versión LTS desde [nodejs.org](https://nodejs.org/).
-*   **Git for Windows**: Necesario para clonar y gestionar el repositorio.
-*   **Java JDK 17**: Recomendado para compatibilidad con Android Studio.
-
-### 2. Preparación de la Terminal
-> [!WARNING]
-> **Error de Scripts en PowerShell:**
-> Por defecto, Windows bloquea la ejecución de scripts. Si recibes un error al ejecutar `npm` o `expo`, abre PowerShell como **Administrador** y ejecuta:
-> `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
-
-### 3. Pasos para Correr la App
-1.  **Instalar dependencias**:
-    ```powershell
-    npm install --legacy-peer-deps
-    ```
-2.  **Navegar a la carpeta móvil**:
-    ```powershell
-    cd apps/mobile-app
-    ```
-3.  **Iniciar Expo**:
-    ```powershell
-    npx expo start
-    ```
-
-> [!IMPORTANT]
-> **Conectividad y Firewall:**
-> Windows Defender suele bloquear las conexiones entrantes de Expo. 
-> *   Asegúrate de que tu PC y tu teléfono estén en la **misma red WiFi**.
-> *   Si el código QR no carga, intenta cambiar el modo de conexión a **Tunnel** ejecutando: `npx expo start --tunnel`.
-
-### 4. Uso de WSL2 (Opcional pero Recomendado)
-Si prefieres un entorno Linux dentro de Windows, puedes usar WSL2 con Ubuntu. Asegúrate de instalar Node.js dentro de la instancia de WSL y no usar la versión de Windows para evitar conflictos de rutas.
+## 📱 Generación de PWA
+Para generar la versión Web Progresiva desde el código mobile:
+1. Asegurar dependencias web: `npx expo install react-native-web react-dom @expo/metro-runtime`
+2. Exportar versión estática:
+```bash
+cd apps/mobile-app
+npx expo export --platform web
+```
+3. La build estará disponible en `apps/mobile-app/dist`.
 
 ---
 
-## 📁 Estructura del Monorepositorio
-
-- `apps/mobile-app`: Aplicación móvil con Expo y React Native.
-- `apps/web-app`: Panel administrativo con React y Vite.
-- `apps/api-backend`: Servidor FastAPI (Python).
-- `packages/`: Lógica compartida.
+## 📜 Convenciones del Proyecto
+- **Naming:** CamelCase para componentes React, snake_case para backend Python.
+- **UI:** Seguir el sistema de diseño premium definido en `ThemeContext.tsx`.
+- **API:** Toda interacción debe pasar por el `httpClient` configurado en mobile.
+- **Git:** No realizar commits ni pushes automáticos sin instrucción explícita.
 
 ---
 
-## 🛠️ Tecnologías Principales
-- **Móvil**: Expo, React Native, NativeWind.
-- **Web**: React, Vite, Tailwind CSS.
-- **Backend**: FastAPI (Python).
-- **Base de Datos**: MongoDB (Local en Docker o Atlas).
+## 🤖 Reglas para Agentes de Código
+1. **Fuente de Verdad:** Solo `README.md` y `reporte_cambios_gama.md` son válidos.
+2. **No Redundancia:** No crear archivos `.md` adicionales para reportes de tareas.
+3. **Consistencia:** Mantener siempre sincronizadas las funcionalidades entre Web y Mobile.
+4. **Determinismo:** Los cambios deben ser directos y funcionales sin requerir validación manual constante.
 
+---
+*Última actualización: 2026-04-24*

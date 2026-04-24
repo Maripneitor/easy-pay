@@ -114,6 +114,36 @@ export default function GroupDetailScreen() {
 
                 <View className="flex-row items-center gap-1">
                     <TouchableOpacity 
+                        onPress={async () => {
+                            import('react-native').then(({ Alert }) => {
+                                Alert.alert(
+                                    'Eliminar Grupo',
+                                    '¿Estás seguro de que deseas eliminar este grupo? Esta acción no se puede deshacer.',
+                                    [
+                                        { text: 'Cancelar', style: 'cancel' },
+                                        { 
+                                            text: 'Eliminar', 
+                                            style: 'destructive',
+                                            onPress: async () => {
+                                                try {
+                                                    await groupRepository.deleteGroup(id as string);
+                                                    router.back();
+                                                } catch (err) {
+                                                    console.error('Error al eliminar grupo:', err);
+                                                    Alert.alert('Error', 'No se pudo eliminar el grupo');
+                                                }
+                                            }
+                                        }
+                                    ]
+                                );
+                            });
+                        }}
+                        className="p-2 rounded-full mr-1" 
+                        style={{ backgroundColor: theme.cardSecondary }}
+                    >
+                        <MaterialIcons name="delete-outline" size={24} color="#f43f5e" />
+                    </TouchableOpacity>
+                    <TouchableOpacity 
                         onPress={() => router.push({ pathname: '/new-expense', params: { groupId: id } } as any)}
                         className="p-2 rounded-full" 
                         style={{ backgroundColor: theme.cardSecondary }}

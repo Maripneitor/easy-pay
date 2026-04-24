@@ -3,13 +3,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { TokenStorage } from '../security/TokenStorage';
 
+import { NETWORK_CONFIG } from './network.config';
+
 const getAuthToken = async (): Promise<string | null> => {
     return await TokenStorage.getToken();
 };
 
 
-// URL de la API — En mobile usamos la IP detectada por el contenedor o localhost por defecto
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000'; 
+// URL de la API — Usando la configuración de red centralizada
+const API_BASE_URL = NETWORK_CONFIG.BASE_URL;
 
 export const httpClient: AxiosInstance = axios.create({
     baseURL: API_BASE_URL,

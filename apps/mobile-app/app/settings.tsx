@@ -130,9 +130,14 @@ export default function SettingsScreen() {
                 </View>
 
                 {/* Stats Section */}
-                <SectionHeader title="Estadísticas" />
+                <View className="flex-row justify-between items-center mb-6">
+                    <SectionHeader title="Estadísticas" />
+                    <TouchableOpacity onPress={() => router.push('/profile/stats')}>
+                        <Text style={{ color: theme.primary }} className="text-[10px] font-black uppercase mb-4">Ver Detalles</Text>
+                    </TouchableOpacity>
+                </View>
                 <View className="flex-row flex-wrap gap-4 mb-10">
-                    <View style={{ backgroundColor: theme.cardSecondary, width: (SCREEN_WIDTH - 64) / 2, borderColor: theme.border }} className="p-5 rounded-[32px] border">
+                    <TouchableOpacity onPress={() => router.push('/profile/stats')} style={{ backgroundColor: theme.cardSecondary, width: (SCREEN_WIDTH - 64) / 2, borderColor: theme.border }} className="p-5 rounded-[32px] border">
                         <View className="flex-row justify-between items-center mb-2">
                             <Text className="text-slate-400 text-[10px] font-black uppercase">Gastado</Text>
                             <MaterialIcons name="payments" size={16} color={theme.primary} />
@@ -140,8 +145,8 @@ export default function SettingsScreen() {
                         <Text style={{ fontSize: 18 * fontScale, color: theme.text }} className="font-mono font-black">
                             ${isLoading ? '...' : totalSpent.toFixed(2)}
                         </Text>
-                    </View>
-                    <View style={{ backgroundColor: theme.cardSecondary, width: (SCREEN_WIDTH - 64) / 2, borderColor: theme.border }} className="p-5 rounded-[32px] border">
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => router.push('/profile/stats')} style={{ backgroundColor: theme.cardSecondary, width: (SCREEN_WIDTH - 64) / 2, borderColor: theme.border }} className="p-5 rounded-[32px] border">
                         <View className="flex-row justify-between items-center mb-2">
                             <Text className="text-slate-400 text-[10px] font-black uppercase">Grupos</Text>
                             <MaterialIcons name="groups" size={16} color={theme.primary} />
@@ -149,25 +154,7 @@ export default function SettingsScreen() {
                         <Text style={{ fontSize: 18 * fontScale, color: theme.text }} className="font-mono font-black">
                             {isLoading ? '...' : userGroups.length}
                         </Text>
-                    </View>
-                    <View style={{ backgroundColor: theme.cardSecondary, width: (SCREEN_WIDTH - 64) / 2, borderColor: theme.border }} className="p-5 rounded-[32px] border">
-                        <View className="flex-row justify-between items-center mb-2">
-                            <Text className="text-slate-400 text-[10px] font-black uppercase">Saldados</Text>
-                            <MaterialIcons name="check-circle" size={16} color="#10b981" />
-                        </View>
-                        <Text style={{ fontSize: 18 * fontScale, color: theme.text }} className="font-mono font-black">
-                            {isLoading ? '...' : paidGroups}
-                        </Text>
-                    </View>
-                    <View style={{ backgroundColor: theme.cardSecondary, width: (SCREEN_WIDTH - 64) / 2, borderColor: theme.border }} className="p-5 rounded-[32px] border flex-row items-center justify-between">
-                         <View>
-                            <Text className="text-slate-400 text-[10px] font-black uppercase mb-1">Confianza</Text>
-                            <Text style={{ fontSize: 18 * fontScale, color: theme.text }} className="font-mono font-black">98%</Text>
-                         </View>
-                         <View className="w-10 h-10 rounded-full border-4 border-slate-700 items-center justify-center">
-                            <View className="w-10 h-10 rounded-full border-4 absolute" style={{ borderTopColor: theme.primary, borderLeftColor: theme.primary, borderRightColor: 'transparent', borderBottomColor: 'transparent' }} />
-                         </View>
-                    </View>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Personalization Section */}
@@ -220,27 +207,29 @@ export default function SettingsScreen() {
                 </View>
 
                 {/* Ajustes Section */}
-                <SectionHeader title="General" />
+                <SectionHeader title="Seguridad" />
                 <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="rounded-[40px] border overflow-hidden mb-10">
-                    <TouchableOpacity style={{ borderBottomColor: theme.border }} className="p-6 flex-row items-center justify-between border-b">
-                        <View className="flex-row items-center gap-4">
-                            <MaterialIcons name="notifications-none" size={24} color="#94a3b8" />
-                            <Text style={{ color: theme.text, fontSize: 15 * fontScale }} className="font-bold">Notificaciones</Text>
-                        </View>
-                        <Switch 
-                            value={notificationsEnabled} 
-                            onValueChange={setNotificationsEnabled}
-                            trackColor={{ false: '#334155', true: theme.primary }}
-                            thumbColor="white"
-                        />
-                    </TouchableOpacity>
-                    <TouchableOpacity className="p-6 flex-row items-center justify-between">
+                    <TouchableOpacity 
+                        onPress={() => router.push('/profile/change-password')}
+                        style={{ borderBottomColor: theme.border }} 
+                        className="p-6 flex-row items-center justify-between border-b"
+                    >
                         <View className="flex-row items-center gap-4">
                             <MaterialIcons name="lock-outline" size={24} color="#94a3b8" />
-                            <Text style={{ color: theme.text, fontSize: 15 * fontScale }} className="font-bold">Seguridad y 2FA</Text>
+                            <Text style={{ color: theme.text, fontSize: 15 * fontScale }} className="font-bold">Cambiar Contraseña</Text>
+                        </View>
+                        <MaterialIcons name="chevron-right" size={24} color={theme.textSecondary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        onPress={() => router.push('/profile/two-factor-setup')}
+                        className="p-6 flex-row items-center justify-between"
+                    >
+                        <View className="flex-row items-center gap-4">
+                            <MaterialIcons name="security" size={24} color="#94a3b8" />
+                            <Text style={{ color: theme.text, fontSize: 15 * fontScale }} className="font-bold">Seguridad 2FA</Text>
                         </View>
                         <View className="px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20">
-                            <Text className="text-emerald-500 text-[9px] font-black uppercase tracking-widest">Activado</Text>
+                            <Text className="text-emerald-500 text-[9px] font-black uppercase tracking-widest">Configurar</Text>
                         </View>
                     </TouchableOpacity>
                 </View>

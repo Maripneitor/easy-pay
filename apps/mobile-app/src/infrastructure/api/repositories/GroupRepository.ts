@@ -87,6 +87,10 @@ export class ApiMobileGroupRepository implements GroupRepository {
         return response.data;
     }
 
+    async deleteGroup(groupId: string): Promise<void> {
+        await httpClient.delete(`/api/groups/${groupId}`);
+    }
+
     onGroupUpdate(groupId: string, callback: (group: Group) => void): () => void {
         return () => {};
     }

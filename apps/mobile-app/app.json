@@ -35,7 +35,14 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "description": "Easy-Pay: Divide gastos de forma inteligente",
+      "themeColor": "#3b82f6",
+      "backgroundColor": "#0f172a",
+      "display": "standalone",
+      "lang": "es",
+      "name": "Easy-Pay Mobile Web",
+      "shortName": "Easy-Pay"
     },
     "plugins": [
       "expo-router",
