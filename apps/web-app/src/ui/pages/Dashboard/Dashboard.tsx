@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
+import { toast } from 'sonner';
 import { PageHeader } from '@ui/components/PageHeader';
 import { useOutletContext } from 'react-router-dom';
 import { useDashboard } from './useDashboard';
@@ -11,7 +12,8 @@ export const Dashboard: React.FC = () => {
     const {
         navigate,
         allActiveGroups = [],
-        isLoading
+        isLoading,
+        deleteGroup
     } = useDashboard();
 
     const userName = localStorage.getItem('userName') || 'Usuario';
@@ -33,6 +35,18 @@ export const Dashboard: React.FC = () => {
             bg: style.bg,
             color: style.text
         };
+    };
+
+    const handleDelete = async (e: React.MouseEvent, groupId: string, groupName: string) => {
+        e.stopPropagation();
+        if (window.confirm(`¿Estás seguro de que quieres eliminar el grupo "${groupName}"? Esta acción no se puede deshacer.`)) {
+            try {
+                await deleteGroup(groupId);
+                toast.success('Grupo eliminado correctamente');
+            } catch (error: any) {
+                toast.error(error.message || 'Error al eliminar el grupo');
+            }
+        }
     };
 
     return (
@@ -82,7 +96,7 @@ export const Dashboard: React.FC = () => {
                                                 // Usamos los nombres que vienen del Hook con balances
                                                 total: group.total_gastado || 0,
                                                 userBalance: group.mi_balance || 0,
-                                                isAdmin: group.creador_id === localStorage.getItem('userId')
+                                                isAdmin: group.admin_id === localStorage.getItem('userId')
                                             };
 
                                             return (
@@ -90,6 +104,7 @@ export const Dashboard: React.FC = () => {
                                                     key={group.id}
                                                     group={mappedGroup}
                                                     onClick={() => navigate(`/group/${group.id}`)}
+                                                    onDelete={mappedGroup.isAdmin ? (e) => handleDelete(e, group.id, mappedGroup.name) : undefined}
                                                     appearance={appearance}
                                                 />
                                             );

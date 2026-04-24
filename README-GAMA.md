@@ -61,7 +61,7 @@ El celular necesita saber dónde vive tu servidor backend. No uses `localhost`, 
     Ve al archivo `apps/mobile-app/.env` y actualiza la URL:
     ```env
     # Reemplaza <TU_IP> por tu dirección real (ej: 192.168.1.15)
-    EXPO_PUBLIC_API_URL=http://<TU_IP>:8000
+    EXPO_PUBLIC_API_URL=http://192.168.56.1:8000
     ```
 
 ---

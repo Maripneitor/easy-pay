@@ -109,7 +109,17 @@ export const Auth = () => {
                             </div>
 
                             <div className={styles.inputGroup}>
-                                <label htmlFor="password">Contraseña</label>
+                                <div className={styles.options} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <label htmlFor="password">Contraseña</label>
+                                    <button 
+                                        type="button" 
+                                        className={styles.forgotPass}
+                                        onClick={() => navigate('/recover-password')}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                    >
+                                        ¿Olvidé mi contraseña?
+                                    </button>
+                                </div>
                                 <div className={styles.inputWrapper}>
                                     <Lock className={styles.inputIcon} size={20} />
                                     <input
@@ -186,12 +196,6 @@ export const Auth = () => {
                     )}
                 </div>
 
-                <div className={styles.guestAction}>
-                    <button className={styles.guestBtn} onClick={() => navigate('/')} disabled={loading}>
-                        Continuar como Invitado
-                        <ArrowRight size={18} />
-                    </button>
-                </div>
             </main>
         </div>
     );

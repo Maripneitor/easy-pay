@@ -16,14 +16,14 @@ export const useDashboard = () => {
         }
 
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+            const API_URL = 'http://localhost:8002/api';
             const response = await fetch(`${API_URL}/groups/user/${userId}`);
             const data = await response.json();
 
             if (Array.isArray(data)) {
                 const groupsWithBalances = await Promise.all(data.map(async (group: any) => {
                     try {
-                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+                        const API_URL = 'http://localhost:8002/api';
                         const resBalance = await fetch(`${API_URL}/groups/${group.id}/balances`);
                         if (resBalance.ok) {
                             const bData = await resBalance.json();
@@ -59,11 +59,29 @@ export const useDashboard = () => {
         return () => window.removeEventListener('focus', fetchGroups);
     }, [fetchGroups]);
 
+    const deleteGroup = async (groupId: string) => {
+        try {
+            const API_URL = 'http://localhost:8002/api';
+            const response = await fetch(`${API_URL}/groups/delete/${groupId}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Error al eliminar el grupo');
+            }
+            fetchGroups();
+            return data;
+        } catch (error: any) {
+            throw error;
+        }
+    };
+
     return {
         allActiveGroups,
         settledGroups,
         isLoading,
         navigate,
-        refresh: fetchGroups
+        refresh: fetchGroups,
+        deleteGroup
     };
 };

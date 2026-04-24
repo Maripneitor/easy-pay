@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Trash2 } from 'lucide-react';
 import { cn } from '../../../../infrastructure/utils';
 import { MemberAvatars } from './MemberAvatars';
 import { BalanceBadge } from './BalanceBadge';
@@ -19,10 +20,11 @@ interface GroupProps {
 interface GroupCardProps {
     group: GroupProps;
     onClick: () => void;
+    onDelete?: (e: React.MouseEvent) => void;
     appearance: { icon: React.ReactNode; bg: string; color: string; };
 }
 
-export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, appearance }) => {
+export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onDelete, appearance }) => {
     return (
         <motion.div
             whileHover={{ y: -4, scale: 1.01 }}
@@ -48,9 +50,23 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, appearance
                                 {group.name}
                             </h3>
                             {group.isAdmin && (
-                                <span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800">
-                                    Admin
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800">
+                                        Admin
+                                    </span>
+                                    {onDelete && (
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onDelete(e);
+                                            }}
+                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-500/10 p-1.5 rounded transition-colors"
+                                            title="Eliminar grupo"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    )}
+                                </div>
                             )}
                         </div>
                         <p className="mb-3 truncate text-xs text-slate-500 dark:text-slate-400">
