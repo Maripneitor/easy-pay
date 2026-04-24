@@ -39,6 +39,18 @@ El script ahora actualizará tu IP local automáticamente, levantará los conten
 
 ---
 
+## 🏫 **Modo Universidad (Red Bloqueada / UNACH)**
+Si estás en una red pública que bloquea la conexión entre tu celular y tu PC, usa este comando en lugar del normal:
+```bash
+npm run gama:unach
+```
+*(Esto usará LocalTunnel para sacar tu base de datos y backend a internet, y lanzará Expo en modo túnel, saltándose cualquier restricción de la red).*
+
+🔌 **Plan B Infalible (Cable USB):**
+Si el internet de la universidad es demasiado lento para el túnel, conecta tu celular por cable USB, habilita la Depuración USB y usa el script con el flag `--usb` (o ejecuta `adb reverse tcp:8000 tcp:8000`).
+
+---
+
 ## 🔒 Seguridad y Buenas Prácticas
 * **Variables de Entorno:** Nunca subas el archivo `.env` a GitHub. Ya está configurado en el `.gitignore` para tu protección.
 * **IP Local:** No te preocupes por tu IP. El script `setup-gama.js` la detecta e inyecta en el sistema cada vez que inicias el proyecto.

@@ -3,48 +3,36 @@ import {
     View, 
     Text, 
     TouchableOpacity, 
-    StyleSheet, 
-    Dimensions, 
     ActivityIndicator, 
     Alert,
     ScrollView
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'react-native';
-import { useTheme } from '../src/infrastructure/context/ThemeContext';
-
-const { width } = Dimensions.get('window');
 
 export default function SecuritySetupScreen() {
     const router = useRouter();
     const { userId, email, name } = useLocalSearchParams<{ userId: string, email: string, name: string }>();
     const [loading, setLoading] = useState(false);
     const insets = useSafeAreaInsets();
-    const { theme, cycleTheme } = useTheme();
     
     const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 
     const handleSendCode = async () => {
-        if (!userId && !__DEV__) {
-            Alert.alert('Error', 'ID de usuario no encontrado. Reintenta el registro.');
-            return;
-        }
-
         setLoading(true);
+        console.log(`📡 Enviando código para usuario: ${userId || 'demo-user'}`);
+        console.log(`🔗 URL: ${API_URL}/api/auth/2fa/setup/${userId || 'demo-user'}`);
+
         try {
-            // Llamamos al endpoint de setup
             const response = await fetch(`${API_URL}/api/auth/2fa/setup/${userId || 'demo-user'}`, {
-                method: 'POST'
+                method: 'POST',
+                headers: { 'Accept': 'application/json' }
             });
             
-            // Check if response is ok
-            if (!response.ok) throw new Error('Network response was not ok');
-            
-            const data = (await response.json()) as any;
+            const data = await response.json();
 
             if (data.status === 'success') {
                 router.push({
@@ -52,19 +40,21 @@ export default function SecuritySetupScreen() {
                     params: { userId, email, name }
                 });
             } else {
-                throw new Error(data.message || 'No se pudo enviar el código.');
+                throw new Error(data.message || 'Error en el servidor');
             }
         } catch (err) {
-            console.warn('⚠️ Bypass: Procediendo con modo demo debido a fallo en API:', err);
-            
-            // En desarrollo, permitimos el bypass si la API falla
+            console.warn('⚠️ Error en API, usando modo demo:', err);
             if (__DEV__) {
                 router.push({
                     pathname: '/security-2fa',
-                    params: { userId: userId || 'demo-id', email: email || 'demo@easy-pay.com', name: name || 'Usuario Demo' }
+                    params: { 
+                        userId: userId || 'demo-id', 
+                        email: email || 'demo@easy-pay.com', 
+                        name: name || 'Usuario Demo' 
+                    }
                 } as any);
             } else {
-                Alert.alert('Error', 'No se pudo conectar con el servidor de seguridad. Inténtalo más tarde.');
+                Alert.alert('Error', 'No se pudo enviar el código. Revisa tu conexión.');
             }
         } finally {
             setLoading(false);
@@ -72,108 +62,89 @@ export default function SecuritySetupScreen() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
-            <StatusBar style={theme.isDark ? "light" : "dark"} />
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }} edges={['top']}>
+            <StatusBar style="light" />
             
             {/* Top Bar */}
-            <View style={{ backgroundColor: theme.bg }} className="px-6 py-4 flex-row justify-between items-center z-50">
-                <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: theme.glassBg, borderColor: theme.border }} className="w-10 h-10 rounded-full items-center justify-center border">
-                    <Ionicons name="arrow-back" size={24} color={theme.text} />
+            <View className="px-6 py-4 flex-row justify-between items-center border-b border-white/5">
+                <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-xl items-center justify-center bg-white/5 border border-white/10">
+                    <Ionicons name="arrow-back" size={24} color="white" />
                 </TouchableOpacity>
                 <View className="flex-row items-center gap-2">
                     <Image 
                         source={require('../assets/images/logo-ep.png')} 
-                        style={{ width: 32, height: 32 }}
+                        style={{ width: 28, height: 28 }}
                         resizeMode="contain"
                     />
-                    <Text style={{ color: theme.text }} className="font-black text-xl tracking-tight">Easy-Pay</Text>
+                    <Text className="font-bold text-lg text-white tracking-tight">Easy-Pay</Text>
                 </View>
-                <TouchableOpacity 
-                    onPress={cycleTheme}
-                    style={{ backgroundColor: theme.primary }}
-                    className="w-10 h-10 rounded-full items-center justify-center shadow-lg shadow-blue-500/20"
-                >
-                    <Ionicons name={theme.isDark ? "sunny" : "moon"} size={20} color="black" />
-                </TouchableOpacity>
+                <View className="w-10" /> 
             </View>
 
             <ScrollView 
                 className="flex-1 px-6" 
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
+                contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
             >
-                {/* Background Glow Effect */}
-                <View style={{ backgroundColor: theme.primary + '10' }} className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl" />
-                
                 {/* Stepper */}
-                <View className="flex-row items-center justify-center space-x-3 my-10">
-                    <View style={{ backgroundColor: theme.border }} className="w-2 h-2 rounded-full" />
-                    <View style={{ backgroundColor: theme.primary }} className="w-10 h-2 rounded-full" />
-                    <View style={{ backgroundColor: theme.border }} className="w-2 h-2 rounded-full" />
+                <View className="flex-row items-center justify-center gap-2 my-12">
+                    <View className="w-8 h-1.5 rounded-full bg-blue-500" />
+                    <View className="w-2 h-1.5 rounded-full bg-white/10" />
                 </View>
 
                 {/* Title Section */}
-                <View className="mb-10 items-center">
-                    <Text style={{ color: theme.text }} className="text-3xl font-black mb-3 tracking-tight text-center">Seguridad Easy-Pay</Text>
-                    <Text style={{ color: theme.textSecondary }} className="text-base text-center leading-relaxed font-medium px-4">
-                        Protege tu cuenta activando la verificación de dos pasos (2FA).
+                <View className="mb-10">
+                    <Text className="text-3xl font-bold text-white mb-3 tracking-tight">Seguridad de la cuenta</Text>
+                    <Text className="text-slate-400 text-base leading-relaxed">
+                        Para proteger tu dinero y tus datos, necesitamos verificar tu identidad mediante un código de seguridad.
                     </Text>
                 </View>
 
-                {/* Main Card Section */}
-                <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="rounded-[40px] p-8 shadow-sm border items-center">
-                    <View style={{ backgroundColor: theme.primary + '15', borderColor: theme.primary + '30' }} className="w-20 h-20 rounded-[30px] items-center justify-center mb-6 border">
-                        <MaterialIcons name="shield" size={44} color={theme.primary} />
+                {/* Main Card */}
+                <View className="bg-slate-800/40 rounded-[32px] p-8 border border-white/10">
+                    <View className="w-16 h-16 rounded-2xl bg-blue-500/10 items-center justify-center mb-6 border border-blue-500/20">
+                        <MaterialIcons name="security" size={32} color="#3b82f6" />
                     </View>
 
-                    <Text style={{ color: theme.text }} className="text-xl font-black text-center mb-3">Verificación por Correo</Text>
-                    <Text style={{ color: theme.textSecondary }} className="text-sm text-center leading-relaxed mb-10 font-medium">
-                        Te enviaremos un código de seguridad de 6 dígitos para validar tu identidad.
+                    <Text className="text-xl font-bold text-white mb-2">Verificación en dos pasos</Text>
+                    <Text className="text-slate-400 text-sm leading-relaxed mb-8">
+                        Recibirás un código único en tu correo electrónico cada vez que realices una acción importante.
                     </Text>
 
-                    {/* Email Info Box */}
-                    <View style={{ backgroundColor: theme.glassBg, borderColor: theme.border }} className="rounded-3xl p-6 w-full flex-row items-center border">
-                        <View style={{ backgroundColor: theme.primary }} className="w-12 h-12 rounded-full items-center justify-center shadow-lg shadow-blue-500/20 mr-4">
-                            <MaterialIcons name="alternate-email" size={24} color="black" />
+                    {/* Email Box */}
+                    <View className="bg-slate-900/50 rounded-2xl p-5 flex-row items-center border border-white/5">
+                        <View className="w-10 h-10 rounded-full bg-blue-500 items-center justify-center mr-4">
+                            <MaterialIcons name="email" size={20} color="white" />
                         </View>
                         <View className="flex-1">
-                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-widest mb-1">Recibirás el código en:</Text>
-                            <Text style={{ color: theme.text }} className="text-[15px] font-black">{email || 'tu@ejemplo.com'}</Text>
+                            <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-0.5">Correo registrado</Text>
+                            <Text className="text-white font-medium text-sm" numberOfLines={1}>{email || 'tu-correo@ejemplo.com'}</Text>
                         </View>
                     </View>
                 </View>
 
-                {/* Security Protocol Indicator */}
-                <View className="mt-12 flex-row items-center justify-center space-x-3 opacity-50">
-                    <MaterialIcons name="verified-user" size={16} color={theme.primary} />
-                    <Text style={{ color: theme.primary }} className="text-[10px] font-black uppercase tracking-[3px]">Protocolo Activo</Text>
+                {/* Footer Info */}
+                <View className="mt-12 flex-row items-center gap-3 bg-blue-500/5 p-4 rounded-2xl border border-blue-500/10">
+                    <MaterialIcons name="info" size={20} color="#3b82f6" />
+                    <Text className="text-blue-200/60 text-xs flex-1 leading-relaxed">
+                        Easy-Pay utiliza cifrado de grado bancario para todas las comunicaciones y transacciones.
+                    </Text>
                 </View>
             </ScrollView>
 
-            {/* Sticky Footer CTA */}
-            <View 
-                style={{ 
-                    paddingBottom: insets.bottom + 24,
-                    paddingHorizontal: 24,
-                    paddingTop: 24,
-                    backgroundColor: theme.bg + 'ee',
-                    borderTopColor: theme.border,
-                    borderTopWidth: 1
-                }} 
-                className="absolute bottom-0 left-0 right-0"
-            >
+            {/* CTA Button */}
+            <View style={{ paddingBottom: insets.bottom + 20 }} className="px-6 pt-4">
                 <TouchableOpacity 
                     onPress={handleSendCode}
                     disabled={loading}
-                    style={{ backgroundColor: theme.primary }}
-                    className="w-full py-5 rounded-[28px] flex-row justify-center items-center shadow-xl shadow-blue-500/30"
+                    className="w-full h-16 bg-blue-500 rounded-2xl flex-row justify-center items-center overflow-hidden"
                 >
                     {loading ? (
-                        <ActivityIndicator color="black" />
+                        <ActivityIndicator color="white" />
                     ) : (
                         <>
-                            <Text className="text-black font-black text-base mr-2 uppercase tracking-widest">Activar Seguridad</Text>
-                            <MaterialIcons name="arrow-forward" size={20} color="black" />
+                            <Text className="text-white font-bold text-base mr-2">Configurar Seguridad</Text>
+                            <MaterialIcons name="chevron-right" size={24} color="white" />
                         </>
                     )}
                 </TouchableOpacity>

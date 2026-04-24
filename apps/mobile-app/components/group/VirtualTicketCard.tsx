@@ -1,16 +1,20 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
-import { MaterialIcons, Ionicons } from '@expo/vector-icons';
-import { MotiView } from 'moti';
+import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
+// import { MotiView } from 'moti';
+const MotiView = ({ children, style, ...props }: any) => <View style={style} {...props}>{children}</View>;
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width } = Dimensions.get('window');
 
 interface Item {
     id: string;
     name: string;
     detail: string;
     amount: number;
-    avatars: string[];
+    participants: string[];
 }
 
 interface VirtualTicketCardProps {
@@ -24,82 +28,116 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({ items, ser
 
     return (
         <MotiView 
-            from={{ opacity: 0, translateY: 10 }} 
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: 'timing', duration: 400 }}
-            className="px-4 pt-2"
+            from={{ opacity: 0, scale: 0.95 }} 
+            animate={{ opacity: 1, scale: 1 }}
+            className="px-6"
         >
-            <View className="flex-row justify-between items-end mb-6 mt-2 px-2">
+            {/* Header section with Add Button */}
+            <View className="flex-row justify-between items-center mb-6">
                 <View>
-                    <Text style={{ color: theme.text, fontSize: 18 * fontScale, fontFamily: 'Manrope' }} className="font-bold tracking-tight">Detalle de la cuenta</Text>
-                    <Text style={{ color: theme.textSecondary, fontSize: 13 * fontScale, fontFamily: 'Inter' }} className="mt-1 opacity-80">Asigna quién consumió qué.</Text>
+                    <Text style={{ color: theme.text }} className="text-xl font-black">Detalle del Ticket</Text>
+                    <Text style={{ color: theme.textSecondary }} className="text-xs font-medium">Asigna y divide consumos</Text>
                 </View>
                 <TouchableOpacity 
                     onPress={() => router.push({ pathname: '/new-expense', params: { groupId } } as any)}
-                    className="flex-row items-center gap-1 px-4 py-2 rounded-full active:opacity-70"
+                    style={{ backgroundColor: theme.primary }}
+                    className="flex-row items-center gap-2 px-4 py-2 rounded-xl shadow-lg shadow-blue-500/20"
                 >
-                    <Ionicons name="add" size={16} color={theme.primary} />
-                    <Text style={{ color: theme.primary, fontSize: 14 * fontScale, fontFamily: 'Inter' }} className="font-bold">Añadir</Text>
+                    <Ionicons name="add-circle" size={18} color="black" />
+                    <Text className="text-black font-black text-xs uppercase">Añadir</Text>
                 </TouchableOpacity>
             </View>
 
-            <View className="gap-y-4">
-                {items.map((item) => (
-                    <TouchableOpacity 
-                        key={item.id} 
-                        activeOpacity={0.7}
-                        onPress={() => router.push({ pathname: '/new-expense', params: { id: item.id, name: item.name, amount: item.amount, groupId } } as any)}
-                        style={{ 
-                            backgroundColor: theme.card, 
-                            borderColor: theme.border + '26', // 15% opacity ghost border
-                        }} 
-                        className="rounded-xl p-5 border shadow-sm"
-                    >
-                        <View className="flex-row justify-between items-start mb-4">
-                            <View className="flex-1 pr-4">
-                                <Text style={{ color: theme.text, fontSize: 16 * fontScale, fontFamily: 'Manrope' }} className="font-bold">{item.name}</Text>
-                                <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale, fontFamily: 'Inter' }} className="mt-1 opacity-70">{item.detail}</Text>
-                            </View>
-                            <Text style={{ color: theme.text, fontSize: 18 * fontScale, fontFamily: 'Manrope' }} className="font-black">${item.amount.toFixed(2)}</Text>
-                        </View>
-                        
-                        <View className="flex-row items-center justify-between mt-2 pt-4 border-t" style={{ borderColor: theme.cardSecondary }}>
-                            <View className="flex-row -space-x-2">
-                                {item.avatars.map((av, idx) => (
-                                    <Image 
-                                        key={idx} 
-                                        source={{ uri: av }} 
-                                        className="w-8 h-8 rounded-full border-2" 
-                                        style={{ borderColor: theme.card }} 
-                                    />
-                                ))}
-                            </View>
-                            <TouchableOpacity 
-                                style={{ backgroundColor: theme.cardSecondary }} 
-                                className="w-8 h-8 rounded-full items-center justify-center active:opacity-60"
-                            >
-                                <MaterialIcons name="edit" size={18} color={theme.textSecondary} />
-                            </TouchableOpacity>
-                        </View>
-                    </TouchableOpacity>
-                ))}
+            {/* Virtual Ticket Container */}
+            <View 
+                style={{ 
+                    backgroundColor: 'white', 
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 20 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 30,
+                    elevation: 10
+                }} 
+                className="rounded-[30px] overflow-hidden"
+            >
+                {/* Ticket Top Jagged Edge */}
+                <View className="flex-row justify-around -mt-2">
+                    {[...Array(15)].map((_, i) => (
+                        <View key={i} className="w-4 h-4 bg-slate-900 rounded-full" />
+                    ))}
+                </View>
 
-                {/* Tax/Tip Row (Non-interactive style from Stitch) */}
-                <View 
-                    style={{ backgroundColor: theme.cardSecondary }} 
-                    className="rounded-xl p-4 flex-row justify-between items-center mt-2"
-                >
-                    <View className="flex-row items-center gap-3">
-                        <View style={{ backgroundColor: theme.card }} className="w-8 h-8 rounded-full items-center justify-center shadow-xs">
-                            <MaterialIcons name="receipt-long" size={18} color={theme.textSecondary} />
+                <View className="p-8">
+                    {/* Items List */}
+                    {items.length === 0 ? (
+                        <View className="py-10 items-center opacity-30">
+                            <FontAwesome5 name="receipt" size={40} color="black" />
+                            <Text className="text-slate-900 font-bold mt-4">Sin consumos registrados</Text>
                         </View>
-                        <View>
-                            <Text style={{ color: theme.text, fontSize: 14 * fontScale, fontFamily: 'Manrope' }} className="font-bold">Propina y Servicio</Text>
-                            <Text style={{ color: theme.textSecondary, fontSize: 12 * fontScale, fontFamily: 'Inter' }} className="mt-0.5 opacity-70">Dividido en partes iguales</Text>
+                    ) : (
+                        <View className="gap-y-6">
+                            {items.map((item) => (
+                                <View key={item.id}>
+                                    <View className="flex-row justify-between items-start mb-2">
+                                        <View className="flex-1 pr-4">
+                                            <Text className="text-slate-900 font-black text-base uppercase leading-tight">{item.name}</Text>
+                                            <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">{item.detail}</Text>
+                                        </View>
+                                        <Text className="text-slate-900 font-black text-lg">${item.amount.toFixed(2)}</Text>
+                                    </View>
+                                    
+                                    {/* Participants badges */}
+                                    <View className="flex-row flex-wrap gap-1.5 mt-2">
+                                        {item.participants.map((p, idx) => (
+                                            <View key={idx} className="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                                                <Text className="text-slate-600 text-[8px] font-black uppercase">{p.split(' ')[0]}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
+                    )}
+
+                    {/* Divider Line */}
+                    <View className="my-8 border-t border-dashed border-slate-300" />
+
+                    {/* Subtotal / Fees */}
+                    <View className="gap-y-3">
+                        <View className="flex-row justify-between">
+                            <Text className="text-slate-400 font-bold text-xs uppercase tracking-widest">Subtotal</Text>
+                            <Text className="text-slate-600 font-black text-xs">${items.reduce((acc, i) => acc + i.amount, 0).toFixed(2)}</Text>
+                        </View>
+                        <View className="flex-row justify-between">
+                            <Text className="text-slate-400 font-bold text-xs uppercase tracking-widest">Servicio / Propina</Text>
+                            <Text className="text-slate-600 font-black text-xs">${serviceFee.toFixed(2)}</Text>
                         </View>
                     </View>
-                    <Text style={{ color: theme.text, fontSize: 14 * fontScale, fontFamily: 'Manrope' }} className="font-bold">${serviceFee.toFixed(2)}</Text>
+
+                    {/* Total Section */}
+                    <View className="mt-8 bg-slate-900 rounded-2xl p-5 flex-row justify-between items-center shadow-lg">
+                        <View>
+                            <Text className="text-white/50 text-[10px] font-black uppercase tracking-widest">Total a Pagar</Text>
+                            <Text className="text-white text-2xl font-black">${(items.reduce((acc, i) => acc + i.amount, 0) + serviceFee).toFixed(2)}</Text>
+                        </View>
+                        <View className="w-10 h-10 bg-white/10 rounded-full items-center justify-center">
+                            <MaterialIcons name="qr-code" size={20} color="white" />
+                        </View>
+                    </View>
                 </View>
+
+                {/* Ticket Bottom Jagged Edge */}
+                <View className="flex-row justify-around -mb-2 mt-4">
+                    {[...Array(15)].map((_, i) => (
+                        <View key={i} className="w-4 h-4 bg-slate-900 rounded-full" />
+                    ))}
+                </View>
+            </View>
+
+            {/* Hint */}
+            <View className="mt-6 flex-row items-center justify-center gap-2 opacity-50">
+                <Ionicons name="information-circle" size={14} color={theme.textSecondary} />
+                <Text style={{ color: theme.textSecondary }} className="text-[10px] font-bold">Puedes editar cualquier item tocándolo en la lista.</Text>
             </View>
         </MotiView>
     );

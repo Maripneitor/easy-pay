@@ -9,6 +9,8 @@
   "scripts": {
     "install:all": "npm install",
     "gama": "node setup-gama.js",
+    "gama:unach": "node setup-gama.js --unach",
+    "gama:usb": "node setup-gama.js --usb",
     "dev:backend": "docker compose up backend",
     "dev:frontend": "docker compose up frontend",
     "dev:mobile": "cd apps/mobile-app && npm start",
@@ -37,6 +39,7 @@
     "ajv-keywords": "^5.1.0"
   },
   "devDependencies": {
+    "localtunnel": "^2.0.2",
     "metro-runtime": "^0.84.3"
   }
 }

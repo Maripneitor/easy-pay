@@ -5,63 +5,27 @@ import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { useNotifications } from '../../src/infrastructure/context/NotificationContext';
-// import { MotiView } from 'moti';
-const MotiView = View as any;
 
 const CustomTabBarButton = ({ children, onPress, theme }: any) => {
-  const [isExpanding, setIsExpanding] = React.useState(false);
-
-  const handlePress = () => {
-    setIsExpanding(true);
-    setTimeout(() => {
-      onPress();
-      setTimeout(() => setIsExpanding(false), 500); // Reset for next time
-    }, 400);
-  };
-
   return (
     <View style={{ alignItems: 'center' }}>
-      {/* Background Expansion Circle */}
-      {isExpanding && (
-        <MotiView 
-          from={{ scale: 0, opacity: 1 }}
-          animate={{ scale: 20, opacity: 1 }}
-          transition={{ type: 'timing', duration: 500 }}
-          style={{
-            position: 'absolute',
-            width: 100,
-            height: 100,
-            borderRadius: 50,
-            backgroundColor: theme.primary,
-            zIndex: 1000,
-            top: -40,
-          }}
-        />
-      )}
-      
       <TouchableOpacity
         style={{
           top: -20,
           justifyContent: 'center',
           alignItems: 'center',
           zIndex: 1001,
-          ...styles.shadow
+          ...styles.tabButtonShadow
         }}
-        onPress={handlePress}
+        onPress={onPress}
         activeOpacity={0.9}
       >
-        <MotiView
-          from={{ scale: 1, shadowOpacity: 0.3 }}
-          animate={{ scale: [1, 1.05, 1], shadowOpacity: [0.3, 0.6, 0.3] }}
-          transition={{ loop: true, type: 'timing', duration: 3000 }}
+        <View
           style={{
             width: 64,
             height: 64,
             borderRadius: 32,
             backgroundColor: theme.primary,
-            shadowColor: theme.primary,
-            shadowOffset: { width: 0, height: 10 },
-            shadowRadius: 15,
             alignItems: 'center',
             justifyContent: 'center',
             borderWidth: 4,
@@ -69,7 +33,7 @@ const CustomTabBarButton = ({ children, onPress, theme }: any) => {
           }}
         >
           {children}
-        </MotiView>
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -85,6 +49,8 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
 
   if (isLoading) return null;
+  
+  console.log(`🛡️ TabLayout Protection - Token: ${token ? '✅ Presente' : '❌ Ausente'}`);
   if (!token) return <Redirect href="/" />;
 
   return (
@@ -183,14 +149,17 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  shadow: {
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.5,
-    elevation: 5,
+  tabButtonShadow: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 10,
+      },
+    }),
   },
 });

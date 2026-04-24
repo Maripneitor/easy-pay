@@ -37,7 +37,7 @@ export default function GroupDetailScreen() {
     const { theme, fontScale } = useTheme();
     const { user } = useAuth();
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<TabType>('miembros');
+    const [activeTab, setActiveTab] = useState<TabType>('actividad');
     
     // API Data State
     const [groupData, setGroupData] = useState<any>(null);
@@ -51,17 +51,19 @@ export default function GroupDetailScreen() {
     const fetchData = useCallback(async () => {
         if (!id) return;
         setIsLoading(true);
+        console.log(`📡 GroupDetail: Cargando datos para grupo ${id}...`);
         try {
-            const [g, items, b] = await Promise.all([
+            const [g, items, balancesData] = await Promise.all([
                 groupRepository.getGroup(id),
-                fetch(`http://192.168.1.12:8000/api/groups/${id}/items`).then(r => r.json()),
-                fetch(`http://192.168.1.12:8000/api/groups/${id}/balances`).then(r => r.json())
+                groupRepository.getItems(id),
+                groupRepository.getBalances(id)
             ]);
             setGroupData(g);
             setGroupItems(Array.isArray(items) ? items : []);
-            setBalances(b);
+            setBalances(balancesData);
+            console.log('✅ GroupDetail: Datos cargados correctamente');
         } catch (err) {
-            // Silently fail
+            console.error('❌ Error cargando datos del grupo:', err);
         } finally {
             setIsLoading(false);
         }
@@ -170,11 +172,11 @@ export default function GroupDetailScreen() {
                             <VirtualTicketCard 
                                 groupId={id}
                                 items={groupItems.map((i: any) => ({
-                                    id: i.id,
+                                    id: i.id || i._id,
                                     name: i.nombre,
-                                    detail: i.comprador_id === user?.id ? 'Pagado por ti' : 'Gasto grupal',
-                                    amount: i.monto || i.precio,
-                                    avatars: []
+                                    detail: i.nombre_comprador ? `Pagado por ${i.nombre_comprador}` : 'Gasto grupal',
+                                    amount: (i.precio || 0) * (i.cantidad || 1),
+                                    participants: i.nombres_participantes || []
                                 }))} 
                                 serviceFee={0} 
                             />

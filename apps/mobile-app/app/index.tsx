@@ -30,11 +30,14 @@ export default function LandingScreen() {
   const insets = useSafeAreaInsets();
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
+  // La navegación se manejará desde el layout raíz o manualmente para evitar bucles
+  /* 
   useEffect(() => {
     if (!isLoading && user) {
       router.replace('/(tabs)/');
     }
   }, [user, isLoading]);
+  */
 
   const toggleFaq = (index: number) => {
     setExpandedFaq(expandedFaq === index ? null : index);
@@ -42,7 +45,7 @@ export default function LandingScreen() {
 
   const handleProfilePress = () => {
     if (user) {
-      router.push('/(tabs)/settings');
+      router.replace('/(tabs)');
     } else {
       router.push('/login');
     }
@@ -50,7 +53,7 @@ export default function LandingScreen() {
 
   const handleActionPress = () => {
     if (user) {
-      router.push('/create-group');
+      router.replace('/(tabs)');
     } else {
       router.push('/login');
     }
@@ -317,7 +320,7 @@ export default function LandingScreen() {
                 Únete a miles de comensales felices que ya no sufren con la cuenta.
               </Text>
               <TouchableOpacity 
-                onPress={() => router.push('/login')}
+                onPress={handleActionPress}
                 className="bg-dodger-blue px-10 py-5 rounded-full shadow-xl shadow-blue-500/40"
               >
                 <Text className="text-white font-black text-lg">COMENZAR GRATIS</Text>

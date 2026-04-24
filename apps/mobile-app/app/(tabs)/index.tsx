@@ -10,7 +10,8 @@ import {
     TouchableOpacity, 
     StyleSheet,
     RefreshControl,
-    ActivityIndicator
+    ActivityIndicator,
+    Platform
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -20,8 +21,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 // // import { MotiView, MotiText, AnimatePresence } from 'moti';
 const AnimatePresence = ({ children }: any) => children;
-const MotiView = View as any;
-const MotiText = Text as any;
+const MotiView = ({ children, from, animate, transition, style, ...props }: any) => (
+  <View style={style} {...props}>{children}</View>
+);
+const MotiText = ({ children, from, animate, transition, style, ...props }: any) => (
+  <Text style={style} {...props}>{children}</Text>
+);
 import { useAuth } from '../../context/AuthContext';
 import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
 import { SHARED_USER } from '../../src/infrastructure/constants/MockUser';
@@ -46,13 +51,18 @@ export default function DashboardScreen() {
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchGroups = useCallback(async () => {
-        if (!user?.id) return;
+        if (!user?.id) {
+            console.log('⚠️ Dashboard: No user ID yet, skipping fetch');
+            return;
+        }
         setIsLoading(true);
+        console.log(`📡 Dashboard: Fetching groups for user ${user.id}...`);
         try {
             const groups = await groupRepository.findByUser(user.id);
+            console.log(`✅ Dashboard: Found ${groups?.length || 0} groups`);
             setUserGroups(Array.isArray(groups) ? groups : []);
         } catch (err) {
-            // Silently fail for UI cleanup
+            console.error('❌ Dashboard: Error fetching groups:', err);
         } finally {
             setIsLoading(false);
             setRefreshing(false);
@@ -188,7 +198,8 @@ export default function DashboardScreen() {
                                         colors={item.color as any}
                                         start={{ x: 0, y: 0 }}
                                         end={{ x: 1, y: 1 }}
-                                        className="h-44 rounded-[50px] p-7 justify-between shadow-2xl shadow-black/40 relative overflow-hidden"
+                                        style={styles.cardGradient}
+                                        className="h-44 rounded-[50px] p-7 justify-between relative overflow-hidden"
                                     >
                                         <View className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
                                         <View className="flex-row items-center justify-between">
@@ -233,8 +244,8 @@ export default function DashboardScreen() {
                                 activeOpacity={0.7}
                             >
                                 <View 
-                                    style={{ backgroundColor: theme.glassBg, borderColor: theme.border }}
-                                    className="w-16 h-16 rounded-[24px] items-center justify-center mb-3 border border-white/5 shadow-sm"
+                                    style={{ backgroundColor: theme.glassBg, borderColor: theme.border, ...styles.actionShadow }}
+                                    className="w-16 h-16 rounded-[24px] items-center justify-center mb-3 border border-white/5"
                                 >
                                     {action.id === 'settle' ? (
                                         <FontAwesome5 name="handshake" size={24} color={action.color} />
@@ -333,4 +344,31 @@ export default function DashboardScreen() {
     );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+    cardGradient: {
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 10 },
+                shadowOpacity: 0.3,
+                shadowRadius: 15,
+            },
+            android: {
+                elevation: 8,
+            },
+        }),
+    },
+    actionShadow: {
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 5,
+            },
+            android: {
+                elevation: 3,
+            },
+        }),
+    }
+});

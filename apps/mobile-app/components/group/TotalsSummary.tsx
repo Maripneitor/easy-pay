@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { MotiView } from 'moti';
+// // import { MotiView, AnimatePresence } from 'moti';
+const MotiView = ({ children, style, ...props }: any) => <View style={style} {...props}>{children}</View>;
+const AnimatePresence = ({ children }: any) => children;
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 
 interface TotalsSummaryProps {
