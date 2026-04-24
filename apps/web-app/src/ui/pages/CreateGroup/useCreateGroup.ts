@@ -32,7 +32,7 @@ export const useCreateGroup = () => {
                 integrantes: [userId]
             };
 
-            const response = await fetch('http://localhost:8002/api/groups/create', {
+            const response = await fetch(`${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api/groups/create`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -70,7 +70,7 @@ export const useCreateGroup = () => {
                 user_id: userId
             };
 
-            const response = await fetch(`http://localhost:8002/api/groups/join`, {
+            const response = await fetch(`${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api/groups/join`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),

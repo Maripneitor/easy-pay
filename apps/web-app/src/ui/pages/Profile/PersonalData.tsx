@@ -20,7 +20,7 @@ export const PersonalData = () => {
 
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:8001/api/auth/update/${userId}`, {
+            const response = await fetch(`${import.meta.env.VITE_USER_SERVICE_URL ?? 'http://localhost:8001'}/api/auth/update/${userId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

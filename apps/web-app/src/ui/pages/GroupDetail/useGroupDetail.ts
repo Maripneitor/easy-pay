@@ -24,7 +24,7 @@ export const useGroupDetail = (group_id: string) => {
             const myId = localStorage.getItem('userId');
 
             // 1. Obtener datos del Grupo
-            const resGroup = await fetch(`http://localhost:8002/api/groups/${group_id}`);
+            const resGroup = await fetch(`${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api/groups/${group_id}`);
             if (resGroup.ok) {
                 const gData = await resGroup.json();
                 setGroupName(gData.nombre || "Grupo");
@@ -45,7 +45,7 @@ export const useGroupDetail = (group_id: string) => {
             }
 
             // ... resto del código ...
-            const resItems = await fetch(`http://localhost:8002/api/groups/${group_id}/items`);
+            const resItems = await fetch(`${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api/groups/${group_id}/items`);
             let itemsList: any[] = [];
             if (resItems.ok) {
                 const itemsData = await resItems.json();
@@ -53,7 +53,7 @@ export const useGroupDetail = (group_id: string) => {
                 setActivities(itemsList);
             }
 
-            const resBalances = await fetch(`http://localhost:8002/api/groups/${group_id}/balances`);
+            const resBalances = await fetch(`${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api/groups/${group_id}/balances`);
             if (resBalances.ok) {
                 const bData = await resBalances.json();
                 setBalances(bData);

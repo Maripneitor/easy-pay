@@ -13,8 +13,8 @@ export const useAuth = () => {
         setLoading(true);
         setError(null);
         try {
-            const API_URL = 'http://localhost:8001';
-            const response = await fetch(`${API_URL}api/auth/register`, {
+            const API_URL = import.meta.env.VITE_USER_SERVICE_URL ?? 'http://localhost:8001';
+            const response = await fetch(`${API_URL}/api/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(userData),
@@ -45,7 +45,7 @@ export const useAuth = () => {
         setError(null);
 
         try {
-            const API_URL = 'http://localhost:8001';
+            const API_URL = import.meta.env.VITE_USER_SERVICE_URL ?? 'http://localhost:8001';
             const response = await fetch(`${API_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

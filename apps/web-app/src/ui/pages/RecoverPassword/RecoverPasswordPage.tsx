@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { toast } from 'sonner';
 
-const API_URL = 'http://localhost:8001';
+const API_URL = import.meta.env.VITE_USER_SERVICE_URL ?? 'http://localhost:8001';
 
 export const RecoverPasswordPage = () => {
     const navigate = useNavigate();

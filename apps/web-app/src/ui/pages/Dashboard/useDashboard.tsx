@@ -16,14 +16,14 @@ export const useDashboard = () => {
         }
 
         try {
-            const API_URL = 'http://localhost:8002/api';
+            const API_URL = `${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api`;
             const response = await fetch(`${API_URL}/groups/user/${userId}`);
             const data = await response.json();
 
             if (Array.isArray(data)) {
                 const groupsWithBalances = await Promise.all(data.map(async (group: any) => {
                     try {
-                        const API_URL = 'http://localhost:8002/api';
+                        const API_URL = `${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api`;
                         const resBalance = await fetch(`${API_URL}/groups/${group.id}/balances`);
                         if (resBalance.ok) {
                             const bData = await resBalance.json();
@@ -61,7 +61,7 @@ export const useDashboard = () => {
 
     const deleteGroup = async (groupId: string) => {
         try {
-            const API_URL = 'http://localhost:8002/api';
+            const API_URL = `${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api`;
             const response = await fetch(`${API_URL}/groups/delete/${groupId}`, {
                 method: 'DELETE'
             });

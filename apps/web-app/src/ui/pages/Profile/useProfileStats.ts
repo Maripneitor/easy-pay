@@ -10,7 +10,7 @@ export const useProfileStats = () => {
                 const userId = localStorage.getItem('userId');
                 if (!userId) return;
                 
-                const API_URL = 'http://localhost:8003/api';
+                const API_URL = `${import.meta.env.VITE_STATS_SERVICE_URL ?? 'http://localhost:8003'}/api`;
                 const response = await fetch(`${API_URL}/stats/user/${userId}/charts`);
                 if (response.ok) {
                     const data = await response.json();
