@@ -25,7 +25,7 @@ export const GroupDetail = () => {
     const handleDeleteItem = async (itemId: string) => {
         if (!window.confirm("¿Estás seguro de eliminar este gasto? Los balances se recalcularán.")) return;
         try {
-            const res = await fetch(`http://localhost:8002/api/groups/${idFinal}/items/${itemId}`, {
+            const res = await fetch(`${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api/groups/${idFinal}/items/${itemId}`, {
                 method: 'DELETE'
             });
             if (res.ok) {

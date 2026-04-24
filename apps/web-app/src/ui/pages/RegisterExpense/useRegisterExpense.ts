@@ -22,7 +22,7 @@ export const useRegisterExpense = () => {
         if (!userId || !cleanGroupId) return;
 
         try {
-            const res = await fetch(`http://localhost:8000/api/groups/${cleanGroupId}`);
+            const res = await fetch(`${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api/groups/${cleanGroupId}`);
 
             if (res.ok) {
                 const currentGroup = await res.json();
@@ -89,7 +89,7 @@ export const useRegisterExpense = () => {
                 participantes_ids: formData.participantes_ids
             };
 
-            const response = await fetch(`http://localhost:8000/api/groups/add-item`, {
+            const response = await fetch(`${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api/groups/add-item`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

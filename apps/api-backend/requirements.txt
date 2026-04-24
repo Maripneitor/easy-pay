@@ -7,3 +7,5 @@ pyjwt
 python-dotenv
 pyotp==2.9.0
 fastapi-mail==1.4.1
+passlib[bcrypt]
+python-jose[cryptography]

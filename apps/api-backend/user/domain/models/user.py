@@ -26,3 +26,18 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     identifier: str
     password: str
+
+# Clase para cambio de contraseña (SWAGGER)
+class PasswordChange(BaseModel):
+    new_password: str = Field(..., min_length=8, description="La nueva contraseña (mínimo 8 caracteres)")
+    confirm_password: str = Field(..., description="Confirmación de la nueva contraseña")
+
+    # Opcional: Validación básica de coincidencia en el esquema
+    def validate_matching(self):
+        if self.new_password != self.confirm_password:
+            raise ValueError("La nueva contraseña y la confirmación no coinciden")
+        return True
+
+# Clase para solicitar restablecimiento de contraseña
+class PasswordResetRequest(BaseModel):
+    email: EmailStr

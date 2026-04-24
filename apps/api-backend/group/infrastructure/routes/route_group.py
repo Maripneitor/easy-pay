@@ -1,14 +1,15 @@
 from fastapi import APIRouter, HTTPException
 from group.infrastructure.repository.group_repository import MongoGroupRepository
 from group.infrastructure.repository.item_repository import MongoItemRepository
-from group.application.create_group import CreateGroupUseCase
-from group.application.add_item import AddItemUseCase
 from group.domain.models.group import GroupCreate
 from group.domain.models.item import ItemCreate
-from group.application.get_balance import GetGroupBalancesUseCase
-from group.application.join_group import JoinGroupUseCase 
 from group.domain.models.group import GroupJoin
 from group.domain.models.item import ItemUpdate
+from group.application.get_balance import GetGroupBalancesUseCase
+from group.application.join_group import JoinGroupUseCase 
+from group.application.delete_group import DeleteGroupUseCase
+from group.application.create_group import CreateGroupUseCase
+from group.application.add_item import AddItemUseCase
 
 group_router = APIRouter(prefix="/api/groups", tags=["Groups"], redirect_slashes=False)
 
@@ -19,7 +20,7 @@ create_group_uc = CreateGroupUseCase(group_repo)
 add_item_uc = AddItemUseCase(item_repo, group_repo)
 get_balances_uc = GetGroupBalancesUseCase(item_repo, group_repo)
 join_group_uc = JoinGroupUseCase(group_repo)
-
+delete_group_uc = DeleteGroupUseCase(group_repo)                    
 
 @group_router.post("/create")
 async def create_group(data: GroupCreate):
@@ -86,14 +87,14 @@ async def edit_item(group_id: str, item_id: str, item_data: ItemUpdate):
         
     return {"message": "Gasto actualizado correctamente", "status": "success"}
 
-@group_router.delete("/{group_id}/items/{item_id}")
-async def remove_item(group_id: str, item_id: str):
+@group_router.delete("/delete/{group_id}", tags=["Groups"])
+async def delete_group_route(group_id: str):
     """
-    Elimina un gasto de la base de datos.
+    Elimina un grupo permanentemente por su ID.
     """
-    success = await item_repo.delete_item(item_id)
+    result = await delete_group_uc.execute(group_id)
     
-    if not success:
-        raise HTTPException(status_code=404, detail="No se pudo eliminar el gasto")
+    if result["status"] == "error":
+        raise HTTPException(status_code=404, detail=result["message"])
         
-    return {"message": "Gasto eliminado", "status": "success"}
+    return result

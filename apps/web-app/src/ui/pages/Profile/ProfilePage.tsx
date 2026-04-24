@@ -11,16 +11,32 @@ import {
     LogOut,
     Palette,
     Type,
-    Lock
+    Lock,
+    ArrowDownRight,
+    ArrowUpRight,
+    AlertCircle
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { PageHeader } from '@ui/components/PageHeader';
 import { useAuth } from '../Auth/useAuth';
+import { useProfileStats } from './useProfileStats';
+import { useDashboard } from '../Dashboard/useDashboard';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
 
 export const ProfilePage = () => {
     const navigate = useNavigate();
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
     const { logout } = useAuth();
+    const { stats, loading: statsLoading } = useProfileStats();
+    const { allActiveGroups, settledGroups } = useDashboard();
+
+    // --- Cálculos Dinámicos ---
+    const totalGrupos = (allActiveGroups?.length || 0) + (settledGroups?.length || 0);
+    const loQueDebe = allActiveGroups?.reduce((acc, g) => acc + (g.mi_balance < 0 ? Math.abs(g.mi_balance) : 0), 0) || 0;
+    const loQueLeDeben = allActiveGroups?.reduce((acc, g) => acc + (g.mi_balance > 0 ? g.mi_balance : 0), 0) || 0;
+    const gruposConDeudasActivas = allActiveGroups?.filter(g => g.mi_balance !== 0).length || 0;
 
     const { colorTheme, isDark, setTheme, toggleTheme, fontSize, setFontSize } = useTheme();
 
@@ -97,46 +113,114 @@ export const ProfilePage = () => {
                         <section className="lg:col-span-2">
                             <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Estadísticas</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* 1. Estadísticas de Gastado (Total histórico) */}
                                 <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 shadow-sm dark:shadow-none">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-[var(--text-secondary)] text-sm font-medium">Total Gastado</span>
                                         <CreditCard className="text-slate-400 dark:text-slate-500" size={20} />
                                     </div>
-                                    <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">$0.00</div>
+                                    <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">
+                                        ${stats?.total_spent?.toLocaleString('es-MX', { minimumFractionDigits: 2 }) || '0.00'}
+                                    </div>
                                 </div>
 
+                                {/* 2. Grupos a los que pertenece */}
                                 <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 shadow-sm dark:shadow-none">
                                     <div className="flex items-center justify-between mb-2">
-                                        <span className="text-[var(--text-secondary)] text-sm font-medium">Grupos Activos</span>
+                                        <span className="text-[var(--text-secondary)] text-sm font-medium">Mis Grupos</span>
                                         <Users className="text-slate-400 dark:text-slate-500" size={20} />
                                     </div>
-                                    <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">0</div>
+                                    <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">
+                                        {totalGrupos}
+                                    </div>
                                 </div>
 
+                                {/* 3. Lo que se debe (Deudas activas a pagar) */}
                                 <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 shadow-sm dark:shadow-none">
                                     <div className="flex items-center justify-between mb-2">
-                                        <span className="text-[var(--text-secondary)] text-sm font-medium">Deudas Pagadas</span>
-                                        <CheckCircle className="text-green-500 dark:text-green-400" size={20} />
+                                        <span className="text-[var(--text-secondary)] text-sm font-medium">Lo que debo</span>
+                                        <div className="flex items-center gap-1 text-rose-500">
+                                            {gruposConDeudasActivas > 0 && <span className="text-[10px] font-bold bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">{gruposConDeudasActivas} activas</span>}
+                                            <ArrowDownRight size={20} />
+                                        </div>
                                     </div>
-                                    <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">0</div>
+                                    <div className="text-2xl font-mono font-bold text-rose-500 dark:text-rose-400">
+                                        ${loQueDebe.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                    </div>
                                 </div>
 
-                                <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 flex items-center justify-between shadow-sm dark:shadow-none">
-                                    <div>
-                                        <span className="text-[var(--text-secondary)] text-sm font-medium block mb-1">Confiabilidad</span>
-                                        <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">100%</div>
+                                {/* 4. Lo que le deben (A cobrar) */}
+                                <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 shadow-sm dark:shadow-none">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-[var(--text-secondary)] text-sm font-medium">Lo que me deben</span>
+                                        <ArrowUpRight className="text-emerald-500 dark:text-emerald-400" size={20} />
                                     </div>
-                                    <div className="relative w-12 h-12">
-                                        <svg className="transform -rotate-90 w-12 h-12">
-                                            <circle className="text-slate-200 dark:text-slate-700" cx="24" cy="24" fill="transparent" r="20" stroke="currentColor" strokeWidth="4"></circle>
-                                            <circle
-                                                className="text-[var(--primary)] transition-colors duration-500"
-                                                cx="24" cy="24" fill="transparent" r="20" stroke="currentColor" strokeWidth="4"
-                                                strokeDasharray="126" strokeDashoffset="0"
-                                            ></circle>
-                                        </svg>
+                                    <div className="text-2xl font-mono font-bold text-emerald-500 dark:text-emerald-400">
+                                        ${loQueLeDeben.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Gastos por Categoría */}
+                            <div className="mt-8 bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-6 shadow-sm dark:shadow-none">
+                                <h4 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Desglose de Gastos</h4>
+                                
+                                {statsLoading ? (
+                                    <div className="animate-pulse space-y-4">
+                                        {[1, 2, 3].map(i => (
+                                            <div key={i} className="h-12 bg-slate-100 dark:bg-slate-800 rounded-lg"></div>
+                                        ))}
+                                    </div>
+                                ) : stats?.by_category?.length > 0 ? (
+                                    <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                                        <div className="w-full md:w-1/2 h-[250px]">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <PieChart>
+                                                    <Pie
+                                                        data={stats.by_category}
+                                                        cx="50%"
+                                                        cy="50%"
+                                                        innerRadius={60}
+                                                        outerRadius={100}
+                                                        paddingAngle={5}
+                                                        dataKey="amount"
+                                                        nameKey="category"
+                                                        stroke="none"
+                                                    >
+                                                        {stats.by_category.map((entry: any, index: number) => (
+                                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                        ))}
+                                                    </Pie>
+                                                    <Tooltip 
+                                                        formatter={(value: number) => `$${value.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`}
+                                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                    />
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                        
+                                        <div className="w-full md:w-1/2 space-y-3">
+                                            {stats.by_category.map((cat: any, idx: number) => (
+                                                <div key={idx} className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
+                                                        <span className="font-medium text-sm text-[var(--text-primary)]">{cat.category}</span>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-sm font-mono font-bold text-[var(--text-primary)]">
+                                                            ${cat.amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                                        </div>
+                                                        <div className="text-xs text-[var(--text-secondary)]">
+                                                            {cat.percentage}%
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-[var(--text-secondary)] text-center py-4">No hay gastos registrados aún.</p>
+                                )}
                             </div>
                         </section>
 

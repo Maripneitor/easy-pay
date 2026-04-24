@@ -15,16 +15,20 @@ conf = ConnectionConfig(
 )
 
 class EmailService:
-    async def send_otp(self, email_to: str, code: str):
+    async def send_otp(self, email_to: str, code: str, is_recovery: bool = False):
         try:
+            subject = "🔐 Recuperación de Contraseña - Easy-Pay" if is_recovery else "🔐 Código de Seguridad - Easy-Pay"
+            title = "Recuperación de Contraseña" if is_recovery else "Verificación de Identidad"
+            desc = "Tu código para restablecer tu contraseña es:" if is_recovery else "Tu código de seguridad es:"
+            
             message = MessageSchema(
-                subject="🔐 Código de Seguridad - Easy-Pay",
+                subject=subject,
                 recipients=[email_to],
                 body=f"""
                     <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-                        <h2 style="color: #4f46e5;">Verificación de Identidad</h2>
+                        <h2 style="color: #4f46e5;">{title}</h2>
                         <p>Te damos la bienvenida a <b>GP Easy-Pay</b>.</p>
-                        <p>Tu código de seguridad es:</p>
+                        <p>{desc}</p>
                         <div style="background: #f3f4f6; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #1f2937; border-radius: 8px;">
                             {code}
                         </div>

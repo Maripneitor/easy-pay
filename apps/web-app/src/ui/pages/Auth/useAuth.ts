@@ -13,8 +13,8 @@ export const useAuth = () => {
         setLoading(true);
         setError(null);
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-            const response = await fetch(`${API_URL}/auth/register`, {
+            const API_URL = import.meta.env.VITE_USER_SERVICE_URL ?? 'http://localhost:8001';
+            const response = await fetch(`${API_URL}/api/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(userData),
@@ -45,8 +45,8 @@ export const useAuth = () => {
         setError(null);
 
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-            const response = await fetch(`${API_URL}/auth/login`, {
+            const API_URL = import.meta.env.VITE_USER_SERVICE_URL ?? 'http://localhost:8001';
+            const response = await fetch(`${API_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ identifier, password }),
@@ -59,6 +59,7 @@ export const useAuth = () => {
                 localStorage.setItem('userId', data.user?.id || data.user?._id || data.user_id);
                 localStorage.setItem('userName', data.user?.nombre || identifier);
                 localStorage.setItem('userEmail', data.user?.email || identifier);
+                localStorage.setItem('2fa_enabled', data.user?.['2fa_enabled'] ? 'true' : 'false');
                 localStorage.removeItem('temp_userId');
                 navigate('/dashboard');
                 return;

@@ -7,7 +7,7 @@ class MongoGroupRepository:
         self.db = db_instance.get_db("EasyPay_Groups")
         self.collection = self.db.get_collection("Groups")
         
-        # 🚩 AGREGADO: Referencia a la base de datos de usuarios para obtener los nombres
+        #  AGREGADO: Referencia a la base de datos de usuarios para obtener los nombres
         self.db_auth = db_instance.get_db("EasyPay_Auth")
         self.users_collection = self.db_auth.get_collection("Users")
 
@@ -22,7 +22,7 @@ class MongoGroupRepository:
         result = await self.collection.insert_one(group_data)
         return str(result.inserted_id)
 
-    # 🛠️ NUEVA FUNCIÓN: Obtiene el grupo con los nombres de los integrantes
+    #  NUEVA FUNCIÓN: Obtiene el grupo con los nombres de los integrantes
     async def find_by_id_detailed(self, group_id: str):
         """Busca un grupo y reemplaza los IDs de integrantes por objetos {id, nombre}"""
         if not ObjectId.is_valid(group_id):
@@ -93,3 +93,7 @@ class MongoGroupRepository:
         cursor = self.collection.find({})
         groups = await cursor.to_list(length=100)
         return [self._map_group(g) for g in groups]
+    
+    async def delete_group(self, group_id: str) -> bool:
+        result = await self.collection.delete_one({"_id": ObjectId(group_id)})
+        return result.deleted_count > 0
