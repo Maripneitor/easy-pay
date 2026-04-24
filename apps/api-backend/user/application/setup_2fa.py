@@ -7,13 +7,13 @@ class Setup2FAUseCase:
         self.repository = repository
         self.email_service = email_service
 
-    async def execute(self, user_id: str, email: str):
+    async def execute(self, user_id: str, email: str, is_recovery: bool = False):
         otp_code = f"{random.randint(100000, 999999)}"
         expires_at = datetime.utcnow() + timedelta(minutes=5)
 
         #Intenta enviar el correo 
         try: 
-            await self.email_service.send_otp(email, otp_code)
+            await self.email_service.send_otp(email, otp_code, is_recovery)
         except Exception as e:
             #Si el correo no existe, se corta aqui
             print(f"Debug: Error real al enviar a {email}: {e}")
