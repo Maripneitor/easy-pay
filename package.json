@@ -8,10 +8,14 @@
   ],
   "scripts": {
     "install:all": "npm install",
-    "dev:backend": "docker-compose up backend",
+    "gama": "node setup-gama.js",
+    "gama:unach": "node setup-gama.js --unach",
+    "gama:usb": "node setup-gama.js --usb",
+    "dev:backend": "docker compose up backend",
+    "dev:frontend": "docker compose up frontend",
     "dev:mobile": "cd apps/mobile-app && npm start",
     "dev:web": "npm run dev --workspace=apps/web-app",
-    "dev": "npm run /^dev:*/",
+    "dev": "docker compose up",
     "clean": "npx rimraf node_modules apps/*/node_modules packages/*/node_modules package-lock.json && npm install",
     "android": "expo run:android",
     "ios": "expo run:ios"
@@ -34,6 +38,7 @@
     "ajv-keywords": "^5.1.0"
   },
   "devDependencies": {
+    "localtunnel": "^2.0.2",
     "metro-runtime": "^0.84.3"
   }
 }

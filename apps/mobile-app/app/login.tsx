@@ -18,7 +18,9 @@ import { Stack, useRouter } from 'expo-router';
 import { Ionicons, Feather, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 // import { MotiView } from 'moti';
-const MotiView = View as any;
+const MotiView = ({ children, from, animate, transition, style, ...props }: any) => (
+  <View style={style} {...props}>{children}</View>
+);
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -55,6 +57,9 @@ export default function AuthScreen() {
                 const data = response.data;
                 
                 if (data.status === 'success') {
+                    console.log('✅ Login exitoso. Guardando sesión...');
+                    console.log(`🔑 Token recibido: ${data.access_token ? 'SÍ' : 'NO'}`);
+                    
                     await saveSession(data.access_token, {
                         id: data.user?.id || data.user?._id || 'unknown',
                         nombre: data.user?.nombre || 'Usuario',
@@ -62,7 +67,8 @@ export default function AuthScreen() {
                         isGuest: false
                     });
                     
-                    router.replace('/(tabs)/');
+                    console.log('🚀 Navegando al Dashboard...');
+                    router.replace('/(tabs)');
                     return;
                 }
             } else {
@@ -74,7 +80,14 @@ export default function AuthScreen() {
                 const data = response.data;
 
                 if (data.status === 'success') {
-                    router.replace('/onboarding/account');
+                    router.replace({
+                        pathname: '/security-setup',
+                        params: { 
+                            userId: data.user_id || data.user?.id || data.user?._id || 'pending', 
+                            email: email, 
+                            name: name 
+                        }
+                    } as any);
                 } else {
                     setError(data.detail || data.message || 'Error en el registro');
                 }

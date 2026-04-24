@@ -8,7 +8,9 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { MotiView } from 'moti';
+// import { MotiView, AnimatePresence } from 'moti';
+const MotiView = ({ children, style, ...props }: any) => <View style={style} {...props}>{children}</View>;
+const AnimatePresence = ({ children }: any) => children;
 
 interface PaymentMethodModalProps {
     isVisible: boolean;

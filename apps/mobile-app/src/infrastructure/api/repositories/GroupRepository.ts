@@ -47,24 +47,23 @@ export class ApiMobileGroupRepository implements GroupRepository {
         throw new Error('Not implemented');
     }
 
-    async addItem(groupId: string, item: Item): Promise<void> {
+    async addItem(groupId: string, item: any): Promise<void> {
         await httpClient.post('/api/groups/add-item', {
             group_id: groupId,
-            nombre: item.description,
-            precio: item.amount,
-            cantidad: 1,
-            comprador_id: item.addedBy,
-            participantes_ids: item.assignedTo
+            nombre: item.description || item.nombre,
+            precio: item.amount || item.precio,
+            cantidad: item.quantity || 1,
+            comprador_id: item.addedBy || item.comprador_id,
+            participantes_ids: item.assignedTo || item.participantes_ids
         });
     }
 
     async removeItem(groupId: string, itemId: string): Promise<void> {
-        // Assuming group_id is required by backend for deletion
-        await httpClient.delete(`/api/groups/unknown/items/${itemId}`);
+        await httpClient.delete(`/api/groups/${groupId}/items/${itemId}`);
     }
 
     async assignItem(groupId: string, itemId: string, memberIds: string[]): Promise<void> {
-        await httpClient.put(`/api/groups/unknown/items/${itemId}`, {
+        await httpClient.put(`/api/groups/${groupId}/items/${itemId}`, {
             participantes_ids: memberIds
         });
     }
@@ -73,8 +72,18 @@ export class ApiMobileGroupRepository implements GroupRepository {
         // Backend logic here
     }
 
-    async findByUser(userId: string): Promise<Group[]> {
+    async findByUser(userId: string): Promise<any[]> {
         const response = await httpClient.get(`/api/groups/user/${userId}`);
+        return response.data;
+    }
+
+    async getItems(groupId: string): Promise<any[]> {
+        const response = await httpClient.get(`/api/groups/${groupId}/items`);
+        return response.data;
+    }
+
+    async getBalances(groupId: string): Promise<any> {
+        const response = await httpClient.get(`/api/groups/${groupId}/balances`);
         return response.data;
     }
 

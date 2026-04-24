@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image } from 'react-native';
-import { MotiView } from 'moti';
+// import { MotiView } from 'moti';
+const MotiView = ({ children, style, ...props }: any) => <View style={style} {...props}>{children}</View>;
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 
 interface Member {

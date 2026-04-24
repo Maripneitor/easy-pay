@@ -1,116 +1,60 @@
-# 🚀 Guía de Onboarding para Gama - Proyecto Easy-Pay
+# 🚀 Easy-Pay: Onboarding Automático Definitivo
 
-¡Hola Gama! Bienvenido a la nueva arquitectura de **Easy-Pay**. Esta guía está diseñada para que puedas levantar el proyecto en tu máquina local sin fricciones, resolviendo de antemano los problemas comunes de caché y configuración de red que surgen con las actualizaciones masivas de Expo SDK 54 y NativeWind.
+¡Bienvenido al repositorio de Easy-Pay! Hemos automatizado toda la infraestructura para que no pierdas tiempo configurando puertos, IPs o entornos virtuales. 
 
-Esta rama (`mario`) contiene la refactorización total de la UI a un estilo premium "Fluid Architect" y la migración a NativeWind. Sigue estos pasos al pie de la letra para asegurar que todo funcione correctamente.
-
----
-
-## 📂 1. Estructura del Proyecto y Reglas de Oro
-
-El proyecto es un monorepo dividido principalmente en dos grandes áreas:
-
-*   **`apps/api-backend`**: El corazón del sistema. Desarrollado en Python con **FastAPI**. Aquí se gestionan los grupos, gastos y la lógica de negocio. La base de datos es **MongoDB**.
-*   **`apps/mobile-app`**: La aplicación móvil desarrollada con **Expo (SDK 54)**, React Native y NativeWind para el estilizado.
-
-### 💡 Reglas de Oro del Backend:
-1.  **Entorno Virtual**: Siempre, antes de tocar nada en `apps/api-backend`, asegúrate de tener activado el entorno virtual (`.venv`).
-2.  **Endpoints**: Los controladores principales están en `apps/api-backend/main.py` y las rutas en la carpeta `routes/`.
-3.  **Persistencia**: Trabajamos con MongoDB. Si necesitas ver los datos en vivo, asegúrate de tener acceso a la instancia configurada en el `.env` del backend.
+El proyecto consta de:
+* **Backend:** FastAPI + MongoDB Atlas (Cloud). Dockerizado.
+* **Mobile:** React Native + Expo SDK 54 + NativeWind.
 
 ---
 
-## 🧹 Paso 1: Pull y Purga de Dependencias (CRÍTICO)
-
-Para evitar conflictos de versiones con el nuevo SDK de Expo, debemos "limpiar la casa" antes de instalar:
-
-1.  **Actualiza tu código:**
-    ```bash
-    git checkout mario
-    git pull origin mario
-    ```
-
-2.  **Limpieza Profunda (En `apps/mobile-app`):**
-    Borra las carpetas de dependencias y el lockfile para evitar colisiones:
-    ```bash
-    cd apps/mobile-app
-    # En Windows (PowerShell)
-    Remove-Item -Recurse -Force node_modules, .expo
-    Remove-Item package-lock.json
-
-    # En Mac/Linux
-    rm -rf node_modules .expo package-lock.json
-    ```
-
-3.  **Instalación Limpia:**
-    ```bash
-    npm install --legacy-peer-deps
-    ```
+## 📋 Requisitos Previos
+1. Tener **Docker Desktop** instalado y **abierto** en tu computadora.
+2. Tener Node.js instalado.
+3. Tener la app **Expo Go** en tu celular (conectado al mismo Wi-Fi que tu PC).
 
 ---
 
-## 🌐 Paso 2: Configuración de Red y Variables (.env)
+## 🛠️ Cómo iniciar el proyecto (Flujo Mágico)
 
-El celular necesita saber dónde vive tu servidor backend. No uses `localhost`, usa tu IP privada.
+Solo necesitas la terminal de tu editor en la raíz del proyecto:
 
-1.  **Obtén tu IP Local:**
-    *   **Windows:** Abre terminal y corre `ipconfig` (busca "Dirección IPv4" en tu adaptador Wi-Fi).
-    *   **Mac/Linux:** Corre `ifconfig` o `ip addr`.
-
-2.  **Configura el Mobile:**
-    Ve al archivo `apps/mobile-app/.env` y actualiza la URL:
-    ```env
-    # Reemplaza <TU_IP> por tu dirección real (ej: 192.168.1.15)
-    EXPO_PUBLIC_API_URL=http://192.168.56.1:8000
-    ```
-
----
-
-## ⚡ Paso 3: El Flujo de las 3 Terminales
-
-Abre 3 terminales distintas en la raíz del proyecto para mantener los servicios corriendo:
-
-### 🔹 Terminal 1: Infraestructura (Docker)
-Si necesitas servicios de soporte (como la base de datos local):
+### Paso 1: Generar tu entorno
+Ejecuta el siguiente comando:
 ```bash
-docker compose up -d
+npm run gama
 ```
+El script detectará que no tienes un archivo de configuración, creará uno basado en la plantilla y **pausará la ejecución** por seguridad.
 
-### 🔹 Terminal 2: Backend (Python)
+### Paso 2: Configurar Base de Datos
+1. Localiza el archivo `.env` que se acaba de crear en la **raíz** del proyecto.
+2. Edita la variable `MONGO_URL` con el string de conexión a **MongoDB Atlas** (solicita el password al equipo).
+
+### Paso 3: ¡Todo listo para despegar!
+Vuelve a ejecutar el mismo comando:
 ```bash
-cd apps/api-backend
-# Activar venv (Windows)
-.\.venv\Scripts\activate
-# Activar venv (Mac/Linux)
-source .venv/bin/activate
-
-# Lanzar servidor
-python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+npm run gama
 ```
-
-### 🔹 Terminal 3: Mobile (Expo)
-```bash
-cd apps/mobile-app
-# Limpia caché de Expo al iniciar
-npm run start:clean
-# Si tienes problemas de red persistentes, prueba:
-# npx expo start -c --offline
-```
+El script ahora actualizará tu IP local automáticamente, levantará los contenedores de Docker y lanzará el entorno de Expo. ¡Escanea el código QR y empieza a codear!
 
 ---
 
-## 🔌 Paso 4: Conexión del Teléfono por Cable USB
+## 🏫 **Modo Universidad (Red Bloqueada / UNACH)**
+Si estás en una red pública que bloquea la conexión entre tu celular y tu PC, usa este comando en lugar del normal:
+```bash
+npm run gama:unach
+```
+*(Esto usará LocalTunnel para sacar tu base de datos y backend a internet, y lanzará Expo en modo túnel, saltándose cualquier restricción de la red).*
 
-Si prefieres no depender del Wi-Fi para las pruebas, el cable USB es lo más estable:
-
-1.  **Habilita el Teléfono:** Activa la **"Depuración USB"** en las "Opciones de Desarrollador" de tu Android.
-2.  **Conecta y Mapea:** Una vez conectado a la PC, corre estos comandos para que el teléfono "vea" los puertos de tu computadora como si fueran suyos:
-    ```bash
-    adb reverse tcp:8000 tcp:8000
-    adb reverse tcp:8081 tcp:8081
-    ```
-3.  **Lanzar en Expo Go:** Abre la app **Expo Go** en tu celular. Debería detectar automáticamente la sesión de desarrollo o puedes escanear el código QR que generó la Terminal 3.
+🔌 **Plan B Infalible (Cable USB):**
+Si el internet de la universidad es demasiado lento para el túnel, conecta tu celular por cable USB, habilita la Depuración USB y usa el script con el flag `--usb` (o ejecuta `adb reverse tcp:8000 tcp:8000`).
 
 ---
 
-¡Listo! Con esto deberías tener el entorno de **Easy-Pay** volando. Si tienes dudas con alguna ruta de NativeWind o la lógica de los nuevos grupos, avísame. 🚀
+## 🔒 Seguridad y Buenas Prácticas
+* **Variables de Entorno:** Nunca subas el archivo `.env` a GitHub. Ya está configurado en el `.gitignore` para tu protección.
+* **IP Local:** No te preocupes por tu IP. El script `setup-gama.js` la detecta e inyecta en el sistema cada vez que inicias el proyecto.
+* **Limpieza Profunda:** Si el sistema falla por caché, usa `npm run clean` para resetear el entorno.
+
+---
+*Easy-Pay Developer Experience Team*
