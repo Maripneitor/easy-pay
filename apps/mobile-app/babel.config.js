@@ -6,7 +6,16 @@ module.exports = function (api) {
       "nativewind/babel",
     ],
     plugins: [
-      ["module-resolver", { alias: { "@": "./src" } }],
+      [
+        "module-resolver",
+        {
+          alias: {
+            "@": "./src",
+            "react-native-worklets": "./src/worklets-shim",
+            "moti": "./src/moti-shim"
+          },
+        },
+      ],
       "react-native-reanimated/plugin",
     ],
   };

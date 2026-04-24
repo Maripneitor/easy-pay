@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo } from 'react';
-import {
+import { 
     GroupRepository,
     CreateGroupUseCase,
     JoinGroupUseCase,
@@ -10,18 +10,12 @@ import {
     AssignItemUseCase,
     GetGroupUpdateUseCase
 } from '@easy-pay/domain';
-
-// Repositorio que conecta con tus microservicios de FastAPI
 import { groupRepository as mobileGroupRepository } from '../api/repositories/GroupRepository';
-
-// Repositorio de pruebas locales
 import { InMemoryGroupRepository } from '../mock/InMemoryGroupRepository';
 
-// ========================================================
-// CONFIGURACIÓN DE PRUEBAS
-// ========================================================
-// Cambia a 'false' para conectar con tus microservicios reales
-const USE_MOCKS = false;
+// TOGGLE MOCKS: Set to true to use In-Memory Repositories for faster UI development
+const USE_MOCKS = true;
+
 
 interface Dependencies {
     repositories: {
@@ -43,13 +37,7 @@ const DependenciesContext = createContext<Dependencies | null>(null);
 
 export const DependenciesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const dependencies = useMemo(() => {
-
-        // Elegimos el repositorio según el flag USE_MOCKS
-        // Si es true: Usa datos en memoria (no necesita internet)
-        // Si es false: Intenta conectar a tus microservicios en los puertos 8000/8001
-        const groupRepo = USE_MOCKS ? new InMemoryGroupRepository() : mobileGroupRepository;
-
-        console.log(`[Dependencies] Usando modo: ${USE_MOCKS ? 'MOCKS (Local)' : 'API (Real)'}`);
+        const groupRepo = mobileGroupRepository;
 
         return {
             repositories: {
@@ -60,7 +48,7 @@ export const DependenciesProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 joinGroup: new JoinGroupUseCase(groupRepo),
                 closeGroup: new CloseGroupUseCase(groupRepo),
                 getGroup: new GetGroupUseCase(groupRepo),
-                calculateShares: new CalculateSharesUseCase(), // No requiere repositorio
+                calculateShares: new CalculateSharesUseCase(), // Repository-less use case
                 addItem: new AddItemUseCase(groupRepo),
                 assignItem: new AssignItemUseCase(groupRepo),
                 getGroupUpdate: new GetGroupUpdateUseCase(groupRepo),
