@@ -74,6 +74,11 @@ Una vez que la aplicación esté corriendo en el simulador:
 >    ```env
 >    EXPO_PUBLIC_API_URL=http://192.168.1.XX:8000
 >    ```
+>
+> 3. **Uso de ADB Reverse (Recomendado):** Para evitar problemas de firewall, puedes reenviar los puertos directamente a tu dispositivo/simulador usando el script incluido:
+>    ```powershell
+>    powershell ./scripts/adb-reverse.ps1
+>    ```
 
 ---
 

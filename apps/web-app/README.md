@@ -1,75 +1,45 @@
-# React + TypeScript + Vite
+# 🌐 Easy-Pay Web Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Esta es la interfaz de administración y visualización web del ecosistema **Easy-Pay**. Proporciona un panel de control para gestionar grupos, visualizar gastos y administrar el perfil de usuario desde cualquier navegador.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Tecnologías
+- **Core:** React 18
+- **Construcción:** Vite
+- **Estilos:** Tailwind CSS
+- **Estado/Datos:** Hooks personalizados y Context API para sincronización con el Backend.
 
-## React Compiler
+---
 
-> [!WARNING]
-> El Compilador de React no está habilitado en esta plantilla debido a su impacto en el rendimiento de desarrollo y construcción. Para habilitarlo, consulta la [documentación oficial](https://react.dev/learn/react-compiler/installation).
+## ⚙️ Estado de la Aplicación Web
 
-## Expanding the ESLint configuration
+### Funcionalidades Implementadas
+- **Dashboard de Usuario**: ✅ Visualización de grupos activos y saldos generales.
+- **Detalle de Grupo**: ✅ Lista de ítems registrados y balances entre miembros.
+- **Gestión de Perfil**: ✅ Edición de datos personales y visualización de estadísticas.
+- **Seguridad**: ✅ Configuración de 2FA y flujo de recuperación de contraseña.
 
-> [!TIP]
-> Si estás desarrollando una aplicación de producción, recomendamos actualizar la configuración para habilitar reglas de lint conscientes del tipado (type-aware):
+### Limitaciones Actuales
+- La interfaz web sigue los patrones de la App Móvil pero no incluye el escaneo OCR (exclusivo de Mobile).
+- Algunas visualizaciones de gráficos en la web utilizan datos de mock en áreas donde el microservicio de estadísticas aún no está plenamente integrado.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🛠️ Desarrollo
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Instalación
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Ejecución
+```bash
+npm run dev
 ```
+La aplicación se servirá por defecto en `http://localhost:5173`.
+
+---
+
+## 🧪 Notas de Integración
+La Web App consume los endpoints definidos en el `api-backend`. Asegúrate de que las variables de entorno en `.env` apunten a la IP correcta del servidor FastAPI (normalmente el puerto 8000 para core y 8001 para estadísticas).

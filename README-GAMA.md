@@ -3,8 +3,11 @@
 ¡Bienvenido al repositorio de Easy-Pay! Hemos automatizado toda la infraestructura para que no pierdas tiempo configurando puertos, IPs o entornos virtuales. 
 
 El proyecto consta de:
-* **Backend:** FastAPI + MongoDB Atlas (Cloud). Dockerizado.
+* **Backend Fragmentado:** FastAPI + MongoDB Atlas (Cloud). 
+  - `main.py` (Puerto 8000): Autenticación y Grupos.
+  - `main_stats.py` (Puerto 8001): Servicio de Estadísticas.
 * **Mobile:** React Native + Expo SDK 54 + NativeWind.
+* **Web:** React + Vite (Puerto 5173).
 
 ---
 

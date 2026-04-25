@@ -15,6 +15,7 @@
     "@easy-pay/ui": "*",
     "@expo/metro-runtime": "~6.1.2",
     "@expo/ngrok": "^4.1.0",
+    "@expo/webpack-config": "^19.0.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-masked-view/masked-view": "^0.3.2",
     "@react-navigation/native": "^7.0.0",

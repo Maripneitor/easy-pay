@@ -1,123 +1,89 @@
 # 💸 EASY-PAY: Gestión de Gastos Compartidos
 
-¡Bienvenido a **EASY-PAY**! Esta es una plataforma integral (Móvil, Web y API) diseñada para facilitar el registro y la liquidación de gastos entre amigos y grupos, al estilo de Splitwise pero con un enfoque moderno y rápido.
+¡Bienvenido a **EASY-PAY**! Esta es una plataforma integral diseñada para facilitar el registro y la liquidación de gastos entre amigos y grupos. El sistema combina una aplicación móvil nativa con un backend potente y una interfaz web de administración.
 
 ---
 
-## 🌟 Descripción del Sistema
-EASY-PAY es una solución full-stack que permite:
-- **Gestión de Grupos:** Creación y administración de grupos de gastos.
-- **Registro de Gastos:** Control detallado de quién debe a quién.
-- **Estadísticas Avanzadas:** Visualización de gastos por categoría y actividad mensual.
-- **Seguridad:** Autenticación robusta con soporte para 2FA y cambio de contraseña.
-- **Flexibilidad:** Acceso desde App Móvil nativa o PWA (Web).
+## 🏗️ 2. Arquitectura del Sistema
+
+El proyecto está estructurado como un **Monorepositorio** que interactúa con servicios distribuidos:
+
+- **📱 Mobile App (`apps/mobile-app`)**: Desarrollada con **Expo SDK 54** y **React Native**. Utiliza una arquitectura de capas (Infrastructure, Application, UI) y un sistema de temas dinámico.
+- **🐍 Backend (`apps/api-backend`)**: Basado en **FastAPI**. Actualmente fragmentado en tres servicios lógicos que comparten la misma base de datos MongoDB:
+  - `main.py`: Gestión de Usuarios y Autenticación.
+  - `main_groups.py`: Lógica de Grupos y Gastos.
+  - `main_stats.py`: Servicio de Estadísticas y Gráficos.
+- **🌐 Web App (`apps/web-app`)**: Panel administrativo construido con **React + Vite + TailwindCSS**.
+- **🗄️ Base de Datos**: **MongoDB Atlas** (en la nube) para persistencia global.
 
 ---
 
-## 🏗️ Arquitectura del Proyecto
-El proyecto utiliza una estructura de **Monorepositorio**:
+## ⚙️ 3. Estado de Funcionalidades
 
-- **`apps/mobile-app`**: Aplicación móvil desarrollada con **React Native (Expo)** y **NativeWind**.
-- **`apps/web-app`**: Interfaz administrativa y de usuario web construida con **React** y **Vite**.
-- **`apps/api-backend`**: Servidor de API de alto rendimiento desarrollado con **FastAPI (Python)**.
-- **`packages/`**: Contiene lógica de dominio, modelos y componentes de UI compartidos.
-- **Base de Datos**: **MongoDB** gestionada localmente vía Docker o en la nube (Atlas).
+### 🔐 Autenticación y Seguridad
+- **Registro de Usuarios**: ✅ Completo (incluye bypass de desarrollo para duplicados).
+- **Inicio de Sesión**: ✅ Completo (JWT Auth).
+- **2FA (Doble Factor)**: ✅ Completo (Configuración y verificación mediante código).
+- **Cambio de Contraseña**: ✅ Completo (Validación de contraseña actual y nueva).
+- **Recuperación de Cuenta**: ✅ Completo (Flujo basado en correo y 2FA).
 
----
+### 👥 Gestión de Grupos
+- **Creación de Grupos**: ✅ Completo.
+- **Unión por Código**: ✅ Completo.
+- **Eliminación de Grupos**: ✅ Completo (Eliminación lógica y física).
+- **Visualización de Balances**: ✅ Completo (Cálculo en tiempo real de deudas).
 
-## 🚦 Flujo de Trabajo del Equipo
-Para mantener la consistencia y velocidad, seguimos este flujo:
-1. **Sincronización:** Asegurar que el backend y frontend estén alineados (ver `reporte_cambios_gama.md`).
-2. **Desarrollo:** Mobile es la prioridad de diseño; Web sigue sus patrones.
-3. **Documentación:** El `README.md` es la única fuente de verdad operativa.
-4. **Despliegue:** Validar cambios tanto en el emulador como en la versión PWA.
+### 🧾 Gestión de Gastos (Ítems)
+- **Registro Manual**: ✅ Completo (Asignación selectiva a miembros).
+- **Edición de Gastos**: ✅ Completo (Endpoint listo, UI integrada).
+- **Escaneo OCR**: ⚠️ Parcial (Interfaz de cámara funcional, pero el procesamiento es **Simulado**).
 
----
-
-## ⚙️ Configuración del Entorno
-
-### 1. Requisitos Previos
-- **Node.js LTS**
-- **Docker Desktop**
-- **Python 3.10+** (para desarrollo local de backend sin Docker)
-- **Expo Go** (instalado en dispositivo móvil)
-
-### 2. Instalación Inicial
-```bash
-# Instalar dependencias del monorepo
-npm install
-
-# Instalar dependencias de la app móvil
-cd apps/mobile-app
-npm install
-```
+### 📊 Otros
+- **Estadísticas**: ✅ Completo (Gráficos circulares y de barras funcionales).
+- **PWA (Versión Web de Mobile)**: ✅ Completo (Exportación estática disponible).
 
 ---
 
-## 🌐 Configuración de Red
-La comunicación entre la App Móvil y el Backend requiere una configuración de red específica:
+## 🐛 4. Problemas y Riesgos Detectados
 
-- **IP Local Detectada:** `192.168.1.10`
-- **Configuración Centralizada:** `apps/mobile-app/src/infrastructure/api/network.config.ts`
-- **Puertos Abiertos:**
-  - `8000`: Backend API (FastAPI)
-  - `8081`: Metro Bundler (Expo)
-  - `3000`: Frontend Web / PWA
-
-### Scripts de Red Disponibles:
-- **ADB Reverse (Android USB):** `powershell ./scripts/adb-reverse.ps1`
-- **Túnel Externo (localtunnel):** `node ./scripts/tunnel-backend.js`
+- **Fragmentación del Backend**: La existencia de tres archivos `main*.py` independientes genera redundancia y dificulta el despliegue coherente.
+- **Estabilidad Mobile**: El uso de "shims" para `moti` y `react-native-worklets` es una medida temporal para evitar crashes en la arquitectura New Architecture de Expo, lo que limita las animaciones avanzadas.
+- **OCR Simulado**: El sistema promete IA en la interfaz, pero la lógica de extracción de datos de la imagen no está conectada a un servicio real de Visión Artificial.
+- **Liquidación Estática**: La pantalla `settle-up` muestra datos fijos y no realiza transacciones reales ni actualizaciones de estado en la DB.
 
 ---
 
-## 🚀 Ejecución de Servicios
+## 🚧 5. Trabajo Pendiente
 
-### Backend (Docker)
-Desde la raíz del proyecto:
-```bash
-docker compose up -d
-```
-*El backend estará disponible en `http://192.168.1.10:8000`*
-
-### Mobile (Expo)
-```bash
-cd apps/mobile-app
-npm run start:lan
-```
-*Usa `npm run start:clean` si experimentas problemas de caché.*
-
-### Web / PWA
-```bash
-npm run dev:web
-```
+- **Unificación del Backend**: Consolidar los tres puntos de entrada en una sola API robusta o definir formalmente la arquitectura de microservicios.
+- **Integración OCR Real**: Conectar el `ocr-scanner` con un servicio como Google Cloud Vision o AWS Textract.
+- **Módulo de Pagos**: Implementar una pasarela real (Stripe/PayPal) o al menos un sistema de confirmación de pago manual que actualice los balances.
+- **Notificaciones Push**: Activar el `NotificationProvider` con Firebase (FCM) para avisos de nuevos gastos o deudas pendientes.
 
 ---
 
-## 📱 Generación de PWA
-Para generar la versión Web Progresiva desde el código mobile:
-1. Asegurar dependencias web: `npx expo install react-native-web react-dom @expo/metro-runtime`
-2. Exportar versión estática:
-```bash
-cd apps/mobile-app
-npx expo export --platform web
-```
-3. La build estará disponible en `apps/mobile-app/dist`.
+## ▶️ 6. Cómo Ejecutar el Proyecto
+
+### Requisitos
+- Docker Desktop.
+- Node.js LTS.
+- Expo Go en dispositivo móvil.
+
+### Pasos
+1. **Configurar Red**: Asegúrate de que tu PC y móvil estén en la misma red.
+2. **Setup Automático**:
+   ```bash
+   npm run gama  # Detecta tu IP y configura el .env
+   ```
+3. **Levantar Backend**:
+   ```bash
+   docker compose up -d
+   ```
+4. **Iniciar Mobile**:
+   ```bash
+   cd apps/mobile-app
+   npx expo start --lan
+   ```
 
 ---
-
-## 📜 Convenciones del Proyecto
-- **Naming:** CamelCase para componentes React, snake_case para backend Python.
-- **UI:** Seguir el sistema de diseño premium definido en `ThemeContext.tsx`.
-- **API:** Toda interacción debe pasar por el `httpClient` configurado en mobile.
-- **Git:** No realizar commits ni pushes automáticos sin instrucción explícita.
-
----
-
-## 🤖 Reglas para Agentes de Código
-1. **Fuente de Verdad:** Solo `README.md` y `reporte_cambios_gama.md` son válidos.
-2. **No Redundancia:** No crear archivos `.md` adicionales para reportes de tareas.
-3. **Consistencia:** Mantener siempre sincronizadas las funcionalidades entre Web y Mobile.
-4. **Determinismo:** Los cambios deben ser directos y funcionales sin requerir validación manual constante.
-
----
-*Última actualización: 2026-04-24*
+*Última Auditoría Técnica: Abril 2026*
