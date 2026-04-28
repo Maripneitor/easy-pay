@@ -13,6 +13,7 @@ import { NotificationProvider } from '../src/infrastructure/context/Notification
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../context/AuthContext';
 import { GrupoProvider } from '../context/GrupoContext';
+import { PaymentProvider } from '../src/infrastructure/context/PaymentContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,7 +37,8 @@ export default function RootLayout() {
       <AuthProvider>
       <GrupoProvider>
       <AppThemeProvider>
-        <NotificationProvider>
+        <PaymentProvider>
+          <NotificationProvider>
           <QueryClientProvider client={queryClient}>
             <DependenciesProvider>
               <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
@@ -54,6 +56,7 @@ export default function RootLayout() {
             </DependenciesProvider>
           </QueryClientProvider>
         </NotificationProvider>
+          </PaymentProvider>
       </AppThemeProvider>
       </GrupoProvider>
       </AuthProvider>
