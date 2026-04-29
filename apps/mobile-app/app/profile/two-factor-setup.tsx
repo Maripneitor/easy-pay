@@ -69,13 +69,13 @@ export default function TwoFactorSetupScreen() {
                 <View className="w-10" />
             </View>
 
-            <ScrollView className="flex-1 px-6 pt-10" contentContainerStyle={{ paddingBottom: 100 }}>
+            <ScrollView className="flex-1 px-6 pt-10" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
                 <View className="mb-10">
-                    <Text style={{ fontSize: 10 * fontScale, color: theme.textSecondary }} className="font-black uppercase tracking-[3px] mb-4">Autenticación de dos pasos</Text>
-                    <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="p-6 rounded-[32px] border flex-row items-center justify-between">
+                    <Text style={{ fontSize: 10 * fontScale, color: theme.textSecondary }} className="font-black uppercase tracking-[3px] mb-4 ml-2">Autenticación de dos pasos</Text>
+                    <View style={{ backgroundColor: theme.cardSecondary + '50', borderColor: theme.border + '20' }} className="p-8 rounded-[40px] border shadow-2xl backdrop-blur-xl flex-row items-center justify-between">
                         <View className="flex-1 pr-4">
-                            <Text style={{ color: theme.text }} className="text-lg font-black mb-1">Estado</Text>
-                            <Text style={{ color: theme.textSecondary }} className="text-xs font-medium">Añade una capa extra de seguridad a tu cuenta.</Text>
+                            <Text style={{ color: theme.text }} className="text-xl font-black mb-2">Estado</Text>
+                            <Text style={{ color: theme.textSecondary }} className="text-xs font-medium leading-5">Añade una capa extra de seguridad a tu cuenta protegiéndola de accesos no autorizados.</Text>
                         </View>
                         {isLoading ? (
                             <ActivityIndicator color={theme.primary} />
@@ -91,46 +91,47 @@ export default function TwoFactorSetupScreen() {
                 </View>
 
                 {qrCode && (
-                    <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="p-8 rounded-[40px] border items-center mb-10">
-                        <Text style={{ color: theme.text }} className="text-xl font-black mb-6 text-center">Configura tu App</Text>
-                        <Text style={{ color: theme.textSecondary }} className="text-sm text-center mb-8">Escanea el código QR o ingresa la clave en tu app de autenticación (Google Authenticator, Authy, etc.)</Text>
+                    <View style={{ backgroundColor: theme.cardSecondary + '50', borderColor: theme.border + '20' }} className="p-8 rounded-[40px] border items-center mb-10 shadow-2xl backdrop-blur-xl">
+                        <Text style={{ color: theme.text }} className="text-2xl font-black mb-4 text-center">Configura tu App</Text>
+                        <Text style={{ color: theme.textSecondary }} className="text-xs text-center mb-10 font-medium leading-5">Escanea el código QR o ingresa la clave en tu app de autenticación favorita.</Text>
                         
-                        <View className="p-4 bg-white rounded-3xl mb-8">
-                             {/* In a real app we'd render the QR image here */}
+                        <View className="p-6 bg-white rounded-[40px] mb-10 shadow-xl">
                              <Ionicons name="qr-code" size={180} color="#0f172a" />
                         </View>
 
                         {secret && (
-                            <View style={{ backgroundColor: theme.bg }} className="p-4 rounded-xl mb-10 border border-white/5 w-full">
-                                <Text className="text-slate-500 text-[10px] font-black uppercase mb-1">Clave de respaldo</Text>
-                                <Text style={{ color: theme.text }} className="font-mono font-bold select-all">{secret}</Text>
+                            <View style={{ backgroundColor: theme.bg + '50' }} className="p-5 rounded-3xl mb-10 border border-white/5 w-full items-center">
+                                <Text className="text-slate-500 text-[10px] font-black uppercase mb-2 tracking-widest">Clave de respaldo</Text>
+                                <Text style={{ color: theme.text }} className="font-mono font-bold text-base tracking-widest">{secret}</Text>
                             </View>
                         )}
 
-                        <Text style={{ color: theme.textSecondary }} className="text-xs font-black uppercase mb-4 ml-2 self-start">Verificar Código</Text>
-                        <TextInput
-                            value={verificationCode}
-                            onChangeText={setVerificationCode}
-                            keyboardType="numeric"
-                            maxLength={6}
-                            style={{ backgroundColor: theme.bg, color: theme.text, borderColor: theme.border }}
-                            className="p-5 rounded-2xl border font-bold w-full text-center text-2xl tracking-[10px]"
-                            placeholder="000000"
-                            placeholderTextColor={theme.textSecondary + '40'}
-                        />
+                        <View className="w-full">
+                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase mb-3 ml-2 self-start">Verificar Código</Text>
+                            <TextInput
+                                value={verificationCode}
+                                onChangeText={setVerificationCode}
+                                keyboardType="numeric"
+                                maxLength={6}
+                                style={{ backgroundColor: theme.bg + '80', color: theme.text, borderColor: theme.border + '30' }}
+                                className="p-6 rounded-[28px] border font-black w-full text-center text-3xl tracking-[12px]"
+                                placeholder="000000"
+                                placeholderTextColor={theme.textSecondary + '20'}
+                            />
 
-                        <TouchableOpacity 
-                            onPress={handleVerify}
-                            disabled={isVerifying}
-                            style={{ backgroundColor: theme.primary }}
-                            className="mt-8 w-full py-5 rounded-2xl items-center shadow-lg"
-                        >
-                            {isVerifying ? (
-                                <ActivityIndicator color="white" />
-                            ) : (
-                                <Text className="text-white font-black uppercase tracking-widest">Confirmar Activación</Text>
-                            )}
-                        </TouchableOpacity>
+                            <TouchableOpacity 
+                                onPress={handleVerify}
+                                disabled={isVerifying}
+                                style={{ backgroundColor: theme.primary }}
+                                className="mt-10 w-full py-6 rounded-[28px] items-center shadow-2xl shadow-blue-500/30"
+                            >
+                                {isVerifying ? (
+                                    <ActivityIndicator color="white" />
+                                ) : (
+                                    <Text className="text-white font-black uppercase tracking-widest text-xs">Finalizar Configuración</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 )}
             </ScrollView>

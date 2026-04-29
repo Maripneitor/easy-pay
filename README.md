@@ -1,89 +1,68 @@
-# 💸 EASY-PAY: Gestión de Gastos Compartidos
+# 💸 EASY-PAY: Ecosistema de Gestión de Gastos Compartidos
 
-¡Bienvenido a **EASY-PAY**! Esta es una plataforma integral diseñada para facilitar el registro y la liquidación de gastos entre amigos y grupos. El sistema combina una aplicación móvil nativa con un backend potente y una interfaz web de administración.
-
----
-
-## 🏗️ 2. Arquitectura del Sistema
-
-El proyecto está estructurado como un **Monorepositorio** que interactúa con servicios distribuidos:
-
-- **📱 Mobile App (`apps/mobile-app`)**: Desarrollada con **Expo SDK 54** y **React Native**. Utiliza una arquitectura de capas (Infrastructure, Application, UI) y un sistema de temas dinámico.
-- **🐍 Backend (`apps/api-backend`)**: Basado en **FastAPI**. Actualmente fragmentado en tres servicios lógicos que comparten la misma base de datos MongoDB:
-  - `main.py`: Gestión de Usuarios y Autenticación.
-  - `main_groups.py`: Lógica de Grupos y Gastos.
-  - `main_stats.py`: Servicio de Estadísticas y Gráficos.
-- **🌐 Web App (`apps/web-app`)**: Panel administrativo construido con **React + Vite + TailwindCSS**.
-- **🗄️ Base de Datos**: **MongoDB Atlas** (en la nube) para persistencia global.
+¡Bienvenido a **EASY-PAY**! Esta es una plataforma integral diseñada para facilitar el registro y la liquidación de gastos entre amigos y grupos. El sistema combina una aplicación móvil nativa, un backend potente y una interfaz web de administración, todo orquestado mediante **Docker**.
 
 ---
 
-## ⚙️ 3. Estado de Funcionalidades
+## 🏗️ 1. Arquitectura del Sistema (100% Dockerizado)
 
-### 🔐 Autenticación y Seguridad
-- **Registro de Usuarios**: ✅ Completo (incluye bypass de desarrollo para duplicados).
-- **Inicio de Sesión**: ✅ Completo (JWT Auth).
-- **2FA (Doble Factor)**: ✅ Completo (Configuración y verificación mediante código).
-- **Cambio de Contraseña**: ✅ Completo (Validación de contraseña actual y nueva).
-- **Recuperación de Cuenta**: ✅ Completo (Flujo basado en correo y 2FA).
+El proyecto está estructurado como un **Monorepositorio** con servicios orquestados:
 
-### 👥 Gestión de Grupos
-- **Creación de Grupos**: ✅ Completo.
-- **Unión por Código**: ✅ Completo.
-- **Eliminación de Grupos**: ✅ Completo (Eliminación lógica y física).
-- **Visualización de Balances**: ✅ Completo (Cálculo en tiempo real de deudas).
-
-### 🧾 Gestión de Gastos (Ítems)
-- **Registro Manual**: ✅ Completo (Asignación selectiva a miembros).
-- **Edición de Gastos**: ✅ Completo (Endpoint listo, UI integrada).
-- **Escaneo OCR**: ⚠️ Parcial (Interfaz de cámara funcional, pero el procesamiento es **Simulado**).
-
-### 📊 Otros
-- **Estadísticas**: ✅ Completo (Gráficos circulares y de barras funcionales).
-- **PWA (Versión Web de Mobile)**: ✅ Completo (Exportación estática disponible).
+- **🐍 API Backend (`apps/api-backend`)**: API Unificada basada en **FastAPI**. Gestiona Auth, Grupos, Gastos y Estadísticas en un solo punto de entrada (Puerto 8000).
+- **🌐 Web App (`apps/web-app`)**: Panel administrativo construido con **React + Vite**.
+- **📱 Mobile App (`apps/mobile-app`)**: App nativa con **Expo SDK 54**. (Se corre localmente para conectar con Expo Go).
+- **🗄️ Database**: **MongoDB** local persistente mediante volúmenes de Docker.
 
 ---
 
-## 🐛 4. Problemas y Riesgos Detectados
+## 🚀 2. Inicio Rápido (The One-Command Start)
 
-- **Fragmentación del Backend**: La existencia de tres archivos `main*.py` independientes genera redundancia y dificulta el despliegue coherente.
-- **Estabilidad Mobile**: El uso de "shims" para `moti` y `react-native-worklets` es una medida temporal para evitar crashes en la arquitectura New Architecture de Expo, lo que limita las animaciones avanzadas.
-- **OCR Simulado**: El sistema promete IA en la interfaz, pero la lógica de extracción de datos de la imagen no está conectada a un servicio real de Visión Artificial.
-- **Liquidación Estática**: La pantalla `settle-up` muestra datos fijos y no realiza transacciones reales ni actualizaciones de estado en la DB.
+Para levantar todo el ecosistema (Backend + Web + DB) con un solo comando:
+
+```powershell
+# 1. Configurar IP y entorno (Detecta tu IP local automáticamente)
+./start-all.ps1
+
+# 2. Levantar el ecosistema Docker
+docker-compose up --build
+```
+
+> [!TIP]
+> Si estás en la red restringida de la UNACH, el script `start-all.ps1` configurará automáticamente los túneles y la IP necesaria.
+
+---
+
+## 🛠️ 3. Comandos de Mantenimiento y Rescate
+
+Si el entorno se vuelve inestable o quieres empezar desde cero:
+
+### Limpieza Profunda (Rescue Script)
+Ejecuta el script de rescate para borrar caches, `node_modules` y carpetas temporales:
+```powershell
+./clean-install.ps1
+```
+
+### Comandos Útiles de Docker
+- **Ver Logs:** `docker-compose logs -f`
+- **Bajar Todo:** `docker-compose down`
+- **Reiniciar Limpio:** `docker system prune -a` (Borra imágenes y contenedores huérfanos).
+- **Reinstalar en Docker:** `docker-compose up --build --force-recreate`
 
 ---
 
-## 🚧 5. Trabajo Pendiente
+## ⚙️ 4. Configuración de Red (Mobile)
 
-- **Unificación del Backend**: Consolidar los tres puntos de entrada en una sola API robusta o definir formalmente la arquitectura de microservicios.
-- **Integración OCR Real**: Conectar el `ocr-scanner` con un servicio como Google Cloud Vision o AWS Textract.
-- **Módulo de Pagos**: Implementar una pasarela real (Stripe/PayPal) o al menos un sistema de confirmación de pago manual que actualice los balances.
-- **Notificaciones Push**: Activar el `NotificationProvider` con Firebase (FCM) para avisos de nuevos gastos o deudas pendientes.
-
----
-
-## ▶️ 6. Cómo Ejecutar el Proyecto
-
-### Requisitos
-- Docker Desktop.
-- Node.js LTS.
-- Expo Go en dispositivo móvil.
-
-### Pasos
-1. **Configurar Red**: Asegúrate de que tu PC y móvil estén en la misma red.
-2. **Setup Automático**:
-   ```bash
-   npm run gama  # Detecta tu IP y configura el .env
-   ```
-3. **Levantar Backend**:
-   ```bash
-   docker compose up -d
-   ```
-4. **Iniciar Mobile**:
-   ```bash
-   cd apps/mobile-app
-   npx expo start --lan
-   ```
+Para que el celular (Expo Go) se conecte al backend de la PC:
+1. Asegúrate de que ambos estén en la misma red Wi-Fi.
+2. El archivo `.env` debe tener `EXPO_PUBLIC_API_URL=http://<TU_IP_LOCAL>:8000`.
+3. Si la red bloquea conexiones directas, usa el modo **Localtunnel** incluido en el script de inicio.
 
 ---
-*Última Auditoría Técnica: Abril 2026*
+
+## 📜 5. Documentación Oficial
+- [Requerimientos del Proyecto](./requerimientos.md): Especificaciones técnicas y funcionales.
+- [Diagnóstico de Red](./DIAGNOSTICO.md): Guía para resolver problemas de conexión en la UNACH.
+- [Estado del Despliegue](./ESTADO_DEL_DESPLIEGUE.md): Resumen de la infraestructura actual.
+
+---
+*Última Actualización DevOps: Abril 2026*

@@ -55,61 +55,70 @@ export default function ChangePasswordScreen() {
                 <View className="w-10" />
             </View>
 
-            <ScrollView className="flex-1 px-6 pt-10">
-                <Text style={{ fontSize: 10 * fontScale, color: theme.textSecondary }} className="font-black uppercase tracking-[3px] mb-8">Actualizar Contraseña</Text>
+            <ScrollView className="flex-1 px-6 pt-10" showsVerticalScrollIndicator={false}>
+                <View style={{ backgroundColor: theme.cardSecondary + '50' }} className="p-8 rounded-[40px] border border-white/5 backdrop-blur-xl shadow-2xl">
+                    <Text style={{ fontSize: 10 * fontScale, color: theme.textSecondary }} className="font-black uppercase tracking-[3px] mb-8">Actualizar Contraseña</Text>
 
-                <View className="gap-6">
-                    <View>
-                        <Text style={{ color: theme.textSecondary }} className="text-xs font-black uppercase mb-2 ml-2">Contraseña Actual</Text>
-                        <TextInput
-                            secureTextEntry
-                            value={oldPassword}
-                            onChangeText={setOldPassword}
-                            style={{ backgroundColor: theme.cardSecondary, color: theme.text, borderColor: theme.border }}
-                            className="p-5 rounded-2xl border font-bold"
-                            placeholder="••••••••"
-                            placeholderTextColor={theme.textSecondary + '80'}
-                        />
+                    <View className="gap-8">
+                        <View>
+                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase mb-3 ml-2">Contraseña Actual</Text>
+                            <TextInput
+                                secureTextEntry
+                                value={oldPassword}
+                                onChangeText={setOldPassword}
+                                style={{ backgroundColor: theme.bg + '80', color: theme.text, borderColor: theme.border + '30' }}
+                                className="p-6 rounded-[24px] border font-bold"
+                                placeholder="••••••••"
+                                placeholderTextColor={theme.textSecondary + '40'}
+                            />
+                        </View>
+
+                        <View>
+                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase mb-3 ml-2">Nueva Contraseña</Text>
+                            <TextInput
+                                secureTextEntry
+                                value={newPassword}
+                                onChangeText={setNewPassword}
+                                style={{ backgroundColor: theme.bg + '80', color: theme.text, borderColor: theme.border + '30' }}
+                                className="p-6 rounded-[24px] border font-bold"
+                                placeholder="••••••••"
+                                placeholderTextColor={theme.textSecondary + '40'}
+                            />
+                        </View>
+
+                        <View>
+                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase mb-3 ml-2">Confirmar Nueva</Text>
+                            <TextInput
+                                secureTextEntry
+                                value={confirmPassword}
+                                onChangeText={setConfirmPassword}
+                                style={{ backgroundColor: theme.bg + '80', color: theme.text, borderColor: theme.border + '30' }}
+                                className="p-6 rounded-[24px] border font-bold"
+                                placeholder="••••••••"
+                                placeholderTextColor={theme.textSecondary + '40'}
+                            />
+                        </View>
+
+                        <TouchableOpacity 
+                            onPress={handleSave}
+                            disabled={isLoading}
+                            style={{ backgroundColor: theme.primary }}
+                            className="mt-6 py-6 rounded-[28px] items-center shadow-xl shadow-blue-500/30"
+                        >
+                            {isLoading ? (
+                                <ActivityIndicator color="white" />
+                            ) : (
+                                <Text className="text-white font-black uppercase tracking-widest text-xs">Guardar Nueva Contraseña</Text>
+                            )}
+                        </TouchableOpacity>
                     </View>
+                </View>
 
-                    <View>
-                        <Text style={{ color: theme.textSecondary }} className="text-xs font-black uppercase mb-2 ml-2">Nueva Contraseña</Text>
-                        <TextInput
-                            secureTextEntry
-                            value={newPassword}
-                            onChangeText={setNewPassword}
-                            style={{ backgroundColor: theme.cardSecondary, color: theme.text, borderColor: theme.border }}
-                            className="p-5 rounded-2xl border font-bold"
-                            placeholder="••••••••"
-                            placeholderTextColor={theme.textSecondary + '80'}
-                        />
-                    </View>
-
-                    <View>
-                        <Text style={{ color: theme.textSecondary }} className="text-xs font-black uppercase mb-2 ml-2">Confirmar Nueva Contraseña</Text>
-                        <TextInput
-                            secureTextEntry
-                            value={confirmPassword}
-                            onChangeText={setConfirmPassword}
-                            style={{ backgroundColor: theme.cardSecondary, color: theme.text, borderColor: theme.border }}
-                            className="p-5 rounded-2xl border font-bold"
-                            placeholder="••••••••"
-                            placeholderTextColor={theme.textSecondary + '80'}
-                        />
-                    </View>
-
-                    <TouchableOpacity 
-                        onPress={handleSave}
-                        disabled={isLoading}
-                        style={{ backgroundColor: theme.primary }}
-                        className="mt-10 py-5 rounded-2xl items-center shadow-lg"
-                    >
-                        {isLoading ? (
-                            <ActivityIndicator color="white" />
-                        ) : (
-                            <Text className="text-white font-black uppercase tracking-widest">Guardar Cambios</Text>
-                        )}
-                    </TouchableOpacity>
+                <View className="mt-10 px-4 items-center">
+                    <MaterialIcons name="security" size={32} color={theme.textSecondary + '20'} />
+                    <Text style={{ color: theme.textSecondary + '60' }} className="text-[10px] font-bold text-center mt-4 px-10">
+                        Tu seguridad es nuestra prioridad. Las contraseñas están cifradas de extremo a extremo.
+                    </Text>
                 </View>
             </ScrollView>
         </SafeAreaView>

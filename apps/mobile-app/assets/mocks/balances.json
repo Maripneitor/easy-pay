@@ -1,0 +1,20 @@
+{
+  "status": "success",
+  "total_gastado_en_grupo": 1500.50,
+  "propina_total": 150.05,
+  "total_con_propina": 1650.55,
+  "balance_detallado": [
+    {
+      "usuario_id": "mock-user-1",
+      "balance": 500.25,
+      "cuota_correspondiente": 750.25,
+      "estado": "favor"
+    },
+    {
+      "usuario_id": "mock-user-2",
+      "balance": -500.25,
+      "cuota_correspondiente": 750.25,
+      "estado": "deuda"
+    }
+  ]
+}

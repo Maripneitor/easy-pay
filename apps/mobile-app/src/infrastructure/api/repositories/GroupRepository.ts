@@ -68,6 +68,11 @@ export class ApiMobileGroupRepository implements GroupRepository {
         });
     }
 
+    async editItem(groupId: string, itemId: string, itemData: any): Promise<void> {
+        await httpClient.put(`/api/groups/${groupId}/items/${itemId}`, itemData);
+    }
+
+
     async markMemberAsPaid(groupId: string, memberId: string): Promise<void> {
         // Backend logic here
     }

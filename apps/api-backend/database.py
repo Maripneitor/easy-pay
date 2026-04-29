@@ -9,8 +9,12 @@ MONGO_URL = os.getenv("MONGO_URL")
 
 class DatabaseConnector:
     def __init__(self):
-        # Usamos el cliente de Motor para Atlas
-        self.client = AsyncIOMotorClient(MONGO_URL)
+        # Usamos el cliente de Motor para Atlas con timeouts para evitar cuelgues
+        self.client = AsyncIOMotorClient(
+            MONGO_URL,
+            serverSelectionTimeoutMS=5000,
+            connectTimeoutMS=5000
+        )
 
     def get_db(self, db_name: str):
         return self.client[db_name]

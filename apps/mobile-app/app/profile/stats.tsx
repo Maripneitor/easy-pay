@@ -64,54 +64,75 @@ export default function StatsScreen() {
                 <View className="w-10" />
             </View>
 
-            <ScrollView className="flex-1 px-6 pt-6" contentContainerStyle={{ paddingBottom: 100 }}>
-                <Text style={{ fontSize: 10 * fontScale, color: theme.textSecondary }} className="font-black uppercase tracking-[3px] mb-6">Gastos por Categoría</Text>
-                
-                <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="p-4 rounded-[32px] border items-center mb-10">
-                    <PieChart
-                        data={pieData}
-                        width={SCREEN_WIDTH - 80}
-                        height={220}
-                        chartConfig={chartConfig}
-                        accessor={"amount"}
-                        backgroundColor={"transparent"}
-                        paddingLeft={"15"}
-                        center={[10, 0]}
-                        absolute
-                    />
-                </View>
-
-                <Text style={{ fontSize: 10 * fontScale, color: theme.textSecondary }} className="font-black uppercase tracking-[3px] mb-6">Actividad Mensual</Text>
-                
-                <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="p-4 rounded-[32px] border items-center mb-10">
-                    <BarChart
-                        data={barData}
-                        width={SCREEN_WIDTH - 80}
-                        height={220}
-                        yAxisLabel="$"
-                        chartConfig={chartConfig}
-                        verticalLabelRotation={0}
-                        fromZero
-                        style={{
-                            marginVertical: 8,
-                            borderRadius: 16
-                        }}
-                    />
-                </View>
-
-                <View style={{ backgroundColor: theme.primary + '10', borderColor: theme.primary + '30' }} className="p-8 rounded-[40px] border">
-                    <View className="flex-row items-center gap-4 mb-4">
-                        <View style={{ backgroundColor: theme.primary }} className="w-12 h-12 rounded-2xl items-center justify-center">
-                            <MaterialIcons name="insights" size={24} color="white" />
+            <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+                {/* BENTO GRID START */}
+                <View className="flex-row gap-4 mb-6">
+                    {/* Main Total Card (Large) */}
+                    <View style={{ backgroundColor: theme.cardSecondary + '80', borderColor: theme.border + '20' }} className="flex-1 p-6 rounded-[40px] border shadow-2xl backdrop-blur-xl">
+                        <View className="flex-row items-center gap-3 mb-4">
+                            <View style={{ backgroundColor: theme.primary }} className="w-10 h-10 rounded-2xl items-center justify-center">
+                                <MaterialIcons name="account-balance-wallet" size={20} color="white" />
+                            </View>
+                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-[2px]">Total Gastado</Text>
                         </View>
-                        <View>
-                            <Text style={{ color: theme.text }} className="text-lg font-black">Resumen Total</Text>
-                            <Text style={{ color: theme.textSecondary }} className="text-xs font-bold">Gastos acumulados</Text>
+                        <Text style={{ color: theme.text, fontSize: 36 * fontScale }} className="font-black tracking-tighter">
+                            ${stats?.total_spent.toFixed(2)}
+                        </Text>
+                        <Text style={{ color: theme.primary }} className="text-[10px] font-bold mt-1">Sincronizado hoy</Text>
+                    </View>
+                </View>
+
+                <View className="flex-row gap-4 mb-6">
+                    {/* Categories Card (Wide) */}
+                    <View style={{ backgroundColor: theme.cardSecondary + '80', borderColor: theme.border + '20' }} className="w-full p-6 rounded-[40px] border shadow-2xl backdrop-blur-xl">
+                        <Text style={{ fontSize: 10 * fontScale, color: theme.textSecondary }} className="font-black uppercase tracking-[3px] mb-6">Distribución por Categoría</Text>
+                        <View className="items-center">
+                            <PieChart
+                                data={pieData}
+                                width={SCREEN_WIDTH - 100}
+                                height={200}
+                                chartConfig={{...chartConfig, backgroundGradientFrom: 'transparent', backgroundGradientTo: 'transparent'}}
+                                accessor={"amount"}
+                                backgroundColor={"transparent"}
+                                paddingLeft={"15"}
+                                center={[10, 0]}
+                                absolute
+                            />
                         </View>
                     </View>
-                    <Text style={{ color: theme.text, fontSize: 32 * fontScale }} className="font-black">
-                        ${stats?.total_spent.toFixed(2)}
-                    </Text>
+                </View>
+
+                <View className="flex-row gap-4 mb-6">
+                    {/* Activity Card (Wide) */}
+                    <View style={{ backgroundColor: theme.cardSecondary + '80', borderColor: theme.border + '20' }} className="w-full p-6 rounded-[40px] border shadow-2xl backdrop-blur-xl">
+                        <Text style={{ fontSize: 10 * fontScale, color: theme.textSecondary }} className="font-black uppercase tracking-[3px] mb-6">Actividad Mensual</Text>
+                        <View className="items-center">
+                            <BarChart
+                                data={barData}
+                                width={SCREEN_WIDTH - 100}
+                                height={220}
+                                yAxisLabel="$"
+                                chartConfig={{...chartConfig, backgroundGradientFrom: 'transparent', backgroundGradientTo: 'transparent'}}
+                                verticalLabelRotation={0}
+                                fromZero
+                                style={{
+                                    marginVertical: 8,
+                                    borderRadius: 16
+                                }}
+                            />
+                        </View>
+                    </View>
+                </View>
+
+                {/* Insights Bento Card */}
+                <View style={{ backgroundColor: theme.primary + '15', borderColor: theme.primary + '30' }} className="p-8 rounded-[40px] border flex-row items-center justify-between">
+                    <View className="flex-1">
+                        <Text style={{ color: theme.text }} className="text-lg font-black">Tu Insight</Text>
+                        <Text style={{ color: theme.textSecondary }} className="text-xs font-medium mt-1">Has ahorrado un 12% comparado con el mes anterior usando Easy-Pay.</Text>
+                    </View>
+                    <View style={{ backgroundColor: theme.primary }} className="w-14 h-14 rounded-full items-center justify-center shadow-lg shadow-blue-500/30">
+                        <MaterialIcons name="trending-up" size={28} color="white" />
+                    </View>
                 </View>
             </ScrollView>
         </SafeAreaView>

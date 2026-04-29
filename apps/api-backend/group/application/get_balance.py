@@ -38,6 +38,19 @@ class GetGroupBalancesUseCase:
                         balances_netos[p_id] -= cuota_item
                         consumos_individuales[p_id] += cuota_item # 🚩 Registro de gasto real
 
+        # 🚩 Cálculo de Propina Dinámica (Regla Easy-Pay)
+        # < $3000 -> 10% | >= $3000 -> 5%
+        propina_percent = 0.10 if total_grupo < 3000 else 0.05
+        total_propina = total_grupo * propina_percent
+        total_con_propina = total_grupo + total_propina
+
+        # Distribuir la propina equitativamente entre los integrantes activos
+        if integrantes:
+            cuota_propina = total_propina / len(integrantes)
+            for u_id in integrantes:
+                balances_netos[u_id] -= cuota_propina
+                consumos_individuales[u_id] += cuota_propina
+
         # 3. Formatear la respuesta
         detalle = []
         for u_id in integrantes:
@@ -52,5 +65,7 @@ class GetGroupBalancesUseCase:
         return {
             "status": "success",
             "total_gastado_en_grupo": round(total_grupo, 2),
+            "propina_total": round(total_propina, 2),
+            "total_con_propina": round(total_con_propina, 2),
             "balance_detallado": detalle # 🚩 Usamos este nombre para consistencia con el Front
         }

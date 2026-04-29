@@ -1,13 +1,13 @@
 
 export const NETWORK_CONFIG = {
   // Configuración de IP detectada automáticamente (Entorno UNACH/Local)
-  LOCAL_IP: '192.168.1.6',
+  LOCAL_IP: '10.33.26.208',
   PORT: '8000',
   PROTO: 'http',
   
   // URL Completa
   get BASE_URL() {
-    return `${this.PROTO}://${this.LOCAL_IP}:${this.PORT}`;
+    return 'http://10.33.26.208:8000';
   },
 
   // Tiempo de espera para peticiones
@@ -15,9 +15,9 @@ export const NETWORK_CONFIG = {
   
   // Endpoints específicos
   ENDPOINTS: {
-    AUTH: '/auth',
-    USER: '/user',
-    GROUPS: '/groups',
-    STATS: '/stats',
+    AUTH: '/api/auth',
+    USER: '/api/auth', // Sincronizado con el backend unified
+    GROUPS: '/api/groups',
+    STATS: '/api/stats',
   }
 };

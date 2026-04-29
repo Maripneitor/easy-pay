@@ -87,7 +87,8 @@ async def edit_item(group_id: str, item_id: str, item_data: ItemUpdate):
         
     return {"message": "Gasto actualizado correctamente", "status": "success"}
 
-@group_router.delete("/delete/{group_id}", tags=["Groups"])
+@group_router.delete("/{group_id}", tags=["Groups"])
+@group_router.delete("/delete/{group_id}", include_in_schema=False)
 async def delete_group_route(group_id: str):
     """
     Elimina un grupo permanentemente por su ID.
@@ -98,3 +99,13 @@ async def delete_group_route(group_id: str):
         raise HTTPException(status_code=404, detail=result["message"])
         
     return result
+
+@group_router.delete("/{group_id}/items/{item_id}")
+async def remove_item(group_id: str, item_id: str):
+    """
+    Elimina un gasto de un grupo.
+    """
+    success = await item_repo.delete_item(item_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Gasto no encontrado")
+    return {"message": "Gasto eliminado correctamente", "status": "success"}

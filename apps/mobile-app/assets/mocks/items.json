@@ -1,0 +1,22 @@
+[
+  {
+    "id": "mock-item-1",
+    "nombre": "Pizza Familiar",
+    "precio": 450,
+    "cantidad": 1,
+    "comprador_id": "mock-user-1",
+    "participantes_ids": ["mock-user-1", "mock-user-2"],
+    "nombre_comprador": "Usuario Demo",
+    "nombres_participantes": ["Usuario Demo", "Amigo 1"]
+  },
+  {
+    "id": "mock-item-2",
+    "nombre": "Cervezas",
+    "precio": 300,
+    "cantidad": 1,
+    "comprador_id": "mock-user-2",
+    "participantes_ids": ["mock-user-1", "mock-user-2"],
+    "nombre_comprador": "Amigo 1",
+    "nombres_participantes": ["Usuario Demo", "Amigo 1"]
+  }
+]

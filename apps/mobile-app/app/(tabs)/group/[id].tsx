@@ -105,48 +105,51 @@ export default function GroupDetailScreen() {
                 <View className="items-center">
                     <Text style={{ color: theme.text, fontSize: 20 * fontScale, fontFamily: 'Manrope' }} className="font-bold">{groupData?.nombre || 'Grupo'}</Text>
                     <View className="flex-row items-center mt-0.5">
-                        <View className="w-1.5 h-1.5 rounded-full bg-[#10B981] mr-1.5" />
+                        <View style={{ backgroundColor: groupData?.status === 'ACTIVA' ? '#10B981' : groupData?.status === 'CERRANDO' ? '#F59E0B' : '#64748B' }} className="w-1.5 h-1.5 rounded-full mr-1.5" />
                         <Text style={{ color: theme.textSecondary, fontSize: 11 * fontScale, fontFamily: 'Inter' }} className="font-medium opacity-80">
-                            {isLoading ? 'Sincronizando...' : 'Conectado'}
+                            {groupData?.status || (isLoading ? 'Sincronizando...' : 'Conectado')}
                         </Text>
                     </View>
                 </View>
 
                 <View className="flex-row items-center gap-1">
-                    <TouchableOpacity 
-                        onPress={async () => {
-                            import('react-native').then(({ Alert }) => {
-                                Alert.alert(
-                                    'Eliminar Grupo',
-                                    '¿Estás seguro de que deseas eliminar este grupo? Esta acción no se puede deshacer.',
-                                    [
-                                        { text: 'Cancelar', style: 'cancel' },
-                                        { 
-                                            text: 'Eliminar', 
-                                            style: 'destructive',
-                                            onPress: async () => {
-                                                try {
-                                                    await groupRepository.deleteGroup(id as string);
-                                                    router.back();
-                                                } catch (err) {
-                                                    console.error('Error al eliminar grupo:', err);
-                                                    Alert.alert('Error', 'No se pudo eliminar el grupo');
+                    {(groupData?.admin_id === user?.id || groupData?.lider_id === user?.id || groupData?.liderId === user?.id) && (
+                        <TouchableOpacity 
+                            onPress={async () => {
+                                import('react-native').then(({ Alert }) => {
+                                    Alert.alert(
+                                        'Eliminar Grupo',
+                                        '¿Estás seguro de que deseas eliminar este grupo? Esta acción no se puede deshacer.',
+                                        [
+                                            { text: 'Cancelar', style: 'cancel' },
+                                            { 
+                                                text: 'Eliminar', 
+                                                style: 'destructive',
+                                                onPress: async () => {
+                                                    try {
+                                                        await groupRepository.deleteGroup(id as string);
+                                                        router.back();
+                                                    } catch (err) {
+                                                        console.error('Error al eliminar grupo:', err);
+                                                        Alert.alert('Error', 'No se pudo eliminar el grupo');
+                                                    }
                                                 }
                                             }
-                                        }
-                                    ]
-                                );
-                            });
-                        }}
-                        className="p-2 rounded-full mr-1" 
-                        style={{ backgroundColor: theme.cardSecondary }}
-                    >
-                        <MaterialIcons name="delete-outline" size={24} color="#f43f5e" />
-                    </TouchableOpacity>
+                                        ]
+                                    );
+                                });
+                            }}
+                            className="p-2 rounded-full mr-1" 
+                            style={{ backgroundColor: theme.cardSecondary }}
+                        >
+                            <MaterialIcons name="delete-outline" size={24} color="#f43f5e" />
+                        </TouchableOpacity>
+                    )}
                     <TouchableOpacity 
                         onPress={() => router.push({ pathname: '/new-expense', params: { groupId: id } } as any)}
+                        disabled={groupData?.status === 'CERRADA'}
                         className="p-2 rounded-full" 
-                        style={{ backgroundColor: theme.cardSecondary }}
+                        style={{ backgroundColor: theme.cardSecondary, opacity: groupData?.status === 'CERRADA' ? 0.5 : 1 }}
                     >
                         <MaterialIcons name="add" size={24} color={theme.text} />
                     </TouchableOpacity>
@@ -260,14 +263,46 @@ export default function GroupDetailScreen() {
                         </View>
                     </View>
 
-                    <TouchableOpacity 
-                        onPress={() => setIsPaymentVisible(true)}
-                        style={{ backgroundColor: '#10B981' }} 
-                        className="w-row items-center justify-center py-4 rounded-xl shadow-lg active:scale-[0.98]"
-                    >
-                        <Text style={{ fontFamily: 'Manrope' }} className="text-white font-bold text-lg mr-2">Dividir Gastos</Text>
-                        <MaterialIcons name="check-circle" size={20} color="white" />
-                    </TouchableOpacity>
+                    {(groupData?.admin_id === user?.id || groupData?.lider_id === user?.id || groupData?.liderId === user?.id) ? (
+                        <TouchableOpacity 
+                            onPress={() => {
+                                import('react-native').then(({ Alert }) => {
+                                    Alert.alert(
+                                        'Cerrar Mesa',
+                                        '¿Deseas cerrar la mesa y proceder al cálculo de saldos?',
+                                        [
+                                            { text: 'Cancelar', style: 'cancel' },
+                                            { 
+                                                text: 'Cerrar Mesa', 
+                                                onPress: async () => {
+                                                    try {
+                                                        // This would call a hypothetical closeTable endpoint or update status
+                                                        // For now, we open the payment/division flow
+                                                        setIsPaymentVisible(true);
+                                                    } catch (err) {
+                                                        console.error(err);
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    );
+                                });
+                            }}
+                            style={{ backgroundColor: theme.primary }} 
+                            className="w-row items-center justify-center py-4 rounded-xl shadow-lg active:scale-[0.98]"
+                        >
+                            <Text style={{ fontFamily: 'Manrope', color: 'white' }} className="font-bold text-lg mr-2">Cerrar Mesa y Dividir</Text>
+                            <MaterialIcons name="lock-outline" size={20} color="white" />
+                        </TouchableOpacity>
+                    ) : (
+                        <View 
+                            style={{ backgroundColor: theme.cardSecondary }} 
+                            className="w-row items-center justify-center py-4 rounded-xl opacity-60"
+                        >
+                            <Text style={{ fontFamily: 'Manrope', color: theme.textSecondary }} className="font-bold text-lg mr-2">Esperando al Líder...</Text>
+                            <ActivityIndicator size="small" color={theme.textSecondary} />
+                        </View>
+                    )}
                 </View>
             </View>
 

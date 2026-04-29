@@ -30,6 +30,11 @@ export default function CreateGroupScreen() {
             return;
         }
 
+        if (user.isGuest) {
+            Alert.alert('Acceso Denegado', 'Los invitados no pueden crear grupos. Por favor regístrate.');
+            return;
+        }
+
         setIsLoading(true);
         try {
             await createGrupo(groupName, user.id);
