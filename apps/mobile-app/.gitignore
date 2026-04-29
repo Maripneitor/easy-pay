@@ -42,3 +42,16 @@ yarn-error.*
 
 # React Native Tools
 .vscode/.react
+
+# --- Agrega esto al final ---
+
+# Archivos de entorno globales (MUY IMPORTANTE)
+.env
+.env.example
+
+# Python (WSL / Backend)
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/

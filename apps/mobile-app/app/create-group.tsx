@@ -1,32 +1,33 @@
 import React, { useState } from 'react';
 import { ScrollView, View, Text, TextInput, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { useGrupo } from '../context/GrupoContext';
-
-const MotiView = View as any;
+import { MotiView } from 'moti';
+import OcrTicketScanner from '../components/OcrTicketScanner';
+import { TicketData } from '../src/infrastructure/services/OcrService';
 
 export default function CreateGroupScreen() {
     const { user } = useAuth();
     const { theme, fontScale } = useTheme();
     const { createGrupo } = useGrupo();
-    const router = useRouter();
     const [groupName, setGroupName] = useState('');
     const [groupDesc, setGroupDesc] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [showOcr, setShowOcr] = useState(false);
+    const [scannedTicket, setScannedTicket] = useState<TicketData | null>(null);
 
     const handleCreateGroup = async () => {
         if (!groupName.trim()) {
-            Alert.alert('Error', 'Por favor ingresa un nombre para el grupo');
+            Alert.alert('Error', 'Por favor ingresa un nombre para la mesa');
             return;
         }
-
         if (!user?.id) {
-            Alert.alert('Error', 'Debes iniciar sesión para crear un grupo');
+            Alert.alert('Error', 'Debes iniciar sesión para crear una mesa');
             return;
         }
 
@@ -38,46 +39,114 @@ export default function CreateGroupScreen() {
         setIsLoading(true);
         try {
             await createGrupo(groupName, user.id);
-            router.replace('/(tabs)/group');
+            router.replace('/new-mesa');
         } catch (error) {
-            Alert.alert('Error', 'No se pudo crear el grupo. Revisa tu conexión.');
-            console.error(error);
+            Alert.alert('Error', 'No se pudo crear la mesa. Revisa tu conexión.');
         } finally {
             setIsLoading(false);
         }
     };
 
+    const handleOcrConfirm = (data: TicketData) => {
+        setShowOcr(false);
+        setScannedTicket(data);
+        // Autocompletar el nombre con el restaurante detectado
+        if (data.restaurantName && data.restaurantName !== 'Restaurante') {
+            setGroupName(data.restaurantName);
+        }
+    };
+
     return (
         <SafeAreaView style={{ backgroundColor: theme.bg }} className="flex-1">
-            <StatusBar style={theme.isDark ? "light" : "dark"} />
+            <StatusBar style={theme.isDark ? 'light' : 'dark'} />
             <Stack.Screen options={{ headerShown: false }} />
-            
+
             <View className="px-6 py-4 flex-row items-center justify-between border-b border-white/5 z-50">
-                <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: theme.glassBg }} className="w-10 h-10 rounded-xl items-center justify-center border border-white/5">
+                <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-xl items-center justify-center bg-slate-800/40">
                     <Ionicons name="chevron-back" size={24} color={theme.text} />
                 </TouchableOpacity>
                 <Text style={{ color: theme.text }} className="text-lg font-black tracking-tight">Easy-Pay</Text>
                 <View className="w-10" />
             </View>
 
-            <ScrollView className="flex-1 px-6 pt-8" contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-                <View className="gap-8">
+            <ScrollView className="flex-1 px-6 pt-8" contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+                <MotiView
+                    from={{ opacity: 0, translateY: 20 }}
+                    animate={{ opacity: 1, translateY: 0 }}
+                    className="gap-8"
+                >
                     <View className="items-center gap-2">
                         <View style={{ backgroundColor: theme.primary + '15' }} className="w-20 h-20 rounded-[30px] items-center justify-center mb-2">
                             <MaterialIcons name="add-business" size={40} color={theme.primary} />
                         </View>
                         <Text style={{ color: theme.text }} className="text-3xl font-black tracking-tight text-center">
-                            Crear Grupo
+                            Crear Mesa
                         </Text>
                         <Text style={{ color: theme.textSecondary }} className="text-base text-center opacity-70">
                             Inicia una nueva sesión para dividir la cuenta con tus amigos.
                         </Text>
                     </View>
 
+                    {/* Botón escanear ticket */}
+                    <TouchableOpacity
+                        onPress={() => setShowOcr(true)}
+                        style={{ backgroundColor: theme.primary + '15', borderColor: theme.primary + '40' }}
+                        className="flex-row items-center gap-4 p-5 rounded-[24px] border"
+                    >
+                        <View style={{ backgroundColor: theme.primary + '20' }} className="w-12 h-12 rounded-2xl items-center justify-center">
+                            <MaterialIcons name="document-scanner" size={26} color={theme.primary} />
+                        </View>
+                        <View className="flex-1">
+                            <Text style={{ color: theme.primary }} className="font-black text-base">
+                                {scannedTicket ? '✅ Ticket escaneado' : 'Escanear Ticket'}
+                            </Text>
+                            <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">
+                                {scannedTicket
+                                    ? `${scannedTicket.items.length} productos — Total $${scannedTicket.total.toFixed(2)}`
+                                    : 'Detecta productos y precios automáticamente con OCR'}
+                            </Text>
+                        </View>
+                        <MaterialIcons name="chevron-right" size={20} color={theme.primary} />
+                    </TouchableOpacity>
+
+                    {/* Preview del ticket escaneado */}
+                    {scannedTicket && (
+                        <MotiView
+                            from={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
+                            className="rounded-[24px] border overflow-hidden"
+                        >
+                            <View style={{ borderBottomColor: theme.border }} className="px-5 py-4 border-b flex-row justify-between items-center">
+                                <Text style={{ color: theme.text }} className="font-black">{scannedTicket.restaurantName}</Text>
+                                <TouchableOpacity onPress={() => setScannedTicket(null)}>
+                                    <MaterialIcons name="close" size={18} color={theme.textSecondary} />
+                                </TouchableOpacity>
+                            </View>
+                            {scannedTicket.items.slice(0, 3).map((item, i) => (
+                                <View key={i} style={{ borderBottomColor: theme.border }} className="flex-row justify-between px-5 py-3 border-b">
+                                    <Text style={{ color: theme.textSecondary }} className="text-sm">{item.name}</Text>
+                                    <Text style={{ color: theme.text }} className="font-bold text-sm">${(item.price * item.quantity).toFixed(2)}</Text>
+                                </View>
+                            ))}
+                            {scannedTicket.items.length > 3 && (
+                                <Text style={{ color: theme.textSecondary }} className="text-xs text-center py-2">
+                                    +{scannedTicket.items.length - 3} más...
+                                </Text>
+                            )}
+                            <View className="flex-row justify-between px-5 py-4">
+                                <Text style={{ color: theme.text }} className="font-black">Total</Text>
+                                <Text style={{ color: theme.primary }} className="font-black text-lg">${scannedTicket.total.toFixed(2)}</Text>
+                            </View>
+                        </MotiView>
+                    )}
+
                     <View className="gap-6">
                         <View className="gap-2">
-                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-[3px] mb-1 ml-1">Nombre del Grupo</Text>
-                            <TextInput 
+                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-[3px] mb-1 ml-1">
+                                Nombre de la Mesa
+                            </Text>
+                            <TextInput
                                 value={groupName}
                                 onChangeText={setGroupName}
                                 placeholder="Ej. Restaurante Sonora Grill"
@@ -86,10 +155,12 @@ export default function CreateGroupScreen() {
                                 className="w-full text-lg font-bold rounded-2xl p-5 border border-white/5"
                             />
                         </View>
-                        
+
                         <View className="gap-2">
-                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-[3px] mb-1 ml-1">Descripción (Opcional)</Text>
-                            <TextInput 
+                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-[3px] mb-1 ml-1">
+                                Descripción (Opcional)
+                            </Text>
+                            <TextInput
                                 value={groupDesc}
                                 onChangeText={setGroupDesc}
                                 placeholder="Describe el propósito de este grupo..."
@@ -103,32 +174,38 @@ export default function CreateGroupScreen() {
                         </View>
                     </View>
 
-                    <View style={{ backgroundColor: theme.primary + '10', borderColor: theme.primary + '30' }} className="p-6 rounded-3xl border">
+                    <View className="bg-blue-500/10 p-6 rounded-3xl border border-blue-500/20">
                         <View className="flex-row items-center gap-3 mb-2">
                             <MaterialIcons name="info-outline" size={18} color={theme.primary} />
                             <Text style={{ color: theme.primary }} className="font-black text-xs uppercase tracking-widest">Rol: Líder</Text>
                         </View>
                         <Text style={{ color: theme.textSecondary }} className="text-xs leading-relaxed">
-                            Al crear el grupo serás el **Líder**. Podrás escanear tickets, asignar platillos y cerrar la cuenta final.
+                            Al crear la mesa serás el Líder. Podrás escanear tickets, asignar platillos y cerrar la cuenta final.
                         </Text>
                     </View>
-                </View>
+                </MotiView>
             </ScrollView>
 
             <View className="px-6 pb-10">
-                <TouchableOpacity 
+                <TouchableOpacity
                     onPress={handleCreateGroup}
                     disabled={isLoading}
                     style={{ backgroundColor: theme.primary }}
-                    className="w-full py-5 rounded-2xl shadow-xl shadow-blue-500/20 items-center justify-center active:scale-[0.98]"
+                    className="w-full py-5 rounded-2xl shadow-xl shadow-blue-500/20 items-center justify-center"
                 >
-                    {isLoading ? (
-                        <ActivityIndicator color="black" />
-                    ) : (
-                        <Text className="text-black font-black text-base uppercase tracking-widest">Crear Grupo Ahora</Text>
-                    )}
+                    {isLoading
+                        ? <ActivityIndicator color="white" />
+                        : <Text className="text-white font-black text-base">Crear Mesa</Text>
+                    }
                 </TouchableOpacity>
             </View>
+
+            <OcrTicketScanner
+                visible={showOcr}
+                onClose={() => setShowOcr(false)}
+                onConfirm={handleOcrConfirm}
+                theme={theme}
+            />
         </SafeAreaView>
     );
 }

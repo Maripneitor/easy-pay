@@ -22,8 +22,11 @@ import { MemberList } from '../../../components/group/MemberList';
 import { TotalsSummary } from '../../../components/group/TotalsSummary';
 import { PaymentMethodModal } from '../../../components/group/PaymentMethodModal';
 
+import OcrTicketScanner from '../../../components/OcrTicketScanner';
+import { TicketData } from '../../../src/infrastructure/services/OcrService';
 import { groupRepository } from '../../../src/infrastructure/api/repositories/GroupRepository';
 import { useAuth } from '../../../context/AuthContext';
+import { useGrupo } from '../../../context/GrupoContext';
 
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -36,6 +39,7 @@ export default function GroupDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const { theme, fontScale } = useTheme();
     const { user } = useAuth();
+    const { addItem, activeGrupo } = useGrupo();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<TabType>('actividad');
     
@@ -47,6 +51,7 @@ export default function GroupDetailScreen() {
 
     // UI State for Modals
     const [isPaymentVisible, setIsPaymentVisible] = useState(false);
+    const [showOcr, setShowOcr] = useState(false);
 
     const fetchData = useCallback(async () => {
         if (!id) return;
@@ -55,8 +60,8 @@ export default function GroupDetailScreen() {
         try {
             const [g, items, balancesData] = await Promise.all([
                 groupRepository.getGroup(id),
-                groupRepository.getItems(id),
-                groupRepository.getBalances(id)
+                fetch(`http://localhost:8000/api/groups/${id}/items`).then(r => r.json()),
+                fetch(`http://localhost:8000/api/groups/${id}/balances`).then(r => r.json())
             ]);
             setGroupData(g);
             setGroupItems(Array.isArray(items) ? items : []);
@@ -146,12 +151,11 @@ export default function GroupDetailScreen() {
                         </TouchableOpacity>
                     )}
                     <TouchableOpacity 
-                        onPress={() => router.push({ pathname: '/new-expense', params: { groupId: id } } as any)}
-                        disabled={groupData?.status === 'CERRADA'}
+                        onPress={() => setShowOcr(true)}
                         className="p-2 rounded-full" 
                         style={{ backgroundColor: theme.cardSecondary, opacity: groupData?.status === 'CERRADA' ? 0.5 : 1 }}
                     >
-                        <MaterialIcons name="add" size={24} color={theme.text} />
+                        <MaterialIcons name="document-scanner" size={24} color={theme.primary} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -204,13 +208,15 @@ export default function GroupDetailScreen() {
                         {activeTab === 'actividad' && (
                             <VirtualTicketCard 
                                 groupId={id}
-                                items={groupItems.map((i: any) => ({
-                                    id: i.id || i._id,
-                                    name: i.nombre,
-                                    detail: i.nombre_comprador ? `Pagado por ${i.nombre_comprador}` : 'Gasto grupal',
-                                    amount: (i.precio || 0) * (i.cantidad || 1),
-                                    participants: i.nombres_participantes || []
-                                }))} 
+                                items={(groupItems).map((i: any) => ({
+                                  id: i.id,
+                                  description: i.description,
+                                  name: i.description ?? i.name ?? '',
+                                  amount: i.amount,
+                                  assignedTo: i.assignedTo ?? [],
+                                  avatars: i.avatars ?? [],
+                                  addedBy: i.addedBy ?? '',
+                                }))}
                                 serviceFee={0} 
                             />
                         )}
@@ -309,6 +315,26 @@ export default function GroupDetailScreen() {
             {/* MODALES PREMIUM */}
 
 
+            <OcrTicketScanner
+                visible={showOcr}
+                onClose={() => setShowOcr(false)}
+                onConfirm={async (data: TicketData) => {
+                    setShowOcr(false);
+                    for (const item of data.items) {
+                        for (let i = 0; i < item.quantity; i++) {
+                            console.log('Agregando item:', item.name, item.price);
+                            setGroupItems(prev => [...prev, { name: item.name, id: Date.now().toString() + Math.random().toString(36).slice(2), description: item.name, amount: item.price, assignedTo: [], avatars: [], addedBy: user?.id ?? '' }]);
+                            await addItem({
+                                description: item.name,
+                                amount: item.price,
+                                assignedTo: [],
+                                addedBy: user?.id ?? 'unknown',
+                            });
+                        }
+                    }
+                }}
+                theme={theme}
+            />
             <PaymentMethodModal 
                 isVisible={isPaymentVisible}
                 onClose={() => setIsPaymentVisible(false)}

@@ -1,301 +1,369 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { 
-    ScrollView, 
-    View, 
-    Text, 
-    Pressable, 
-    Image, 
-    TouchableOpacity, 
+import React, { useMemo } from 'react';
+import {
+    ScrollView,
+    View,
+    Text,
+    Pressable,
+    Image,
+    TouchableOpacity,
     ActivityIndicator,
     Dimensions,
-    RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
-import { MaterialIcons, Ionicons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-// import { MotiView, AnimatePresence } from 'moti';
-const MotiView = View as any;
-const AnimatePresence = ({ children }: any) => children;
+import { MotiView, AnimatePresence } from 'moti';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { useNotifications } from '../../src/infrastructure/context/NotificationContext';
-import { useAuth } from '../../context/AuthContext';
-import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
+import { useNotifications, timeAgo } from '../../src/infrastructure/context/NotificationContext';
+import { AppNotification } from '../../src/infrastructure/services/NotificationService';
 
 const { width } = Dimensions.get('window');
 
+// ── Sección de deudas ────────────────────────────────────────────────────────
+function DebtsSummary({ notifications }: { notifications: AppNotification[] }) {
+    const { theme } = useTheme();
+    const router = useRouter();
+
+    const debts = useMemo(() =>
+        notifications.filter(n => n.type === 'payment_due'),
+    [notifications]);
+
+    const totalOwed = useMemo(() =>
+        debts.reduce((acc, n) => {
+            const raw = n.amount?.replace(/[^0-9.]/g, '') ?? '0';
+            return acc + parseFloat(raw);
+        }, 0),
+    [debts]);
+
+    if (debts.length === 0) return null;
+
+    return (
+        <MotiView
+            from={{ opacity: 0, translateY: -10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 400 }}
+            style={{ backgroundColor: '#ef444415', borderColor: '#ef444430' }}
+            className="mx-0 mb-6 p-5 rounded-[28px] border"
+        >
+            <View className="flex-row items-center justify-between mb-4">
+                <View className="flex-row items-center gap-2">
+                    <View className="w-8 h-8 bg-red-500/20 rounded-full items-center justify-center">
+                        <MaterialIcons name="payment" size={18} color="#ef4444" />
+                    </View>
+                    <Text style={{ color: '#ef4444' }} className="font-black text-sm uppercase tracking-wider">
+                        Debes pagar
+                    </Text>
+                </View>
+                <Text style={{ color: '#ef4444' }} className="font-black text-lg">
+                    ${totalOwed.toFixed(2)}
+                </Text>
+            </View>
+
+            {debts.map(debt => (
+                <TouchableOpacity
+                    key={debt.id}
+                    onPress={() => router.push('/(tabs)/payments' as any)}
+                    className="flex-row justify-between items-center py-3 border-t border-red-500/10"
+                >
+                    <View className="flex-1">
+                        <Text style={{ color: '#fca5a5' }} className="font-bold text-sm">{debt.groupName ?? 'Grupo'}</Text>
+                        <Text className="text-red-400/60 text-xs mt-0.5">A: {debt.userName ?? 'Desconocido'}</Text>
+                    </View>
+                    <View className="flex-row items-center gap-2">
+                        <Text style={{ color: '#ef4444' }} className="font-black">{debt.amount}</Text>
+                        <MaterialIcons name="chevron-right" size={16} color="#ef4444" />
+                    </View>
+                </TouchableOpacity>
+            ))}
+
+            <TouchableOpacity
+                onPress={() => router.push('/(tabs)/payments' as any)}
+                className="mt-4 bg-red-500/20 py-3 rounded-2xl items-center"
+            >
+                <Text className="text-red-400 font-black text-xs uppercase tracking-widest">
+                    Ver en Cartera →
+                </Text>
+            </TouchableOpacity>
+        </MotiView>
+    );
+}
+
+// ── Tarjeta individual ───────────────────────────────────────────────────────
+function NotificationCard({
+    n,
+    theme,
+    onMarkRead,
+    onRemove,
+    onAccept,
+    accepting,
+    accepted,
+}: {
+    n: AppNotification;
+    theme: any;
+    onMarkRead: () => void;
+    onRemove: () => void;
+    onAccept: () => void;
+    accepting: boolean;
+    accepted: boolean;
+}) {
+    const router = useRouter();
+
+    const getInitials = (name?: string) => {
+        if (!name) return '??';
+        return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    };
+
+    const isInvitation = n.type === 'invitation';
+
+    return (
+        <AnimatePresence>
+            <MotiView
+                from={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8, height: 0 }}
+                transition={{ type: 'timing', duration: 350 }}
+                className="relative mb-4 overflow-hidden"
+            >
+                {!n.read && (
+                    <View
+                        style={{ backgroundColor: theme.primary }}
+                        className="absolute z-10 left-0 top-6 w-1 h-10 rounded-full"
+                    />
+                )}
+
+                <Pressable
+                    onPress={() => {
+                        onMarkRead();
+                        if (!isInvitation || accepted) {
+                            if (n.route) router.push(n.route as any);
+                        }
+                    }}
+                    style={{
+                        backgroundColor: theme.cardSecondary,
+                        borderColor: !n.read ? `${theme.primary}25` : theme.border,
+                    }}
+                    className="border rounded-[28px] p-5 flex-row gap-4 items-center"
+                >
+                    {/* Icono / Avatar */}
+                    {isInvitation ? (
+                        <View className="w-14 h-14 rounded-full overflow-hidden border-2 border-slate-700/50 items-center justify-center bg-slate-800">
+                            {n.avatar ? (
+                                <Image source={{ uri: n.avatar }} className="w-full h-full" />
+                            ) : (
+                                <Text className="text-white font-black text-lg">
+                                    {getInitials(n.userName ?? n.title)}
+                                </Text>
+                            )}
+                        </View>
+                    ) : (
+                        <View
+                            className="w-14 h-14 rounded-[22px] items-center justify-center"
+                            style={{
+                                backgroundColor: `${n.iconColor ?? '#2196F3'}15`,
+                                borderWidth: 1,
+                                borderColor: `${n.iconColor ?? '#2196F3'}30`,
+                            }}
+                        >
+                            <MaterialIcons
+                                name={(n.icon ?? 'notifications') as any}
+                                size={28}
+                                color={n.iconColor ?? '#2196F3'}
+                            />
+                        </View>
+                    )}
+
+                    {/* Contenido */}
+                    <View className="flex-1">
+                        {accepted ? (
+                            <MotiView
+                                from={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="flex-row items-center gap-2"
+                            >
+                                <MaterialIcons name="check-circle" size={16} color="#4ade80" />
+                                <Text style={{ color: '#4ade80' }} className="font-black text-sm uppercase tracking-widest">
+                                    ¡Te uniste!
+                                </Text>
+                            </MotiView>
+                        ) : (
+                            <>
+                                <View className="flex-row justify-between items-start">
+                                    <View className="flex-1">
+                                        <Text style={{ color: theme.text }} className="font-bold text-sm leading-tight">
+                                            {n.title}
+                                        </Text>
+                                        <Text className="text-slate-500 text-xs mt-1">{n.body}</Text>
+                                        <Text className="text-slate-600 text-[10px] mt-1 font-bold uppercase tracking-widest">
+                                            {timeAgo(n.timestamp)}
+                                        </Text>
+                                    </View>
+                                    {(!n.read || n.type === 'alert') && (
+                                        <TouchableOpacity
+                                            onPress={onRemove}
+                                            className="ml-2 bg-white/5 p-1.5 rounded-full"
+                                        >
+                                            <MaterialIcons name="close" size={14} color={theme.textSecondary} />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+
+                                {isInvitation && (
+                                    <View className="flex-row gap-3 mt-4">
+                                        <TouchableOpacity
+                                            onPress={onAccept}
+                                            disabled={accepting}
+                                            style={{ backgroundColor: theme.primary }}
+                                            className="px-6 py-2.5 rounded-2xl flex-row items-center justify-center gap-2 min-w-[100px]"
+                                        >
+                                            {accepting ? (
+                                                <ActivityIndicator size="small" color="white" />
+                                            ) : (
+                                                <Text className="text-white font-black text-[10px] uppercase">Aceptar</Text>
+                                            )}
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={onRemove}
+                                            className="bg-white/5 border border-white/10 px-6 py-2.5 rounded-2xl"
+                                        >
+                                            <Text className="text-slate-400 font-bold text-[10px] uppercase">Rechazar</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+
+                                {/* Badge de monto si existe */}
+                                {n.amount && n.type !== 'payment_due' && (
+                                    <View className="mt-2 self-start">
+                                        <Text
+                                            style={{ color: n.iconColor ?? '#4ade80' }}
+                                            className="font-black text-base"
+                                        >
+                                            {n.amount}
+                                        </Text>
+                                    </View>
+                                )}
+                            </>
+                        )}
+                    </View>
+                </Pressable>
+            </MotiView>
+        </AnimatePresence>
+    );
+}
+
+// ── Pantalla principal ───────────────────────────────────────────────────────
 export default function NotificationsScreen() {
     const { theme, fontScale } = useTheme();
-    const { user } = useAuth();
-    const { setUnreadCount, setHasAlerts } = useNotifications();
-    const router = useRouter();
-    
-    const [notifications, setNotifications] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-    const [loadingIds, setLoadingIds] = useState<string[]>([]);
-    const [acceptedIds, setAcceptedIds] = useState<string[]>([]);
+    const {
+        notifications,
+        markAsRead,
+        markAllAsRead,
+        removeNotification,
+    } = useNotifications();
 
-    const fetchActivity = useCallback(async () => {
-        if (!user?.id) return;
-        setIsLoading(true);
-        try {
-            const groups = await groupRepository.findByUser(user.id);
-            // Derive notifications from groups
-            const activity = groups.map((g: any) => ({
-                id: g.id,
-                type: g.is_settled ? 'payment' : 'expense',
-                title: g.is_settled ? `Grupo ${g.nombre} ha sido liquidado` : `Nueva actividad en ${g.nombre}`,
-                amount: `$${(g.total_gastado || 0).toFixed(2)}`,
-                time: new Date(g.fecha_creacion).toLocaleDateString(),
-                unread: !g.is_settled,
-                icon: g.is_settled ? 'check-circle' : 'restaurant',
-                iconColor: g.is_settled ? '#4ade80' : theme.primary,
-                route: { pathname: '/(tabs)/group/[id]', params: { id: g.id } },
-            }));
+    const [acceptingIds, setAcceptingIds] = React.useState<string[]>([]);
+    const [acceptedIds, setAcceptedIds] = React.useState<string[]>([]);
 
-            // Sort by ID or date (mocking date sort with ID for now if date is similar)
-            activity.sort((a, b) => b.id.localeCompare(a.id));
-
-            setNotifications(activity);
-            updateContext(activity);
-        } catch (error) {
-            console.error('Error fetching activity:', error);
-        } finally {
-            setIsLoading(false);
-            setRefreshing(false);
-        }
-    }, [user?.id, theme.primary]);
-
-    useEffect(() => {
-        fetchActivity();
-    }, [fetchActivity]);
-
-    const onRefresh = () => {
-        setRefreshing(true);
-        fetchActivity();
-    };
-
-    const unreadCount = notifications.filter(n => n.unread).length;
-
-    const updateContext = (newNotifications: any[]) => {
-        const count = newNotifications.filter(n => n.unread).length;
-        setUnreadCount(count);
-        setHasAlerts(count > 0);
-    };
+    const unreadCount = notifications.filter(n => !n.read).length;
 
     const handleAccept = (id: string) => {
-        setLoadingIds(prev => [...prev, id]);
+        setAcceptingIds(prev => [...prev, id]);
         setTimeout(() => {
-            setLoadingIds(prev => prev.filter(loadingId => loadingId !== id));
+            setAcceptingIds(prev => prev.filter(x => x !== id));
             setAcceptedIds(prev => [...prev, id]);
-            const next = notifications.map(n => n.id === id ? { ...n, unread: false } : n);
-            setNotifications(next);
-            updateContext(next);
+            markAsRead(id);
         }, 1500);
     };
 
-    const handleMarkAllRead = () => {
-        const next = notifications.map(n => ({ ...n, unread: false }));
-        setNotifications(next);
-        updateContext(next);
-    };
-
-    const removeNotification = (id: string) => {
-        const next = notifications.filter(n => n.id !== id);
-        setNotifications(next);
-        updateContext(next);
-    };
-
-    const markAsRead = (id: string) => {
-        const next = notifications.map(n => n.id === id ? { ...n, unread: false } : n);
-        setNotifications(next);
-        updateContext(next);
-    };
-
-    const getInitials = (name: string) => {
-        if (!name) return '??';
-        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    };
-
-    const renderCard = (n: any) => {
-        const isLoading = loadingIds.includes(n.id);
-        const isAccepted = acceptedIds.includes(n.id);
-
-        return (
-            <AnimatePresence key={n.id}>
-                <MotiView 
-                    from={{ opacity: 0, scale: 0.9, height: 100 }}
-                    animate={{ opacity: 1, scale: 1, height: 'auto' }}
-                    exit={{ opacity: 0, scale: 0.8, height: 0 }}
-                    transition={{ type: 'timing', duration: 400 }}
-                    className="relative mb-4 overflow-hidden"
-                >
-                    {/* Unread Indicator Bar */}
-                    {n.unread && (
-                        <MotiView 
-                            from={{ opacity: 1, scaleX: 1 }}
-                            animate={{ opacity: 1, scaleX: 1 }}
-                            exit={{ opacity: 0, scaleX: 0 }}
-                            style={{ backgroundColor: theme.primary }} 
-                            className="absolute z-10 -left-0.5 top-1/2 -translate-y-6 w-1 h-12 rounded-full shadow-lg shadow-pink-500/40"
-                        />
-                    )}
-
-                    <Pressable 
-                        onPress={() => {
-                            markAsRead(n.id);
-                            if (n.type !== 'invitation' || isAccepted) {
-                                router.push(n.route as any);
-                            }
-                        }}
-                        style={{ 
-                            backgroundColor: theme.cardSecondary, 
-                            borderColor: n.unread ? `${theme.primary}20` : theme.border 
-                        }}
-                        className="border rounded-[32px] p-5 flex-row gap-4 items-center"
-                    >
-                        {/* Avatar or Icon */}
-                        {n.type === 'invitation' ? (
-                            <View className="w-14 h-14 rounded-full overflow-hidden border-2 border-slate-700/50 items-center justify-center bg-slate-800">
-                                {n.avatar ? (
-                                    <Image source={{ uri: n.avatar }} className="w-full h-full" />
-                                ) : (
-                                    <Text className="text-white font-black text-lg">{getInitials(n.userName || n.title)}</Text>
-                                )}
-                            </View>
-                        ) : (
-                            <View 
-                                className="w-14 h-14 rounded-[22px] items-center justify-center" 
-                                style={{ 
-                                    backgroundColor: `${n.iconColor}15`, 
-                                    borderWidth: 1, 
-                                    borderColor: `${n.iconColor}30` 
-                                }}
-                            >
-                                <MaterialIcons name={n.icon as any} size={28} color={n.iconColor} />
-                            </View>
-                        )}
-
-                        {/* Content */}
-                        <View className="flex-1">
-                            {isAccepted ? (
-                                <MotiView 
-                                    from={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    className="flex-row items-center gap-2"
-                                >
-                                    <View className="bg-emerald-500/10 p-1 rounded-full">
-                                        <MaterialIcons name="check-circle" size={16} color="#4ade80" />
-                                    </View>
-                                    <Text style={{ color: '#4ade80' }} className="font-black text-sm uppercase tracking-widest">¡Te uniste al grupo!</Text>
-                                </MotiView>
-                            ) : (
-                                <>
-                                    <View className="flex-row justify-between items-start">
-                                        <View className="flex-1">
-                                            <Text style={{ fontSize: 13 * fontScale, color: theme.text }} className="font-bold leading-tight">
-                                                {n.title}
-                                            </Text>
-                                            <Text className="text-slate-500 text-[10px] mt-1 font-black uppercase tracking-widest">{n.time}</Text>
-                                        </View>
-                                        
-                                        {(n.type === 'alert' || n.unread) && (
-                                            <TouchableOpacity onPress={() => removeNotification(n.id)} className="ml-2 bg-white/5 p-1.5 rounded-full">
-                                                <MaterialIcons name="close" size={14} color={theme.textSecondary} />
-                                            </TouchableOpacity>
-                                        )}
-                                    </View>
-
-                                    {n.type === 'invitation' && (
-                                        <View className="flex-row gap-3 mt-4">
-                                            <TouchableOpacity 
-                                                onPress={() => handleAccept(n.id)}
-                                                disabled={isLoading}
-                                                style={{ backgroundColor: theme.primary }} 
-                                                className="px-6 py-2.5 rounded-2xl shadow-lg active:scale-95 flex-row items-center justify-center gap-2 min-w-[100px]"
-                                            >
-                                                {isLoading ? (
-                                                    <ActivityIndicator size="small" color="white" />
-                                                ) : (
-                                                    <Text className="text-white font-black text-[10px] uppercase">Aceptar</Text>
-                                                )}
-                                            </TouchableOpacity>
-                                            <TouchableOpacity 
-                                                onPress={() => removeNotification(n.id)}
-                                                className="bg-white/5 border border-white/10 px-6 py-2.5 rounded-2xl active:bg-white/10"
-                                            >
-                                                <Text className="text-slate-400 font-bold text-[10px] uppercase">Rechazar</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                    )}
-                                </>
-                            )}
-                        </View>
-                    </Pressable>
-                </MotiView>
-            </AnimatePresence>
-        );
-    };
+    // Separa deudas del resto para mostrarlas arriba
+    const debtNotifs = notifications.filter(n => n.type === 'payment_due');
+    const otherNotifs = notifications.filter(n => n.type !== 'payment_due');
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
-            <StatusBar style={theme.isDark ? "light" : "dark"} />
+            <StatusBar style={theme.isDark ? 'light' : 'dark'} />
             <Stack.Screen options={{ headerShown: false }} />
-            
+
             {/* Header */}
-            <View style={{ borderColor: theme.border }} className="px-6 py-6 flex-row justify-between items-center bg-transparent">
+            <View className="px-6 py-6 flex-row justify-between items-center">
                 <View className="flex-row items-center gap-3">
-                    <Text style={{ fontSize: 12 * fontScale, color: theme.text }} className="font-black tracking-[4px]">ALERTAS</Text>
+                    <Text
+                        style={{ fontSize: 12 * fontScale, color: theme.text }}
+                        className="font-black tracking-[4px]"
+                    >
+                        ALERTAS
+                    </Text>
                     {unreadCount > 0 && (
-                        <MotiView 
-                            from={{ scale: 0 }} 
+                        <MotiView
+                            from={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            style={{ backgroundColor: theme.primary }} 
-                            className="px-2.5 py-0.5 rounded-full shadow-lg shadow-pink-500/20"
+                            style={{ backgroundColor: theme.primary }}
+                            className="px-2.5 py-0.5 rounded-full"
                         >
                             <Text className="text-white text-[10px] font-black">{unreadCount}</Text>
                         </MotiView>
                     )}
                 </View>
-                <TouchableOpacity onPress={handleMarkAllRead}>
-                    <Text style={{ fontSize: 11 * fontScale, color: theme.primary }} className="font-black uppercase tracking-wider">Marcar todas</Text>
-                </TouchableOpacity>
+                {unreadCount > 0 && (
+                    <TouchableOpacity onPress={markAllAsRead}>
+                        <Text
+                            style={{ fontSize: 11 * fontScale, color: theme.primary }}
+                            className="font-black uppercase tracking-wider"
+                        >
+                            Marcar todas
+                        </Text>
+                    </TouchableOpacity>
+                )}
             </View>
 
-            <ScrollView 
-                className="flex-1 px-6" 
-                showsVerticalScrollIndicator={false} 
+            <ScrollView
+                className="flex-1 px-6"
+                showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 150 }}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
-                }
             >
-                {notifications.length > 0 ? (
-                    <View className="mt-4">
-                        {notifications.map(n => renderCard(n))}
+                {/* Resumen de deudas */}
+                <DebtsSummary notifications={debtNotifs} />
+
+                {/* Lista de notificaciones */}
+                {otherNotifs.length > 0 ? (
+                    <View className="mt-2">
+                        {otherNotifs.map(n => (
+                            <NotificationCard
+                                key={n.id}
+                                n={n}
+                                theme={theme}
+                                onMarkRead={() => markAsRead(n.id)}
+                                onRemove={() => removeNotification(n.id)}
+                                onAccept={() => handleAccept(n.id)}
+                                accepting={acceptingIds.includes(n.id)}
+                                accepted={acceptedIds.includes(n.id)}
+                            />
+                        ))}
                     </View>
                 ) : (
-                    <View className="items-center justify-center py-20 opacity-40">
-                        <View className="bg-slate-800/50 w-20 h-20 rounded-full items-center justify-center mb-6">
-                            <MaterialIcons name="notifications-none" size={40} color={theme.textSecondary} />
+                    !debtNotifs.length && (
+                        <View className="items-center justify-center py-20 opacity-40">
+                            <View className="bg-slate-800/50 w-20 h-20 rounded-full items-center justify-center mb-6">
+                                <MaterialIcons name="notifications-none" size={40} color={theme.textSecondary} />
+                            </View>
+                            <Text style={{ color: theme.text }} className="font-black text-center mb-1">
+                                Todo al día
+                            </Text>
+                            <Text style={{ color: theme.textSecondary }} className="text-center font-bold text-xs px-10">
+                                No tienes notificaciones pendientes.
+                            </Text>
                         </View>
-                        <Text style={{ color: theme.text }} className="font-black text-center mb-1">Todo al día</Text>
-                        <Text style={{ color: theme.textSecondary }} className="text-center font-bold text-xs px-10">No tienes notificaciones pendientes.</Text>
-                    </View>
+                    )
                 )}
 
-                {/* Footer Empty State */}
                 {notifications.length > 0 && (
-                    <View className="items-center py-10 opacity-30 relative">
-                        <View style={{ backgroundColor: theme.border }} className="h-[1px] w-full absolute top-1/2" />
-                        <View style={{ backgroundColor: theme.bg }} className="px-4">
-                            <Text style={{ fontSize: 9 * fontScale }} className="text-slate-500 font-black uppercase tracking-widest text-center">Fin del historial</Text>
-                        </View>
+                    <View className="items-center py-10 opacity-30">
+                        <Text className="text-slate-500 font-black uppercase tracking-widest text-[9px]">
+                            Fin del historial
+                        </Text>
                     </View>
                 )}
             </ScrollView>
         </SafeAreaView>
     );
 }
-
