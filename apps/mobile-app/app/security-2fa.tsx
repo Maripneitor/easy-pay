@@ -150,6 +150,7 @@ export default function Security2FAScreen() {
                                     onChangeText={(v) => updateCode(v, i)}
                                     keyboardType="numeric"
                                     maxLength={1}
+                                    autoFocus={i === 0}
                                     style={{ textAlignVertical: 'center', includeFontPadding: false }}
                                     className="w-11 h-14 bg-slate-900/50 border border-slate-700 rounded-xl text-center text-xl font-bold text-white focus:border-blue-500"
                                     selectionColor="#3b82f6"

@@ -6,14 +6,14 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
-    port: 3000,
+    port: 5173,
     watch: {
       usePolling: true
     },
     // 👇 ESTO ES LO NUEVO
     proxy: {
       '/api': {
-        target: 'http://192.168.1.5:8000', // Apunta al backend en Megacable
+        target: 'http://192.168.1.9:8000', // Apunta al backend en Megacable
         changeOrigin: true,
       }
     }

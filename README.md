@@ -15,24 +15,55 @@ El proyecto está estructurado como un **Monorepositorio** con servicios orquest
 
 ---
 
+---
+
 ## 🚀 2. Inicio Rápido (The One-Command Start)
 
 Para levantar todo el ecosistema (Backend + Web + DB) con un solo comando:
 
+### Método A: Script de Automatización (Recomendado)
+Usa el script PowerShell para configurar IP, puertos y servicios automáticamente:
 ```powershell
-# 1. Configurar IP y entorno (Detecta tu IP local automáticamente)
-./start-all.ps1
-
-# 2. Levantar el ecosistema Docker
-docker-compose up --build
+./dev.ps1
 ```
 
-> [!TIP]
-> Si estás en la red restringida de la UNACH, el script `start-all.ps1` configurará automáticamente los túneles y la IP necesaria.
+### Método B: Comandos Globales (Manual)
+Si prefieres usar `npm` directamente:
+```bash
+# Levanta Backend, Web (5173) y Mobile simultáneamente
+npm run dev:all
+
+# Limpiar puertos rápidamente en Windows/Mac
+npx kill-port 3000 5173 8000
+```
 
 ---
 
-## 🛠️ 3. Comandos de Mantenimiento y Rescate
+## 💻 3. Guía Rápida de Desarrollo (Windows)
+
+Si prefieres levantar los servicios por separado para mayor control:
+
+1.  **Backend (FastAPI + Mongo):**
+    ```bash
+    docker-compose up -d
+    ```
+2.  **Web App (Admin Panel):**
+    ```bash
+    cd apps/web-app
+    npm run dev -- --port 5173 --host
+    ```
+3.  **Mobile App (Expo):**
+    ```bash
+    cd apps/mobile-app
+    npx expo start -c --lan
+    ```
+
+> [!IMPORTANT]
+> Los comandos anteriores están configurados para detectar la IP de la red automáticamente. Asegúrate de estar en la misma red Wi-Fi que el celular.
+
+---
+
+## 🛠️ 4. Comandos de Mantenimiento y Rescate
 
 Si el entorno se vuelve inestable o quieres empezar desde cero:
 

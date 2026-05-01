@@ -46,6 +46,7 @@ export default function RootLayout() {
                       <Stack screenOptions={{ headerShown: false }} initialRouteName="index">
                         <Stack.Screen name="index" />
                         <Stack.Screen name="login" />
+                        <Stack.Screen name="security-2fa" />
                         <Stack.Screen name="friends/add" options={{ presentation: 'modal' }} />
                         <Stack.Screen name="wallet/security" options={{ presentation: 'modal' }} />
                         <Stack.Screen name="wallet/methods/new" options={{ presentation: 'modal' }} />

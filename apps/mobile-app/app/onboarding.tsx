@@ -22,7 +22,7 @@ const { width } = Dimensions.get('window');
 
 export default function OnboardingScreen() {
     const [step, setStep] = useState(1);
-    const [name, setName] = useState('Luis Gonzalez');
+    const [name, setName] = useState('Mario');
     const [currency, setCurrency] = useState('MXN');
 
     const nextStep = () => {

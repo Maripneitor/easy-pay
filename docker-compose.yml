@@ -48,10 +48,11 @@ services:
     env_file:
       - .env
     environment:
-      - VITE_API_URL=http://localhost:8000
-      - VITE_USER_SERVICE_URL=http://localhost:8000
-      - VITE_GROUP_SERVICE_URL=http://localhost:8000
-      - VITE_STATS_SERVICE_URL=http://localhost:8000
+      - VITE_API_URL=http://localhost:8000/api
+      - VITE_API_BASE_URL=http://localhost:8000/api
+      - VITE_USER_SERVICE_URL=http://localhost:8000/api
+      - VITE_GROUP_SERVICE_URL=http://localhost:8000/api
+      - VITE_STATS_SERVICE_URL=http://localhost:8000/api
       - NODE_ENV=development
     stdin_open: true
     tty: true

@@ -54,6 +54,8 @@ export const AnimatedRoutes = () => {
                     <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
                     <Route path="/recover-password" element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
                     <Route path="/qr-scanner" element={<PageTransition><JoinGroup /></PageTransition>} />
+                    <Route path="/2fa-setup" element={<PageTransition><TwoFactorSetup /></PageTransition>} />
+                    <Route path="/2fa-verify" element={<PageTransition><TwoFactorVerify /></PageTransition>} />
 
                     <Route element={<ProtectedRoute />}>
                         <Route element={<DashboardLayout />}>
@@ -65,8 +67,6 @@ export const AnimatedRoutes = () => {
                             <Route path="/group/:id/settle-up" element={<PageTransition><SettleUp /></PageTransition>} />
                             <Route path="/my-payments" element={<PageTransition><MyPayments /></PageTransition>} />
                             <Route path="/stats" element={<PageTransition><StatsPage /></PageTransition>} />
-                            <Route path="/2fa-setup" element={<PageTransition><TwoFactorSetup /></PageTransition>} />
-                            <Route path="/2fa-verify" element={<PageTransition><TwoFactorVerify /></PageTransition>} />
                             <Route path="/invitations" element={<PageTransition><InvitationsPage /></PageTransition>} />
                             <Route path="/profile" element={<PageTransition><ProfilePage /></PageTransition>} />
                             <Route path="/profile/personal-data" element={<PageTransition><PersonalData /></PageTransition>} />

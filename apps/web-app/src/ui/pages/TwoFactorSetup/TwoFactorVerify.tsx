@@ -63,6 +63,7 @@ export const TwoFactorVerify = () => {
                                             type="text"
                                             inputMode="numeric"
                                             maxLength={1}
+                                            autoFocus={i === 0}
                                             placeholder="-"
                                             value={digit}
                                             onChange={(e) => {
@@ -74,10 +75,16 @@ export const TwoFactorVerify = () => {
                                                     nextInput?.focus();
                                                 }
                                             }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Backspace' && !digit && i > 0) {
+                                                    const prevInput = document.getElementById(`digit-${i - 1}`);
+                                                    prevInput?.focus();
+                                                }
+                                            }}
                                             id={`digit-${i}`}
-                                            className="w-10 h-12 sm:w-12 sm:h-14 bg-slate-900/50 border border-slate-700 rounded-lg text-center text-xl font-bold text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all placeholder-slate-600"
+                                            className="w-12 h-14 sm:w-14 sm:h-16 bg-white/5 border border-white/10 rounded-xl text-center text-2xl font-bold text-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all placeholder-white/20"
                                         />
-                                        {i === 2 && <span className="flex items-center text-slate-600">-</span>}
+                                        {i === 2 && <span className="flex items-center text-white/20 text-xl font-light">|</span>}
                                     </React.Fragment>
                                 ))}
                             </div>

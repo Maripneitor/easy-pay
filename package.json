@@ -11,10 +11,11 @@
     "gama": "node setup-gama.js",
     "gama:unach": "node setup-gama.js --unach",
     "gama:usb": "node setup-gama.js --usb",
-    "dev:backend": "docker compose up backend",
+    "dev:backend": "docker compose up -d",
     "dev:frontend": "docker compose up frontend",
-    "dev:mobile": "cd apps/mobile-app && npm start",
-    "dev:web": "npm run dev --workspace=apps/web-app",
+    "dev:mobile": "cd apps/mobile-app && npx expo start -c --lan",
+    "dev:web": "npm run dev --workspace=apps/web-app -- --port 5173 --host",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:web\" \"npm run dev:mobile\"",
     "dev": "docker compose up",
     "clean": "npx rimraf node_modules apps/*/node_modules packages/*/node_modules package-lock.json && npm install",
     "android": "expo run:android",
@@ -22,6 +23,8 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "framer-motion": "^12.38.0",
+    "jspdf": "^4.2.1",
     "lucide-react": "^0.474.0",
     "qrcode.react": "^4.2.0",
     "react": "19.1.0",
@@ -38,6 +41,7 @@
     "ajv-keywords": "^5.1.0"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "localtunnel": "^2.0.2",
     "metro-runtime": "^0.84.3"
   }

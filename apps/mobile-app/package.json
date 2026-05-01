@@ -13,6 +13,7 @@
   "dependencies": {
     "@easy-pay/domain": "*",
     "@easy-pay/ui": "*",
+    "@expo/config-plugins": "^54.0.4",
     "@expo/metro-runtime": "~6.1.2",
     "@expo/ngrok": "^4.1.0",
     "@expo/webpack-config": "^19.0.1",
@@ -34,7 +35,7 @@
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.11",
     "expo-notifications": "~0.32.17",
-    "expo-router": "~6.0.23",
+    "expo-router": "^55.0.13",
     "expo-secure-store": "~15.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
