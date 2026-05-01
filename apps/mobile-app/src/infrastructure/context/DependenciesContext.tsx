@@ -11,10 +11,8 @@ import {
     GetGroupUpdateUseCase
 } from '@easy-pay/domain';
 import { groupRepository as mobileGroupRepository } from '../api/repositories/GroupRepository';
-import { InMemoryGroupRepository } from '../mock/InMemoryGroupRepository';
-
-// TOGGLE MOCKS: Set to true to use In-Memory Repositories for faster UI development
-const USE_MOCKS = true;
+// TOGGLE MOCKS: Set to false to use real Repositories
+const USE_MOCKS = false;
 
 
 interface Dependencies {

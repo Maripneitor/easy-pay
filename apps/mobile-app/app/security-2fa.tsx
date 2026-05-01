@@ -6,6 +6,7 @@ import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../context/AuthContext';
+import { getApiBaseUrl } from '../src/infrastructure/api/network.config';
 
 export default function Security2FAScreen() {
     const { userId, email, name } = useLocalSearchParams<{ userId: string, email: string, name: string }>();
@@ -16,7 +17,7 @@ export default function Security2FAScreen() {
     const insets = useSafeAreaInsets();
     const inputs = useRef<Array<TextInput | null>>([]);
     
-    const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+    const API_URL = getApiBaseUrl();
 
     const updateCode = (value: string, index: number) => {
         const newCode = [...code];
@@ -32,7 +33,7 @@ export default function Security2FAScreen() {
     const handleSetup2FA = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${API_URL}/api/auth/2fa/setup/${userId || 'demo-user'}`, {
+            const response = await fetch(`${API_URL}/auth/2fa/setup/${userId || 'demo-user'}`, {
                 method: 'POST'
             });
             const data = await response.json();
@@ -55,7 +56,7 @@ export default function Security2FAScreen() {
 
         setVerifying(true);
         try {
-            const response = await fetch(`${API_URL}/api/auth/2fa/verify/${userId || 'demo-user'}`, {
+            const response = await fetch(`${API_URL}/auth/2fa/verify/${userId || 'demo-user'}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: fullCode })

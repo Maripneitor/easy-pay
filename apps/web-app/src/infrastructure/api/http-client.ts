@@ -16,10 +16,10 @@ const getAuthToken = (): string | null => {
 };
 
 // ─── Axios instance ───────────────────────────────────────────────────────────
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
-if (!import.meta.env.VITE_API_URL) {
-    console.warn('[http-client] VITE_API_URL is not defined — falling back to http://localhost:8000');
+if (!import.meta.env.VITE_API_BASE_URL) {
+    console.warn('[http-client] VITE_API_BASE_URL is not defined — falling back to http://localhost:8000');
 }
 
 export const httpClient: AxiosInstance = axios.create({

@@ -8,15 +8,20 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 export default function MethodDetailScreen() {
     const { id } = useLocalSearchParams();
-    
-    const method = {
-        type: 'VISA',
-        last4: '4242',
-        holder: 'LUIS GONZALEZ',
-        expiry: '08/28',
-        default: true,
-        colors: ['#4f46e5', '#9333ea', '#db2777']
-    };
+    const [method, setMethod] = React.useState<any>(null);
+
+    React.useEffect(() => {
+        // Here we would fetch the card from the API
+        console.log('Fetching card with id:', id);
+    }, [id]);
+
+    if (!method) {
+        return (
+            <SafeAreaView className="flex-1 bg-[#0d1425] items-center justify-center">
+                <Text className="text-white font-bold">Cargando detalles...</Text>
+            </SafeAreaView>
+        );
+    }
 
     const handleDelete = () => {
         Alert.alert(

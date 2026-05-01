@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { httpClient } from '../../../infrastructure/api/http-client';
 
 export const useCreateGroup = () => {
     const navigate = useNavigate();
@@ -32,22 +33,17 @@ export const useCreateGroup = () => {
                 integrantes: [userId]
             };
 
-            const response = await fetch(`${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api/groups/create`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
+            const response = await httpClient.post('/groups/create', payload);
 
-            if (response.ok) {
+            if (response.status === 200 || response.status === 201) {
                 navigate('/dashboard');
             } else {
-                const err = await response.json();
-                console.error("Error 422/400:", err.detail);
+                console.error("Error al crear:", response.data);
                 alert(`Error al crear el grupo.`);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            alert("Error de conexión con el microservicio");
+            alert(error.response?.data?.detail || "Error de conexión con el servidor");
         } finally {
             setLoading(false);
         }
@@ -70,22 +66,17 @@ export const useCreateGroup = () => {
                 user_id: userId
             };
 
-            const response = await fetch(`${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api/groups/join`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
+            const response = await httpClient.post('/groups/join', payload);
 
-            if (response.ok) {
+            if (response.status === 200 || response.status === 201) {
                 navigate('/dashboard');
             } else {
-                const err = await response.json();
-                console.error("Error al unirse:", err);
-                alert(err.detail || "Código inválido o ya estás en el grupo");
+                console.error("Error al unirse:", response.data);
+                alert(response.data?.detail || "Código inválido o ya estás en el grupo");
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error de red:", error);
-            alert("Error al intentar unirse");
+            alert(error.response?.data?.detail || "Error al intentar unirse");
         } finally {
             setLoading(false);
         }

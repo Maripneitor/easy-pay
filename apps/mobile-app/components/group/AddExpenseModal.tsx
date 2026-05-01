@@ -14,6 +14,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { MotiView, AnimatePresence } from 'moti';
+import { getApiBaseUrl } from '../../src/infrastructure/api/network.config';
 
 interface AddExpenseModalProps {
     isVisible: boolean;
@@ -48,8 +49,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         
         setLoading(true);
         try {
-            // Reemplazar localhost por IP si es necesario, pero siguiendo el contrato
-            const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+            const API_URL = getApiBaseUrl();
             
             const payload = {
                 group_id: groupId,
@@ -60,7 +60,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 participantes_ids: selectedMembers
             };
 
-            const response = await fetch(`${API_URL}/api/groups/add-item`, {
+            const response = await fetch(`${API_URL}/groups/add-item`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

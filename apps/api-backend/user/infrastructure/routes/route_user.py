@@ -61,12 +61,6 @@ async def update_user(user_id: str, data: dict):
 # --- SETUP 2FA ---
 @user_router.post("/2fa/setup/{user_id}")
 async def setup_2fa(user_id: str):
-    if user_id == "demo-user-id" or user_id == "null":
-        return {
-            "status": "success",
-            "message": "MODO DEMO: Código enviado (simulado)"
-        }
-
     user = await repo.get_user_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
@@ -78,14 +72,6 @@ async def setup_2fa(user_id: str):
 
 @user_router.post("/2fa/verify/{user_id}")
 async def verify_2fa(user_id: str, data: dict):
-    if user_id == "demo-user-id" or user_id == "null":
-        return {
-            "status": "success",
-            "message": "MODO DEMO: Verificación exitosa",
-            "access_token": "demo-jwt-token",
-            "user": { "id": "demo-user-id", "nombre": "Usuario Demo", "email": "demo@easypay.com" }
-        }
-
     code = data.get("code")
     if not code:
         raise HTTPException(status_code=400, detail="Código requerido")
@@ -127,4 +113,29 @@ async def change_password_route(user_id: str, data: PasswordChange): # Usamos el
     if result["status"] == "error":
         raise HTTPException(status_code=400, detail=result["message"])
         
-    return result
+# --- GESTIÓN DE TARJETAS ---
+@user_router.get("/cards/{user_id}")
+async def get_user_cards(user_id: str):
+    cards = await repo.get_cards(user_id)
+    return cards
+
+@user_router.post("/cards/{user_id}")
+async def add_user_card(user_id: str, card: dict):
+    success = await repo.add_card(user_id, card)
+    if success:
+        return {"message": "Tarjeta agregada"}
+    raise HTTPException(status_code=400, detail="No se pudo agregar la tarjeta")
+
+@user_router.delete("/cards/{user_id}/{card_id}")
+async def remove_user_card(user_id: str, card_id: str):
+    success = await repo.remove_card(user_id, card_id)
+    if success:
+        return {"message": "Tarjeta eliminada"}
+    raise HTTPException(status_code=400, detail="No se pudo eliminar la tarjeta")
+
+@user_router.patch("/cards/{user_id}/{card_id}/default")
+async def set_default_card(user_id: str, card_id: str):
+    success = await repo.set_default_card(user_id, card_id)
+    if success:
+        return {"message": "Tarjeta predeterminada actualizada"}
+    raise HTTPException(status_code=400, detail="No se pudo actualizar la tarjeta predeterminada")

@@ -21,19 +21,20 @@ import { VirtualTicketCard } from '../../../components/group/VirtualTicketCard';
 import { MemberList } from '../../../components/group/MemberList';
 import { TotalsSummary } from '../../../components/group/TotalsSummary';
 import { PaymentMethodModal } from '../../../components/group/PaymentMethodModal';
+import { SettlementWizard } from '../../../components/group/SettlementWizard';
 
 import OcrTicketScanner from '../../../components/OcrTicketScanner';
 import { TicketData } from '../../../src/infrastructure/services/OcrService';
 import { groupRepository } from '../../../src/infrastructure/api/repositories/GroupRepository';
 import { useAuth } from '../../../context/AuthContext';
 import { useGrupo } from '../../../context/GrupoContext';
-
+import { getApiBaseUrl } from '../../../src/infrastructure/api/network.config';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-type TabType = 'actividad' | 'saldos' | 'miembros';
+type TabType = 'gastos' | 'saldos' | 'integrantes';
 
 export default function GroupDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -41,41 +42,49 @@ export default function GroupDetailScreen() {
     const { user } = useAuth();
     const { addItem, activeGrupo } = useGrupo();
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<TabType>('actividad');
+    const [activeTab, setActiveTab] = useState<TabType>('gastos');
     
     // API Data State
     const [groupData, setGroupData] = useState<any>(null);
     const [groupItems, setGroupItems] = useState<any[]>([]);
     const [balances, setBalances] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isPolling, setIsPolling] = useState(false);
 
     // UI State for Modals
     const [isPaymentVisible, setIsPaymentVisible] = useState(false);
+    const [isWizardVisible, setIsWizardVisible] = useState(false);
     const [showOcr, setShowOcr] = useState(false);
 
-    const fetchData = useCallback(async () => {
+    const fetchData = useCallback(async (silent = false) => {
         if (!id) return;
-        setIsLoading(true);
-        console.log(`📡 GroupDetail: Cargando datos para grupo ${id}...`);
+        if (!silent) setIsLoading(true);
+        else setIsPolling(true);
+
+        const baseUrl = getApiBaseUrl();
+        
         try {
             const [g, items, balancesData] = await Promise.all([
                 groupRepository.getGroup(id),
-                fetch(`http://localhost:8000/api/groups/${id}/items`).then(r => r.json()),
-                fetch(`http://localhost:8000/api/groups/${id}/balances`).then(r => r.json())
+                fetch(`${baseUrl}/groups/${id}/items`).then(r => r.json()),
+                fetch(`${baseUrl}/groups/${id}/balances`).then(r => r.json())
             ]);
             setGroupData(g);
             setGroupItems(Array.isArray(items) ? items : []);
             setBalances(balancesData);
-            console.log('✅ GroupDetail: Datos cargados correctamente');
         } catch (err) {
             console.error('❌ Error cargando datos del grupo:', err);
         } finally {
             setIsLoading(false);
+            setIsPolling(false);
         }
     }, [id]);
 
     useEffect(() => {
         fetchData();
+        // ⚡ Polling cada 5 segundos para paridad con Web
+        const interval = setInterval(() => fetchData(true), 5000);
+        return () => clearInterval(interval);
     }, [fetchData]);
 
     const userOwed = balances?.balance_detallado?.find((b: any) => b.usuario_id === user?.id)?.balance || 0;
@@ -97,7 +106,12 @@ export default function GroupDetailScreen() {
             <StatusBar style={theme.isDark ? "light" : "dark"} />
             <Stack.Screen options={{ headerShown: false }} />
 
-            {/* HEADER PROFESIONAL (OCR Removed) */}
+            {/* Polling Indicator */}
+            {isPolling && (
+                <View className="absolute top-0 left-0 w-full h-0.5 bg-[var(--primary)] z-50 opacity-50" style={{ backgroundColor: theme.primary }} />
+            )}
+
+            {/* HEADER PROFESIONAL */}
             <View className="px-6 py-4 flex-row items-center justify-between z-20" style={{ backgroundColor: theme.bg }}>
                 <TouchableOpacity 
                     onPress={() => router.back()} 
@@ -108,11 +122,11 @@ export default function GroupDetailScreen() {
                 </TouchableOpacity>
                 
                 <View className="items-center">
-                    <Text style={{ color: theme.text, fontSize: 20 * fontScale, fontFamily: 'Manrope' }} className="font-bold">{groupData?.nombre || 'Grupo'}</Text>
+                    <Text style={{ color: theme.text, fontSize: 20 * fontScale, fontFamily: 'Manrope' }} className="font-bold">{groupData?.nombre || 'Mesa'}</Text>
                     <View className="flex-row items-center mt-0.5">
                         <View style={{ backgroundColor: groupData?.status === 'ACTIVA' ? '#10B981' : groupData?.status === 'CERRANDO' ? '#F59E0B' : '#64748B' }} className="w-1.5 h-1.5 rounded-full mr-1.5" />
-                        <Text style={{ color: theme.textSecondary, fontSize: 11 * fontScale, fontFamily: 'Inter' }} className="font-medium opacity-80">
-                            {groupData?.status || (isLoading ? 'Sincronizando...' : 'Conectado')}
+                        <Text style={{ color: theme.textSecondary, fontSize: 11 * fontScale, fontFamily: 'Inter' }} className="font-medium opacity-80 uppercase tracking-widest">
+                            {groupData?.status === 'ACTIVA' ? 'Mesa Abierta' : groupData?.status || 'Sincronizando...'}
                         </Text>
                     </View>
                 </View>
@@ -123,8 +137,8 @@ export default function GroupDetailScreen() {
                             onPress={async () => {
                                 import('react-native').then(({ Alert }) => {
                                     Alert.alert(
-                                        'Eliminar Grupo',
-                                        '¿Estás seguro de que deseas eliminar este grupo? Esta acción no se puede deshacer.',
+                                        'Eliminar Mesa',
+                                        '¿Estás seguro de que deseas eliminar esta mesa? Esta acción no se puede deshacer.',
                                         [
                                             { text: 'Cancelar', style: 'cancel' },
                                             { 
@@ -168,14 +182,13 @@ export default function GroupDetailScreen() {
                     style={{ backgroundColor: theme.cardSecondary }} 
                     className="p-1 rounded-xl flex-row w-full"
                 >
-                    {(['miembros', 'actividad', 'totales'] as const).map(tab => {
-                        const currentTab = tab === 'totales' ? 'saldos' : tab;
-                        const isActive = activeTab === currentTab;
-                        const label = tab === 'miembros' ? 'Miembros' : tab === 'actividad' ? 'Ítems' : 'Totales';
+                    {(['integrantes', 'gastos', 'saldos'] as const).map(tab => {
+                        const isActive = activeTab === tab;
+                        const label = tab === 'integrantes' ? 'Integrantes' : tab === 'gastos' ? 'Ítems' : 'Balances';
                         return (
                             <TouchableOpacity 
                                 key={tab} 
-                                onPress={() => handleTabChange(currentTab as TabType)}
+                                onPress={() => handleTabChange(tab)}
                                 style={{ 
                                     backgroundColor: isActive ? theme.card : 'transparent',
                                 }}
@@ -205,7 +218,7 @@ export default function GroupDetailScreen() {
                     <ActivityIndicator size="large" color={theme.primary} className="mt-10" />
                 ) : (
                     <>
-                        {activeTab === 'actividad' && (
+                        {activeTab === 'gastos' && (
                             <VirtualTicketCard 
                                 groupId={id}
                                 items={(groupItems).map((i: any) => ({
@@ -221,7 +234,7 @@ export default function GroupDetailScreen() {
                             />
                         )}
 
-                        {activeTab === 'miembros' && (
+                        {activeTab === 'integrantes' && (
                             <MemberList members={(groupData?.integrantes || []).map((m: any) => ({
                                 id: m.id || m,
                                 nombre: m.nombre || 'Miembro',
@@ -256,7 +269,7 @@ export default function GroupDetailScreen() {
                 <View className="max-w-4xl mx-auto">
                     <View className="flex-row justify-between items-end mb-5">
                         <View>
-                            <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale, fontFamily: 'Inter' }} className="mb-1">Total del Grupo</Text>
+                            <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale, fontFamily: 'Inter' }} className="mb-1">Total de la Mesa</Text>
                             <Text style={{ color: theme.text, fontSize: 24 * fontScale, fontFamily: 'Manrope' }} className="font-bold">
                                 ${ (balances?.total_gastado_en_grupo || 0).toFixed(2) }
                             </Text>
@@ -271,33 +284,11 @@ export default function GroupDetailScreen() {
 
                     {(groupData?.admin_id === user?.id || groupData?.lider_id === user?.id || groupData?.liderId === user?.id) ? (
                         <TouchableOpacity 
-                            onPress={() => {
-                                import('react-native').then(({ Alert }) => {
-                                    Alert.alert(
-                                        'Cerrar Mesa',
-                                        '¿Deseas cerrar la mesa y proceder al cálculo de saldos?',
-                                        [
-                                            { text: 'Cancelar', style: 'cancel' },
-                                            { 
-                                                text: 'Cerrar Mesa', 
-                                                onPress: async () => {
-                                                    try {
-                                                        // This would call a hypothetical closeTable endpoint or update status
-                                                        // For now, we open the payment/division flow
-                                                        setIsPaymentVisible(true);
-                                                    } catch (err) {
-                                                        console.error(err);
-                                                    }
-                                                }
-                                            }
-                                        ]
-                                    );
-                                });
-                            }}
+                            onPress={() => setIsWizardVisible(true)}
                             style={{ backgroundColor: theme.primary }} 
-                            className="w-row items-center justify-center py-4 rounded-xl shadow-lg active:scale-[0.98]"
+                            className="w-row items-center justify-center py-4 rounded-xl shadow-lg active:scale-[0.98] flex-row"
                         >
-                            <Text style={{ fontFamily: 'Manrope', color: 'white' }} className="font-bold text-lg mr-2">Cerrar Mesa y Dividir</Text>
+                            <Text style={{ fontFamily: 'Manrope', color: 'white' }} className="font-bold text-lg mr-2">Liquidar Mesa</Text>
                             <MaterialIcons name="lock-outline" size={20} color="white" />
                         </TouchableOpacity>
                     ) : (
@@ -334,6 +325,18 @@ export default function GroupDetailScreen() {
                     }
                 }}
                 theme={theme}
+            />
+            <SettlementWizard 
+                isVisible={isWizardVisible}
+                onClose={() => setIsWizardVisible(false)}
+                groupData={groupData}
+                balances={balances}
+                items={groupItems}
+                onComplete={(data) => {
+                    console.log('Mesa liquidada:', data);
+                    // Actualizar estado local si es necesario
+                    fetchData(true);
+                }}
             />
             <PaymentMethodModal 
                 isVisible={isPaymentVisible}

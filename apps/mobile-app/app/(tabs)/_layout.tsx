@@ -91,7 +91,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="group"
+        name="groups"
         options={{
           title: 'Grupos',
           tabBarIcon: ({ color, focused }) => (
@@ -124,6 +124,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="stats"
+        options={{
+          title: 'Análisis',
+          tabBarIcon: ({ color, focused }) => (
+            <View>
+              <MaterialIcons name="bar-chart" size={26} color={color} />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="notifications"
         options={{
           title: 'Alertas',
@@ -141,7 +152,7 @@ export default function TabLayout() {
       />
       
       {/* Hide internal/deprecated routes from tab bar */}
-      <Tabs.Screen name="friends" options={{ href: null }} />
+      <Tabs.Screen name="friends_list" options={{ href: null }} />
       <Tabs.Screen name="two" options={{ href: null }} />
       <Tabs.Screen name="group/[id]" options={{ href: null }} />
     </Tabs>

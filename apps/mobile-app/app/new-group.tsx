@@ -81,7 +81,7 @@ export default function NewGrupoScreen() {
             await closeGrupo();
             setViewState('summary');
             setIsClosing(false);
-            triggerToast('¡Cuenta Cerrada!');
+            triggerToast('Â¡Cuenta Cerrada!');
         } catch (e) {
             triggerToast('Error al cerrar cuenta');
         } finally {
@@ -91,7 +91,7 @@ export default function NewGrupoScreen() {
 
     const toggleAssignment = async (itemId: string, participantId: string) => {
         if (!isLeader) {
-            triggerToast('Solo el líder puede asignar ítems');
+            triggerToast('Solo el lÃ­der puede asignar Ã­tems');
             return;
         }
         const item = activeGrupo.items.find(i => i.id === itemId);
@@ -116,7 +116,7 @@ export default function NewGrupoScreen() {
                         className={`flex-1 py-3 items-center rounded-xl ${activeTab === id ? 'bg-slate-800 border border-white/5 shadow-sm' : ''}`}
                     >
                         <Text style={{ color: activeTab === id ? theme.text : theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-widest">
-                            {id === 'members' ? 'Miembros' : id === 'items' ? 'Ítems' : 'Totales'}
+                            {id === 'members' ? 'Miembros' : id === 'items' ? 'Ãtems' : 'Totales'}
                         </Text>
                     </TouchableOpacity>
                 ))}
@@ -143,7 +143,7 @@ export default function NewGrupoScreen() {
                 </View>
                 <ScrollView showsVerticalScrollIndicator={false} className="px-6">
                     <View style={{ backgroundColor: theme.primary }} className="p-8 rounded-[40px] items-center mb-8">
-                        <Text className="text-slate-900/60 font-black uppercase tracking-[4px] mb-2">Tú debes pagar</Text>
+                        <Text className="text-slate-900/60 font-black uppercase tracking-[4px] mb-2">TÃº debes pagar</Text>
                         <Text style={{ fontSize: 56 * fontScale }} className="text-slate-900 font-black tracking-tighter">${calculateUserDebt(user?.id || '1').toFixed(2)}</Text>
                     </View>
                     
@@ -202,7 +202,7 @@ export default function NewGrupoScreen() {
                                 <View className="flex-row items-center gap-4">
                                     <Image source={{ uri: p.avatar }} className="w-12 h-12 rounded-full border-2" style={{ borderColor: p.color }} />
                                     <View>
-                                        <Text style={{ color: theme.text }} className="font-bold">{p.nombre} {p.isLeader ? '(Líder)' : ''}</Text>
+                                        <Text style={{ color: theme.text }} className="font-bold">{p.nombre} {p.isLeader ? '(LÃ­der)' : ''}</Text>
                                         <Text className="text-emerald-400 text-[10px] font-bold">{p.status}</Text>
                                     </View>
                                 </View>
@@ -260,7 +260,7 @@ export default function NewGrupoScreen() {
                     </TouchableOpacity>
                 ) : (
                     <View className="bg-slate-900/80 py-5 rounded-[28px] items-center justify-center border border-white/5">
-                        <Text className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Esperando que el líder cierre la cuenta</Text>
+                        <Text className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Esperando que el lÃ­der cierre la cuenta</Text>
                     </View>
                 )}
             </View>

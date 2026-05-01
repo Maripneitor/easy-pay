@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 // Agregamos Loader2 aquí abajo en la lista de imports
-import { Mail, Lock, Smartphone, ArrowRight, Ticket, Sun, Moon, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, Lock, Smartphone, ArrowRight, Sun, Moon, AlertCircle, Loader2 } from 'lucide-react';
 import styles from './Auth.module.css';
 import { useAuth } from './useAuth';
 import { useTheme } from '../../context/ThemeContext';

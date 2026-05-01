@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { userRepository } from '../../../infrastructure/api/repositories';
 
 export const useAuth = () => {
     const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -13,18 +14,7 @@ export const useAuth = () => {
         setLoading(true);
         setError(null);
         try {
-            const API_URL = import.meta.env.VITE_USER_SERVICE_URL ?? 'http://localhost:8001';
-            const response = await fetch(`${API_URL}/api/auth/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(userData),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || data.detail || 'Error en el registro');
-            }
+            const data = await userRepository.register(userData);
 
             if (data.status === 'success') {
                 const actualId = data.user_id || data.id || data._id;
@@ -33,7 +23,7 @@ export const useAuth = () => {
                 navigate('/2fa-verify');
             }
         } catch (err: any) {
-            setError(err.message || 'Error en la conexión');
+            setError(err.message || 'Error en el registro. Intenta con otro email.');
         } finally {
             setLoading(false);
         }
@@ -45,16 +35,9 @@ export const useAuth = () => {
         setError(null);
 
         try {
-            const API_URL = import.meta.env.VITE_USER_SERVICE_URL ?? 'http://localhost:8001';
-            const response = await fetch(`${API_URL}/api/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ identifier, password }),
-            });
+            const data = await userRepository.login({ identifier, password });
 
-            const data = await response.json();
-
-            if (response.ok && data.status === 'success') {
+            if (data.status === 'success') {
                 localStorage.setItem('token', data.access_token);
                 localStorage.setItem('userId', data.user?.id || data.user?._id || data.user_id);
                 localStorage.setItem('userName', data.user?.nombre || identifier);
@@ -72,10 +55,8 @@ export const useAuth = () => {
                 return;
             }
 
-            if (!response.ok) throw new Error(data.detail || 'Credenciales incorrectas');
-
         } catch (err: any) {
-            setError(err.message || 'Error al conectar con el servidor');
+            setError(err.response?.data?.detail || 'Credenciales incorrectas o error de servidor');
         } finally {
             setLoading(false);
         }

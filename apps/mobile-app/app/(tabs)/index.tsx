@@ -29,7 +29,6 @@ const MotiText = ({ children, from, animate, transition, style, ...props }: any)
 );
 import { useAuth } from '../../context/AuthContext';
 import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
-import { SHARED_USER } from '../../src/infrastructure/constants/MockUser';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.82;
@@ -75,10 +74,12 @@ export default function DashboardScreen() {
 
     // Calculate dynamic stats based on real groups
     const totalSpent = userGroups.reduce((acc, g) => acc + (g.total_gastado || 0), 0);
+    // In a real app, these would come from a balance endpoint, but for now we use mock/derived
     const STATS = [
-        { id: '1', label: 'Consumo Total', amount: totalSpent, color: [theme.primary, `${theme.primary}80`, `${theme.primary}40`], icon: 'account-balance-wallet', trend: `${userGroups.length} grupos` },
-        { id: '2', label: 'Actividad', amount: userGroups.filter(g => !g.is_settled).length, color: ['#06b6d4', '#3b82f6'], icon: 'call-made', trend: 'En curso' },
-        { id: '3', label: 'Liquidado', amount: userGroups.filter(g => g.is_settled).length, color: ['#f43f5e', '#fb7185'], icon: 'call-received', trend: 'Finalizado' },
+        { id: '1', label: 'Total Gastado', amount: totalSpent, color: [theme.primary, `${theme.primary}80`], icon: 'account-balance-wallet', trend: `${userGroups.length} Mesas` },
+        { id: '2', label: 'Te deben', amount: 0, color: ['#10b981', '#059669'], icon: 'trending-up', trend: 'Saldos +' },
+        { id: '3', label: 'Debes', amount: 0, color: ['#f43f5e', '#e11d48'], icon: 'trending-down', trend: 'Pendiente -' },
+        { id: '4', label: 'Mesas Activas', amount: userGroups.filter(g => !g.is_settled).length, color: ['#8b5cf6', '#7c3aed'], icon: 'groups', trend: 'En curso' },
     ];
 
     const onRefresh = useCallback(() => {
@@ -91,9 +92,9 @@ export default function DashboardScreen() {
     };
 
     const QUICK_ACTIONS = [
-        { id: 'group', label: 'Nuevo Grupo', icon: 'group-add', action: handleCreateGrupo, color: theme.primary },
-        { id: 'join', label: 'Unirse a Grupo', icon: 'qr-code-scanner', route: '/(tabs)/qr', color: '#10b981' },
-        { id: 'settle', label: 'Liquidar', icon: 'handshake', route: '/settle-up', color: '#a855f7' },
+        { id: 'group', label: 'Nueva Mesa', icon: 'group-add', action: handleCreateGrupo, color: theme.primary },
+        { id: 'join', label: 'Unirse a Mesa', icon: 'qr-code-scanner', route: '/(tabs)/qr', color: '#10b981' },
+        { id: 'settle', label: 'Liquidar Mesa', icon: 'handshake', route: '/settle-up', color: '#a855f7' },
     ];
 
 
@@ -334,7 +335,7 @@ export default function DashboardScreen() {
                                     <MaterialCommunityIcons name="ghost" size={40} color={theme.textSecondary} />
                                 </View>
                                 <Text style={{ color: theme.text, fontSize: 14 * fontScale }} className="font-black text-center mb-1">¡Aún no hay actividad!</Text>
-                                <Text style={{ color: theme.textSecondary, fontSize: 11 * fontScale }} className="text-center px-10 font-bold">Crea tu primer grupo para empezar a dividir gastos.</Text>
+                                <Text style={{ color: theme.textSecondary, fontSize: 11 * fontScale }} className="text-center px-10 font-bold">Crea tu primera mesa para empezar a dividir gastos.</Text>
                             </MotiView>
                         )}
                     </View>

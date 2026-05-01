@@ -30,9 +30,8 @@ export const MobileNavigation: React.FC = () => {
     const pathMap = [
         { id: 'dashboard', path: '/dashboard' },
         { id: 'profile', path: '/profile' },
-        { id: 'notifications', path: '/notifications' },
+        { id: 'stats', path: '/stats' },
         { id: 'help', path: '/help' },
-        // { id: 'settings', path: '/profile/personal-data' } // Optional fifth item
     ];
 
     const getActiveId = () => {
@@ -79,22 +78,22 @@ export const MobileNavigation: React.FC = () => {
                             </svg>
                         </label>
 
-                        {/* Notifications (using Messages icon from snippet roughly) */}
+                        {/* Stats */}
                         <label
                             className="has-[:checked]:shadow-lg relative w-full h-16 p-4 ease-in-out duration-300 border-solid border-transparent has-[:checked]:border-black/5 dark:has-[:checked]:border-white/10 group flex flex-row gap-3 items-center justify-center text-slate-500 dark:text-slate-400 rounded-xl cursor-pointer"
-                            htmlFor="notifications"
-                            onClick={() => handleNavigation('notifications', '/notifications')}
+                            htmlFor="stats"
+                            onClick={() => handleNavigation('stats', '/stats')}
                         >
                             <input
-                                id="notifications"
+                                id="stats"
                                 name="mobile-nav"
                                 type="radio"
                                 className="hidden peer/expand"
-                                checked={activeId === 'notifications'}
+                                checked={activeId === 'stats'}
                                 readOnly
                             />
                             <svg viewBox="0 0 24 24" height={24} width={24} xmlns="http://www.w3.org/2000/svg" className="peer-checked/expand:text-blue-500 peer-checked/expand:fill-blue-500/20 text-2xl peer-checked/expand:scale-125 ease-in-out duration-300 transition-all">
-                                <path fill="currentColor" d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
+                                <path fill="currentColor" d="M5 9.2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v8.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V9.2zM10.5 5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12.7a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V5zM16 12a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5.7a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V12z" />
                             </svg>
                         </label>
 
@@ -116,6 +115,28 @@ export const MobileNavigation: React.FC = () => {
                                 <path fill="currentColor" d="M11.953 2C6.465 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.493 2 11.953 2zM12 20c-4.411 0-8-3.589-8-8s3.567-8 7.953-8C16.391 4 20 7.589 20 12s-3.589 8-8 8z" />
                                 <path fill="currentColor" d="M11 7h2v7h-2zm0 8h2v2h-2z" />
                             </svg>
+                        </label>
+
+                        {/* Notifications */}
+                        <label
+                            className="has-[:checked]:shadow-lg relative w-full h-16 p-4 ease-in-out duration-300 border-solid border-transparent has-[:checked]:border-black/5 dark:has-[:checked]:border-white/10 group flex flex-row gap-3 items-center justify-center text-slate-500 dark:text-slate-400 rounded-xl cursor-pointer"
+                            htmlFor="notifications"
+                            onClick={() => handleNavigation('notifications', '/notifications')}
+                        >
+                            <input
+                                id="notifications"
+                                name="mobile-nav"
+                                type="radio"
+                                className="hidden peer/expand"
+                                checked={activeId === 'notifications'}
+                                readOnly
+                            />
+                            <div className="relative">
+                                <svg viewBox="0 0 24 24" height={24} width={24} xmlns="http://www.w3.org/2000/svg" className="peer-checked/expand:text-blue-500 peer-checked/expand:fill-blue-500/20 text-2xl peer-checked/expand:scale-125 ease-in-out duration-300 transition-all">
+                                    <path fill="currentColor" d="M12 22a2.01 2.01 0 0 0 2-2h-4a2.01 2.01 0 0 0 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+                                </svg>
+                                <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                            </div>
                         </label>
 
                         {/* Profile */}

@@ -70,7 +70,7 @@ export const TwoFactorSetup = () => {
                 subtitle="Easy-Pay"
                 onBack={goBack}
                 showAvatar={false}
-                showNotification={true}
+                showStats={true}
             />
 
             <main className={`${styles.mainContent} !bg-transparent`}>

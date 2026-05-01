@@ -1,12 +1,25 @@
-import React from 'react';
-import { Share2, Settings, Plus, Receipt, UserCircle, Hash, ArrowRight, DollarSign, CreditCard, X, Pencil, Trash2, Users } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+    Settings, Plus, Receipt, UserCircle, ArrowRight, 
+    CreditCard, Pencil, Trash2, Users, Download, 
+    PieChart, Activity, Info, Scan, Utensils, Car, Gamepad2, ShoppingBag, Briefcase,
+    X,
+    Check
+} from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../../infrastructure/utils';
 import { useGroupDetail } from './useGroupDetail';
 import { PageHeader } from '@ui/components/PageHeader';
 import { useOutletContext, useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+
+import { httpClient } from '../../../infrastructure/api/http-client';
+import { SettlementWizard } from './components/SettlementWizard';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { TransactionDetailModal } from '../MyPayments/components/TransactionDetailModal';
 
 export const GroupDetail = () => {
     const params = useParams();
@@ -14,196 +27,345 @@ export const GroupDetail = () => {
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
     const navigate = useNavigate();
 
+    const [isWizardOpen, setIsWizardOpen] = useState(false);
+    const [selectedExpense, setSelectedExpense] = useState<any>(null);
+
+    // Register shortcuts (Esc to close wizard)
+    useKeyboardShortcuts(() => setIsWizardOpen(false));
+
     const {
         activeTab, setActiveTab, groupName, groupCode, totalSpent,
         userShare, userOwed, activities, balances, members,
-        integrantes_data, loading, adminId, currentUserId
+        integrantes_data, loading, adminId, currentUserId,
+        isRefreshing
     } = useGroupDetail(idFinal);
 
     const isAdmin = adminId === currentUserId;
 
-    const handleDeleteItem = async (itemId: string) => {
-        if (!window.confirm("¿Estás seguro de eliminar este gasto? Los balances se recalcularán.")) return;
-        try {
-            const res = await fetch(`${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api/groups/${idFinal}/items/${itemId}`, {
-                method: 'DELETE'
-            });
-            if (res.ok) {
-                toast.success("Gasto eliminado");
-                window.location.reload();
-            } else {
-                toast.error("Error al eliminar el gasto");
-            }
-        } catch (error) {
-            toast.error("Error de conexión");
-        }
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        const date = new Date().toLocaleDateString();
+
+        doc.setFontSize(22);
+        doc.setTextColor(59, 130, 246);
+        doc.text("EASY-PAY", 14, 20);
+
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Reporte de Gastos: ${groupName}`, 14, 30);
+        doc.text(`Fecha: ${date}`, 14, 35);
+        doc.text(`Código: ${groupCode}`, 14, 40);
+
+        const tableData = activities.map(act => [
+            act.nombre,
+            integrantes_data.find(i => i.id === act.comprador_id)?.nombre || "N/A",
+            `$${Number(act.monto).toFixed(2)}`,
+            act.fecha
+        ]);
+
+        (doc as any).autoTable({
+            head: [['Gasto', 'Pagado por', 'Monto', 'Fecha']],
+            body: tableData,
+            startY: 50,
+            theme: 'grid',
+            headStyles: { fillColor: [59, 130, 246] }
+        });
+
+        doc.save(`EasyPay_${groupName}_${date}.pdf`);
+        toast.success("PDF generado correctamente");
     };
 
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+                <div className="w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-xs font-black uppercase tracking-widest text-slate-400">Cargando mesa...</p>
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen flex flex-col bg-[var(--bg-body)] font-display text-[var(--text-primary)] antialiased">
-            <div className="flex-1 flex flex-col min-w-0 relative">
-                <PageHeader
-                    onMenuClick={toggleSidebar}
-                    title={groupName || "Cargando..."}
-                    onBack={() => navigate(-1)}
-                    rightSlot={
-                        <div className="flex items-center gap-2">
-                            {isAdmin && (
-                                <button onClick={() => navigate(`/group/${idFinal}/register-expense`)} className="p-2 text-[var(--primary)] rounded-full hover:bg-[var(--primary)]/10 transition-colors">
-                                    <Plus size={22} />
-                                </button>
-                            )}
-                            <button className="p-2 text-[var(--text-secondary)] rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><Settings size={18} /></button>
-                        </div>
-                    }
-                />
-
-                <main className="flex-1 w-full max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-6">
-                    {/* --- RESUMEN --- */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-5 border-t-4 border-t-[var(--primary)] shadow-sm">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] mb-1">Total Grupo</p>
-                            <p className="text-2xl font-black">${Number(totalSpent).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
-                        </div>
-                        <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-5 border-t-4 border-t-slate-400 shadow-sm">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] mb-1">Tu Consumo</p>
-                            <p className="text-2xl font-black">${Number(userShare).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
-                        </div>
-                        <div className={cn("bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-5 border-t-4 shadow-sm flex flex-col justify-between", userOwed >= 0 ? "border-t-emerald-500" : "border-t-red-500")}>
-                            <div>
-                                <p className={cn("text-[10px] font-black uppercase tracking-widest mb-1", userOwed >= 0 ? "text-emerald-500" : "text-red-500")}>{userOwed >= 0 ? 'Te deben' : 'Debes'}</p>
-                                <p className={cn("text-2xl font-black", userOwed >= 0 ? "text-emerald-500" : "text-red-500")}>{userOwed >= 0 ? '+' : '-'}${Math.abs(Number(userOwed)).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
-                            </div>
-                            {userOwed < -0.01 && !isAdmin && (
-                                <button onClick={() => setActiveTab('payments')} className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 bg-red-500 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-red-600 transition-all">Liquidar <ArrowRight size={14} /></button>
-                            )}
-                        </div>
+        <div className="space-y-8 pb-20">
+            <PageHeader 
+                title={groupName || "Detalle de Grupo"}
+                onMenuClick={toggleSidebar}
+                rightSlot={
+                    <div className="flex gap-2">
+                        <button 
+                            onClick={handleExportPDF}
+                            className="p-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all text-[var(--text-primary)]"
+                            title="Exportar PDF"
+                        >
+                            <Download size={20} />
+                        </button>
+                        <button 
+                            className="p-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all text-[var(--text-primary)]"
+                            title="Ajustes"
+                        >
+                            <Settings size={20} />
+                        </button>
                     </div>
+                }
+            />
 
-                    {/* --- TABS --- */}
-                    <div className="flex border-b border-[var(--border-color)] overflow-x-auto no-scrollbar">
-                        {['activity', 'balances', 'members'].map((tab) => (
-                            <button key={tab} onClick={() => setActiveTab(tab as any)} className={cn("px-6 py-4 text-[10px] font-black uppercase tracking-widest relative whitespace-nowrap", activeTab === tab ? "text-[var(--primary)]" : "text-[var(--text-secondary)]")}>
-                                {tab === 'activity' ? 'Actividad' : tab === 'balances' ? 'Saldos' : 'Integrantes'}
-                                {activeTab === tab && <div className="absolute bottom-[-1px] left-0 w-full h-[3px] bg-[var(--primary)] rounded-t-full shadow-[0_0_15px_var(--primary)]" />}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* --- CONTENIDO --- */}
-                    <div className="min-h-[300px] pb-10">
-                        {loading ? (
-                            <div className="py-20 flex flex-col items-center justify-center gap-4 opacity-30">
-                                <div className="animate-spin rounded-full h-8 w-8 border-2 border-[var(--primary)] border-t-transparent" />
-                                <p className="text-[10px] font-black uppercase tracking-widest">Sincronizando...</p>
-                            </div>
-                        ) : activeTab === 'activity' && (
-                            <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-400">
-                                {activities.length > 0 ? activities.map((item: any) => (
-                                    <div key={item.id || item._id} className="bg-[var(--bg-card)] border border-[var(--border-color)] border-l-4 border-l-[var(--primary)] rounded-2xl p-4 flex items-center justify-between shadow-sm hover:bg-[var(--hover-bg)] transition-all">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)]"><Receipt size={20} /></div>
-                                            <div className="flex flex-col">
-                                                <h3 className="font-bold text-sm text-[var(--text-primary)]">{item.nombre || "Gasto"}</h3>
-
-                                                {/* DIVIDIDO ENTRE (Etiquetas) */}
-                                                <div className="flex flex-wrap gap-1 mt-1.5 items-center">
-                                                    <Users size={10} className="text-[var(--text-secondary)] opacity-50" />
-                                                    {item.nombres_participantes && item.nombres_participantes.length > 0 ? (
-                                                        item.nombres_participantes.map((name: string, idx: number) => (
-                                                            <span key={idx} className="text-[8px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-md font-bold border border-black/5 dark:border-white/5">{name}</span>
-                                                        ))
-                                                    ) : (
-                                                        <span className="text-[8px] text-slate-500 italic">Cargando...</span>
-                                                    )}
-                                                </div>
-                                                <p className="text-[9px] text-[var(--text-secondary)] font-black uppercase tracking-tight mt-1 opacity-60">Pagado por: {integrantes_data?.find((i: any) => i.id === item.comprador_id)?.nombre || "Usuario"}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-5">
-                                            {isAdmin && (
-                                                <div className="flex items-center gap-1 border-r border-[var(--border-color)] pr-4">
-                                                    <button onClick={() => navigate(`/group/${idFinal}/edit-item/${item.id || item._id}`)} className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-xl transition-all"><Pencil size={16} /></button>
-                                                    <button onClick={() => handleDeleteItem(item.id || item._id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-all"><Trash2 size={16} /></button>
-                                                </div>
-                                            )}
-                                            <div className="text-right">
-                                                <span className="font-black text-sm text-[var(--text-primary)]">${Number(item.monto || item.precio || 0).toFixed(2)}</span>
-                                                <p className="text-[8px] text-slate-500 uppercase font-bold tracking-tighter">Monto</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )) : <div className="py-20 text-center opacity-30 text-[10px] font-black uppercase">Sin movimientos</div>}
-                            </div>
-                        )}
-
-                        {activeTab === 'balances' && (
-                            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-400">
-                                <h2 className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] px-2">Resumen de Cuentas</h2>
-                                <div className="grid gap-3">
-                                    {balances?.balance_detallado?.map((b: any) => {
-                                        const userObj = integrantes_data?.find((m: any) => m.id === b.usuario_id);
-                                        return (
-                                            <div key={b.usuario_id} className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-5 flex justify-between items-center shadow-sm">
-                                                <div className="flex items-center gap-3">
-                                                    <UserCircle size={24} className="text-slate-400" />
-                                                    <span className="font-bold text-sm">{userObj?.nombre || `ID: ${b.usuario_id.slice(-4)}`}</span>
-                                                </div>
-                                                <div className="text-right">
-                                                    <span className={cn("font-black text-lg", b.balance >= 0 ? "text-emerald-500" : "text-red-500")}>{b.balance >= 0 ? '+' : '-'}${Math.abs(Number(b.balance)).toFixed(2)}</span>
-                                                    <p className="text-[8px] font-black uppercase opacity-40">Saldo Actual</p>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'members' && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-400">
-                                <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-3xl p-8 flex flex-col items-center justify-center shadow-sm text-center">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Código de Invitación</p>
-                                    <div className="p-4 bg-white rounded-2xl shadow-inner mb-6 border border-slate-100"><QRCodeSVG value={groupCode || "EASYPAY"} size={160} /></div>
-                                    <h3 className="text-lg font-black text-[var(--text-primary)] mb-2 tracking-widest">{groupCode}</h3>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {members.map((memberId: string) => {
-                                        const user = integrantes_data?.find((i: any) => i.id === memberId);
-                                        if (!user) return null;
-                                        return (
-                                            <div key={memberId} className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-4 flex items-center gap-4 shadow-sm">
-                                                <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400"><UserCircle size={24} /></div>
-                                                <div className="flex-1">
-                                                    <p className="font-bold text-sm text-[var(--text-primary)]">{user.nombre}</p>
-                                                    <p className="text-[9px] text-[var(--text-secondary)] font-black uppercase tracking-widest">{memberId === adminId ? "👑 Administrador" : "Integrante"}</p>
-                                                </div>
-                                                {memberId === currentUserId && <span className="text-[8px] font-black bg-[var(--primary)] text-white px-2 py-1 rounded-full uppercase">Tú</span>}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </main>
+            {/* Stats Cards (Mini) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[
+                    { label: "Total Gastado", value: totalSpent, icon: <Receipt size={20}/>, color: "var(--primary)" },
+                    { label: "Tu Parte", value: userShare, icon: <UserCircle size={20}/>, color: "#10b981" },
+                    { label: "Te Deben", value: userOwed, icon: <PieChart size={20}/>, color: "#f59e0b" },
+                ].map((stat, i) => (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        key={stat.label}
+                        className="p-6 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[2.5rem] flex items-center gap-6 shadow-sm group hover:border-[var(--primary)]/30 transition-all"
+                    >
+                        <div className="w-14 h-14 rounded-[1.5rem] flex items-center justify-center text-white shadow-lg" style={{ backgroundColor: stat.color }}>
+                            {stat.icon}
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">{stat.label}</p>
+                            <p className="text-2xl font-black tracking-tighter text-[var(--text-primary)] group-hover:text-[var(--primary)] transition-colors">${Number(stat.value).toFixed(2)}</p>
+                        </div>
+                    </motion.div>
+                ))}
             </div>
 
-            {/* --- BOTONES FLOTANTES --- */}
-            <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-3 w-[90%] max-w-[340px] pointer-events-none">
-                {isAdmin && (
-                    <button onClick={() => navigate(`/group/${idFinal}/register-expense`)} className="pointer-events-auto w-full h-16 bg-[var(--primary)] text-white rounded-3xl shadow-2xl flex items-center justify-center gap-4 active:scale-[0.98] transition-all">
-                        <Plus size={22} strokeWidth={3} />
-                        <span className="text-[11px] font-black uppercase tracking-[0.25em]">Registrar Gasto</span>
-                    </button>
-                )}
-                {!isAdmin && (
-                    <button onClick={() => setActiveTab('payments')} className={cn("pointer-events-auto w-full h-14 rounded-2xl flex items-center justify-center gap-3 transition-all font-black uppercase text-[10px] tracking-[0.2em] backdrop-blur-xl border", activeTab === 'payments' ? "bg-emerald-500 text-white border-emerald-400" : "bg-[var(--bg-card)]/80 text-emerald-500 shadow-xl")}>
-                        <CreditCard size={18} strokeWidth={2.5} />
-                        <span>Liquidar Deuda</span>
-                    </button>
-                )}
+            {/* Main Section */}
+            <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[3rem] overflow-hidden shadow-sm">
+                <div className="flex border-b border-[var(--border-color)]">
+                    {['actividades', 'saldos', 'integrantes'].map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab as any)}
+                            className={cn(
+                                "flex-1 py-6 text-xs font-black uppercase tracking-[0.2em] transition-all relative",
+                                activeTab === tab ? "text-[var(--primary)]" : "text-slate-400 hover:text-slate-600"
+                            )}
+                        >
+                            {tab}
+                            {activeTab === tab && (
+                                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--primary)] rounded-full" />
+                            )}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="p-8">
+                    <AnimatePresence mode="wait">
+                        {activeTab === 'actividades' && (
+                            <motion.div 
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                className="space-y-6"
+                            >
+                                <div className="flex justify-between items-center px-2">
+                                    <h3 className="text-lg font-black uppercase tracking-tight">Registro de Gastos</h3>
+                                    <button 
+                                        onClick={() => navigate(`/add-expense/${idFinal}`)}
+                                        className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-[var(--primary)]/20 hover:scale-105 active:scale-95 transition-all"
+                                    >
+                                        <Plus size={18} /> Nuevo Gasto
+                                    </button>
+                                </div>
+
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-separate border-spacing-y-3">
+                                        <thead>
+                                            <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-4">
+                                                <th className="pb-4 pl-6">Concepto</th>
+                                                <th className="pb-4">Pagado por</th>
+                                                <th className="pb-4">Monto</th>
+                                                <th className="pb-4">Fecha</th>
+                                                <th className="pb-4 pr-6 text-right">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {activities.map((act) => {
+                                                const comprador = integrantes_data.find(i => i.id === act.comprador_id);
+                                                const category = act.categoria || "Otros";
+                                                const categoryStyles: any = {
+                                                    "Comida": "bg-orange-100 text-orange-600 border-orange-200",
+                                                    "Transporte": "bg-blue-100 text-blue-600 border-blue-200",
+                                                    "Entretenimiento": "bg-purple-100 text-purple-600 border-purple-200",
+                                                    "Otros": "bg-slate-100 text-slate-600 border-slate-200"
+                                                };
+                                                
+                                                return (
+                                                    <tr 
+                                                        key={act.id} 
+                                                        onClick={() => setSelectedExpense(act)}
+                                                        className="group bg-[var(--bg-body)] hover:bg-[var(--hover-bg)] transition-all cursor-pointer shadow-sm hover:shadow-md"
+                                                    >
+                                                        <td className="py-6 pl-6 rounded-l-[2rem] border-y border-l border-[var(--border-color)] group-hover:border-[var(--primary)]/30">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center border shadow-inner transition-transform group-hover:scale-110", categoryStyles[category] || categoryStyles["Otros"])}>
+                                                                    {category === "Comida" && <Utensils size={20} />}
+                                                                    {category === "Transporte" && <Car size={20} />}
+                                                                    {category === "Entretenimiento" && <Gamepad2 size={20} />}
+                                                                    {category === "Otros" && <ShoppingBag size={20} />}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-black text-[var(--text-primary)] uppercase tracking-tight group-hover:text-[var(--primary)] transition-colors">{act.nombre}</p>
+                                                                    <span className={cn("text-[9px] font-black uppercase px-2 py-0.5 rounded-md border tracking-widest", categoryStyles[category] || categoryStyles["Otros"])}>
+                                                                        {category}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-6 border-y border-[var(--border-color)] group-hover:border-[var(--primary)]/30">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-black">
+                                                                    {comprador?.nombre?.charAt(0) || "U"}
+                                                                </div>
+                                                                <span className="text-xs font-bold text-slate-500 uppercase">{comprador?.nombre || "Usuario"}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-6 border-y border-[var(--border-color)] group-hover:border-[var(--primary)]/30">
+                                                            <span className="font-black text-lg font-mono tracking-tighter text-[var(--text-primary)]">${Number(act.monto).toFixed(2)}</span>
+                                                        </td>
+                                                        <td className="py-6 border-y border-[var(--border-color)] group-hover:border-[var(--primary)]/30">
+                                                            <span className="text-xs font-bold text-slate-400 uppercase">{act.fecha}</span>
+                                                        </td>
+                                                        <td className="py-6 pr-6 rounded-r-[2rem] border-y border-r border-[var(--border-color)] group-hover:border-[var(--primary)]/30 text-right">
+                                                            <button className="p-2 hover:bg-[var(--primary)]/10 rounded-xl text-slate-400 hover:text-[var(--primary)] transition-all">
+                                                                <Info size={18} />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'saldos' && (
+                            <motion.div 
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                className="space-y-8"
+                            >
+                                <div className="flex justify-between items-center px-2">
+                                    <div>
+                                        <h3 className="text-lg font-black uppercase tracking-tight">Balance de Cuentas</h3>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Cómo se dividen los gastos actualmente</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => setIsWizardOpen(true)}
+                                        className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
+                                    >
+                                        <Check size={18} /> Liquidar Mesa
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {balances.map((balance, i) => (
+                                        <motion.div 
+                                            key={i}
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: i * 0.1 }}
+                                            className="p-6 bg-[var(--bg-body)] rounded-[2rem] border border-[var(--border-color)] flex items-center justify-between group hover:border-[var(--primary)]/30 transition-all shadow-sm"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center border border-[var(--border-color)] shadow-sm text-[var(--primary)]">
+                                                    <UserCircle size={24} />
+                                                </div>
+                                                <div>
+                                                    <p className="font-black text-[var(--text-primary)] uppercase tracking-tight">{balance.persona}</p>
+                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{balance.monto >= 0 ? "Saldo a favor" : "Deuda pendiente"}</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className={cn(
+                                                    "text-xl font-black font-mono tracking-tighter",
+                                                    balance.monto >= 0 ? "text-emerald-500" : "text-rose-500"
+                                                )}>
+                                                    {balance.monto >= 0 ? "+" : ""}${Math.abs(balance.monto).toFixed(2)}
+                                                </span>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'integrantes' && (
+                            <motion.div 
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                className="space-y-6 px-2"
+                            >
+                                <div className="flex justify-between items-center mb-8">
+                                    <div>
+                                        <h3 className="text-lg font-black uppercase tracking-tight">Miembros de la Mesa</h3>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{members.length} personas conectadas</p>
+                                    </div>
+                                    <div className="p-3 bg-black/5 rounded-2xl border border-black/5 text-[var(--text-primary)] font-mono text-xs font-black flex items-center gap-2">
+                                        <Scan size={14} /> {groupCode}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {members.map((member, i) => {
+                                        const fullMemberData = integrantes_data.find(it => it.id === member.id);
+                                        return (
+                                            <motion.div 
+                                                key={member.id}
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: i * 0.05 }}
+                                                className="p-5 bg-[var(--bg-body)] rounded-3xl border border-[var(--border-color)] flex items-center gap-4 group hover:border-[var(--primary)]/30 transition-all shadow-sm"
+                                            >
+                                                <div className="relative">
+                                                    <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-sm font-black border-2 border-white shadow-sm">
+                                                        {member.nombre.charAt(0)}
+                                                    </div>
+                                                    {member.id === adminId && (
+                                                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-amber-400 rounded-full border-2 border-white flex items-center justify-center" title="Admin">
+                                                            <Settings size={10} className="text-white" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <p className="font-black text-[var(--text-primary)] uppercase tracking-tight text-sm">{member.nombre}</p>
+                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{member.id === currentUserId ? "Tú" : (member.id === adminId ? "Organizador" : "Miembro")}</p>
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
+                                    
+                                    <button className="p-5 border-2 border-dashed border-[var(--border-color)] rounded-3xl flex items-center justify-center gap-3 text-slate-400 hover:border-[var(--primary)]/30 hover:text-[var(--primary)] transition-all group">
+                                        <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+                                        <span className="text-xs font-black uppercase tracking-widest">Invitar</span>
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+
+                <SettlementWizard 
+                    isOpen={isWizardOpen}
+                    onClose={() => setIsWizardOpen(false)}
+                    balances={balances}
+                    members={members}
+                    totalSpent={totalSpent}
+                    integrantesData={integrantes_data}
+                />
+
+                <TransactionDetailModal 
+                    isOpen={!!selectedExpense}
+                    onClose={() => setSelectedExpense(null)}
+                    transaction={selectedExpense}
+                />
             </div>
         </div>
     );

@@ -19,57 +19,10 @@ export interface PaymentTransaction {
     icon?: string;
 }
 
-const MOCK_CARDS: PaymentCard[] = [
-    {
-        id: '1',
-        lastFour: '4242',
-        holder: 'Luis Gonzalez',
-        brand: 'VISA',
-        isDefault: true,
-    },
-    {
-        id: '2',
-        lastFour: '8888',
-        holder: 'Luis Gonzalez',
-        brand: 'MasterCard',
-        isDefault: false,
-    },
-];
-
-const MOCK_TRANSACTIONS: PaymentTransaction[] = [
-    {
-        id: 't1',
-        description: 'Pago a Ana',
-        category: 'Comida Grupal',
-        date: 'Hoy, 12:30 PM',
-        status: 'completed',
-        amount: -320,
-        avatarUrl: 'https://ui-avatars.com/api/?name=Ana&background=random',
-    },
-    {
-        id: 't2',
-        description: 'Amazon MX',
-        category: 'Electrónicos',
-        date: 'Ayer, 4:15 PM',
-        status: 'completed',
-        amount: -1250,
-        icon: 'shopping-bag',
-    },
-    {
-        id: 't3',
-        description: 'Netflix',
-        category: 'Suscripción Mensual',
-        date: '14 Oct, 9:00 AM',
-        status: 'completed',
-        amount: -199,
-        icon: 'film',
-    },
-];
-
 export const useMyPayments = () => {
     const navigate = useNavigate();
-    const [cards] = useState<PaymentCard[]>(MOCK_CARDS);
-    const [transactions] = useState<PaymentTransaction[]>(MOCK_TRANSACTIONS);
+    const [cards] = useState<PaymentCard[]>([]);
+    const [transactions] = useState<PaymentTransaction[]>([]);
     const [isAddingCard, setIsAddingCard] = useState(false);
 
     const goBack = () => navigate(-1);

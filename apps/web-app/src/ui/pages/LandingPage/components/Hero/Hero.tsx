@@ -37,28 +37,18 @@ export const Hero = () => {
                     </p>
 
                     <div className={styles.actions}>
-                        <div className={styles.actionCard} onClick={() => navigate('/create-group')}>
-                            <div className={styles.cardHeader}>
-                                <PlusCircle className={styles.actionIcon} />
-                                <h3>Nuevo Grupo</h3>
-                            </div>
-                            <p>Eres el anfitrión. Crea un grupo.</p>
-                            <button className={styles.primaryBtn}>Crear Grupo</button>
-                        </div>
-
-                        <div className={styles.actionCard} onClick={() => navigate('/qr-scanner')}>
-                            <div className={styles.cardHeader}>
-                                <Users className={styles.actionIconJoin} />
-                                <h3>Unirme</h3>
-                            </div>
-                            <p>¿Tienes código? Únete al grupo.</p>
-                            <button className={styles.secondaryBtn}>Unirme</button>
-                        </div>
+                        <button 
+                            className={styles.mainCtaBtn}
+                            onClick={() => navigate('/auth')}
+                        >
+                            <QrCode size={20} />
+                            <span>Comenzar ahora</span>
+                        </button>
                     </div>
 
                     <div className={styles.hint}>
-                        <span className={styles.hintEmoji}>💡</span>
-                        <p>El anfitrión crea el grupo y comparte el código.</p>
+                        <span className={styles.hintEmoji}>🔒</span>
+                        <p>Inicia sesión o regístrate para gestionar tus grupos y pagos.</p>
                     </div>
                 </div>
 

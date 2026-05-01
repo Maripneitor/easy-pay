@@ -12,14 +12,8 @@ const AnimatePresence = ({ children }: any) => children;
 
 const { width } = Dimensions.get('window');
 
-// --- Mock Data ---
-const FRIENDS = [
-    { id: '1', name: 'Carlos López', username: '@carlopez', balance: 150.00, status: 'Te debe', avatar: 'https://i.pravatar.cc/150?u=carlos', lastActivity: 'Hoy, 2:30 PM' },
-    { id: '2', name: 'Ana Martínez', username: '@anamar', balance: -50.00, status: 'Le debes', avatar: 'https://i.pravatar.cc/150?u=ana', lastActivity: 'Ayer' },
-    { id: '3', name: 'Roberto Gómez', username: '@robgom', balance: 0.00, status: 'Al día', avatar: 'https://i.pravatar.cc/150?u=roberto', lastActivity: '15 Oct' },
-    { id: '4', name: 'Lucía Fernández', username: '@luciaf', balance: 320.50, status: 'Te debe', avatar: 'https://i.pravatar.cc/150?u=lucia', lastActivity: 'Lunes' },
-    { id: '5', name: 'Marcos Ruiz', username: '@mruiz', balance: -12.00, status: 'Le debes', avatar: 'https://i.pravatar.cc/150?u=marcos', lastActivity: '12 Sep' },
-];
+// --- Mock Data (Removed for API integration) ---
+const FRIENDS: any[] = [];
 
 export default function FriendsScreen() {
     const { theme, fontScale } = useTheme();

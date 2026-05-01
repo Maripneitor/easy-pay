@@ -12,6 +12,7 @@ import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'react-native';
+import { getApiBaseUrl } from '../src/infrastructure/api/network.config';
 
 export default function SecuritySetupScreen() {
     const router = useRouter();
@@ -19,15 +20,15 @@ export default function SecuritySetupScreen() {
     const [loading, setLoading] = useState(false);
     const insets = useSafeAreaInsets();
     
-    const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+    const API_URL = getApiBaseUrl();
 
     const handleSendCode = async () => {
         setLoading(true);
         console.log(`📡 Enviando código para usuario: ${userId || 'demo-user'}`);
-        console.log(`🔗 URL: ${API_URL}/api/auth/2fa/setup/${userId || 'demo-user'}`);
+        console.log(`🔗 URL: ${API_URL}/auth/2fa/setup/${userId || 'demo-user'}`);
 
         try {
-            const response = await fetch(`${API_URL}/api/auth/2fa/setup/${userId || 'demo-user'}`, {
+            const response = await fetch(`${API_URL}/auth/2fa/setup/${userId || 'demo-user'}`, {
                 method: 'POST',
                 headers: { 'Accept': 'application/json' }
             });

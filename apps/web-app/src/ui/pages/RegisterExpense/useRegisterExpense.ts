@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { httpClient } from '../../../infrastructure/api/http-client';
 
 export const useRegisterExpense = () => {
     const { groupId } = useParams<{ groupId: string }>();
@@ -22,12 +23,11 @@ export const useRegisterExpense = () => {
         if (!userId || !cleanGroupId) return;
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api/groups/${cleanGroupId}`);
+            const res = await httpClient.get(`/groups/${cleanGroupId}`);
 
-            if (res.ok) {
-                const currentGroup = await res.json();
+            if (res.status === 200) {
+                const currentGroup = res.data;
 
-                // 🚩 MEJORA 1: Formato "Yo (Nombre Real)"
                 const listaFormateada = currentGroup.integrantes.map((m: any) => {
                     const isMe = m.id === userId;
                     return {
@@ -40,13 +40,11 @@ export const useRegisterExpense = () => {
 
                 setIntegrantes(listaFormateada);
 
-                // 🚩 MEJORA 2: El comprador es FIJO (El usuario actual/admin)
-                // Inicializamos participantes_ids con todos los miembros por defecto
                 const allIds = listaFormateada.map((m: any) => m.id);
 
                 setFormData(prev => ({
                     ...prev,
-                    comprador_id: userId, // Ya no cambiará
+                    comprador_id: userId,
                     participantes_ids: allIds
                 }));
             }
@@ -71,7 +69,6 @@ export const useRegisterExpense = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         if (e) e.preventDefault();
 
-        // 🚩 VALIDACIÓN: Ahora permite que haya solo 1 participante (tú mismo)
         if (!formData.nombre || !formData.precio || formData.participantes_ids.length === 0) {
             alert("Por favor rellena todos los campos.");
             return;
@@ -89,21 +86,16 @@ export const useRegisterExpense = () => {
                 participantes_ids: formData.participantes_ids
             };
 
-            const response = await fetch(`${import.meta.env.VITE_GROUP_SERVICE_URL ?? 'http://localhost:8002'}/api/groups/add-item`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            const response = await httpClient.post('/groups/add-item', payload);
 
-            if (response.ok) {
+            if (response.status === 200 || response.status === 201) {
                 navigate(-1);
             } else {
-                const err = await response.json();
-                alert(`Error: ${err.detail || 'Fallo en el registro'}`);
+                alert(`Error: ${response.data?.detail || 'Fallo en el registro'}`);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            alert("Error de conexión.");
+            alert(error.response?.data?.detail || "Error de conexión.");
         } finally {
             setLoading(false);
         }

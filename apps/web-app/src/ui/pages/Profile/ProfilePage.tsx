@@ -5,7 +5,7 @@ import {
     CreditCard,
     Users,
     CheckCircle,
-    Bell,
+    BarChart3,
     ChevronRight,
     Smartphone,
     LogOut,
@@ -68,9 +68,8 @@ export const ProfilePage = () => {
                         onMenuClick={toggleSidebar}
                         title="MI PERFIL"
                         subtitle="Gestiona tu cuenta"
-                        showNotification
-                        notificationCount={0}
-                        onNotificationClick={() => navigate('/notifications')}
+                        showStats
+                        onStatsClick={() => navigate('/stats')}
                     />
                 </div>
 
@@ -269,11 +268,11 @@ export const ProfilePage = () => {
                                     </div>
                                 </div>
 
-                                {/* Notificaciones */}
-                                <button onClick={() => navigate('/notifications')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
+                                {/* Estadísticas */}
+                                <button onClick={() => navigate('/stats')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
                                     <div className="flex items-center gap-3">
-                                        <Bell className="text-[var(--text-secondary)]" size={20} />
-                                        <span className="text-sm font-medium text-[var(--text-secondary)]">Notificaciones</span>
+                                        <BarChart3 className="text-[var(--text-secondary)]" size={20} />
+                                        <span className="text-sm font-medium text-[var(--text-secondary)]">Mis Estadísticas</span>
                                     </div>
                                     <ChevronRight className="text-slate-400" size={18} />
                                 </button>

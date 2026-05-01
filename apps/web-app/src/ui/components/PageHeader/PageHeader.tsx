@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell } from 'lucide-react';
+import { ArrowLeft, BarChart3 } from 'lucide-react';
 /* Eliminamos el import del ThemeSwitch ya que no lo usaremos aquí */
 import styles from './PageHeader.module.css';
 
@@ -14,9 +14,8 @@ interface PageHeaderProps {
     rightSlot?: React.ReactNode;
     showAvatar?: boolean;
     onAvatarClick?: () => void;
-    showNotification?: boolean;
-    onNotificationClick?: () => void;
-    notificationCount?: number;
+    showStats?: boolean;
+    onStatsClick?: () => void;
     userName?: string;
     onMenuClick?: () => void;
 }
@@ -29,13 +28,13 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     rightSlot,
     showAvatar = false,
     onAvatarClick,
-    showNotification = false,
-    onNotificationClick,
-    notificationCount = 0,
+    showStats = false,
+    onStatsClick,
     userName = DEFAULT_USER_NAME,
 }) => {
     const navigate = useNavigate();
     const handleAvatarClick = onAvatarClick || (() => navigate('/profile'));
+    const handleStatsClick = onStatsClick || (() => navigate('/stats'));
 
     return (
         <header className={styles.header}>
@@ -66,10 +65,9 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                 <div className={styles.rightActions}>
                     {/* Se eliminó el ThemeSwitch de aquí para centralizarlo en Ajustes */}
                     {rightSlot}
-                    {showNotification && (
-                        <button className={styles.notifBtn} onClick={onNotificationClick}>
-                            <Bell size={20} />
-                            {notificationCount > 0 && <span className={styles.notifBadge} />}
+                    {showStats && (
+                        <button className={styles.notifBtn} onClick={handleStatsClick}>
+                            <BarChart3 size={20} />
                         </button>
                     )}
                     {showAvatar && (

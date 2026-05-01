@@ -66,27 +66,54 @@ class MongoUserRepository:
         return None
     
     # --- ACTIVACIÓN FINAL Y VERIFICACIÓN ---
-    async def enable_2fa(self, user_id: str):
-        """
-        CORRECCIÓN PARA EL PROYECTO EASY-PAY:
-        1. Marca la cuenta como verificada (is_verified: True).
-        2. Mantiene el enabled en False para que el LoginUserUseCase no entre en bucle.
-        3. Limpia los códigos temporales usados.
-        """
-        if not ObjectId.is_valid(user_id):
-            return True # Bypass para modo demo
+    # --- GESTIÓN DE TARJETAS (PAYMENT METHODS) ---
+    async def get_cards(self, user_id: str):
+        """Recupera la lista de tarjetas guardadas del usuario"""
+        user = await self.get_user_by_id(user_id)
+        if user and "cards" in user:
+            return user["cards"]
+        return []
 
+    async def add_card(self, user_id: str, card_data: dict):
+        """Agrega una nueva tarjeta al perfil del usuario"""
+        if not ObjectId.is_valid(user_id):
+            return False
+            
+        # Si es la primera, la marcamos como default
+        cards = await self.get_cards(user_id)
+        if len(cards) == 0:
+            card_data["is_default"] = True
+        
         result = await self.collection.update_one(
             {"_id": ObjectId(user_id)},
-            {
-                "$set": {
-                    "is_verified": True,           # ✅ Permite que el Login pase la validación
-                    "two_factor.enabled": False    # 🔓 Evita que el Login pida 2FA infinitamente
-                },
-                "$unset": {
-                    "two_factor.otp_code": "", 
-                    "two_factor.otp_expires": ""
-                }
-            }
+            {"$push": {"cards": card_data}}
+        )
+        return result.modified_count > 0
+
+    async def remove_card(self, user_id: str, card_id: str):
+        """Elimina una tarjeta por su ID interno"""
+        if not ObjectId.is_valid(user_id):
+            return False
+            
+        result = await self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$pull": {"cards": {"id": card_id}}}
+        )
+        return result.modified_count > 0
+
+    async def set_default_card(self, user_id: str, card_id: str):
+        """Cambia la tarjeta predeterminada"""
+        if not ObjectId.is_valid(user_id):
+            return False
+            
+        # 1. Quitamos default a todas
+        await self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"cards.$[].is_default": False}}
+        )
+        # 2. Ponemos default a la elegida
+        result = await self.collection.update_one(
+            {"_id": ObjectId(user_id), "cards.id": card_id},
+            {"$set": {"cards.$.is_default": True}}
         )
         return result.modified_count > 0

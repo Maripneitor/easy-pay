@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import OcrService, { TicketData, TicketItem } from '../../../infrastructure/services/OcrService';
+
 export interface OCRItem {
     id?: string;
     description: string;
@@ -15,70 +17,73 @@ export interface OCRScanResult {
     unassignedItems: OCRItem[];
 }
 
-const MOCK_SCAN: OCRScanResult = {
-    ticketTotal: 475.0,
-    appTotal: 390.0,
-    confidence: 98,
-    detectedItems: [
-        { id: '1', description: '2x Tacos Pastor', amount: 180.0 },
-        { id: '2', description: '1x Coca-Cola Light', amount: 35.0 },
-        { id: '3', description: '1x Quesadilla', amount: 65.0 },
-        { id: '4', description: '1x Cerveza Modelo', amount: 45.0 },
-        { id: '5', description: '1x Guacamole Extra', amount: 85.0, isUnassigned: true },
-        { id: '6', description: '1x Propina (10%)', amount: 65.0 },
-    ],
-    appItems: [
-        { description: 'Tacos + Refrescos', amount: 215.0 },
-        { description: 'Quesadilla + Cerveza', amount: 110.0 },
-        { description: 'Servicio', amount: 65.0 },
-    ],
-    unassignedItems: [
-        { id: '5', description: 'Guacamole Extra', amount: 85.0, isUnassigned: true },
-    ],
+const INITIAL_SCAN: OCRScanResult = {
+    ticketTotal: 0,
+    appTotal: 0,
+    confidence: 0,
+    detectedItems: [],
+    appItems: [],
+    unassignedItems: [],
 };
 
 export const useOCRScanner = () => {
-    const [scanResult] = useState<OCRScanResult>(MOCK_SCAN);
-    const [isScanning, setIsScanning] = useState(true);
+    const [scanResult, setScanResult] = useState<OCRScanResult>(INITIAL_SCAN);
+    const [isScanning, setIsScanning] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [flashOn, setFlashOn] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-    const toggleFlash = () => setFlashOn((prev) => !prev);
-
-    const handleCapture = () => {
+    const handleFileUpload = useCallback(async (file: File) => {
         if (isProcessing) return;
+        
+        setSelectedFile(file);
         setIsProcessing(true);
+        setIsScanning(true);
 
-        // Simulate OCR analysis delay
-        setTimeout(() => {
+        try {
+            const data: TicketData = await OcrService.extractTicketData(file);
+            
+            // Mapear datos de OCR al formato de la UI
+            const detectedItems: OCRItem[] = data.items.map((item, idx) => ({
+                id: `ocr-${idx}`,
+                description: `${item.quantity}x ${item.name}`,
+                amount: item.price * item.quantity,
+                isUnassigned: true
+            }));
+
+            setScanResult({
+                ticketTotal: data.total,
+                appTotal: 0, // Esto se llenaría comparando con el grupo actual
+                confidence: 95,
+                detectedItems,
+                appItems: [],
+                unassignedItems: detectedItems
+            });
+
+        } catch (error) {
+            console.error('Error procesando ticket:', error);
+            // Fallback o mensaje de error
+        } finally {
             setIsProcessing(false);
             setIsScanning(false);
-            console.log('Capture ticket processed');
-        }, 2500);
-    };
-
-    const handleGallery = () => {
-        console.log('Open gallery');
-    };
-
-    const handleCrop = () => {
-        console.log('Crop mode');
-    };
+        }
+    }, [isProcessing]);
 
     const handleSplitAll = (item: OCRItem) => {
-        console.log('Split among all:', item);
+        console.log('Dividir entre todos:', item);
+        // Lógica para repartir el costo en el grupo
     };
 
     const handleAssignToMe = (item: OCRItem) => {
-        console.log('Assign to me:', item);
+        console.log('Asignar a mí:', item);
+        // Lógica para reclamar el item
     };
 
     const handleConfirmSync = () => {
-        console.log('Confirm & sync:', scanResult);
+        console.log('Confirmando y sincronizando:', scanResult);
     };
 
     const formatCurrency = (amount: number) =>
-        amount.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+        `$${Number(amount).toFixed(2)}`;
 
     const difference = scanResult.ticketTotal - scanResult.appTotal;
 
@@ -86,12 +91,9 @@ export const useOCRScanner = () => {
         scanResult,
         isScanning,
         isProcessing,
-        flashOn,
+        selectedFile,
         difference,
-        toggleFlash,
-        handleCapture,
-        handleGallery,
-        handleCrop,
+        handleFileUpload,
         handleSplitAll,
         handleAssignToMe,
         handleConfirmSync,
