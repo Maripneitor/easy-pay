@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, PlusSquare, CreditCard, BarChart3, Settings, LogOut, Users as LucideUsers, ChevronLeft, Menu, Clock } from 'lucide-react';
+import { Home, PlusSquare, CreditCard, BarChart3, Settings, LogOut, Users as LucideUsers, ChevronLeft, Menu, Clock, ShieldAlert } from 'lucide-react';
 import { cn } from '../../../infrastructure/utils';
 
 interface SidebarProps {
@@ -160,6 +160,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onLogout, use
                     >
                         <Settings size={22} className="group-hover:text-[var(--primary)] transition-all" />
                         {isOpen && <span>Configuración</span>}
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            navigate('/change-password');
+                            if (window.innerWidth < 768) onClose();
+                        }}
+                        title={!isOpen ? 'Seguridad' : ''}
+                        className={cn(
+                            "w-full flex items-center gap-3 mt-2 rounded-2xl text-sm font-bold text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] group transition-all relative",
+                            isOpen ? "px-4 py-3" : "p-0 justify-center",
+                            !isOpen && "md:p-3"
+                        )}
+                    >
+                        <ShieldAlert size={22} className="group-hover:text-[var(--primary)] transition-all" />
+                        {isOpen && <span>Seguridad</span>}
                     </button>
 
                     <button

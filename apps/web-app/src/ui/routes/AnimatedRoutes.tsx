@@ -70,7 +70,7 @@ class RouteErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundar
 // --- Lazy load de páginas ---
 const LandingPage = lazy(() => import('../pages/LandingPage').then(m => ({ default: m.LandingPage })));
 const Auth = lazy(() => import('../pages/Auth').then(m => ({ default: m.Auth })));
-const RecoverPasswordPage = lazy(() => import('../pages/RecoverPassword').then(m => ({ default: m.RecoverPasswordPage })));
+const RecoverPasswordPage = lazy(() => import('../pages/RecoverPassword/RecoverPasswordPage').then(m => ({ default: m.RecoverPasswordPage })));
 const Dashboard = lazy(() => import('../pages/Dashboard/Dashboard').then(m => ({ default: m.Dashboard })));
 const CreateGroup = lazy(() => import('../pages/CreateGroup').then(m => ({ default: m.CreateGroup })));
 const GroupDetail = lazy(() => import('../pages/GroupDetail').then(m => ({ default: m.GroupDetail })));
@@ -135,6 +135,7 @@ export const AnimatedRoutes = () => {
 
                         {/* Rutas públicas sin guard */}
                         <Route path="/recover-password" element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
+                        <Route path="/reset-password" element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
                         <Route path="/qr-scanner" element={<PageTransition><JoinGroup /></PageTransition>} />
                         <Route path="/2fa-setup" element={<PageTransition><TwoFactorSetup /></PageTransition>} />
                         <Route path="/2fa-verify" element={<PageTransition><TwoFactorVerify /></PageTransition>} />
@@ -152,6 +153,7 @@ export const AnimatedRoutes = () => {
                                 <Route path="/my-payments" element={<PageTransition><MyPayments /></PageTransition>} />
                                 <Route path="/stats" element={<PageTransition><StatsPage /></PageTransition>} />
                                 <Route path="/profile" element={<PageTransition><ProfilePage /></PageTransition>} />
+                                <Route path="/change-password" element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
                                 <Route path="/profile/personal-data" element={<PageTransition><PersonalData /></PageTransition>} />
                                 <Route path="/ocr-scanner" element={<PageTransition><OCRScanner /></PageTransition>} />
                             </Route>

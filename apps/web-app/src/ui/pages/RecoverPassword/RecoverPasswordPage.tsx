@@ -8,11 +8,15 @@ import { toast } from 'sonner';
 
 import { userRepository } from '../../../infrastructure/api/repositories';
 
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
+
 export const RecoverPasswordPage = () => {
     const navigate = useNavigate();
     const { isDark, toggleTheme } = useTheme();
     const { user } = useAuthContext();
     const isAuthenticated = !!user;
+
+    useDocumentTitle('Recuperar Contraseña | Easy-Pay');
     
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [email, setEmail] = useState('');
@@ -21,6 +25,7 @@ export const RecoverPasswordPage = () => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [resending, setResending] = useState(false);
 
     const handleRequestReset = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -41,6 +46,18 @@ export const RecoverPasswordPage = () => {
             toast.error(error.message || 'Error al solicitar restablecimiento');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleResendCode = async () => {
+        setResending(true);
+        try {
+            await userRepository.requestPasswordReset(email);
+            toast.success('Código reenviado');
+        } catch (error: any) {
+            toast.error(error.message || 'Error al reenviar código');
+        } finally {
+            setResending(false);
         }
     };
 
@@ -166,6 +183,18 @@ export const RecoverPasswordPage = () => {
                                 <button type="submit" className={styles.primaryBtn} disabled={loading}>
                                     {loading ? <Loader2 className="animate-spin" size={20} /> : 'Verificar código'}
                                 </button>
+
+                                <div className="text-center mt-4">
+                                    <button 
+                                        type="button"
+                                        onClick={handleResendCode}
+                                        disabled={loading || resending}
+                                        className="text-xs font-bold text-[var(--primary)] hover:underline flex items-center justify-center gap-2 mx-auto"
+                                    >
+                                        {resending && <Loader2 className="animate-spin" size={12} />}
+                                        ¿No recibiste el código? Reenviar
+                                    </button>
+                                </div>
                             </form>
                         </>
                     )}
