@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Pencil } from 'lucide-react';
 import { cn } from '../../../../infrastructure/utils';
 import { MemberAvatars } from './MemberAvatars';
 import { BalanceBadge } from './BalanceBadge';
@@ -19,129 +19,205 @@ interface GroupProps {
 
 interface GroupCardProps {
     group: GroupProps;
-    onClick: () => void;
+    onClick: (e: React.MouseEvent) => void;
     onDelete?: (e: React.MouseEvent) => void;
+    onEdit?: (e: React.MouseEvent) => void;
     appearance: { icon: React.ReactNode; bg: string; color: string; };
+    className?: string;
+    isSelectionMode?: boolean;
+    isSelected?: boolean;
+    onToggleSelection?: (id: string) => void;
 }
 
-export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onDelete, appearance }) => {
+export const GroupCard: React.FC<GroupCardProps> = ({ 
+    group, onClick, onDelete, onEdit, appearance, className,
+    isSelectionMode = false,
+    isSelected = false,
+    onToggleSelection
+}) => {
     const hasDebt = (group.userBalance || 0) < 0;
     const hasCredit = (group.userBalance || 0) > 0;
 
-    const formatCurrency = (val: number) => {
-        const absVal = Math.abs(val).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        // Si hay deuda, quitamos el símbolo $ según el requerimiento para reducir ruido
-        return hasDebt ? absVal : `$${absVal}`;
+    const handleCardClick = (e: React.MouseEvent) => {
+        if (isSelectionMode) {
+            onToggleSelection?.(group.id);
+            return;
+        }
+        // Evita la navegación si se hizo clic en un botón de acción (Editar/Eliminar)
+        if ((e.target as HTMLElement).closest('button')) {
+            return;
+        }
+        onClick?.(e);
+    };
+
+    const currencyFormatter = (val: number, compact = false) => {
+        const numVal = isNaN(val) ? 0 : val;
+        return new Intl.NumberFormat('es-MX', {
+            style: 'currency',
+            currency: 'MXN',
+            notation: compact && Math.abs(numVal) >= 100000 ? 'compact' : 'standard',
+            maximumFractionDigits: compact && Math.abs(numVal) >= 100000 ? 1 : 2,
+        }).format(numVal);
     };
 
     const getFontSizeClass = (val: string) => {
-        if (val.length > 12) return "text-sm";
-        if (val.length > 10) return "text-base";
-        return "text-lg";
+        if (val.length > 15) return "text-[11px]";
+        if (val.length > 12) return "text-[13px]";
+        if (val.length > 10) return "text-sm";
+        return "text-base";
     };
 
-    const totalStr = `$${(group.total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    const balanceStr = `${group.userBalance && group.userBalance > 0 ? "+" : ""}${formatCurrency(group.userBalance || 0)}`;
+    const totalStr = currencyFormatter(group.total || 0, true);
+    const balanceStr = currencyFormatter(group.userBalance || 0, true);
 
     return (
         <motion.div
-            whileHover={{ y: -4, scale: 1.02 }}
+            whileHover={isSelectionMode ? { scale: 1.02 } : { y: -4 }}
             whileTap={{ scale: 0.98 }}
-            onClick={onClick}
-            className="group relative w-full overflow-hidden rounded-[2.5rem] border border-white/20 bg-white/40 dark:bg-slate-900/40 p-6 sm:p-8 shadow-xl backdrop-blur-3xl transition-all duration-300 hover:bg-white/60 dark:hover:bg-slate-800/60 cursor-pointer"
+            onClick={handleCardClick}
+            className={cn(
+                "group relative w-full overflow-hidden rounded-[2.5rem] border p-6 shadow-md backdrop-blur-3xl transition-all duration-300 cursor-pointer",
+                isSelected 
+                    ? "border-[var(--primary)] bg-[var(--primary)]/10 ring-2 ring-[var(--primary)]/20" 
+                    : "border-white/20 bg-white/40 dark:bg-slate-900/40 hover:bg-white/60 dark:hover:bg-slate-800/60 shadow-md hover:shadow-lg",
+                className
+            )}
         >
-            {/* Background Accent Gradient - Subtle static glow */}
+            {/* Selection Checkmark */}
+            {isSelectionMode && (
+                <div className={cn(
+                    "absolute top-4 right-4 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all",
+                    isSelected 
+                        ? "bg-[var(--primary)] border-[var(--primary)] text-white" 
+                        : "border-slate-300 dark:border-slate-600 bg-white/20"
+                )}>
+                    {isSelected && (
+                        <motion.svg 
+                            initial={{ scale: 0 }} 
+                            animate={{ scale: 1 }} 
+                            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"
+                        >
+                            <polyline points="20 6 9 17 4 12" />
+                        </motion.svg>
+                    )}
+                </div>
+            )}
+
+            {/* Subtle Accent Glow */}
             <div className={cn(
-                "absolute -right-12 -top-12 h-32 w-32 rounded-full blur-[70px] opacity-10 transition-opacity duration-500 group-hover:opacity-20",
+                "absolute -right-12 -top-12 h-32 w-32 rounded-full blur-[80px] opacity-[0.08] transition-opacity duration-500 group-hover:opacity-15",
                 appearance.bg
             )} />
 
-            <div className="flex flex-col gap-6 sm:gap-8">
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 sm:gap-5 min-w-0">
-                        {/* Dynamic Avatar - High Contrast & Static (No flicker) */}
+            <div className="flex flex-col gap-6">
+                {/* Header: Name (Left) | Actions + Admin (Right) */}
+                <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
                         <div className={cn(
-                            "relative flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-[1.5rem] sm:rounded-[1.8rem] shadow-lg border-2 border-white/50 dark:border-slate-700/50 transition-transform duration-500 group-hover:rotate-3",
+                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black shadow-sm border border-white/40 dark:border-slate-700/40",
                             appearance.bg,
                             appearance.color
                         )}>
-                            <div className="absolute inset-0 rounded-[1.5rem] sm:rounded-[1.8rem] bg-white/10" />
-                            <span className="text-xl sm:text-2xl font-black">{group.name.charAt(0).toUpperCase()}</span>
+                            {group.name.charAt(0).toUpperCase()}
                         </div>
-
-                        <div className="min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                                <h3 className="truncate text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-                                    {group.name}
-                                </h3>
-                                {group.isAdmin && (
-                                    <span className="shrink-0 px-2 py-0.5 bg-black/5 dark:bg-white/10 rounded-md text-[7px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-                                        ADMIN
-                                    </span>
-                                )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-slate-400">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                    Activo ahora
-                                </span>
-                            </div>
-                        </div>
+                        <h3 className="truncate text-lg font-bold text-slate-800 dark:text-white tracking-tight">
+                            {group.name}
+                        </h3>
                     </div>
 
-                    {group.isAdmin && onDelete && (
-                        <button 
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onDelete(e);
-                            }}
-                            className="shrink-0 p-3 bg-slate-100 dark:bg-white/5 text-slate-400 rounded-2xl hover:bg-red-500/10 hover:text-red-500 transition-colors duration-300"
-                            title="Eliminar grupo"
-                        >
-                            <Trash2 size={18} />
-                        </button>
-                    )}
+                    <div className="flex items-center gap-2 shrink-0">
+                        {!isSelectionMode && group.isAdmin && (
+                            <span className="px-2 py-0.5 bg-slate-200 dark:bg-white/10 rounded-md text-[8px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">
+                                ADMIN
+                            </span>
+                        )}
+                        <div className="flex items-center gap-1">
+                            {!isSelectionMode && group.isAdmin && onEdit && (
+                                <button 
+                                    onClick={(e) => { 
+                                        e.stopPropagation(); 
+                                        e.preventDefault();
+                                        e.nativeEvent.stopImmediatePropagation();
+                                        onEdit(e); 
+                                    }}
+                                    className="p-2 text-slate-400 hover:text-[var(--primary)] hover:bg-[var(--primary)]/5 rounded-xl transition-all"
+                                    title="Editar grupo"
+                                >
+                                    <Pencil size={16} />
+                                </button>
+                            )}
+                            {!isSelectionMode && group.isAdmin && onDelete && (
+                                <button 
+                                    onClick={(e) => { 
+                                        e.stopPropagation(); 
+                                        e.preventDefault();
+                                        e.nativeEvent.stopImmediatePropagation();
+                                        onDelete(e); 
+                                    }}
+                                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/5 rounded-xl transition-all"
+                                    title="Eliminar grupo"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
-                {/* Financial Summary Section - Responsive Layout */}
-                <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
-                    <div className="flex-1 bg-white/5 dark:bg-white/5 backdrop-blur-md rounded-[1.5rem] sm:rounded-[1.8rem] p-4 sm:p-5 flex flex-col justify-center transition-colors hover:bg-white/10">
-                        <p className="text-[10px] font-medium text-slate-400/80 mb-1">Total grupo</p>
-                        <p className={cn(
-                            "font-bold text-slate-900 dark:text-white font-mono break-all leading-tight",
-                            getFontSizeClass(totalStr)
-                        )}>
+                {/* Body: Financial Summary centered with no wrap */}
+                <div className="flex gap-3 min-w-0">
+                    <div className="flex-1 bg-white/10 dark:bg-white/5 rounded-2xl p-3 flex flex-col justify-center border border-white/5 min-w-0 overflow-hidden">
+                        <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-0.5 truncate">Total grupo</p>
+                        <p 
+                            title={totalStr}
+                            className={cn(
+                                "font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap overflow-hidden text-ellipsis leading-tight",
+                                getFontSizeClass(totalStr)
+                            )}
+                        >
                             {totalStr}
                         </p>
                     </div>
 
                     <div className={cn(
-                        "flex-1 backdrop-blur-md rounded-[1.5rem] sm:rounded-[1.8rem] p-4 sm:p-5 flex flex-col justify-center transition-all",
-                        hasDebt ? "bg-red-500/10" : 
-                        hasCredit ? "bg-emerald-500/10" : 
-                        "bg-white/5"
+                        "flex-1 rounded-2xl p-3 flex flex-col justify-center transition-all border border-transparent min-w-0 overflow-hidden",
+                        hasDebt ? "bg-red-500/10 border-red-500/5" : 
+                        hasCredit ? "bg-emerald-500/10 border-emerald-500/5" : 
+                        "bg-white/10"
                     )}>
                         <p className={cn(
-                            "text-[10px] font-medium mb-1",
-                            hasDebt ? "text-rose-400" : hasCredit ? "text-emerald-400" : "text-slate-400/80"
-                        )}>Tu balance</p>
-                        <p className={cn(
-                            "font-bold font-mono break-all leading-tight",
-                            hasDebt ? "text-rose-600 dark:text-rose-400" : 
-                            hasCredit ? "text-emerald-600 dark:text-emerald-400" : 
-                            "text-slate-500",
-                            getFontSizeClass(balanceStr)
+                            "text-[8px] font-black uppercase tracking-widest mb-0.5 truncate",
+                            hasDebt ? "text-rose-400" : hasCredit ? "text-emerald-400" : "text-slate-400"
                         )}>
-                            {balanceStr}
+                            {hasDebt ? "Debes" : (hasCredit ? "A Favor" : "Tu Parte")}
+                        </p>
+                        <p 
+                            title={`${group.userBalance && group.userBalance > 0 ? "+" : ""}${balanceStr}`}
+                            className={cn(
+                                "font-bold font-mono whitespace-nowrap overflow-hidden text-ellipsis leading-tight",
+                                hasDebt ? "text-rose-600 dark:text-rose-400" : 
+                                hasCredit ? "text-emerald-600 dark:text-emerald-400" : 
+                                "text-slate-500",
+                                getFontSizeClass(balanceStr)
+                            )}
+                        >
+                            {group.userBalance && group.userBalance > 0 ? "+" : ""}{balanceStr}
                         </p>
                     </div>
                 </div>
 
+                {/* Footer: Avatars (Left) | Status (Right) */}
                 <div className="flex items-center justify-between pt-1">
                     <MemberAvatars members={group.members || []} extraMembers={group.extraMembers} />
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-[var(--primary)] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        Ver detalles 
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+                    
+                    <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                            Activo ahora
+                        </span>
                     </div>
                 </div>
             </div>

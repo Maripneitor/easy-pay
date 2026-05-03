@@ -91,14 +91,14 @@
 }
 
 /* REGLA DE BORDES Y FONDOS ADAPTABLES */
-[class*="rounded-2xl"]:not(button) {
+[class*="rounded-2xl"]:not(button):not(.payment-card) {
     border: 1.5px solid var(--border-color) !important;
     background-color: var(--bg-card) !important;
     transition: all 0.3s ease;
 }
 
 /* Color de Iconos */
-svg {
+svg:not(.payment-card-icon) {
     color: var(--primary) !important;
     transition: color 0.3s ease;
 }
@@ -135,22 +135,23 @@ body {
 .animate-item-left { animation: item-separate-left 4s ease-out infinite; animation-fill-mode: forwards; }
 .animate-item-right { animation: item-separate-right 4s ease-out infinite; animation-fill-mode: forwards; }
 .animate-item-center { animation: item-separate-center 4s ease-out infinite; animation-fill-mode: forwards; }
+
 /* Limpieza de fondos y textos para temas oscuros y personalizados */
 .dark, .vibrant, .serene, .earth, .pink {
-    [class*="bg-white"], 
-    [class*="bg-slate-"], 
-    [class*="bg-gray-"], 
-    [class*="border-slate-"], 
-    [class*="border-gray-"], 
+    [class*="bg-white"]:not(.payment-card), 
+    [class*="bg-slate-"]:not(.payment-card), 
+    [class*="bg-gray-"]:not(.payment-card), 
+    [class*="border-slate-"]:not(.payment-card), 
+    [class*="border-gray-"]:not(.payment-card), 
     header[class*="header"], 
-    div[class*="bg-gray-50"] {
+    div[class*="bg-gray-50"]:not(.payment-card) {
         background-color: var(--bg-card) !important;
         border-color: var(--border-color) !important;
     }
 
-    [class*="text-slate-"], 
-    [class*="text-gray-"], 
-    [class*="text-zinc-"] {
+    [class*="text-slate-"]:not(.payment-card), 
+    [class*="text-gray-"]:not(.payment-card), 
+    [class*="text-zinc-"]:not(.payment-card) {
         color: var(--text-secondary) !important;
     }
 
@@ -187,3 +188,12 @@ html.font-large .custom-scrollbar {
 html.font-large aside {
     overflow: hidden !important;
 }
+
+/* ═══ Custom Utilities ═══ */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

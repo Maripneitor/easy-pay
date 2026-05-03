@@ -333,7 +333,7 @@ export default function GroupDetailScreen() {
                 balances={balances}
                 items={groupItems}
                 onComplete={(data) => {
-                    console.log('Mesa liquidada:', data);
+                    console.log('Grupo liquidado:', data);
                     // Actualizar estado local si es necesario
                     fetchData(true);
                 }}

@@ -11,6 +11,8 @@ import { CardAlert } from '@ui/components/Dashboard/CardAlert';
 import { cn } from '../../../infrastructure/utils';
 import { useAuthContext } from '../../context/AuthContext';
 
+import { TwoFactorModal } from '../../components/Security/TwoFactorModal';
+
 export const Dashboard: React.FC = () => {
     useDocumentTitle('Dashboard');
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
@@ -20,7 +22,11 @@ export const Dashboard: React.FC = () => {
         stats,
         isLoading,
         hasCards,
-        deleteGroup
+        deleteGroup,
+        confirmDeleteGroup,
+        is2FAModalOpen,
+        setIs2FAModalOpen,
+        userId
     } = useDashboard();
 
     const { user } = useAuthContext();
@@ -47,14 +53,8 @@ export const Dashboard: React.FC = () => {
 
     const handleDelete = async (e: React.MouseEvent, groupId: string, groupName: string) => {
         e.stopPropagation();
-        if (window.confirm(`¿Estás seguro de que quieres eliminar el grupo "${groupName}"? Esta acción no se puede deshacer.`)) {
-            try {
-                await deleteGroup(groupId);
-                toast.success('Grupo eliminado correctamente');
-            } catch (error: any) {
-                toast.error(error.message || 'Error al eliminar el grupo');
-            }
-        }
+        e.preventDefault();
+        await deleteGroup(groupId);
     };
 
     return (
@@ -67,7 +67,7 @@ export const Dashboard: React.FC = () => {
                     showStats
                 />
 
-                <main className="relative flex-grow px-4 py-8 md:px-8 max-w-[1600px] mx-auto w-full">
+                <main className="relative flex-grow px-4 py-8 md:px-8 max-w-7xl mx-auto w-full">
                     {/* Background decorative elements */}
                     <div className="pointer-events-none absolute -left-[10%] -top-[20%] h-[500px] w-[500px] rounded-full bg-[var(--primary)]/5 blur-[120px]" />
                     <div className="pointer-events-none absolute -right-[10%] bottom-[10%] h-[400px] w-[400px] rounded-full bg-emerald-500/5 blur-[100px]" />
@@ -82,7 +82,7 @@ export const Dashboard: React.FC = () => {
                                         <Wallet size={24} />
                                     </div>
                                     <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-full">
-                                        <TrendingUp size={12} /> +12%
+                                        <TrendingUp size={12} /> {stats?.groups_count || 0} grupos
                                     </span>
                                 </div>
                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] mb-1">Total Gastado</p>
@@ -160,7 +160,7 @@ export const Dashboard: React.FC = () => {
                                 {isLoading ? (
                                     <DashboardSkeleton />
                                 ) : (
-                                    <div className="grid gap-6 sm:grid-cols-2">
+                                    <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                                         {allActiveGroups.length > 0 ? (
                                             allActiveGroups.map((group: any) => {
                                                 const appearance = getAppearance(group.nombre || "G");
@@ -210,33 +210,30 @@ export const Dashboard: React.FC = () => {
 
                                 <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[2.5rem] p-8 shadow-sm">
                                     <div className="space-y-6">
-                                        <div>
-                                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
-                                                <span>Restaurantes</span>
-                                                <span className="text-[var(--primary)]">65%</span>
+                                        {stats?.by_category && stats.by_category.length > 0 ? (
+                                            stats.by_category.slice(0, 3).map((cat: any, i: number) => {
+                                                const total = stats.total_spent || 1;
+                                                const percentage = Math.round((cat.amount / total) * 100);
+                                                const colors = ['bg-[var(--primary)]', 'bg-emerald-500', 'bg-violet-500'];
+                                                return (
+                                                    <div key={i}>
+                                                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
+                                                            <span>{cat.category}</span>
+                                                            <span className={i === 0 ? 'text-[var(--primary)]' : i === 1 ? 'text-emerald-500' : 'text-violet-500'}>
+                                                                {percentage}%
+                                                            </span>
+                                                        </div>
+                                                        <div className="w-full h-2 bg-black/10 rounded-full overflow-hidden">
+                                                            <div className={cn("h-full", colors[i % colors.length])} style={{ width: `${percentage}%` }} />
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        ) : (
+                                            <div className="text-center py-4">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">Sin gastos registrados</p>
                                             </div>
-                                            <div className="w-full h-2 bg-black/10 rounded-full overflow-hidden">
-                                                <div className="h-full bg-[var(--primary)] w-[65%]" />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
-                                                <span>Diversión</span>
-                                                <span className="text-emerald-500">25%</span>
-                                            </div>
-                                            <div className="w-full h-2 bg-black/10 rounded-full overflow-hidden">
-                                                <div className="h-full bg-emerald-500 w-[25%]" />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
-                                                <span>Otros</span>
-                                                <span className="text-violet-500">10%</span>
-                                            </div>
-                                            <div className="w-full h-2 bg-black/10 rounded-full overflow-hidden">
-                                                <div className="h-full bg-violet-500 w-[10%]" />
-                                            </div>
-                                        </div>
+                                        )}
                                     </div>
 
                                     <div className="mt-10 pt-8 border-t border-[var(--border-color)]">
@@ -264,6 +261,15 @@ export const Dashboard: React.FC = () => {
                     </div>
                 </main>
             </div>
+
+            <TwoFactorModal
+                isOpen={is2FAModalOpen}
+                onClose={() => setIs2FAModalOpen(false)}
+                onVerified={confirmDeleteGroup}
+                userId={userId || ''}
+                actionTitle="Eliminar Grupo"
+                actionDescription="Esta acción es irreversible. Por seguridad, verifica tu identidad."
+            />
         </div>
     );
 };

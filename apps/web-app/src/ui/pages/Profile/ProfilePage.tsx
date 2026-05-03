@@ -14,14 +14,16 @@ import {
     Lock,
     ArrowDownRight,
     ArrowUpRight,
-    AlertCircle
+    AlertCircle,
+    ShoppingBag,
+    PieChart
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { PageHeader } from '@ui/components/PageHeader';
 import { useAuthContext } from '../../context/AuthContext';
 import { useProfileStats } from './useProfileStats';
 import { useDashboard } from '../Dashboard/useDashboard';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart as RePieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
 
@@ -66,20 +68,18 @@ export const ProfilePage = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg-body)] font-display text-[var(--text-primary)] antialiased selection:bg-[var(--primary)] selection:text-white transition-colors duration-300">
-            <div className="flex-1 flex flex-col min-w-0 relative pb-20 md:pb-0">
-                
-                <div className="bg-[var(--bg-body)] [&_header]:bg-transparent [&_header]:backdrop-blur-none [&_header]:border-[var(--border-color)]">
-                    <PageHeader
-                        onMenuClick={toggleSidebar}
-                        title="MI PERFIL"
-                        subtitle="Gestiona tu cuenta"
-                        showStats
-                        onStatsClick={() => navigate('/stats')}
-                    />
-                </div>
+        <div className="w-full space-y-8 animate-in fade-in duration-500">
+            <div className="bg-transparent [&_header]:bg-transparent [&_header]:backdrop-blur-none [&_header]:border-[var(--border-color)]">
+                <PageHeader
+                    onMenuClick={toggleSidebar}
+                    title="MI PERFIL"
+                    subtitle="Gestiona tu cuenta"
+                    showStats
+                    onStatsClick={() => navigate('/stats')}
+                />
+            </div>
 
-                <main className="flex-1 w-full max-w-5xl mx-auto px-4 md:px-6 py-8 space-y-8">
+                <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8">
 
                     {/* Tarjeta de Identidad Principal */}
                     <section className="w-full">
@@ -166,8 +166,8 @@ export const ProfilePage = () => {
                             </div>
 
                             {/* Gastos por Categoría */}
-                            <div className="mt-8 bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-6 shadow-sm dark:shadow-none">
-                                <h4 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Desglose de Gastos</h4>
+                            <div className="mt-8 bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-2xl p-6 md:p-8 shadow-sm dark:shadow-none">
+                                <h4 className="text-xs font-black text-[var(--text-secondary)] uppercase tracking-widest mb-6">Desglose de Gastos</h4>
                                 
                                 {statsLoading ? (
                                     <div className="animate-pulse space-y-4">
@@ -175,55 +175,74 @@ export const ProfilePage = () => {
                                             <div key={i} className="h-12 bg-slate-100 dark:bg-slate-800 rounded-lg"></div>
                                         ))}
                                     </div>
-                                ) : stats?.by_category?.length > 0 ? (
-                                    <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                                        <div className="w-full md:w-1/2 h-[250px]">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <PieChart>
+                                ) : (
+                                    <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+                                        <div className="w-full lg:w-1/2 h-64 md:h-80 relative">
+                                            {(!stats?.by_category || stats.by_category.length === 0) && (
+                                                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center">
+                                                    <div className="p-4 bg-black/5 rounded-full mb-2">
+                                                        <PieChart className="text-slate-300" size={32} />
+                                                    </div>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sin datos de gastos</p>
+                                                </div>
+                                            )}
+                                            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                                                <RePieChart>
                                                     <Pie
-                                                        data={stats.by_category}
+                                                        data={(!stats?.by_category || stats.by_category.length === 0) ? [{ category: 'Vacío', amount: 1 }] : stats.by_category}
                                                         cx="50%"
                                                         cy="50%"
                                                         innerRadius={60}
                                                         outerRadius={100}
-                                                        paddingAngle={5}
+                                                        paddingAngle={(!stats?.by_category || stats.by_category.length === 0) ? 0 : 5}
                                                         dataKey="amount"
                                                         nameKey="category"
                                                         stroke="none"
                                                     >
-                                                        {stats.by_category.map((entry: any, index: number) => (
-                                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                                        ))}
+                                                        {(!stats?.by_category || stats.by_category.length === 0) ? (
+                                                            <Cell fill="#e2e8f0" />
+                                                        ) : (
+                                                            stats.by_category.map((entry: any, index: number) => (
+                                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                            ))
+                                                        )}
                                                     </Pie>
-                                                    <Tooltip 
-                                                        formatter={(value: number) => `$${value.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`}
-                                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                                    />
-                                                </PieChart>
+                                                    {stats?.by_category?.length > 0 && (
+                                                        <Tooltip 
+                                                            formatter={(value: any) => `$${Number(value || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`}
+                                                            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', background: 'var(--bg-card)' }}
+                                                        />
+                                                    )}
+                                                </RePieChart>
                                             </ResponsiveContainer>
                                         </div>
                                         
-                                        <div className="w-full md:w-1/2 space-y-3">
-                                            {stats.by_category.map((cat: any, idx: number) => (
-                                                <div key={idx} className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
-                                                        <span className="font-medium text-sm text-[var(--text-primary)]">{cat.category}</span>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <div className="text-sm font-mono font-bold text-[var(--text-primary)]">
-                                                            ${cat.amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                        <div className="w-full lg:w-1/2 space-y-4">
+                                            {stats?.by_category?.length > 0 ? (
+                                                stats.by_category.map((cat: any, idx: number) => (
+                                                    <div key={idx} className="flex items-center justify-between p-3 bg-black/5 rounded-2xl border border-white/5">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
+                                                            <span className="font-bold text-sm text-[var(--text-primary)]">{cat.category}</span>
                                                         </div>
-                                                        <div className="text-xs text-[var(--text-secondary)]">
-                                                            {cat.percentage}%
+                                                        <div className="text-right">
+                                                            <div className="text-sm font-mono font-black text-[var(--text-primary)]">
+                                                                ${cat.amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                                            </div>
+                                                            <div className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+                                                                {cat.percentage}%
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                ))
+                                            ) : (
+                                                <div className="py-12 text-center opacity-30">
+                                                    <ShoppingBag size={48} className="mx-auto mb-3" />
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Registra tu primer gasto para ver el desglose</p>
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     </div>
-                                ) : (
-                                    <p className="text-sm text-[var(--text-secondary)] text-center py-4">No hay gastos registrados aún.</p>
                                 )}
                             </div>
                         </section>
@@ -319,6 +338,5 @@ export const ProfilePage = () => {
                     </div>
                 </main>
             </div>
-        </div>
     );
 };

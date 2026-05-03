@@ -41,22 +41,24 @@ class MongoGroupRepository:
         
         usuarios_cursor = self.users_collection.find(
             {"_id": {"$in": valid_uids}},
-            {"nombre": 1}
+            {"nombre": 1, "financial_profile": 1}
         )
         
-        # 3. Mapear a una lista de objetos {id, nombre}
+        # 3. Mapear a una lista de objetos {id, nombre, financial_profile}
         miembros_detallados = []
         
         # Si incluimos al usuario demo, lo agregamos manualmente si está en la lista
         if "demo-user-id" in integrantes_ids:
             miembros_detallados.append({
                 "id": "demo-user-id",
-                "nombre": "Usuario Demo (Tú)"
+                "nombre": "Usuario Demo (Tú)",
+                "financial_profile": {}
             })
         async for user in usuarios_cursor:
             miembros_detallados.append({
                 "id": str(user["_id"]),
-                "nombre": user.get("nombre") or "Usuario sin nombre"
+                "nombre": user.get("nombre") or "Usuario sin nombre",
+                "financial_profile": user.get("financial_profile") or {}
             })
 
         # 4. Limpiar el grupo y meter la nueva lista detallada
@@ -106,3 +108,26 @@ class MongoGroupRepository:
     async def delete_group(self, group_id: str) -> bool:
         result = await self.collection.delete_one({"_id": ObjectId(group_id)})
         return result.deleted_count > 0
+
+    async def update_group(self, group_id: str, update_data: dict) -> bool:
+        if not ObjectId.is_valid(group_id):
+            return False
+        result = await self.collection.update_one(
+            {"_id": ObjectId(group_id)},
+            {"$set": update_data}
+        )
+        return result.modified_count > 0 or result.matched_count > 0
+
+    async def close_group(self, group_id: str, final_data: dict) -> bool:
+        if not ObjectId.is_valid(group_id):
+            return False
+        result = await self.collection.update_one(
+            {"_id": ObjectId(group_id)},
+            {"$set": {
+                "estado": "closed",
+                "fecha_cierre": final_data.get("fecha_cierre"),
+                "monto_final": final_data.get("final_total"),
+                "propina_total": final_data.get("tip_amount")
+            }}
+        )
+        return result.modified_count > 0

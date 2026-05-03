@@ -37,7 +37,8 @@ async def add_item(data: ItemCreate):
 async def join_group(data: GroupJoin):
     result = await join_group_uc.execute(data.codigo, data.user_id)
     if result["status"] == "error":
-        raise HTTPException(status_code=400, detail=result["message"])
+        status_code = 404 if "Código" in result["message"] else 400
+        raise HTTPException(status_code=status_code, detail=result["message"])
     return result
 
 @group_router.get("/{group_id}/items")
@@ -108,6 +109,16 @@ async def delete_group_route(group_id: str):
         
     return result
 
+@group_router.put("/{group_id}")
+async def update_group(group_id: str, data: dict):
+    """
+    Actualiza los detalles de un grupo (nombre, descripción).
+    """
+    success = await group_repo.update_group(group_id, data)
+    if not success:
+        raise HTTPException(status_code=404, detail="Grupo no encontrado o sin cambios")
+    return {"status": "success", "message": "Grupo actualizado correctamente"}
+
 @group_router.delete("/{group_id}/items/{item_id}")
 async def remove_item(group_id: str, item_id: str):
     """
@@ -128,6 +139,19 @@ async def add_member(group_id: str, data: dict):
     if not success:
         raise HTTPException(status_code=400, detail="No se pudo agregar al miembro")
     return {"status": "success", "message": "Miembro agregado"}
+
+@group_router.post("/{group_id}/close")
+async def close_group(group_id: str, data: dict):
+    from datetime import datetime
+    final_data = {
+        "tip_amount": data.get("tip_amount", 0),
+        "final_total": data.get("final_total", 0),
+        "fecha_cierre": datetime.utcnow().isoformat()
+    }
+    success = await group_repo.close_group(group_id, final_data)
+    if not success:
+        raise HTTPException(status_code=400, detail="No se pudo cerrar el grupo")
+    return {"status": "success", "message": "Grupo cerrado correctamente"}
 
 @group_router.delete("/{group_id}/members/{user_id}")
 async def remove_member(group_id: str, user_id: str):

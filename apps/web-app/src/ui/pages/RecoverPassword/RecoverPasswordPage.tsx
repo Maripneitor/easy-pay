@@ -3,6 +3,7 @@ import { Mail, ArrowLeft, Sun, Moon, Lock, Loader2, KeyRound } from 'lucide-reac
 import styles from './RecoverPassword.module.css';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuthContext } from '../../context/AuthContext';
 import { toast } from 'sonner';
 
 import { userRepository } from '../../../infrastructure/api/repositories';
@@ -10,6 +11,8 @@ import { userRepository } from '../../../infrastructure/api/repositories';
 export const RecoverPasswordPage = () => {
     const navigate = useNavigate();
     const { isDark, toggleTheme } = useTheme();
+    const { user } = useAuthContext();
+    const isAuthenticated = !!user;
     
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [email, setEmail] = useState('');
@@ -222,12 +225,12 @@ export const RecoverPasswordPage = () => {
                         <button
                             type="button"
                             className={styles.switchBtn}
-                            onClick={() => navigate('/auth')}
+                            onClick={() => navigate(isAuthenticated ? '/profile' : '/auth')}
                             style={{ margin: '0 auto' }}
                             disabled={loading}
                         >
                             <ArrowLeft size={18} />
-                            <span>Volver al inicio de sesión</span>
+                            <span>{isAuthenticated ? 'Cancelar y volver al Perfil' : 'Volver al inicio de sesión'}</span>
                         </button>
                     </div>
                 </div>

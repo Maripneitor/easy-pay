@@ -2,34 +2,54 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path';
 
+// SIEMPRE usar 127.0.0.1 porque Vite corre en el HOST, no dentro de Docker.
+// Los puertos de los contenedores están mapeados al host: 0.0.0.0:8001->8001, etc.
+// Los nombres de servicio Docker (auth-service, group-service) SOLO son resolvibles
+// dentro de la red interna de Docker — no desde el proceso Node.js del host.
+const getTarget = (port: number) => `http://127.0.0.1:${port}`;
+
 export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
     port: 5173,
+    strictPort: false, // Si 5173 está ocupado, usa el siguiente disponible
+    hmr: {
+      // El cliente HMR usará automáticamente el host y puerto desde el que se cargó la página.
+      // Esto evita ERR_CONNECTION_REFUSED cuando Vite sube de 5173 a 5174.
+    },
     watch: {
       usePolling: true
     },
-    // 👇 PROXY PARA MICROSERVICIOS
     proxy: {
       '/api/auth': {
-        target: 'http://auth-service:8001',
+        target: getTarget(8001),
         changeOrigin: true,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('[vite-proxy] ❌ auth-service error:', err.message);
+          });
+        },
       },
       '/api/groups': {
-        target: 'http://group-service:8002',
+        target: getTarget(8002),
         changeOrigin: true,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('[vite-proxy] ❌ group-service error:', err.message);
+          });
+        },
       },
       '/api/stats': {
-        target: 'http://stats-service:8003',
+        target: getTarget(8003),
         changeOrigin: true,
       },
       '/api/ocr': {
-        target: 'http://ocr-service:8004',
+        target: getTarget(8004),
         changeOrigin: true,
       },
       '/api/notifications': {
-        target: 'http://notification-service:8005',
+        target: getTarget(8005),
         changeOrigin: true,
       }
     }

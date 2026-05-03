@@ -7,11 +7,17 @@ class TwoFactorConfig(BaseModel):
     otp_code: Optional[str] = None
     otp_expires: Optional[datetime] = None
 
+class FinancialProfile(BaseModel):
+    beneficiario: Optional[str] = None
+    clabe: Optional[str] = None
+    entidad_financiera: Optional[str] = None
+
 class User(BaseModel):
     nombre: str
     email: EmailStr
     password_hash: str
     two_factor: TwoFactorConfig = Field(default_factory=TwoFactorConfig)
+    financial_profile: FinancialProfile = Field(default_factory=FinancialProfile)
     roles: List[str] = ["user"]
     fecha_registro: datetime = Field(default_factory=datetime.utcnow)
     is_verified: bool = False  
@@ -43,6 +49,7 @@ class UserUpdate(BaseModel):
     nombre: Optional[str] = None
     email: Optional[EmailStr] = None
     telefono: Optional[str] = None
+    financial_profile: Optional[FinancialProfile] = None
 
 # Clase para solicitar restablecimiento de contraseña
 class PasswordResetRequest(BaseModel):

@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { statsRepository } from '../../../infrastructure/api/repositories';
+import { useAuthContext } from '../../context/AuthContext';
 
 export const useProfileStats = () => {
-    const userId = localStorage.getItem('userId');
+    const { user } = useAuthContext();
+    const userId = user?.id || null;
 
     // Fetch basic stats (Total spent, owed, etc.)
     const statsQuery = useQuery({

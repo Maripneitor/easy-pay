@@ -11,10 +11,7 @@ app = FastAPI(
 )
 
 # Configurar CORS (Puerto del Frontend: 5173)
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+origins = ["*"]
 
 # ✅ CORREGIDO: 'app' en lugar de 'add'
 app.add_middleware(
@@ -36,6 +33,20 @@ def read_root():
         "status": "active"
     }
 
+import logging
+logger = logging.getLogger(__name__)
+
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "system": "Easy Pay Group Service"}
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    import traceback
+    logger.error(f"Global exception: {str(exc)}")
+    logger.error(traceback.format_exc())
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error", "error": str(exc)}
+    )

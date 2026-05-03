@@ -7,10 +7,22 @@ class MongoUserRepository:
         # Conexión a la base de datos y colección
         self.db = db_instance.get_db("EasyPay_Auth") 
         self.collection = self.db.get_collection("Users")
+        # Crear índice único en email para prevenir duplicados a nivel de BD
+        self._indexes_created = False
+
+    async def _ensure_indexes(self):
+        """Crea índices únicos si aún no se han creado en esta instancia."""
+        if not self._indexes_created:
+            try:
+                await self.collection.create_index("email", unique=True, sparse=True)
+                self._indexes_created = True
+            except Exception as e:
+                print(f"⚠️ Índice de email ya existe o error: {e}")
 
     # --- MÉTODO PARA GUARDAR EL USUARIO (REGISTRO) ---
     async def save_user(self, user_data: dict):
         """Inserta el JSON del usuario en MongoDB"""
+        await self._ensure_indexes()
         result = await self.collection.insert_one(user_data)
         return str(result.inserted_id)
 
@@ -50,7 +62,7 @@ class MongoUserRepository:
             {"_id": ObjectId(user_id)},
             {"$set": update_data}
         )
-        return result.modified_count > 0
+        return result.matched_count > 0
     
     # --- MÉTODO PARA BUSCAR POR ID ---
     async def get_user_by_id(self, user_id: str):

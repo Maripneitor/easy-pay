@@ -6,6 +6,11 @@ export interface User {
     nombre: string;
     email: string;
     avatarUrl?: string;
+    financial_profile?: {
+        beneficiario?: string;
+        clabe?: string;
+        entidad_financiera?: string;
+    };
     [key: string]: any;
 }
 

@@ -11,17 +11,20 @@ import {
     Edit3,
     Calendar,
     Hash,
-    ShieldCheck
+    ShieldCheck,
+    Users
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '../../../../infrastructure/utils';
 
 interface TransactionDetailModalProps {
     isOpen: boolean;
     onClose: () => void;
     transaction: any;
+    members?: any[]; // Optional list of members to resolve names and shares
 }
 
-export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({ isOpen, onClose, transaction }) => {
+export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({ isOpen, onClose, transaction, members = [] }) => {
     if (!transaction) return null;
 
     const copyToClipboard = (text: string, label: string) => {
@@ -65,10 +68,14 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({ 
                             
                             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)] mb-1">Operación Exitosa</p>
                             <h2 className="text-5xl font-black text-[var(--text-primary)] tracking-tighter mb-1 font-mono">
-                                ${Number(transaction.amount || transaction.monto).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                {(() => {
+                                    const amount = Number(transaction.amount || transaction.monto);
+                                    if (isNaN(amount)) return "$0.00";
+                                    return amount.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+                                })()}
                             </h2>
                             <p className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-widest">
-                                {transaction.description || transaction.nombre}
+                                {transaction.description || transaction.nombre || "Gasto sin descripción"}
                             </p>
                         </div>
 
@@ -81,9 +88,20 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({ 
                                 </div>
                                 <div className="text-right">
                                     <p className="text-xs font-bold text-[var(--text-primary)]">
-                                        {transaction.date || new Date().toLocaleDateString('es-MX')}
+                                        {transaction.date || transaction.fecha || new Date().toLocaleDateString('es-MX')}
                                     </p>
-                                    <p className="text-[9px] font-bold text-emerald-500 uppercase">Aprobado</p>
+                                    <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                                        <div className={cn(
+                                            "w-1.5 h-1.5 rounded-full animate-pulse",
+                                            (transaction.status === 'completed' || transaction.status === 'approved' || !transaction.status) ? "bg-emerald-500" : "bg-amber-500"
+                                        )} />
+                                        <p className={cn(
+                                            "text-[9px] font-black uppercase tracking-widest",
+                                            (transaction.status === 'completed' || transaction.status === 'approved' || !transaction.status) ? "text-emerald-500" : "text-amber-500"
+                                        )}>
+                                            {transaction.status === 'pending' ? 'Pendiente' : 'Completado'}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -93,14 +111,16 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({ 
                                     <div className="space-y-1">
                                         <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Origen</p>
                                         <div className="flex items-center gap-2">
-                                            <div className="w-6 h-4 bg-blue-600 rounded-sm"></div>
-                                            <p className="text-xs font-bold">Tarjeta Visa **** 4582</p>
+                                            <div className="w-6 h-4 bg-[var(--primary)]/20 rounded-sm flex items-center justify-center">
+                                                <div className="w-full h-[2px] bg-[var(--primary)]/40" />
+                                            </div>
+                                            <p className="text-xs font-bold">{transaction.paymentMethod || 'Saldo Easy-Pay'}</p>
                                         </div>
                                     </div>
                                     <ArrowRight size={16} className="text-slate-300" />
                                     <div className="text-right space-y-1">
                                         <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Destino</p>
-                                        <p className="text-xs font-bold">Cuenta Easy-Pay</p>
+                                        <p className="text-xs font-bold">Grupo: {transaction.groupName || 'Transacción Directa'}</p>
                                     </div>
                                 </div>
                             </div>
@@ -110,7 +130,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({ 
                                 <div className="flex justify-between items-center group">
                                     <div>
                                         <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">N.° de operación</p>
-                                        <p className="text-sm font-mono font-bold text-[var(--text-primary)]">{transaction.id?.slice(0, 12).toUpperCase() || 'OP-74859623'}</p>
+                                        <p className="text-sm font-mono font-bold text-[var(--text-primary)]">{String(transaction.id || 'OP-' + Math.random().toString(36).substr(2, 9)).toUpperCase()}</p>
                                     </div>
                                     <button 
                                         onClick={() => copyToClipboard(transaction.id || 'OP-74859623', 'N.° de operación')}
@@ -120,23 +140,17 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({ 
                                     </button>
                                 </div>
 
-                                <div className="flex justify-between items-center group">
-                                    <div>
-                                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Clave de rastreo</p>
-                                        <p className="text-sm font-mono font-bold text-[var(--text-primary)]">EP-TRK-{Math.floor(Math.random() * 1000000)}</p>
+                                {transaction.notes && (
+                                    <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-2xl">
+                                        <p className="text-[9px] font-black uppercase text-amber-600 tracking-widest mb-1">Notas</p>
+                                        <p className="text-xs text-amber-900/70 font-medium">{transaction.notes}</p>
                                     </div>
-                                    <button 
-                                        onClick={() => copyToClipboard('EP-TRK-7485962', 'Clave de rastreo')}
-                                        className="p-2 text-slate-400 hover:text-[var(--primary)] transition-all"
-                                    >
-                                        <Copy size={16} />
-                                    </button>
-                                </div>
+                                )}
 
                                 <div className="flex justify-between items-center group">
                                     <div>
                                         <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Referencia</p>
-                                        <p className="text-sm font-bold text-[var(--text-primary)]">{transaction.category || 'Otros'}</p>
+                                        <p className="text-sm font-bold text-[var(--text-primary)] uppercase">{transaction.category || 'Varios'}</p>
                                     </div>
                                     <button 
                                         onClick={() => copyToClipboard(transaction.category || 'Otros', 'Referencia')}
@@ -146,6 +160,57 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({ 
                                     </button>
                                 </div>
                             </div>
+
+                            {/* Expense Split Section */}
+                            {(transaction.participantes_ids || transaction.assignedTo) && (
+                                <div className="space-y-4 pt-6 border-t border-[var(--border-color)]">
+                                    <div className="flex items-center justify-between px-1">
+                                        <div className="flex items-center gap-2">
+                                            <Users size={16} className="text-[var(--primary)]" />
+                                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">División del Gasto</h4>
+                                        </div>
+                                        <span className="text-[9px] font-black uppercase px-2 py-1 bg-[var(--primary)]/10 text-[var(--primary)] rounded-md">
+                                            { (transaction.participantes_ids || transaction.assignedTo || []).length } Personas
+                                        </span>
+                                    </div>
+
+                                    <div className="bg-black/5 rounded-[2rem] p-6 space-y-3">
+                                        {(() => {
+                                            const participantsIds = transaction.participantes_ids || transaction.assignedTo || [];
+                                            const totalAmount = Number(transaction.amount || transaction.monto || 0);
+                                            const perPerson = totalAmount / Math.max(participantsIds.length, 1);
+                                            
+                                            return participantsIds.map((pid: string, idx: number) => {
+                                                const member = members.find(m => m.id === pid);
+                                                const memberName = member?.nombre || member?.name || `Usuario ${pid.substring(0, 4)}`;
+                                                
+                                                return (
+                                                    <div key={pid} className="flex items-center justify-between group/split">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-full bg-white border border-[var(--border-color)] flex items-center justify-center text-[10px] font-black shadow-sm group-hover/split:border-[var(--primary)]/30 transition-all">
+                                                                {memberName.charAt(0)}
+                                                            </div>
+                                                            <span className="text-xs font-bold text-slate-600 uppercase group-hover/split:text-[var(--primary)] transition-colors">{memberName}</span>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className="text-xs font-black font-mono tracking-tighter text-[var(--text-primary)]">
+                                                                ${perPerson.toFixed(2)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            });
+                                        })()}
+                                    </div>
+                                    
+                                    <div className="flex justify-between items-center px-4 py-3 bg-[var(--primary)]/5 rounded-2xl border border-[var(--primary)]/10">
+                                        <p className="text-[9px] font-black uppercase text-[var(--primary)] tracking-widest">Total a repartir</p>
+                                        <p className="text-sm font-black text-[var(--primary)] font-mono">
+                                            ${Number(transaction.amount || transaction.monto || 0).toFixed(2)}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Category Section */}
                             <div className="py-6 border-t border-[var(--border-color)] flex items-center justify-between">

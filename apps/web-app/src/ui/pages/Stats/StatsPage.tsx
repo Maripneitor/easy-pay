@@ -14,12 +14,12 @@ import {
     Gamepad2,
     Briefcase,
     Ghost,
-    Users,
     Activity,
     Cake,
     Plane,
     CheckCircle,
-    RotateCw
+    RotateCw,
+    AlertCircle
 } from 'lucide-react';
 import { 
     BarChart,
@@ -32,8 +32,6 @@ import {
     PieChart as RePieChart,
     Pie,
     Cell,
-    LineChart,
-    Line,
     AreaChart,
     Area
 } from 'recharts';
@@ -42,89 +40,155 @@ import { useProfileStats } from '../Profile/useProfileStats';
 import { Loader } from '../../components/Loader/Loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../../infrastructure/utils';
+import { PageHeader } from '../../components/PageHeader/PageHeader';
 import styles from './StatsPage.module.css';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
-
-const categoryIcons: Record<string, any> = {
-    'Comida': <Utensils size={18} />,
-    'Restaurantes': <Utensils size={18} />,
-    'Transporte': <Car size={18} />,
-    'Entretenimiento': <Gamepad2 size={18} />,
-    'Diversión': <Gamepad2 size={18} />,
-    'Compras': <ShoppingBag size={18} />,
-    'Otros': <Briefcase size={18} />
-};
+const EMPTY_COLOR = '#e2e8f0'; // Light gray for empty states
 
 // --- Sub-componentes Semánticos ---
 
-const CategoryDonutChart = ({ data }: { data: any[] }) => (
-    <div className="h-[300px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-            <RePieChart>
-                <Pie
-                    data={data}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={100}
-                    paddingAngle={8}
-                    dataKey="amount"
-                    nameKey="category"
-                    stroke="none"
-                >
-                    {data.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                </Pie>
-                <ReTooltip 
-                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
-                    itemStyle={{ color: 'var(--text-primary)', fontWeight: 'bold' }}
-                    formatter={(value: number) => `$${value.toLocaleString('es-MX')}`}
-                />
-            </RePieChart>
-        </ResponsiveContainer>
+const EmptyStateOverlay = () => (
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[var(--bg-card)]/40 backdrop-blur-[2px] rounded-[2.5rem]">
+        <div className="p-4 bg-white/10 rounded-full mb-3 shadow-sm border border-white/5">
+            <AlertCircle size={24} className="text-slate-400" />
+        </div>
+        <p className="text-xs font-black uppercase tracking-widest text-slate-500 text-center px-4">
+            Aún no hay transacciones para analizar
+        </p>
     </div>
+
 );
 
-const ExpenseLineChart = ({ data }: { data: any[] }) => (
-    <div className="h-[300px] w-full pt-4">
-        <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data}>
-                <defs>
-                    <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
-                    </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                <XAxis 
-                    dataKey="month" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }}
-                />
-                <YAxis hide />
-                <ReTooltip 
-                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
-                    cursor={{ stroke: 'var(--primary)', strokeWidth: 2 }}
-                />
-                <Area 
-                    type="monotone" 
-                    dataKey="total" 
-                    stroke="var(--primary)" 
-                    strokeWidth={4}
-                    fillOpacity={1} 
-                    fill="url(#colorTotal)" 
-                />
-            </AreaChart>
-        </ResponsiveContainer>
-    </div>
-);
+const CategoryDonutChart = ({ data }: { data: any[] }) => {
+    const isEmpty = !data || data.length === 0;
+    const chartData = isEmpty ? [{ category: 'Sin datos', amount: 1 }] : data;
+
+    return (
+        <div className="h-[300px] w-full relative">
+            {isEmpty && <EmptyStateOverlay />}
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                <RePieChart>
+                    <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={70}
+                        outerRadius={100}
+                        paddingAngle={isEmpty ? 0 : 8}
+                        dataKey="amount"
+                        nameKey="category"
+                        stroke="none"
+                    >
+                        {chartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={isEmpty ? EMPTY_COLOR : COLORS[index % COLORS.length]} />
+                        ))}
+                    </Pie>
+                    {!isEmpty && (
+                        <ReTooltip 
+                            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                            itemStyle={{ color: 'var(--text-primary)', fontWeight: 'bold' }}
+                            formatter={(value: any) => `$${Number(value || 0).toLocaleString('es-MX')}`}
+                        />
+                    )}
+                </RePieChart>
+            </ResponsiveContainer>
+        </div>
+    );
+};
+
+const IncomeExpenseChart = ({ data }: { data: any[] }) => {
+    const isEmpty = !data || data.length === 0;
+    const fallbackData = [
+        { month: 'Ene', ingresos: 0, gastos: 0 },
+        { month: 'Feb', ingresos: 0, gastos: 0 },
+        { month: 'Mar', ingresos: 0, gastos: 0 },
+        { month: 'Abr', ingresos: 0, gastos: 0 },
+        { month: 'May', ingresos: 0, gastos: 0 },
+        { month: 'Jun', ingresos: 0, gastos: 0 }
+    ];
+    const chartData = isEmpty ? fallbackData : data;
+
+    return (
+        <div className="h-[300px] w-full pt-4 relative">
+            {isEmpty && <EmptyStateOverlay />}
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                    <XAxis 
+                        dataKey="month" 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }}
+                    />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
+                    {!isEmpty && (
+                        <ReTooltip 
+                            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                        />
+                    )}
+                    <Bar dataKey="ingresos" fill={isEmpty ? EMPTY_COLOR : "#10b981"} radius={[4, 4, 0, 0]} name="Ingresos" />
+                    <Bar dataKey="gastos" fill={isEmpty ? "#cbd5e1" : "#ef4444"} radius={[4, 4, 0, 0]} name="Gastos" />
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+    );
+};
+
+const ExpenseLineChart = ({ data }: { data: any[] }) => {
+    const isEmpty = !data || data.length === 0;
+    const fallbackData = [
+        { month: 'Ene', total: 0 },
+        { month: 'Feb', total: 0 },
+        { month: 'Mar', total: 0 },
+        { month: 'Abr', total: 0 },
+        { month: 'May', total: 0 },
+        { month: 'Jun', total: 0 }
+    ];
+    const chartData = isEmpty ? fallbackData : data;
+
+    return (
+        <div className="h-[300px] w-full pt-4 relative">
+            {isEmpty && <EmptyStateOverlay />}
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                <AreaChart data={chartData}>
+                    <defs>
+                        <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={isEmpty ? EMPTY_COLOR : "var(--primary)"} stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor={isEmpty ? EMPTY_COLOR : "var(--primary)"} stopOpacity={0}/>
+                        </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                    <XAxis 
+                        dataKey="month" 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }}
+                    />
+                    <YAxis hide />
+                    {!isEmpty && (
+                        <ReTooltip 
+                            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                            cursor={{ stroke: 'var(--primary)', strokeWidth: 2 }}
+                        />
+                    )}
+                    <Area 
+                        type="monotone" 
+                        dataKey="total" 
+                        stroke={isEmpty ? EMPTY_COLOR : "var(--primary)"} 
+                        strokeWidth={4}
+                        fillOpacity={1} 
+                        fill="url(#colorTotal)" 
+                    />
+                </AreaChart>
+            </ResponsiveContainer>
+        </div>
+    );
+};
 
 export const StatsPage = () => {
     const navigate = useNavigate();
-    const { stats, loading, error, refresh } = useProfileStats();
+    const { stats, loading, refresh } = useProfileStats();
 
     if (loading) return <Loader />;
 
@@ -141,251 +205,183 @@ export const StatsPage = () => {
         visible: { y: 0, opacity: 1 }
     };
 
-    const hasData = stats && stats.total_spent > 0;
+    // Ensure we have data structure even if backend is empty
+    const incomeVsExpenses = stats?.income_vs_expenses || [];
+    const categories = stats?.categories || [];
+    const monthlyTrend = stats?.monthly_trend || [];
+    
+    // Always show the dashboard, even if "empty"
+    const hasAnyData = (stats?.total_spent > 0) || (incomeVsExpenses.length > 0) || (categories.length > 0);
 
     return (
-        <div className={cn(styles.container, "bg-[var(--bg-body)] min-h-screen pb-20")}>
-            <header className={styles.header}>
-                <div className="max-w-6xl mx-auto w-full px-6 flex items-center gap-6">
-                    <button onClick={() => navigate(-1)} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/10 text-[var(--text-primary)]">
-                        <ArrowLeft size={24} />
+        <div className="w-full space-y-8 animate-in fade-in duration-500">
+            <PageHeader
+                title="ESTADÍSTICAS"
+                subtitle="Análisis detallado de tus finanzas"
+                onBack={() => navigate(-1)}
+                rightSlot={
+                    <button 
+                        onClick={() => refresh()}
+                        className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/10 text-[var(--text-primary)]"
+                        title="Actualizar"
+                    >
+                        <RotateCw size={24} className={loading ? "animate-spin" : ""} />
                     </button>
-                    <div className={styles.headerContent}>
-                        <h1 className="text-3xl font-black tracking-tighter text-[var(--text-primary)]">Gráficas y Análisis</h1>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Tu ecosistema financiero en un solo lugar</p>
-                    </div>
-                </div>
-            </header>
+                }
+            />
 
-            <main className="max-w-6xl mx-auto px-6 py-12">
-                <AnimatePresence mode="wait">
-                    {!hasData ? (
-                        <motion.div 
-                            key="empty"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="flex flex-col items-center justify-center py-40 opacity-40 text-center"
-                        >
-                            <div className="p-8 bg-black/5 rounded-[3rem] mb-8">
-                                <Ghost size={80} className="text-slate-400" />
+            <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12">
+                <motion.div 
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="space-y-8 md:space-y-12"
+                >
+                    {/* --- Summary Cards (KPIs) --- */}
+                    <section className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                        <motion.div variants={itemVariants} className="p-6 md:p-8 bg-[var(--bg-card)] rounded-[2rem] md:rounded-[2.5rem] border border-[var(--border-color)] shadow-sm group hover:border-[var(--primary)]/30 transition-all backdrop-blur-xl">
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Total Transaccionado</span>
+                            <h2 className="text-3xl md:text-4xl font-black mt-2 tracking-tighter text-[var(--text-primary)]">
+                                ${Number(stats?.total_spent || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                            </h2>
+                            <div className="mt-3 flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                                <Activity size={14} className="text-[var(--primary)]" /> Historial acumulado
                             </div>
-                            <h2 className="text-2xl font-black uppercase tracking-[0.2em] text-[var(--text-primary)]">Sin actividad aún</h2>
-                            <p className="text-sm font-bold mt-2 text-slate-500">Crea un grupo o registra gastos para activar tu historial.</p>
-                            <button 
-                                onClick={() => navigate('/create-group')}
-                                className="mt-8 px-8 py-4 bg-[var(--primary)] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 transition-transform"
-                            >
-                                Iniciar Primer Grupo
-                            </button>
                         </motion.div>
-                    ) : (
-                        <motion.div 
-                            key="dashboard"
-                            variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
-                            className="space-y-12"
-                        >
-                            {/* --- Summary Cards --- */}
-                            <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                <motion.div variants={itemVariants} className="p-8 bg-[var(--bg-card)] rounded-[2.5rem] border border-[var(--border-color)] shadow-sm group hover:border-[var(--primary)]/30 transition-all backdrop-blur-xl">
-                                    <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-6 group-hover:rotate-6 transition-transform">
-                                        <Wallet size={28} />
-                                    </div>
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Gasto Acumulado</span>
-                                    <h2 className="text-4xl font-black mt-2 tracking-tighter text-[var(--text-primary)]">
-                                        ${stats?.total_spent?.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                                    </h2>
-                                </motion.div>
 
-                                <motion.div variants={itemVariants} className="p-8 bg-[var(--bg-card)] rounded-[2.5rem] border border-[var(--border-color)] shadow-sm group hover:border-emerald-500/30 transition-all backdrop-blur-xl">
-                                    <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6 group-hover:rotate-6 transition-transform">
-                                        <TrendingUp size={28} />
-                                    </div>
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Por recibir</span>
-                                    <h2 className="text-4xl font-black mt-2 tracking-tighter text-emerald-500">
-                                        ${(stats?.owed_to_user || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                                    </h2>
-                                </motion.div>
+                        <motion.div variants={itemVariants} className="p-6 md:p-8 bg-[var(--bg-card)] rounded-[2rem] md:rounded-[2.5rem] border border-[var(--border-color)] shadow-sm group hover:border-emerald-500/30 transition-all backdrop-blur-xl">
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">A favor (Por cobrar)</span>
+                            <h2 className="text-3xl md:text-4xl font-black mt-2 tracking-tighter text-emerald-500">
+                                ${Number(stats?.owed_to_user || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                            </h2>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase mt-3 flex items-center gap-2">
+                                <ArrowUpRight size={14} className="text-emerald-500" /> Dinero que te deben
+                            </p>
+                        </motion.div>
 
-                                <motion.div variants={itemVariants} className="p-8 bg-[var(--bg-card)] rounded-[2.5rem] border border-[var(--border-color)] shadow-sm group hover:border-rose-500/30 transition-all backdrop-blur-xl">
-                                    <div className="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500 mb-6 group-hover:rotate-6 transition-transform">
-                                        <TrendingDown size={28} />
-                                    </div>
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Por pagar</span>
-                                    <h2 className="text-4xl font-black mt-2 tracking-tighter text-rose-500">
-                                        ${(stats?.user_owes || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                                    </h2>
-                                </motion.div>
-                            </section>
+                        <motion.div variants={itemVariants} className="p-6 md:p-8 bg-[var(--bg-card)] rounded-[2rem] md:rounded-[2.5rem] border border-[var(--border-color)] shadow-sm group hover:border-rose-500/30 transition-all backdrop-blur-xl">
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Deudas (Por pagar)</span>
+                            <h2 className="text-3xl md:text-4xl font-black mt-2 tracking-tighter text-rose-500">
+                                ${Number(stats?.user_owes || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                            </h2>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase mt-3 flex items-center gap-2">
+                                <ArrowDownLeft size={14} className="text-rose-500" /> Dinero que debes
+                            </p>
+                        </motion.div>
+                    </section>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                                {/* --- Category Breakdown --- */}
-                                <motion.section variants={itemVariants} className="p-10 bg-[var(--bg-card)] rounded-[3rem] border border-[var(--border-color)] shadow-sm backdrop-blur-xl">
-                                    <div className="flex items-center justify-between mb-10">
-                                        <div className="flex items-center gap-4">
-                                            <div className="p-3 bg-violet-500/10 rounded-2xl text-violet-500">
-                                                <PieChart size={24} />
-                                            </div>
-                                            <h3 className="text-xl font-black uppercase tracking-tighter">Categorías</h3>
-                                        </div>
-                                        <span className="text-[9px] font-black bg-violet-500/10 text-violet-500 px-3 py-1 rounded-full uppercase tracking-widest">Distribución</span>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+                        {/* --- Comparison Chart --- */}
+                        <motion.section variants={itemVariants} className="p-6 md:p-10 bg-[var(--bg-card)] rounded-[2rem] md:rounded-[3rem] border border-[var(--border-color)] shadow-sm backdrop-blur-xl flex flex-col min-h-[450px]">
+                            <div className="flex items-center justify-between mb-8 md:mb-10">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-500">
+                                        <Activity size={24} />
                                     </div>
-                                    
-                                    <div className="flex flex-col items-center">
-                                        <CategoryDonutChart data={stats?.categories || []} />
-                                        
-                                        <div className="grid grid-cols-2 w-full gap-4 mt-6">
-                                            {stats?.categories?.slice(0, 4).map((cat: any, index: number) => (
-                                                <div key={index} className="flex items-center gap-3 p-4 bg-black/5 rounded-2xl border border-white/5">
-                                                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                                                    <div className="min-w-0">
-                                                        <p className="text-[10px] font-black uppercase tracking-tight text-slate-500 truncate">{cat.category || cat.name}</p>
-                                                        <p className="text-xs font-bold text-[var(--text-primary)]">${cat.amount?.toLocaleString()}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </motion.section>
-
-                                {/* --- Monthly Trend --- */}
-                                <motion.section variants={itemVariants} className="p-10 bg-[var(--bg-card)] rounded-[3rem] border border-[var(--border-color)] shadow-sm backdrop-blur-xl flex flex-col">
-                                    <div className="flex items-center justify-between mb-10">
-                                        <div className="flex items-center gap-4">
-                                            <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-500">
-                                                <BarChart3 size={24} />
-                                            </div>
-                                            <h3 className="text-xl font-black uppercase tracking-tighter">Tendencia</h3>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button className="p-2 bg-[var(--primary)] text-white rounded-lg text-[9px] font-black uppercase tracking-widest px-3">6M</button>
-                                            <button className="p-2 bg-black/5 text-slate-400 rounded-lg text-[9px] font-black uppercase tracking-widest px-3">1Y</button>
-                                        </div>
-                                    </div>
-                                    
-                                    <ExpenseLineChart data={stats?.monthly_trend || []} />
-                                    
-                                    <div className="mt-auto pt-8 border-t border-white/5 flex justify-between items-center">
-                                        <div className="flex items-center gap-2">
-                                            <Calendar size={14} className="text-slate-400" />
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Últimos 4 meses</span>
-                                        </div>
-                                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">+12.5% vs periodo anterior</span>
-                                    </div>
-                                </motion.section>
+                                    <h3 className="text-lg md:text-xl font-black uppercase tracking-tighter">Balance Mensual</h3>
+                                </div>
+                                <span className="text-[9px] font-black bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full uppercase tracking-widest hidden sm:inline-block">Ingresos vs Gastos</span>
                             </div>
                             
-                            {/* --- Grupos Archivados --- */}
-                            <motion.section variants={itemVariants} className="space-y-6">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-sm font-black text-[var(--text-secondary)] uppercase tracking-[0.2em]">Grupos Archivados</h3>
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Cerrados recientemente</span>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {/* Mapped Archived Groups or Mock for now to preserve layout */}
-                                    <div className="group relative rounded-[2.5rem] p-8 flex flex-col justify-between overflow-hidden border border-[var(--border-color)] bg-[var(--bg-card)] backdrop-blur-xl transition-all duration-300 hover:border-[var(--primary)] hover:shadow-xl">
-                                        <div className="flex justify-between items-start mb-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="p-4 bg-[var(--primary)]/10 rounded-2xl border border-[var(--primary)]/20 text-[var(--primary)]">
-                                                    <Cake size={28} />
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-[var(--text-primary)] font-black text-xl uppercase tracking-tight">Cumpleaños Pedro</h4>
-                                                    <p className="text-[var(--text-secondary)] text-[10px] font-bold uppercase opacity-60 mt-1">Finalizado el 12 Ago</p>
-                                                </div>
-                                            </div>
-                                            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                                                <CheckCircle size={14} /> Pagado
-                                            </span>
-                                        </div>
-                                        <div className="space-y-6">
-                                            <div className="flex justify-between items-center text-sm border-t border-[var(--border-color)] pt-6">
-                                                <span className="text-[var(--text-secondary)] font-medium">Total recolectado</span>
-                                                <span className="text-[var(--text-primary)] font-mono font-black text-lg">$4,250.00</span>
-                                            </div>
-                                            <div className="flex gap-4">
-                                                <button className="flex-1 py-4 rounded-2xl border border-[var(--border-color)] text-[var(--text-secondary)] text-[10px] font-black uppercase tracking-widest hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)] transition-all">
-                                                    Ver Detalle
-                                                </button>
-                                                <button className="flex-1 py-4 rounded-2xl border border-[var(--border-color)] text-[var(--text-secondary)] text-[10px] font-black uppercase tracking-widest hover:bg-[var(--primary)]/10 hover:text-[var(--primary)] transition-all flex items-center justify-center gap-2">
-                                                    <RotateCw size={14} /> Reactivar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <IncomeExpenseChart data={incomeVsExpenses} />
+                        </motion.section>
 
-                                    <div className="group relative rounded-[2.5rem] p-8 flex flex-col justify-between overflow-hidden border border-[var(--border-color)] bg-[var(--bg-card)] backdrop-blur-xl transition-all duration-300 hover:border-[var(--primary)] hover:shadow-xl">
-                                        <div className="flex justify-between items-start mb-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="p-4 bg-[var(--primary)]/10 rounded-2xl border border-[var(--primary)]/20 text-[var(--primary)]">
-                                                    <Plane size={28} />
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-[var(--text-primary)] font-black text-xl uppercase tracking-tight">Viaje Acapulco</h4>
-                                                    <p className="text-[var(--text-secondary)] text-[10px] font-bold uppercase opacity-60 mt-1">Finalizado el 05 Jul</p>
-                                                </div>
-                                            </div>
-                                            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                                                <CheckCircle size={14} /> Pagado
-                                            </span>
-                                        </div>
-                                        <div className="space-y-6">
-                                            <div className="flex justify-between items-center text-sm border-t border-[var(--border-color)] pt-6">
-                                                <span className="text-[var(--text-secondary)] font-medium">Total recolectado</span>
-                                                <span className="text-[var(--text-primary)] font-mono font-black text-lg">$12,800.00</span>
-                                            </div>
-                                            <div className="flex gap-4">
-                                                <button className="flex-1 py-4 rounded-2xl border border-[var(--border-color)] text-[var(--text-secondary)] text-[10px] font-black uppercase tracking-widest hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)] transition-all">
-                                                    Ver Detalle
-                                                </button>
-                                                <button className="flex-1 py-4 rounded-2xl border border-[var(--border-color)] text-[var(--text-secondary)] text-[10px] font-black uppercase tracking-widest hover:bg-[var(--primary)]/10 hover:text-[var(--primary)] transition-all flex items-center justify-center gap-2">
-                                                    <RotateCw size={14} /> Reactivar
-                                                </button>
-                                            </div>
-                                        </div>
+                        {/* --- Category Breakdown --- */}
+                        <motion.section variants={itemVariants} className="p-6 md:p-10 bg-[var(--bg-card)] rounded-[2rem] md:rounded-[3rem] border border-[var(--border-color)] shadow-sm backdrop-blur-xl flex flex-col min-h-[450px]">
+                            <div className="flex items-center justify-between mb-8 md:mb-10">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-violet-500/10 rounded-2xl text-violet-500">
+                                        <PieChart size={24} />
                                     </div>
+                                    <h3 className="text-lg md:text-xl font-black uppercase tracking-tighter">Categorías</h3>
                                 </div>
-                            </motion.section>
+                                <span className="text-[9px] font-black bg-violet-500/10 text-violet-500 px-3 py-1 rounded-full uppercase tracking-widest hidden sm:inline-block">Distribución</span>
+                            </div>
+                            
+                            <div className="flex flex-col items-center flex-1">
+                                <CategoryDonutChart data={categories} />
+                                
+                                {categories.length > 0 ? (
+                                    <div className="grid grid-cols-2 w-full gap-3 mt-6">
+                                        {categories.slice(0, 4).map((cat: any, index: number) => (
+                                            <div key={index} className="flex items-center gap-3 p-3 md:p-4 bg-black/5 rounded-2xl border border-white/5">
+                                                <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                                                <div className="min-w-0">
+                                                    <p className="text-[9px] md:text-[10px] font-black uppercase tracking-tight text-slate-500 truncate">{cat.category || cat.name}</p>
+                                                    <p className="text-xs font-bold text-[var(--text-primary)]">${Number(cat.amount || 0).toLocaleString()}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="mt-auto py-8 text-center opacity-30">
+                                        <ShoppingBag size={48} className="mx-auto mb-2" />
+                                        <p className="text-[10px] font-black uppercase tracking-widest">Sin categorías registradas</p>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.section>
+                    </div>
 
-                            {/* --- Insights & Balance --- */}
-                            <motion.section variants={itemVariants} className="p-10 bg-gradient-to-br from-[var(--primary)] to-blue-700 rounded-[3rem] text-white relative overflow-hidden shadow-2xl">
-                                <div className="absolute top-0 right-0 p-12 opacity-10">
-                                    <Activity size={180} strokeWidth={1} />
+                    {/* --- Monthly Trend --- */}
+                    <motion.section variants={itemVariants} className="p-6 md:p-10 bg-[var(--bg-card)] rounded-[2rem] md:rounded-[3rem] border border-[var(--border-color)] shadow-sm backdrop-blur-xl flex flex-col min-h-[400px]">
+                        <div className="flex items-center justify-between mb-8 md:mb-10">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-500">
+                                    <BarChart3 size={24} />
                                 </div>
-                                <div className="relative z-10 flex flex-col lg:flex-row items-center gap-10">
-                                    <div className="flex-1 space-y-6">
-                                        <div className="flex items-center gap-3">
-                                            <Calendar size={20} className="text-blue-200" />
-                                            <h3 className="text-xl font-black uppercase tracking-tighter">Insights Globales</h3>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 flex items-center gap-4">
-                                                <ArrowUpRight size={24} className="text-blue-200 shrink-0" />
-                                                <p className="text-sm font-medium">Categoría dominante: <strong>{stats?.categories?.[0]?.category || 'N/A'}</strong></p>
-                                            </div>
-                                            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 flex items-center gap-4">
-                                                <Activity size={24} className="text-blue-200 shrink-0" />
-                                                <p className="text-sm font-medium">Balance neto actual: <strong>${((stats?.owed_to_user || 0) - (stats?.user_owes || 0)).toLocaleString('es-MX')}</strong></p>
-                                            </div>
-                                        </div>
+                                <h3 className="text-lg md:text-xl font-black uppercase tracking-tighter">Tendencia de Gasto</h3>
+                            </div>
+                        </div>
+                        
+                        <ExpenseLineChart data={monthlyTrend} />
+                        
+                        <div className="mt-8 pt-8 border-t border-white/5 flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <Calendar size={14} className="text-slate-400" />
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Análisis de tiempo</span>
+                            </div>
+                            <span className={cn("text-[10px] font-black uppercase tracking-widest", monthlyTrend.length > 0 ? "text-emerald-500" : "text-slate-500")}>
+                                {monthlyTrend.length > 0 ? 'Activo' : 'Sin datos'}
+                            </span>
+                        </div>
+                    </motion.section>
+
+                    {/* --- Insights --- */}
+                    <motion.section variants={itemVariants} className="p-8 md:p-12 bg-gradient-to-br from-[var(--primary)] to-blue-700 rounded-[2rem] md:rounded-[3rem] text-white relative overflow-hidden shadow-2xl">
+                        <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
+                            <Activity size={180} strokeWidth={1} />
+                        </div>
+                        <div className="relative z-10 flex flex-col lg:flex-row items-center gap-8 md:gap-10">
+                            <div className="flex-1 space-y-6 w-full">
+                                <div className="flex items-center gap-3">
+                                    <Calendar size={20} className="text-blue-200" />
+                                    <h3 className="text-lg md:text-xl font-black uppercase tracking-tighter">Insights Globales</h3>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 md:p-6 border border-white/10 flex items-center gap-4">
+                                        <ShoppingBag size={24} className="text-blue-200 shrink-0" />
+                                        <p className="text-sm font-medium">Categoría principal: <strong>{categories[0]?.category || 'N/A'}</strong></p>
                                     </div>
-                                    <div className="w-full lg:w-auto flex flex-col items-center gap-2 p-10 bg-black/10 rounded-[2.5rem] border border-white/5 backdrop-blur-md">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-blue-200">Total Transaccionado</span>
-                                        <h4 className="text-5xl font-black tracking-tighter">
-                                            ${stats?.total_spent?.toLocaleString('es-MX')}
-                                        </h4>
-                                        <div className="flex items-center gap-2 mt-2 px-3 py-1 bg-emerald-500/20 rounded-full border border-emerald-500/20">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                                            <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-200">Cuenta verificada</span>
-                                        </div>
+                                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 md:p-6 border border-white/10 flex items-center gap-4">
+                                        <Activity size={24} className="text-blue-200 shrink-0" />
+                                        <p className="text-sm font-medium">Balance neto: <strong>${(Number(stats?.owed_to_user || 0) - Number(stats?.user_owes || 0)).toLocaleString('es-MX')}</strong></p>
                                     </div>
                                 </div>
-                            </motion.section>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                            </div>
+                            <div className="w-full lg:w-auto flex flex-col items-center gap-2 p-8 md:p-10 bg-black/10 rounded-[2rem] md:rounded-[2.5rem] border border-white/5 backdrop-blur-md">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-blue-200">Total Transaccionado</span>
+                                <h4 className="text-4xl md:text-5xl font-black tracking-tighter">
+                                    ${Number(stats?.total_spent || 0).toLocaleString('es-MX')}
+                                </h4>
+                                <div className="flex items-center gap-2 mt-2 px-3 py-1 bg-emerald-500/20 rounded-full border border-emerald-500/20">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                    <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-200">Actualizado</span>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.section>
+                </motion.div>
             </main>
         </div>
     );

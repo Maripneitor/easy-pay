@@ -16,6 +16,10 @@ user_router = APIRouter(prefix="/api/auth", tags=["Auth"])
 # --- Inyección de dependencias ---
 repo = MongoUserRepository()
 
+@user_router.get("/ping")
+async def ping():
+    return {"status": "ok", "message": "Pong from Auth Service"}
+
 @user_router.get("/search")
 async def search_users(query: str, limit: int = 5):
     """Busca usuarios registrados por nombre o email"""
@@ -36,15 +40,12 @@ change_password_use_case = ChangePasswordUseCase(repo)
 async def register(user_data: UserCreate):
     result = await resgister_use_case.execute(user_data)
     
+    # Si el email ya está registrado, retornar 409 Conflict
     if result["status"] == "error" and result["message"] == "El usuario ya existe":
-        existing_user = await repo.find_by_identifier(user_data.email)
-        if existing_user:
-            return {
-                "status": "success",
-                "message": "Usuario existente (Bypass Desarrollo)",
-                "user_id": str(existing_user["_id"]),
-                "is_existing": True
-            }
+        raise HTTPException(
+            status_code=409, 
+            detail="Este correo electrónico ya está registrado. Intenta iniciar sesión."
+        )
 
     if result["status"] == "error":
         raise HTTPException(status_code=400, detail=result.get("message", "Error en registro"))
@@ -52,7 +53,11 @@ async def register(user_data: UserCreate):
     # --- AUTO-ENVIAR CÓDIGO DE VERIFICACIÓN ---
     user_id = result.get("user_id")
     if user_id:
-        await setup_2fa_use_case.execute(user_id, user_data.email)
+        try:
+            await setup_2fa_use_case.execute(user_id, user_data.email)
+        except Exception as e:
+            # Si el correo falla, no abortamos el registro; el usuario podrá reenviar
+            print(f"⚠️ Registro exitoso pero falló envío de verificación: {e}")
         
     return result
 

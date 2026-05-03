@@ -1,10 +1,20 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { groupRepository, userRepository } from '../../../infrastructure/api/repositories';
+import { useAuthContext } from '../../context/AuthContext';
+import { toast } from 'sonner';
 import { httpClient } from '../../../infrastructure/api/http-client';
 
 export const useGroupDetail = (group_id: string) => {
     const [activeTab, setActiveTab] = useState<'activity' | 'balances' | 'members' | 'payments' | 'asignación' | 'actividades' | 'saldos' | 'integrantes'>('actividades');
-    const myId = localStorage.getItem('userId');
+    const { user } = useAuthContext();
+    const myId = user?.id;
+
+    const normalizeId = (id: any) => {
+        if (!id) return "";
+        if (typeof id === 'string') return id;
+        return id.$oid || id.id || id._id || id.toString();
+    };
 
     const { data, isLoading, refetch, isFetching } = useQuery({
         queryKey: ['group', group_id],
@@ -28,36 +38,45 @@ export const useGroupDetail = (group_id: string) => {
                 throw new Error(gData.message || bData.message || "Error al cargar datos");
             }
 
-            const itemsList = Array.isArray(itemsData) ? itemsData : (itemsData.items || []);
+            const itemsList = (Array.isArray(itemsData) ? itemsData : (itemsData.items || []))
+                .map((item: any) => ({
+                    ...item,
+                    id: normalizeId(item.id || item._id),
+                    comprador_id: normalizeId(item.comprador_id)
+                }));
+
             const rawIntegrantes = gData.integrantes || [];
-            
             let integrantes_data: any[] = [];
             let members: any[] = [];
 
             if (rawIntegrantes.length > 0 && typeof rawIntegrantes[0] === 'object') {
-                integrantes_data = rawIntegrantes;
-                members = rawIntegrantes; // Devolvemos objetos {id, nombre}
+                integrantes_data = rawIntegrantes.map((m: any) => ({
+                    ...m,
+                    id: normalizeId(m.id || m._id)
+                }));
+                members = integrantes_data;
             } else {
-                // Fallback si solo vienen IDs (no debería pasar con find_by_id_detailed)
-                members = rawIntegrantes.map((id: string) => ({ id, nombre: 'Usuario' }));
+                members = rawIntegrantes.map((id: string) => ({ id: normalizeId(id), nombre: 'Usuario' }));
                 integrantes_data = members;
             }
 
-            // Map balances with user names
             const detailedBalances = Array.isArray(bData.balance_detallado) 
                 ? bData.balance_detallado.map((b: any) => {
-                    const user = integrantes_data.find(i => i.id === b.usuario_id);
+                    const uId = normalizeId(b.usuario_id);
+                    const foundUser = integrantes_data.find(i => i.id === uId);
                     return {
                         ...b,
-                        persona: user ? user.nombre : "Usuario"
+                        usuario_id: uId,
+                        persona: foundUser ? foundUser.nombre : "Usuario"
                     };
                 })
                 : [];
 
             return {
                 groupName: gData.nombre || "Grupo",
+                groupDescription: gData.descripcion || "",
                 groupCode: gData.codigo_invitacion || "---",
-                adminId: gData.administrador_id,
+                adminId: normalizeId(gData.administrador_id),
                 members,
                 integrantes_data,
                 activities: itemsList,
@@ -69,15 +88,49 @@ export const useGroupDetail = (group_id: string) => {
         enabled: !!group_id && group_id !== ':group_id'
     });
 
+    const [is2FAModalOpen, setIs2FAModalOpen] = useState(false);
+
     const removeMember = async (userId: string) => {
         try {
-            const response = await httpClient.delete(`/groups/${group_id}/members/${userId}`);
-            if (response.status === 200) {
-                toast.success("Miembro eliminado");
-                refetch();
-            }
+            await groupRepository.removeMember(group_id, userId);
+            toast.success("Miembro eliminado");
+            refetch();
         } catch (error: any) {
-            toast.error(error.response?.data?.detail || "Error al eliminar miembro");
+            toast.error(error.message || "Error al eliminar miembro");
+        }
+    };
+
+    const deleteGroup = async () => {
+        if (!myId) return;
+        const toastId = toast.loading("Preparando verificación de seguridad...");
+        try {
+            await userRepository.setupTwoFactor(myId);
+            setIs2FAModalOpen(true);
+            toast.success("Código de verificación enviado", { id: toastId });
+        } catch (error: any) {
+            toast.error(error.message || "Error al preparar la seguridad", { id: toastId });
+        }
+    };
+
+    const confirmDeleteGroup = async () => {
+        try {
+            await groupRepository.deleteGroup(group_id);
+            toast.success("Grupo eliminado correctamente");
+            setIs2FAModalOpen(false);
+            return true; // Navigation will be handled by the component
+        } catch (error: any) {
+            toast.error(error.message || "Error al eliminar grupo");
+            return false;
+        }
+    };
+
+    const deleteItem = async (itemId: string) => {
+        try {
+            await groupRepository.removeItem(group_id, itemId);
+            toast.success("Gasto eliminado");
+            refetch();
+        } catch (error: any) {
+            toast.error(error.message || "Error al eliminar gasto");
         }
     };
 
@@ -107,6 +160,7 @@ export const useGroupDetail = (group_id: string) => {
     return {
         activeTab, setActiveTab,
         groupName: data?.groupName || '',
+        groupDescription: data?.groupDescription || '',
         groupCode: data?.groupCode || '',
         members: data?.members || [],
         integrantes_data: data?.integrantes_data || [],
@@ -116,10 +170,15 @@ export const useGroupDetail = (group_id: string) => {
         activities: data?.activities || [],
         balances: data?.balances || [],
         adminId: data?.adminId,
-        currentUserId: myId,
+        currentUserId: normalizeId(myId),
         isFetchingGroup: isLoading,
         isRefreshing: isFetching, 
         refresh: refetch,
-        removeMember
+        removeMember,
+        deleteGroup,
+        confirmDeleteGroup,
+        deleteItem,
+        is2FAModalOpen,
+        setIs2FAModalOpen
     };
 };

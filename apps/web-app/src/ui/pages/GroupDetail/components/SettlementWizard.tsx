@@ -16,6 +16,7 @@ import { cn } from '../../../../infrastructure/utils';
 import { httpClient } from '../../../../infrastructure/api/http-client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { groupRepository } from '../../../../infrastructure/api/repositories';
 
 interface SettlementWizardProps {
     isOpen: boolean;
@@ -45,16 +46,23 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
     const tipAmount = tipPercentage === -1 ? Number(customTip) || 0 : (totalSpent * tipPercentage) / 100;
     const finalTotal = totalSpent + tipAmount;
 
-    // --- MOCK CALCULATION FOR DEMO ---
-    // In a real app, this would come from the backend or a complex logic
+    // --- CÁLCULO DE RESUMEN POR INTEGRANTE ---
+    // Calcula la porción de cada miembro basándose en los gastos reales asignados
     const summary = safeIntegrantes.map(member => {
         const spent = safeActivities
-            .filter(item => item.nombres_participantes?.includes(member.nombre))
-            .reduce((acc, item) => acc + (item.monto / (item.nombres_participantes?.length || 1)), 0);
+            .filter(item => {
+                const pIds = item.participantes_ids || [];
+                return pIds.includes(member.id);
+            })
+            .reduce((acc, item) => {
+                const amount = Number(item.monto || item.precio || 0);
+                const participantsCount = Math.max((item.participantes_ids || []).length, 1);
+                return acc + (amount / participantsCount);
+            }, 0);
         
         const shareOfTip = tipAmount / (safeIntegrantes.length || 1);
         return {
-            name: member.nombre,
+            name: member.nombre || 'Usuario',
             subtotal: spent,
             tip: shareOfTip,
             total: spent + shareOfTip
@@ -69,21 +77,17 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
     const handleCloseTable = async () => {
         setIsClosing(true);
         try {
-            const res = await httpClient.post(`/groups/${groupId}/close`, {
-                tip_amount: tipAmount,
-                final_total: finalTotal
-            });
-            if (res.status === 200) {
-                toast.success("Grupo cerrado correctamente");
-                // Invalidate all related data
-                queryClient.invalidateQueries({ queryKey: ['group', groupId] });
-                queryClient.invalidateQueries({ queryKey: ['user-stats'] });
-                queryClient.invalidateQueries({ queryKey: ['user-charts'] });
-                
-                onClose();
-                // We keep the reload as fallback for now if the user isn't in a React Query context elsewhere
-                setTimeout(() => window.location.reload(), 500);
-            }
+            await groupRepository.closeGroup(groupId, tipAmount, finalTotal);
+            
+            toast.success("Grupo cerrado correctamente");
+            // Invalidate all related data
+            queryClient.invalidateQueries({ queryKey: ['group', groupId] });
+            queryClient.invalidateQueries({ queryKey: ['user-stats'] });
+            queryClient.invalidateQueries({ queryKey: ['user-charts'] });
+            
+            onClose();
+            // We keep the reload as fallback for now if the user isn't in a React Query context elsewhere
+            setTimeout(() => window.location.reload(), 500);
         } catch (error) {
             toast.error("Error al cerrar el grupo");
         } finally {
@@ -117,7 +121,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                 <Zap size={20} />
                             </div>
                             <div>
-                                <h2 className="text-xl font-black uppercase tracking-tighter text-[var(--text-primary)]">Settlement Wizard</h2>
+                                <h2 className="text-xl font-black uppercase tracking-tighter text-[var(--text-primary)]">Asistente de Liquidación</h2>
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Paso {step} de 3</p>
                             </div>
                         </div>

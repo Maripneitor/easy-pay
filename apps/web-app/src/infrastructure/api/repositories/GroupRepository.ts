@@ -52,11 +52,22 @@ export class ApiGroupRepository implements GroupRepository {
         }
     }
 
-    // ── closeGroup ────────────────────────────────────────────────────────────
-    async closeGroup(groupId: string): Promise<void> {
+    // ── updateGroup ───────────────────────────────────────────────────────────
+    async updateGroup(groupId: string, name: string, description?: string): Promise<void> {
         try {
-            // Nota: El backend no tiene un endpoint explícito de 'close', se lanza error si se intenta usar.
-            throw new Error("Endpoint 'close' no implementado en backend");
+            await httpClient.put(`/groups/${groupId}`, { nombre: name, descripcion: description });
+        } catch (e) {
+            return handleApiError(e);
+        }
+    }
+
+    // ── closeGroup ────────────────────────────────────────────────────────────
+    async closeGroup(groupId: string, tip: number, total: number): Promise<void> {
+        try {
+            await httpClient.post(`/groups/${groupId}/close`, { 
+                tip_amount: tip, 
+                final_total: total 
+            });
         } catch (e) {
             return handleApiError(e);
         }

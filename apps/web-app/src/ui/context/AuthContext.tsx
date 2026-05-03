@@ -79,16 +79,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const loginWithGoogle = useCallback(async (): Promise<void> => {
         setIsAuthenticating(true);
         try {
-            // Mock for now as backend doesn't support Google OAuth yet
-            await new Promise(r => setTimeout(r, 800));
-            const mockUser: User = {
-                id: 'google-user-1',
-                nombre: 'Juan Pérez',
-                email: 'juan@example.com',
-                avatarUrl: 'https://ui-avatars.com/api/?name=Juan+Perez&background=4285F4&color=fff',
-            };
-            authService.persistSession('mock-google-token', mockUser);
-            setUser(authService.getStoredUser());
+            // Google OAuth integration pending backend support
+            await new Promise(r => setTimeout(r, 500));
+            toast.info("Inicia sesión con tu correo para continuar. Google OAuth estará disponible próximamente.");
         } finally {
             setIsAuthenticating(false);
         }
@@ -129,9 +122,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticating(true);
         try {
             authService.clearSession();
+            // Limpiar claves temporales del flujo 2FA
+            localStorage.removeItem('temp_userId');
+            localStorage.removeItem('userEmail');
             setUser(null);
             setGuest(null);
-            window.location.href = '/auth';
+            // Redirigir a la Landing Page (ruta raíz)
+            window.location.href = '/';
         } finally {
             setIsAuthenticating(false);
         }

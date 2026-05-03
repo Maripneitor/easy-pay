@@ -16,18 +16,16 @@ const getAuthToken = (): string | null => {
 };
 
 // ─── Axios instance ───────────────────────────────────────────────────────────
+// El proxy de Vite (vite.config.ts) redirige /api/* a los microservicios en 127.0.0.1.
+// Usamos ruta relativa para que funcione sin importar el puerto de Vite (5173 o 5174).
 const getDynamicApiUrl = () => {
-    let url = import.meta.env.VITE_API_BASE_URL;
-    
-    // Si no está definido o es localhost en Docker, usar el host actual
-    if (!url || url.includes('localhost')) {
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        url = isLocal ? 'http://localhost:5173' : `${window.location.protocol}//${window.location.hostname}:5173`;
+    const url = import.meta.env.VITE_API_BASE_URL;
+    // Si hay una URL externa configurada (ej: para producción), usarla.
+    // Si no, usar ruta relativa para aprovechar el proxy de Vite.
+    if (url && !url.startsWith('/') && !url.includes('localhost')) {
+        return url.replace(/\/api\/?$/, '') + '/api';
     }
-    
-    // Asegurar que siempre termine en /api para los repositorios
-    const base = url.replace(/\/api\/?$/, '');
-    return `${base}/api`;
+    return '/api';
 };
 
 export const httpClient: AxiosInstance = axios.create({
@@ -64,11 +62,20 @@ httpClient.interceptors.response.use(
         }
 
         // Normalize error message for UI consumption
+        const responseData = error.response?.data;
         const message =
-            (error.response?.data as Record<string, string>)?.detail ??
-            (error.response?.data as Record<string, string>)?.message ??
+            (responseData as any)?.detail ??
+            (responseData as any)?.message ??
+            (typeof responseData === 'string' ? responseData : null) ??
             error.message ??
             'Error desconocido';
+
+        console.error('HTTP Client Error:', {
+            url: error.config?.url,
+            status: error.response?.status,
+            data: responseData,
+            message: message
+        });
 
         return Promise.reject(new Error(message));
     }

@@ -22,6 +22,13 @@ import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { TransactionDetailModal } from '../MyPayments/components/TransactionDetailModal';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { AddMemberModal } from './components/AddMemberModal';
+import { useMyPayments } from '../MyPayments/useMyPayments';
+import { AddCardModal } from '../MyPayments/components/AddCardModal';
+import { groupRepository } from '../../../infrastructure/api/repositories';
+
+import { TwoFactorModal } from '../../components/Security/TwoFactorModal';
+import { EditGroupModal } from '../Groups/components/EditGroupModal';
+
 
 export const GroupDetail = () => {
     const params = useParams();
@@ -31,53 +38,28 @@ export const GroupDetail = () => {
 
     const [isWizardOpen, setIsWizardOpen] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState<any>(null);
+    const [isEditingGroupOpen, setIsEditingGroupOpen] = useState(false);
 
     // Register shortcuts (Esc to close wizard)
     useKeyboardShortcuts(() => setIsWizardOpen(false));
 
     const {
-        activeTab, setActiveTab, groupName, groupCode, totalSpent,
+        activeTab, setActiveTab, groupName, groupDescription, groupCode, totalSpent,
         userShare, userOwed, activities, balances, members,
         integrantes_data, isFetchingGroup, adminId, currentUserId,
-        isRefreshing, refresh, removeMember
+        isRefreshing, refresh, removeMember,
+        deleteGroup, confirmDeleteGroup, deleteItem,
+        is2FAModalOpen, setIs2FAModalOpen
     } = useGroupDetail(idFinal);
 
     const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
-    const [newItem, setNewItem] = useState({ nombre: '', precio: '', participantes: [] as string[] });
-    const [isSavingItem, setIsSavingItem] = useState(false);
+    const { 
+        cards, loading: isFetchingCards, refreshCards, 
+        handleDeleteCard, isAddingCard: isAddCardOpen, 
+        setIsAddingCard: setIsAddCardOpen 
+    } = useMyPayments();
+    
 
-    // Sync participants when members change or tab opens
-    useEffect(() => {
-        if (activeTab === 'asignación' && newItem.participantes.length === 0 && members.length > 0) {
-            setNewItem(prev => ({ ...prev, participantes: members.map((m: any) => m.id) }));
-        }
-    }, [activeTab, members]);
-
-    const handleSaveItem = async () => {
-        if (!newItem.nombre || !newItem.precio || newItem.participantes.length === 0) {
-            toast.error("Rellena todos los campos y selecciona al menos un participante");
-            return;
-        }
-
-        setIsSavingItem(true);
-        try {
-            await httpClient.post('/groups/add-item', {
-                group_id: idFinal,
-                nombre: newItem.nombre,
-                precio: parseFloat(newItem.precio),
-                cantidad: 1,
-                comprador_id: currentUserId,
-                participantes_ids: newItem.participantes
-            });
-            toast.success("Ítem asignado correctamente");
-            setNewItem({ nombre: '', precio: '', participantes: members.map((m: any) => m.id) });
-            refresh();
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || "Error al guardar ítem");
-        } finally {
-            setIsSavingItem(false);
-        }
-    };
 
     const isAdmin = adminId === currentUserId;
     useDocumentTitle(groupName ? `${groupName} - Detalle` : 'Detalle de Grupo');
@@ -129,21 +111,27 @@ export const GroupDetail = () => {
             <PageHeader 
                 title={groupName || "Detalle de Grupo"}
                 onMenuClick={toggleSidebar}
+                onBack={() => navigate('/groups')}
                 rightSlot={
                     <div className="flex gap-2">
-                        <button 
-                            onClick={handleExportPDF}
-                            className="p-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all text-[var(--text-primary)]"
-                            title="Exportar PDF"
-                        >
-                            <Download size={20} />
-                        </button>
-                        <button 
-                            className="p-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all text-[var(--text-primary)]"
-                            title="Ajustes"
-                        >
-                            <Settings size={20} />
-                        </button>
+                        {isAdmin && (
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => setIsEditingGroupOpen(true)}
+                                    className="p-2.5 bg-white/10 hover:bg-blue-500/10 border border-white/20 rounded-xl transition-all text-blue-400"
+                                    title="Editar Grupo"
+                                >
+                                    <Pencil size={20} />
+                                </button>
+                                <button 
+                                    onClick={deleteGroup}
+                                    className="p-2.5 bg-white/10 hover:bg-rose-500/10 border border-white/20 rounded-xl transition-all text-rose-400"
+                                    title="Eliminar Grupo"
+                                >
+                                    <Trash2 size={20} />
+                                </button>
+                            </div>
+                        )}
                     </div>
                 }
             />
@@ -176,7 +164,7 @@ export const GroupDetail = () => {
             {/* Main Section */}
             <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[3rem] overflow-hidden shadow-sm">
                 <div className="flex border-b border-[var(--border-color)] overflow-x-auto no-scrollbar">
-                    {['actividades', 'asignación', 'saldos', 'integrantes'].map((tab) => (
+                    {['actividades', 'saldos', 'integrantes', 'pagos'].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab as any)}
@@ -204,19 +192,29 @@ export const GroupDetail = () => {
                             >
                                 <div className="flex justify-between items-center px-2">
                                     <h3 className="text-lg font-black uppercase tracking-tight">Registro de Gastos</h3>
-                                    <div className="flex gap-2">
+                                     <div className="flex items-center gap-3">
                                          <button 
-                                             onClick={() => navigate(`/group/${idFinal}/register-expense`)}
-                                             className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-[var(--primary)]/20 hover:scale-105 active:scale-95 transition-all"
+                                             onClick={handleExportPDF}
+                                             className="p-4 bg-white border border-[var(--border-color)] text-blue-500 rounded-2xl hover:border-blue-500 hover:bg-blue-50/50 transition-all shadow-sm"
+                                             title="Exportar PDF"
                                          >
-                                             <Plus size={18} /> Nuevo Gasto
+                                             <Download size={22} />
                                          </button>
                                          <button 
                                              onClick={() => navigate(`/group/${idFinal}/register-expense`)}
-                                             className="flex items-center gap-2 px-4 py-3 bg-white border border-[var(--border-color)] text-[var(--text-secondary)] rounded-2xl text-xs font-black uppercase tracking-widest hover:border-[var(--primary)] transition-all"
+                                             className="group flex items-center gap-3 px-8 py-4 bg-[var(--primary)] text-white rounded-[1.5rem] text-sm font-black uppercase tracking-widest shadow-2xl shadow-[var(--primary)]/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                         >
+                                             <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center group-hover:rotate-90 transition-transform">
+                                                <Plus size={18} />
+                                             </div>
+                                             Nuevo Gasto
+                                         </button>
+                                         <button 
+                                             onClick={() => navigate('/ocr-scanner')}
+                                             className="p-4 bg-white border border-[var(--border-color)] text-[var(--text-secondary)] rounded-2xl hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all shadow-sm"
                                              title="Escanear Ticket"
                                          >
-                                             <Receipt size={18} />
+                                             <Receipt size={22} />
                                          </button>
                                      </div>
                                  </div>
@@ -280,21 +278,35 @@ export const GroupDetail = () => {
                                                              <span className="text-xs font-bold text-slate-400 uppercase">{act.fecha}</span>
                                                          </td>
                                                          <td className="py-6 pr-6 rounded-r-[2rem] border-y border-r border-[var(--border-color)] group-hover:border-[var(--primary)]/30 text-right">
-                                                             <div className="flex justify-end gap-2">
-                                                                <button 
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        navigate(`/group/${idFinal}/edit-item/${act.id}`);
-                                                                    }}
-                                                                    className="p-2 hover:bg-blue-500/10 rounded-xl text-blue-400 hover:text-blue-500 transition-all"
-                                                                    title="Editar"
-                                                                >
-                                                                    <Pencil size={18} />
-                                                                </button>
-                                                                <button className="p-2 hover:bg-[var(--primary)]/10 rounded-xl text-slate-400 hover:text-[var(--primary)] transition-all">
-                                                                    <Info size={18} />
-                                                                </button>
-                                                             </div>
+                                                                 <div className="flex justify-end gap-2">
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            e.preventDefault();
+                                                                            navigate(`/group/${idFinal}/edit-item/${act.id}`);
+                                                                        }}
+                                                                        className="p-2 hover:bg-blue-500/10 rounded-xl text-blue-400 hover:text-blue-500 transition-all"
+                                                                        title="Editar"
+                                                                    >
+                                                                        <Pencil size={18} />
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            e.preventDefault();
+                                                                            if (window.confirm("¿Eliminar este gasto?")) {
+                                                                                deleteItem(act.id);
+                                                                            }
+                                                                        }}
+                                                                        className="p-2 hover:bg-rose-500/10 rounded-xl text-rose-400 hover:text-rose-500 transition-all"
+                                                                        title="Eliminar"
+                                                                    >
+                                                                        <Trash2 size={18} />
+                                                                    </button>
+                                                                    <button className="p-2 hover:bg-[var(--primary)]/10 rounded-xl text-slate-400 hover:text-[var(--primary)] transition-all">
+                                                                        <Info size={18} />
+                                                                    </button>
+                                                                 </div>
                                                          </td>
                                                      </tr>
                                                  );
@@ -305,85 +317,7 @@ export const GroupDetail = () => {
                             </motion.div>
                         )}
 
-                        {activeTab === 'asignación' && (
-                            <motion.div 
-                                initial={{ opacity: 0, scale: 0.98 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="max-w-2xl mx-auto space-y-10 py-4"
-                            >
-                                <div className="text-center space-y-2">
-                                    <h3 className="text-2xl font-black uppercase tracking-tighter">Nueva Asignación</h3>
-                                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Crea un gasto y divídelo al instante</p>
-                                </div>
 
-                                <div className="space-y-6 bg-[var(--bg-body)] p-8 rounded-[2.5rem] border border-[var(--border-color)] shadow-inner">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Nombre del Ítem</label>
-                                            <input 
-                                                type="text"
-                                                placeholder="Ej. Pizza Familiar"
-                                                value={newItem.nombre}
-                                                onChange={(e) => setNewItem({...newItem, nombre: e.target.value})}
-                                                className="w-full px-6 py-4 bg-white border-2 border-transparent focus:border-[var(--primary)]/30 rounded-2xl outline-none font-bold transition-all"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Precio ($)</label>
-                                            <input 
-                                                type="number"
-                                                placeholder="0.00"
-                                                value={newItem.precio}
-                                                onChange={(e) => setNewItem({...newItem, precio: e.target.value})}
-                                                className="w-full px-6 py-4 bg-white border-2 border-transparent focus:border-[var(--primary)]/30 rounded-2xl outline-none font-bold transition-all"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">¿Quiénes comparten este gasto?</label>
-                                        <div className="flex flex-wrap gap-3">
-                                            {members.map((member) => {
-                                                const isSelected = newItem.participantes.includes(member.id);
-                                                return (
-                                                    <button
-                                                        key={member.id}
-                                                        onClick={() => {
-                                                            const ids = isSelected 
-                                                                ? newItem.participantes.filter(id => id !== member.id)
-                                                                : [...newItem.participantes, member.id];
-                                                            setNewItem({...newItem, participantes: ids});
-                                                        }}
-                                                        className={cn(
-                                                            "flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 font-black text-[10px] uppercase tracking-widest transition-all",
-                                                            isSelected 
-                                                                ? "bg-[var(--primary)] border-[var(--primary)] text-white shadow-lg shadow-[var(--primary)]/20"
-                                                                : "bg-white border-[var(--border-color)] text-slate-400 hover:border-slate-300"
-                                                        )}
-                                                    >
-                                                        <div className={cn(
-                                                            "w-5 h-5 rounded-full flex items-center justify-center text-[8px]",
-                                                            isSelected ? "bg-white/20" : "bg-slate-100"
-                                                        )}>
-                                                            {member.nombre.charAt(0)}
-                                                        </div>
-                                                        {member.nombre}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-
-                                    <button 
-                                        onClick={handleSaveItem}
-                                        disabled={isSavingItem || !newItem.nombre || !newItem.precio || newItem.participantes.length === 0}
-                                        className="w-full py-5 bg-[var(--primary)] text-white rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-[var(--primary)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-30 disabled:grayscale"
-                                    >
-                                        {isSavingItem ? "Guardando..." : "Guardar Ítem"}
-                                    </button>
-                                </div>
-                            </motion.div>
-                        )}
 
                         {activeTab === 'saldos' && (
                             <motion.div 
@@ -518,6 +452,130 @@ export const GroupDetail = () => {
                                         </button>
                                     )}
                                 </div>
+
+                                {isAdmin && (
+                                    <div className="mt-12 pt-8 border-t border-rose-500/10">
+                                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-500 mb-6 px-2">Zona de Peligro</h4>
+                                        <div className="p-8 bg-rose-500/5 border border-rose-500/10 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6">
+                                            <div>
+                                                <p className="font-black text-rose-500 uppercase tracking-tight">Eliminar permanentemente este grupo</p>
+                                                <p className="text-[10px] font-black text-rose-500/60 uppercase tracking-widest mt-1">Esta acción no se puede deshacer y borrará todos los datos.</p>
+                                            </div>
+                                            <button 
+                                                onClick={deleteGroup}
+                                                className="w-full md:w-auto px-8 py-4 bg-rose-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-rose-500/20 hover:scale-105 active:scale-95 transition-all"
+                                            >
+                                                Eliminar Grupo
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+                        {activeTab === 'pagos' && (
+                            <motion.div 
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                className="space-y-8"
+                            >
+                                <div className="flex justify-between items-center px-2">
+                                    <div>
+                                        <h3 className="text-lg font-black uppercase tracking-tight">Métodos de Pago</h3>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Gestiona tus tarjetas para liquidar deudas</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => setIsAddCardOpen(true)}
+                                        className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-[var(--primary)]/20 hover:scale-105 active:scale-95 transition-all"
+                                    >
+                                        <Plus size={18} /> Nueva Tarjeta
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {isFetchingCards ? (
+                                        [1, 2].map(i => (
+                                            <div key={i} className="h-48 rounded-3xl bg-[var(--bg-body)] border border-[var(--border-color)] animate-pulse" />
+                                        ))
+                                    ) : cards.length > 0 ? (
+                                        cards.map((card: any) => (
+                                            <motion.div 
+                                                key={card.id}
+                                                layout
+                                                whileHover={{ scale: 1.02, translateY: -8, rotateX: 2, rotateY: -2 }}
+                                                className={cn(
+                                                    "p-8 rounded-[2rem] border border-white/20 transition-all relative overflow-hidden group/card shadow-xl hover:shadow-[var(--primary)]/30 preserve-3d perspective-1000",
+                                                    card.bankStyle || "bg-gradient-to-br from-slate-800 to-slate-900"
+                                                )}
+                                            >
+                                                {/* Premium Texture Overlay */}
+                                                <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+                                                
+                                                {/* Animated Gloss Effect */}
+                                                <div className="absolute inset-0 translate-x-[-100%] group-hover/card:translate-x-[100%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-25deg]" />
+
+                                                <div className="relative z-10 flex flex-col justify-between h-44 text-white">
+                                                    <div className="flex justify-between items-start">
+                                                        <div className="flex flex-col">
+                                                            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-white/60 mb-1 drop-shadow-sm">{card.bankName || 'PLATINO GLOBAL'}</div>
+                                                            <div className="w-12 h-9 bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 rounded-lg border border-white/30 flex items-center justify-center p-1.5 shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)]">
+                                                                <div className="w-full h-full bg-black/10 rounded-sm grid grid-cols-4 gap-0.5 opacity-50">
+                                                                    {[...Array(8)].map((_, i) => <div key={i} className="border-r border-b border-white/10"></div>)}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <button 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                if(window.confirm("¿Eliminar esta tarjeta?")) handleDeleteCard(card.id);
+                                                            }}
+                                                            className="p-3 bg-white/10 hover:bg-rose-500 border border-white/10 rounded-2xl transition-all opacity-0 group-hover/card:opacity-100 shadow-xl backdrop-blur-md"
+                                                            title="Eliminar Tarjeta"
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    <div className="space-y-6">
+                                                        <div className="text-2xl font-mono tracking-[0.25em] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] text-white/95 filter contrast-125">
+                                                            •••• •••• •••• {card.lastFour}
+                                                        </div>
+    
+                                                        <div className="flex justify-between items-end">
+                                                            <div className="space-y-1">
+                                                                <p className="text-[9px] font-black uppercase tracking-[0.4em] text-white/50">TITULAR</p>
+                                                                <p className="text-sm font-black uppercase tracking-widest truncate max-w-[200px] text-white/90 drop-shadow-sm">{card.holder}</p>
+                                                            </div>
+                                                            <div className="flex flex-col items-end">
+                                                                <div className="h-10 flex items-center">
+                                                                    {card.brand?.toUpperCase() === 'VISA' && <span className="text-3xl font-black italic tracking-tighter text-white opacity-90 drop-shadow-lg">VISA</span>}
+                                                                    {card.brand?.toUpperCase() === 'MASTERCARD' && (
+                                                                        <div className="flex -space-x-3">
+                                                                            <div className="w-8 h-8 rounded-full bg-rose-500/80 mix-blend-screen" />
+                                                                            <div className="w-8 h-8 rounded-full bg-amber-500/80 mix-blend-screen" />
+                                                                        </div>
+                                                                    )}
+                                                                    {card.brand?.toUpperCase() === 'AMEX' && <div className="px-3 py-1 bg-cyan-500/20 border border-cyan-400/30 rounded text-xs font-black italic">AMEX</div>}
+                                                                    {!['VISA', 'MASTERCARD', 'AMEX'].includes(card.brand?.toUpperCase()) && <span className="text-lg font-black uppercase tracking-widest text-white/70">{card.brand}</span>}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        ))
+                                    ) : (
+                                        <div className="col-span-full py-12 bg-black/5 border-2 border-dashed border-[var(--border-color)] rounded-[2.5rem] flex flex-col items-center justify-center text-center space-y-4">
+                                            <div className="w-16 h-16 rounded-full bg-black/5 flex items-center justify-center text-slate-400">
+                                                <CreditCard size={32} />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-black uppercase tracking-widest text-slate-500">No tienes tarjetas guardadas</p>
+                                                <p className="text-[10px] text-slate-400 uppercase font-bold mt-1">Agrega una para liquidar tus deudas fácilmente</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -547,6 +605,33 @@ export const GroupDetail = () => {
                     isOpen={!!selectedExpense}
                     onClose={() => setSelectedExpense(null)}
                     transaction={selectedExpense}
+                    members={integrantes_data}
+                />
+
+                <AddCardModal 
+                    isOpen={isAddCardOpen}
+                    onClose={() => setIsAddCardOpen(false)}
+                    onSuccess={refreshCards}
+                    currentCardsCount={cards.length}
+                />
+
+                <EditGroupModal 
+                    isOpen={isEditingGroupOpen}
+                    onClose={() => setIsEditingGroupOpen(false)}
+                    group={{ id: idFinal, nombre: groupName, descripcion: groupDescription }}
+                    onSuccess={refresh}
+                />
+
+                <TwoFactorModal
+                    isOpen={is2FAModalOpen}
+                    onClose={() => setIs2FAModalOpen(false)}
+                    onVerified={async () => {
+                        const success = await confirmDeleteGroup();
+                        if (success) navigate('/groups');
+                    }}
+                    userId={currentUserId || ''}
+                    actionTitle="Eliminar Grupo"
+                    actionDescription="Esta acción es irreversible y eliminará todos los gastos y saldos asociados. Por favor verifica tu identidad."
                 />
             </div>
         </div>

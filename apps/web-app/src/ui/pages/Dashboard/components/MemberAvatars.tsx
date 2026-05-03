@@ -21,18 +21,23 @@ export const MemberAvatars: React.FC<MemberAvatarsProps> = ({
     return (
         <div className="flex -space-x-2 overflow-hidden pl-1">
             {visibleMembers.map((m, i) => {
-                const avatarUrl = typeof m === 'string' ? m : m.avatar;
                 const name = typeof m === 'string' ? 'Usuario' : m.name || 'Usuario';
-                const key = typeof m === 'string' ? i : m.id || i; // Prefer ID
+                const avatarUrl = typeof m === 'string' 
+                    ? m 
+                    : (m.avatarUrl || m.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`);
+                const key = typeof m === 'string' ? i : m.id || i;
 
                 return (
                     <img
                         key={key}
                         src={avatarUrl}
                         alt={`Avatar de ${name}`}
-                        className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover"
+                        className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover bg-slate-100"
                         onError={(e) => {
-                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${name}&background=random`;
+                            const target = e.target as HTMLImageElement;
+                            if (!target.src.includes('ui-avatars.com')) {
+                                target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`;
+                            }
                         }}
                     />
                 );

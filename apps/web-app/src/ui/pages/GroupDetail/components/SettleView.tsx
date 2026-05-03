@@ -14,14 +14,16 @@ interface SettleViewProps {
     userShare: number;
 }
 
-export const SettleView = ({ userShare }: SettleViewProps) => {
+export const SettleView = ({ userShare: rawUserShare }: SettleViewProps) => {
+    const userShare = isNaN(rawUserShare) ? 0 : rawUserShare;
     const [amount, setAmount] = useState(userShare.toString());
     const [method, setMethod] = useState<'cash' | 'card' | 'transfer'>('cash');
     const [note, setNote] = useState('');
     const [loading, setLoading] = useState(false);
 
+    const numericAmount = parseFloat(amount) || 0;
+
     const handleSettle = () => {
-        const numericAmount = parseFloat(amount);
         if (isNaN(numericAmount) || numericAmount <= 0) {
             toast.error('Por favor ingresa un monto válido');
             return;
@@ -44,7 +46,7 @@ export const SettleView = ({ userShare }: SettleViewProps) => {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
             <div className="flex items-center justify-between">
                 <h2 className="text-sm font-black uppercase tracking-widest text-[var(--text-secondary)]">Liquidar Deuda</h2>
-                {parseFloat(amount) !== userShare && (
+                {numericAmount !== userShare && (
                     <button 
                         onClick={handlePayAll}
                         className="text-[10px] font-black uppercase tracking-widest text-[var(--primary)] hover:opacity-80 transition-opacity"
@@ -146,7 +148,7 @@ export const SettleView = ({ userShare }: SettleViewProps) => {
             {/* Confirm Button */}
             <button 
                 onClick={handleSettle}
-                disabled={loading || parseFloat(amount) <= 0}
+                disabled={loading || numericAmount <= 0}
                 className="w-full bg-[var(--primary)] text-white font-black uppercase tracking-widest py-6 rounded-3xl shadow-xl shadow-[var(--primary)]/20 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed border-t border-white/10"
             >
                 {loading ? (

@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import OcrService, { TicketData, TicketItem } from '../../../infrastructure/services/OcrService';
 
 export interface OCRItem {
@@ -38,6 +39,7 @@ export const useOCRScanner = () => {
         setSelectedFile(file);
         setIsProcessing(true);
         setIsScanning(true);
+        const toastId = toast.loading("Analizando ticket...");
 
         try {
             const data: TicketData = await OcrService.extractTicketData(file);
@@ -58,10 +60,12 @@ export const useOCRScanner = () => {
                 appItems: [],
                 unassignedItems: detectedItems
             });
+            
+            toast.success("Ticket analizado con éxito", { id: toastId });
 
         } catch (error) {
             console.error('Error procesando ticket:', error);
-            // Fallback o mensaje de error
+            toast.error("No se pudo leer el ticket. Intenta con una imagen más clara.", { id: toastId });
         } finally {
             setIsProcessing(false);
             setIsScanning(false);

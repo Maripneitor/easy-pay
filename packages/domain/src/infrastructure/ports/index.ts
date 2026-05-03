@@ -18,7 +18,9 @@ export interface GroupRepository {
     getGroup(id: string): Promise<Group>;
     createGroup(leader: Member, name?: string): Promise<Group>;
     joinGroup(code: string, member: Member): Promise<Group>;
+    updateGroup(groupId: string, name: string, description?: string): Promise<void>;
     closeGroup(groupId: string): Promise<void>;
+    deleteGroup(groupId: string): Promise<void>;
 
     // ─── Item Operations ──────────────────────────────────────────────────────
     addItem(groupId: string, item: Item): Promise<void>;

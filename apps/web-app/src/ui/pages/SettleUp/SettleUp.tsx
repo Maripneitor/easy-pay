@@ -11,12 +11,24 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { cn } from '../../../infrastructure/utils';
 import { useGroupDetail } from '../GroupDetail/useGroupDetail';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useClipboard } from '../../hooks/useClipboard';
 
 export const SettleUp = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { userShare, loading } = useGroupDetail(id || "");
+    const { userShare, balances, integrantes_data, isFetchingGroup: loading } = useGroupDetail(id || "");
+    const { copyToClipboard, copiedId } = useClipboard();
+    
+    // Identificar al acreedor (quien tiene el mayor saldo a favor)
+    const creditor = React.useMemo(() => {
+        if (!balances || balances.length === 0) return null;
+        const positiveBalances = balances.filter((b: any) => b.monto > 0);
+        if (positiveBalances.length === 0) return null;
+        
+        const top = [...positiveBalances].sort((a, b) => b.monto - a.monto)[0];
+        return integrantes_data.find(i => i.id === top.usuario_id) || null;
+    }, [balances, integrantes_data]);
     
     const [amount, setAmount] = useState(userShare?.toString() || "0");
     const [method, setMethod] = useState<'cash' | 'card' | 'transfer'>('cash');
@@ -153,6 +165,84 @@ export const SettleUp = () => {
                         </button>
                     ))}
                 </div>
+
+                {/* Transfer Info Section */}
+                <AnimatePresence>
+                    {method === 'transfer' && (
+                        <motion.div 
+                            initial={{ opacity: 0, height: 0, y: -20 }}
+                            animate={{ opacity: 1, height: 'auto', y: 0 }}
+                            exit={{ opacity: 0, height: 0, y: -20 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="bg-blue-500/5 border border-blue-500/20 rounded-[2.5rem] p-8 space-y-6">
+                                <div className="flex items-center gap-3 border-b border-blue-500/10 pb-4">
+                                    <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                                        <Info size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Datos Bancarios</p>
+                                        <p className="text-xs font-bold text-slate-500 uppercase">Realiza tu SPEI con estos datos</p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-4">
+                                    {[
+                                        { 
+                                            label: 'Beneficiario', 
+                                            value: creditor?.financial_profile?.beneficiario || creditor?.nombre || 'Pendiente de configurar', 
+                                            id: 'beneficiary',
+                                            icon: User
+                                        },
+                                        { 
+                                            label: 'Institución Financiera', 
+                                            value: creditor?.financial_profile?.entidad_financiera || 'No especificada', 
+                                            id: 'bank',
+                                            icon: Send
+                                        },
+                                        { 
+                                            label: 'Número de CLABE', 
+                                            value: creditor?.financial_profile?.clabe || 'N/A', 
+                                            id: 'clabe',
+                                            icon: CardIcon
+                                        }
+                                    ].map((item) => (
+                                        <div key={item.id} className="group/item relative">
+                                            <div className="flex items-center justify-between p-6 bg-white/40 dark:bg-slate-900/40 rounded-3xl border border-blue-500/10 group-hover/item:border-blue-500/30 transition-all shadow-sm backdrop-blur-md">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                                                        <item.icon size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-400 mb-0.5">{item.label}</p>
+                                                        <p className="text-sm font-black text-slate-700 dark:text-white uppercase tracking-tight">{item.value}</p>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onClick={() => {
+                                                        if (item.value !== 'N/A' && item.value !== 'No especificada' && item.value !== 'Pendiente de configurar') {
+                                                            copyToClipboard(item.value, item.id);
+                                                        } else {
+                                                            toast.error("Dato no disponible para copiar");
+                                                        }
+                                                    }}
+                                                    className={cn(
+                                                        "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95",
+                                                        copiedId === item.id 
+                                                            ? "bg-emerald-500 text-white shadow-emerald-500/20" 
+                                                            : "bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-500"
+                                                    )}
+                                                >
+                                                    {copiedId === item.id ? '¡Copiado!' : 'Copiar'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Confirm Button */}

@@ -27,7 +27,8 @@ class Verify2FAUseCase:
         # 2. Validar expiración del código
         # Usamos timezone.utc para evitar desfases horarios con la base de datos
         now = datetime.now(timezone.utc).replace(tzinfo=None)
-        if now > otp_data.get("otp_expires"):
+        otp_expires = otp_data.get("otp_expires")
+        if otp_expires and now > otp_expires:
             return {"status": "error", "message": "El código ha expirado. Solicita uno nuevo."}
 
         # 3. Comparación de códigos
