@@ -3,8 +3,7 @@ import { View, Text, TouchableOpacity, TextInput, Dimensions, StyleSheet } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
-// import { MotiView } from 'moti';
-const MotiView = View as any;
+import { MotiView } from 'moti';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 
 const { width } = Dimensions.get('window');

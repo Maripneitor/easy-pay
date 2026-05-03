@@ -53,7 +53,7 @@ export default function StatsScreen() {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
-            <Stack.Screen options={{ title: 'Estadísticas', headerShown: false }} />
+            <Stack.Screen options={{ title: 'Historial', headerShown: false }} />
             
             <View style={{ height: 80, borderBottomColor: theme.border }} className="px-6 flex-row items-center justify-between border-b">
                 <TouchableOpacity onPress={() => router.back()} className="flex-row items-center gap-2">

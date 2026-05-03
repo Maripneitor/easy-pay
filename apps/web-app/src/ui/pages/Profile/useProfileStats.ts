@@ -1,30 +1,49 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { statsRepository } from '../../../infrastructure/api/repositories';
 
 export const useProfileStats = () => {
-    const [stats, setStats] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    const userId = localStorage.getItem('userId');
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const userId = localStorage.getItem('userId');
-                if (!userId) return;
-                
-                const API_URL = `${import.meta.env.VITE_STATS_SERVICE_URL ?? 'http://localhost:8003'}/api`;
-                const response = await fetch(`${API_URL}/stats/user/${userId}/charts`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setStats(data);
-                }
-            } catch (error) {
-                console.error("Error fetching stats:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+    // Fetch basic stats (Total spent, owed, etc.)
+    const statsQuery = useQuery({
+        queryKey: ['user-stats', userId],
+        queryFn: async () => {
+            if (!userId) throw new Error("User ID not found");
+            return await statsRepository.getUserStats(userId);
+        },
+        enabled: !!userId,
+        staleTime: 1000 * 60 * 5,
+    });
 
-        fetchStats();
-    }, []);
+    // Fetch chart data (Monthly trend, detailed categories)
+    const chartsQuery = useQuery({
+        queryKey: ['user-charts', userId],
+        queryFn: async () => {
+            if (!userId) throw new Error("User ID not found");
+            return await statsRepository.getUserCharts(userId);
+        },
+        enabled: !!userId,
+        staleTime: 1000 * 60 * 5,
+    });
 
-    return { stats, loading };
+    const refresh = () => {
+        statsQuery.refetch();
+        chartsQuery.refetch();
+    };
+
+    // Combine data for the UI
+    const combinedData = {
+        ...(statsQuery.data || {}),
+        ...(chartsQuery.data || {}),
+        // Ensure consistent field names
+        categories: chartsQuery.data?.by_category || statsQuery.data?.expenses_by_category || [],
+        monthly_trend: chartsQuery.data?.monthly_trend || []
+    };
+
+    return { 
+        stats: combinedData, 
+        loading: statsQuery.isLoading || chartsQuery.isLoading,
+        error: statsQuery.isError || chartsQuery.isError,
+        refresh 
+    };
 };

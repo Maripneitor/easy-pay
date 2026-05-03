@@ -1,5 +1,6 @@
 import React from 'react';
-import { Plus, TrendingUp, TrendingDown, Wallet, Users, ArrowUpRight, BarChart3, Clock, ReceiptText } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Wallet, Users, BarChart3, Clock, ArrowUpRight, ReceiptText } from 'lucide-react';
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { toast } from 'sonner';
 import { PageHeader } from '@ui/components/PageHeader';
 import { useOutletContext } from 'react-router-dom';
@@ -8,8 +9,10 @@ import { GroupCard } from './components/GroupCard';
 import { DashboardSkeleton } from './components/DashboardSkeleton';
 import { CardAlert } from '@ui/components/Dashboard/CardAlert';
 import { cn } from '../../../infrastructure/utils';
+import { useAuthContext } from '../../context/AuthContext';
 
 export const Dashboard: React.FC = () => {
+    useDocumentTitle('Dashboard');
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
     const {
         navigate,
@@ -20,7 +23,8 @@ export const Dashboard: React.FC = () => {
         deleteGroup
     } = useDashboard();
 
-    const userName = localStorage.getItem('userName') || 'Usuario';
+    const { user } = useAuthContext();
+    const userName = user?.nombre || 'Usuario';
     const welcomeTitle = `HOLA, ${userName.toUpperCase()}`;
 
     const getAppearance = (name: string) => {
@@ -114,11 +118,24 @@ export const Dashboard: React.FC = () => {
                                     <div className="p-3 bg-violet-500/10 rounded-2xl text-violet-500">
                                         <Users size={24} />
                                     </div>
-                                    <button onClick={() => navigate('/create-group')} className="p-2 bg-[var(--primary)] text-white rounded-xl hover:opacity-90 transition-opacity">
-                                        <Plus size={18} />
-                                    </button>
+                                    <div className="flex gap-2">
+                                        <button 
+                                            onClick={() => navigate('/create-group')} 
+                                            className="p-2 bg-[var(--primary)] text-white rounded-xl hover:opacity-90 transition-opacity"
+                                            title="Crear Grupo"
+                                        >
+                                            <Plus size={18} />
+                                        </button>
+                                        <button 
+                                            onClick={() => navigate('/create-group?tab=join')} 
+                                            className="p-2 bg-emerald-500 text-white rounded-xl hover:opacity-90 transition-opacity"
+                                            title="Unirse a Grupo"
+                                        >
+                                            <Users size={18} />
+                                        </button>
+                                    </div>
                                 </div>
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] mb-1">Mesas Activas</p>
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] mb-1">Grupos Activos</p>
                                 <h3 className="text-3xl font-black">{allActiveGroups.length}</h3>
                             </div>
                         </section>
@@ -130,7 +147,7 @@ export const Dashboard: React.FC = () => {
                             <section className="lg:col-span-2 space-y-6">
                                 <div className="flex items-end justify-between">
                                     <h2 className="text-xs font-black uppercase tracking-[0.3em] text-[var(--text-secondary)] flex items-center gap-2">
-                                        <Clock size={16} /> Actividad Reciente
+                                        <Clock size={16} /> Mis Grupos
                                     </h2>
                                     <button 
                                         onClick={() => navigate('/create-group')}
@@ -154,7 +171,7 @@ export const Dashboard: React.FC = () => {
                                                     members: group.integrantes || [],
                                                     total: group.total_gastado || 0,
                                                     userBalance: group.mi_balance || 0,
-                                                    isAdmin: group.admin_id === localStorage.getItem('userId')
+                                                    isAdmin: group.admin_id === user?.id
                                                 };
 
                                                 return (
@@ -170,12 +187,12 @@ export const Dashboard: React.FC = () => {
                                         ) : (
                                             <div className="col-span-full py-20 text-center border-4 border-dashed border-[var(--border-color)] rounded-[3rem] opacity-30">
                                                 <Users size={48} className="mx-auto mb-4" />
-                                                <p className="text-sm font-black uppercase tracking-widest">No hay mesas activas</p>
+                                                <p className="text-sm font-black uppercase tracking-widest">No hay grupos activos</p>
                                                 <button 
                                                     onClick={() => navigate('/create-group')}
                                                     className="mt-4 text-[var(--primary)] font-bold text-xs uppercase tracking-widest"
                                                 >
-                                                    Crear la primera
+                                                    Crear el primero
                                                 </button>
                                             </div>
                                         )}
@@ -236,7 +253,7 @@ export const Dashboard: React.FC = () => {
                                     <h3 className="text-xl font-black uppercase tracking-tighter mb-2">¿Tienes un Ticket?</h3>
                                     <p className="text-white/70 text-sm font-medium mb-6">Súbelo ahora y deja que la IA desglosé los gastos por ti en segundos.</p>
                                     <button 
-                                        onClick={() => navigate('/qr-scanner')}
+                                        onClick={() => navigate('/ocr-scanner')}
                                         className="bg-white text-[var(--primary)] px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl"
                                     >
                                         Subir Archivo

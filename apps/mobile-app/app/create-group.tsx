@@ -23,11 +23,11 @@ export default function CreateGroupScreen() {
 
     const handleCreateGroup = async () => {
         if (!groupName.trim()) {
-            Alert.alert('Error', 'Por favor ingresa un nombre para la mesa');
+            Alert.alert('Error', 'Por favor ingresa un nombre para el grupo');
             return;
         }
         if (!user?.id) {
-            Alert.alert('Error', 'Debes iniciar sesión para crear una mesa');
+            Alert.alert('Error', 'Debes iniciar sesión para crear un grupo');
             return;
         }
 
@@ -39,9 +39,9 @@ export default function CreateGroupScreen() {
         setIsLoading(true);
         try {
             await createGrupo(groupName, user.id);
-            router.replace('/new-mesa');
+            router.replace('/new-group');
         } catch (error) {
-            Alert.alert('Error', 'No se pudo crear la mesa. Revisa tu conexión.');
+            Alert.alert('Error', 'No se pudo crear el grupo. Revisa tu conexión.');
         } finally {
             setIsLoading(false);
         }
@@ -80,7 +80,7 @@ export default function CreateGroupScreen() {
                             <MaterialIcons name="add-business" size={40} color={theme.primary} />
                         </View>
                         <Text style={{ color: theme.text }} className="text-3xl font-black tracking-tight text-center">
-                            Crear Mesa
+                            Crear Grupo
                         </Text>
                         <Text style={{ color: theme.textSecondary }} className="text-base text-center opacity-70">
                             Inicia una nueva sesión para dividir la cuenta con tus amigos.
@@ -144,7 +144,7 @@ export default function CreateGroupScreen() {
                     <View className="gap-6">
                         <View className="gap-2">
                             <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-[3px] mb-1 ml-1">
-                                Nombre de la Mesa
+                                Nombre del Grupo
                             </Text>
                             <TextInput
                                 value={groupName}
@@ -180,7 +180,7 @@ export default function CreateGroupScreen() {
                             <Text style={{ color: theme.primary }} className="font-black text-xs uppercase tracking-widest">Rol: Líder</Text>
                         </View>
                         <Text style={{ color: theme.textSecondary }} className="text-xs leading-relaxed">
-                            Al crear la mesa serás el Líder. Podrás escanear tickets, asignar platillos y cerrar la cuenta final.
+                            Al crear el grupo serás el Líder. Podrás escanear tickets, asignar platillos y cerrar la cuenta final.
                         </Text>
                     </View>
                 </MotiView>
@@ -195,7 +195,7 @@ export default function CreateGroupScreen() {
                 >
                     {isLoading
                         ? <ActivityIndicator color="white" />
-                        : <Text className="text-white font-black text-base">Crear Mesa</Text>
+                        : <Text className="text-white font-black text-base">Crear Grupo</Text>
                     }
                 </TouchableOpacity>
             </View>

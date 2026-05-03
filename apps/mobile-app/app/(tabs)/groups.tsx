@@ -8,7 +8,7 @@ import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
 
-const MotiView = View as any;
+import { MotiView } from 'moti';
 
 export default function GroupListScreen() {
     const { theme, fontScale } = useTheme();

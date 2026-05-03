@@ -11,6 +11,7 @@ class Item(BaseModel):
     cantidad: int = 1
     comprador_id: str  
     participantes_ids: List[str]  
+    categoria: Optional[str] = "Otros"
     fecha_registro: datetime = Field(default_factory=datetime.utcnow)
 
 class ItemCreate(BaseModel):
@@ -20,6 +21,7 @@ class ItemCreate(BaseModel):
     cantidad: int = 1
     comprador_id: str
     participantes_ids: List[str]
+    categoria: Optional[str] = "Otros"
 
 class ItemUpdate(BaseModel):
     nombre: Optional[str] = None

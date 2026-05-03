@@ -11,6 +11,11 @@ class StatsRepository {
         return response.data;
     }
 
+    async getUserCharts(userId: string): Promise<any> {
+        const response = await httpClient.get(`/stats/user/${userId}/charts`);
+        return response.data;
+    }
+
     async getGroupStats(groupId: string): Promise<any> {
         const response = await httpClient.get(`/stats/group/${groupId}`);
         return response.data;

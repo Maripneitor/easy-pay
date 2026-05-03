@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../../../infrastructure/utils';
 import { httpClient } from '../../../../infrastructure/api/http-client';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface SettlementWizardProps {
     isOpen: boolean;
@@ -34,7 +35,10 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
     const [customTip, setCustomTip] = useState('');
     const [isClosing, setIsClosing] = useState(false);
 
-    const unassignedItems = activities.filter(item => 
+    const safeActivities = activities || [];
+    const safeIntegrantes = integrantesData || [];
+
+    const unassignedItems = safeActivities.filter(item => 
         !item.nombres_participantes || item.nombres_participantes.length === 0
     );
 
@@ -43,12 +47,12 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
 
     // --- MOCK CALCULATION FOR DEMO ---
     // In a real app, this would come from the backend or a complex logic
-    const summary = integrantesData.map(member => {
-        const spent = activities
+    const summary = safeIntegrantes.map(member => {
+        const spent = safeActivities
             .filter(item => item.nombres_participantes?.includes(member.nombre))
             .reduce((acc, item) => acc + (item.monto / (item.nombres_participantes?.length || 1)), 0);
         
-        const shareOfTip = tipAmount / integrantesData.length;
+        const shareOfTip = tipAmount / (safeIntegrantes.length || 1);
         return {
             name: member.nombre,
             subtotal: spent,
@@ -60,6 +64,8 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
     const handleNext = () => setStep(s => s + 1);
     const handleBack = () => setStep(s => s - 1);
 
+    const queryClient = useQueryClient();
+
     const handleCloseTable = async () => {
         setIsClosing(true);
         try {
@@ -68,12 +74,18 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                 final_total: finalTotal
             });
             if (res.status === 200) {
-                toast.success("Mesa cerrada correctamente");
+                toast.success("Grupo cerrado correctamente");
+                // Invalidate all related data
+                queryClient.invalidateQueries({ queryKey: ['group', groupId] });
+                queryClient.invalidateQueries({ queryKey: ['user-stats'] });
+                queryClient.invalidateQueries({ queryKey: ['user-charts'] });
+                
                 onClose();
-                window.location.reload();
+                // We keep the reload as fallback for now if the user isn't in a React Query context elsewhere
+                setTimeout(() => window.location.reload(), 500);
             }
         } catch (error) {
-            toast.error("Error al cerrar la mesa");
+            toast.error("Error al cerrar el grupo");
         } finally {
             setIsClosing(false);
         }
@@ -252,7 +264,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                 <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-6 flex items-start gap-4">
                                     <Calculator size={20} className="text-blue-500 mt-1" />
                                     <p className="text-[10px] text-blue-400 font-medium leading-relaxed">
-                                        Este resumen incluye el desglose exacto de lo que cada persona debe aportar para cubrir el total de la cuenta incluyendo la propina seleccionada. Al cerrar la mesa, se enviará una notificación a todos los integrantes.
+                                        Este resumen incluye el desglose exacto de lo que cada persona debe aportar para cubrir el total de la cuenta incluyendo la propina seleccionada. Al cerrar el grupo, se enviará una notificación a todos los integrantes.
                                     </p>
                                 </div>
                             </motion.div>
@@ -278,7 +290,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                     : "bg-[var(--primary)] text-white shadow-[var(--primary)]/20 hover:brightness-110 disabled:opacity-50 disabled:grayscale"
                             )}
                         >
-                            {isClosing ? 'Procesando...' : step === 3 ? 'Cerrar Mesa Definitivamente' : 'Siguiente'}
+                            {isClosing ? 'Procesando...' : step === 3 ? 'Cerrar Grupo Definitivamente' : 'Siguiente'}
                             {!isClosing && <ArrowRight size={16} />}
                         </button>
                     </div>

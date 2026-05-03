@@ -66,8 +66,8 @@ export default function GroupDetailScreen() {
         try {
             const [g, items, balancesData] = await Promise.all([
                 groupRepository.getGroup(id),
-                fetch(`${baseUrl}/groups/${id}/items`).then(r => r.json()),
-                fetch(`${baseUrl}/groups/${id}/balances`).then(r => r.json())
+                groupRepository.getItems(id),
+                groupRepository.getBalances(id)
             ]);
             setGroupData(g);
             setGroupItems(Array.isArray(items) ? items : []);
@@ -122,11 +122,11 @@ export default function GroupDetailScreen() {
                 </TouchableOpacity>
                 
                 <View className="items-center">
-                    <Text style={{ color: theme.text, fontSize: 20 * fontScale, fontFamily: 'Manrope' }} className="font-bold">{groupData?.nombre || 'Mesa'}</Text>
+                    <Text style={{ color: theme.text, fontSize: 20 * fontScale, fontFamily: 'Manrope' }} className="font-bold">{groupData?.nombre || 'Grupo'}</Text>
                     <View className="flex-row items-center mt-0.5">
                         <View style={{ backgroundColor: groupData?.status === 'ACTIVA' ? '#10B981' : groupData?.status === 'CERRANDO' ? '#F59E0B' : '#64748B' }} className="w-1.5 h-1.5 rounded-full mr-1.5" />
                         <Text style={{ color: theme.textSecondary, fontSize: 11 * fontScale, fontFamily: 'Inter' }} className="font-medium opacity-80 uppercase tracking-widest">
-                            {groupData?.status === 'ACTIVA' ? 'Mesa Abierta' : groupData?.status || 'Sincronizando...'}
+                            {groupData?.status === 'ACTIVA' ? 'Grupo Abierto' : groupData?.status || 'Sincronizando...'}
                         </Text>
                     </View>
                 </View>
@@ -137,8 +137,8 @@ export default function GroupDetailScreen() {
                             onPress={async () => {
                                 import('react-native').then(({ Alert }) => {
                                     Alert.alert(
-                                        'Eliminar Mesa',
-                                        '¿Estás seguro de que deseas eliminar esta mesa? Esta acción no se puede deshacer.',
+                                        'Eliminar Grupo',
+                                        '¿Estás seguro de que deseas eliminar esta grupo? Esta acción no se puede deshacer.',
                                         [
                                             { text: 'Cancelar', style: 'cancel' },
                                             { 
@@ -269,7 +269,7 @@ export default function GroupDetailScreen() {
                 <View className="max-w-4xl mx-auto">
                     <View className="flex-row justify-between items-end mb-5">
                         <View>
-                            <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale, fontFamily: 'Inter' }} className="mb-1">Total de la Mesa</Text>
+                            <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale, fontFamily: 'Inter' }} className="mb-1">Total del Grupo</Text>
                             <Text style={{ color: theme.text, fontSize: 24 * fontScale, fontFamily: 'Manrope' }} className="font-bold">
                                 ${ (balances?.total_gastado_en_grupo || 0).toFixed(2) }
                             </Text>
@@ -288,7 +288,7 @@ export default function GroupDetailScreen() {
                             style={{ backgroundColor: theme.primary }} 
                             className="w-row items-center justify-center py-4 rounded-xl shadow-lg active:scale-[0.98] flex-row"
                         >
-                            <Text style={{ fontFamily: 'Manrope', color: 'white' }} className="font-bold text-lg mr-2">Liquidar Mesa</Text>
+                            <Text style={{ fontFamily: 'Manrope', color: 'white' }} className="font-bold text-lg mr-2">Liquidar Grupo</Text>
                             <MaterialIcons name="lock-outline" size={20} color="white" />
                         </TouchableOpacity>
                     ) : (

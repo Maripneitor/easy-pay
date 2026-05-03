@@ -1,20 +1,29 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar/Sidebar';
-import { useAuth } from '../pages/Auth/useAuth';
+import { useAuthContext } from '../context/AuthContext';
 import { CommandPalette } from '../components/CommandPalette/CommandPalette';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Menu } from 'lucide-react';
 
 export const DashboardLayout = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const { logout } = useAuth();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+        const saved = localStorage.getItem('sidebarCollapsed');
+        return saved !== null ? saved === 'false' : true;
+    });
+    const { logout, user } = useAuthContext();
 
     useKeyboardShortcuts();
 
-    const userName = localStorage.getItem('userName') || 'Usuario';
-    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+    const userName = user?.nombre || user?.name || 'Usuario';
+    const toggleSidebar = () => {
+        setIsSidebarOpen(prev => {
+            const newState = !prev;
+            localStorage.setItem('sidebarCollapsed', (!newState).toString());
+            return newState;
+        });
+    };
 
     return (
         <div className="flex h-screen bg-[var(--bg-body)] text-[var(--text-primary)] overflow-hidden transition-colors duration-300 font-display">

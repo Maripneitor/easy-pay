@@ -73,7 +73,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                         </TouchableOpacity>
                         <View className="items-center">
                             <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-[0.2em]">Paso {step} de 3</Text>
-                            <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black">Liquidar Mesa</Text>
+                            <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black">Liquidar Grupo</Text>
                         </View>
                         <View className="w-10" />
                     </View>
@@ -181,14 +181,14 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                     </View>
                                     <Text style={{ color: theme.text, fontSize: 24 * fontScale }} className="font-black text-center">Resumen Final</Text>
                                     <Text style={{ color: theme.textSecondary, fontSize: 13 * fontScale }} className="font-medium text-center mt-2 opacity-60">
-                                        La mesa se cerrará y se enviarán los saldos a cada integrante.
+                                        El grupo se cerrará y se enviarán los saldos a cada integrante.
                                     </Text>
                                 </View>
 
                                 <View style={{ backgroundColor: theme.primary }} className="p-8 rounded-[3rem] shadow-xl shadow-blue-500/20">
                                     <View className="items-center mb-6">
-                                        <Text className="text-white/60 font-black uppercase tracking-[0.3em] text-[10px] mb-2">Mesa</Text>
-                                        <Text className="text-white font-black text-2xl text-center uppercase tracking-tighter">{groupData?.nombre || "Mesa"}</Text>
+                                        <Text className="text-white/60 font-black uppercase tracking-[0.3em] text-[10px] mb-2">Grupo</Text>
+                                        <Text className="text-white font-black text-2xl text-center uppercase tracking-tighter">{groupData?.nombre || "Grupo"}</Text>
                                     </View>
                                     
                                     <View className="flex-row justify-between mb-4">

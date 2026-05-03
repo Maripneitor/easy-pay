@@ -38,6 +38,12 @@ class PasswordChange(BaseModel):
             raise ValueError("La nueva contraseña y la confirmación no coinciden")
         return True
 
+# Clase para actualización de perfil
+class UserUpdate(BaseModel):
+    nombre: Optional[str] = None
+    email: Optional[EmailStr] = None
+    telefono: Optional[str] = None
+
 # Clase para solicitar restablecimiento de contraseña
 class PasswordResetRequest(BaseModel):
     email: EmailStr

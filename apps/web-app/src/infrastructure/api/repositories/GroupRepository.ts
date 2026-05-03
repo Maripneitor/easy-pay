@@ -105,9 +105,54 @@ export class ApiGroupRepository implements GroupRepository {
         }
     }
 
+    // ── findByUser ───────────────────────────────────────────────────────────
+    async findByUser(userId: string): Promise<any[]> {
+        try {
+            const res = await httpClient.get(`/groups/user/${userId}`);
+            return res.data;
+        } catch (e) {
+            return handleApiError(e);
+        }
+    }
+
+    // ── getBalances ───────────────────────────────────────────────────────────
+    async getBalances(groupId: string): Promise<any> {
+        try {
+            const res = await httpClient.get(`/groups/${groupId}/balances`);
+            return res.data;
+        } catch (e) {
+            return handleApiError(e);
+        }
+    }
+
+    // ── deleteGroup ───────────────────────────────────────────────────────────
+    async deleteGroup(groupId: string): Promise<void> {
+        try {
+            await httpClient.delete(`/groups/${groupId}`);
+        } catch (e) {
+            return handleApiError(e);
+        }
+    }
+
     // ── onGroupUpdate (WebSocket) ─────────────────────────────────────────────
     onGroupUpdate(groupId: string, callback: (group: Group) => void): () => void {
         return subscribeToGroup(groupId, callback);
+    }
+
+    async addMember(groupId: string, userId: string): Promise<void> {
+        try {
+            await httpClient.post(`/groups/${groupId}/members`, { user_id: userId });
+        } catch (e) {
+            return handleApiError(e);
+        }
+    }
+
+    async removeMember(groupId: string, userId: string): Promise<void> {
+        try {
+            await httpClient.delete(`/groups/${groupId}/members/${userId}`);
+        } catch (e) {
+            return handleApiError(e);
+        }
     }
 }
 

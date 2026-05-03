@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { Member } from '@easy-pay/domain';
 import { STORAGE_KEYS } from '../../infrastructure/localStorage/storage-keys';
 import { clearAuthToken } from '../../infrastructure/api/http-client';
+import { authService, type User } from '../../services/authService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -14,19 +14,23 @@ interface GuestSession {
 
 export interface AuthContextType {
     /** Authenticated registered user */
-    user: Member | null;
+    user: User | null;
     /** Guest session (no account, just a name) */
     guest: GuestSession | null;
+    /** Initial loading state (restoring session) */
     isLoading: boolean;
+    /** State during login/logout operations */
+    isAuthenticating: boolean;
     /** True if user OR guest session is active */
     isAuthenticated: boolean;
     /** True only for guest sessions */
     isGuest: boolean;
 
     loginWithGoogle: () => Promise<void>;
-    loginWithEmail: (email: string, password: string) => Promise<void>;
+    loginWithEmail: (email: string, password: string) => Promise<any>;
     loginAsGuest: (name: string, groupCode?: string) => Promise<void>;
     logout: () => Promise<void>;
+    updateUserSession: (updatedUser: User, newToken?: string) => void;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -40,131 +44,107 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-    const [user,      setUser]      = useState<Member | null>(null);
-    const [guest,     setGuest]     = useState<GuestSession | null>(null);
+    const [user, setUser] = useState<User | null>(null);
+    const [guest, setGuest] = useState<GuestSession | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
 
-    // ── Restore session on mount ───────────────────────────────────────────────
+    // ── Restore session and Sync across tabs ─────────────────────────────────
     useEffect(() => {
-        const restoreSession = () => {
-            try {
-                // Ensure we have both token and user data to restore a session
-                const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-                const storedUser = localStorage.getItem(STORAGE_KEYS.AUTH_USER);
-                
-                if (token && storedUser) {
-                    setUser(JSON.parse(storedUser) as Member);
-                    setIsLoading(false);
-                    return;
-                }
+        const syncSession = () => {
+            const storedUser = authService.getStoredUser();
+            setUser(storedUser);
+            
+            const storedGuest = localStorage.getItem(STORAGE_KEYS.GUEST_SESSION);
+            setGuest(storedGuest ? JSON.parse(storedGuest) : null);
+            
+            setIsLoading(false);
+        };
 
-                // Try to restore a guest session
-                const storedGuest = localStorage.getItem(STORAGE_KEYS.GUEST_SESSION);
-                if (storedGuest) {
-                    setGuest(JSON.parse(storedGuest) as GuestSession);
-                }
-            } catch (err) {
-                console.error('[AuthContext] Error restoring session:', err);
-                // Corrupt storage — start clean
-                localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-                localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
-                localStorage.removeItem(STORAGE_KEYS.GUEST_SESSION);
-            } finally {
-                setIsLoading(false);
+        // Listen for storage changes from other tabs
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === STORAGE_KEYS.AUTH_USER || e.key === STORAGE_KEYS.AUTH_TOKEN || e.key === STORAGE_KEYS.GUEST_SESSION) {
+                syncSession();
             }
         };
 
-        restoreSession();
+        syncSession();
+        window.addEventListener('storage', handleStorageChange);
+        
+        return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
     // ── Auth methods ───────────────────────────────────────────────────────────
 
     const loginWithGoogle = useCallback(async (): Promise<void> => {
-        setIsLoading(true);
+        setIsAuthenticating(true);
         try {
-            /**
-             * TODO (Fase Backend):
-             *   const token = await googleOAuthFlow();
-             *   setAuthToken(token);
-             *   const res = await httpClient.get<Member>('/auth/me');
-             *   persistUser(res.data);
-             */
-
-            // Mock: simula un usuario autenticado con Google
+            // Mock for now as backend doesn't support Google OAuth yet
             await new Promise(r => setTimeout(r, 800));
-            const mockUser: Member = {
-                id:        'google-user-1',
-                name:      'Juan Pérez',
-                role:      'member',
+            const mockUser: User = {
+                id: 'google-user-1',
+                nombre: 'Juan Pérez',
+                email: 'juan@example.com',
                 avatarUrl: 'https://ui-avatars.com/api/?name=Juan+Perez&background=4285F4&color=fff',
-                hasPaid:   false,
             };
-            persistUser(mockUser);
+            authService.persistSession('mock-google-token', mockUser);
+            setUser(authService.getStoredUser());
         } finally {
-            setIsLoading(false);
+            setIsAuthenticating(false);
         }
     }, []);
 
-    const loginWithEmail = useCallback(async (email: string): Promise<void> => {
-        setIsLoading(true);
+    const loginWithEmail = useCallback(async (email: string, password: string): Promise<any> => {
+        setIsAuthenticating(true);
         try {
-            /**
-             * TODO (Fase Backend):
-             *   const res = await httpClient.post<{ token: string; user: Member }>('/auth/login', { email, password });
-             *   setAuthToken(res.data.token);
-             *   persistUser(res.data.user);
-             */
-
-            // Mock
-            await new Promise(r => setTimeout(r, 800));
-            const mockUser: Member = {
-                id:        `email-user-${Date.now()}`,
-                name:      email.split('@')[0],
-                role:      'member',
-                avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(email.split('@')[0])}`,
-                hasPaid:   false,
-            };
-            persistUser(mockUser);
+            const result = await authService.login(email, password);
+            
+            if (result.status === 'success') {
+                setUser(authService.getStoredUser());
+            }
+            
+            return result;
         } finally {
-            setIsLoading(false);
+            setIsAuthenticating(false);
         }
     }, []);
 
     const loginAsGuest = useCallback(async (name: string, groupCode?: string): Promise<void> => {
-        setIsLoading(true);
+        setIsAuthenticating(true);
         try {
-            // Guests don't call the API — they just get a local session id
             await new Promise(r => setTimeout(r, 300));
             const guestSession: GuestSession = {
-                id:             `guest-${Date.now()}`,
-                name:           name.trim(),
+                id: `guest-${Date.now()}`,
+                name: name.trim(),
                 joinedGroupCode: groupCode,
             };
             localStorage.setItem(STORAGE_KEYS.GUEST_SESSION, JSON.stringify(guestSession));
             setGuest(guestSession);
         } finally {
-            setIsLoading(false);
+            setIsAuthenticating(false);
         }
     }, []);
 
     const logout = useCallback(async (): Promise<void> => {
-        // Clear everything
-        clearAuthToken();
-        localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
-        localStorage.removeItem(STORAGE_KEYS.GUEST_SESSION);
-        setUser(null);
-        setGuest(null);
-        
-        // Redirect to landing
-        window.location.href = '/';
+        setIsAuthenticating(true);
+        try {
+            authService.clearSession();
+            setUser(null);
+            setGuest(null);
+            window.location.href = '/auth';
+        } finally {
+            setIsAuthenticating(false);
+        }
     }, []);
 
-    // ── Private helpers ────────────────────────────────────────────────────────
-
-    const persistUser = (member: Member) => {
-        localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(member));
-        setUser(member);
-    };
+    const updateUserSession = useCallback((updatedUser: User, newToken?: string) => {
+        if (newToken) {
+            authService.persistSession(newToken, updatedUser);
+        } else {
+            authService.updateUserSession(updatedUser);
+        }
+        setUser(authService.getStoredUser());
+    }, []);
 
     // ── Context value ──────────────────────────────────────────────────────────
 
@@ -172,12 +152,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         user,
         guest,
         isLoading,
+        isAuthenticating,
         isAuthenticated: !!(user || guest),
-        isGuest:         !user && !!guest,
+        isGuest: !user && !!guest,
         loginWithGoogle,
         loginWithEmail,
         loginAsGuest,
         logout,
+        updateUserSession,
     };
 
     return (
@@ -196,3 +178,4 @@ export const useAuthContext = (): AuthContextType => {
     }
     return ctx;
 };
+

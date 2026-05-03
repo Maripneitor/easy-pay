@@ -17,14 +17,13 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons, Feather, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-// import { MotiView } from 'moti';
-const MotiView = ({ children, from, animate, transition, style, ...props }: any) => (
-  <View style={style} {...props}>{children}</View>
-);
+import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { httpClient } from '../src/infrastructure/api/http-client';
+import { authService } from '../src/infrastructure/services/AuthService';
+
 
 const { width } = Dimensions.get('window');
 
@@ -37,7 +36,7 @@ export default function AuthScreen() {
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [isAuthenticating, setIsAuthenticating] = useState(false);
     const [error, setError] = useState('');
     const { saveSession } = useAuth();
     const handleAuth = async () => {
@@ -46,21 +45,16 @@ export default function AuthScreen() {
             return;
         }
         setError('');
-        setLoading(true);
+        setIsAuthenticating(true);
 
         try {
             if (isLogin) {
-                const response = await httpClient.post('/api/auth/login', {
-                    identifier: email,
-                    password
-                });
-                const data = response.data;
+                const data = await authService.login(email, password);
                 
                 if (data.status === 'success') {
                     console.log('✅ Login exitoso. Guardando sesión...');
-                    console.log(`🔑 Token recibido: ${data.access_token ? 'SÍ' : 'NO'}`);
                     
-                    await saveSession(data.access_token, {
+                    await saveSession(data.access_token!, {
                         id: data.user?.id || data.user?._id || 'unknown',
                         nombre: data.user?.nombre || 'Usuario',
                         email: data.user?.email || email,
@@ -70,6 +64,8 @@ export default function AuthScreen() {
                     console.log('🚀 Navegando al Dashboard...');
                     router.replace('/(tabs)');
                     return;
+                } else {
+                    setError(data.message || 'Credenciales incorrectas');
                 }
             } else {
                 const response = await httpClient.post('/api/auth/register', {
@@ -93,12 +89,13 @@ export default function AuthScreen() {
                 }
             }
         } catch (err: any) {
-            const errData = err.response?.data;
-            setError(errData?.detail || errData?.message || 'No se pudo conectar con el servidor.');
+            const message = err.message || 'No se pudo conectar con el servidor.';
+            setError(message);
         } finally {
-            setLoading(false);
+            setIsAuthenticating(false);
         }
     };
+
 
 
     return (
@@ -144,12 +141,14 @@ export default function AuthScreen() {
                                 <View className="flex-row p-1 bg-[#1e293b]/50 rounded-xl mb-8 border border-white/5">
                                     <TouchableOpacity 
                                         onPress={() => { setIsLogin(true); setError(''); }}
+                                        disabled={isAuthenticating}
                                         className={`flex-1 py-3 items-center rounded-lg ${isLogin ? 'bg-[#334155]' : ''}`}
                                     >
                                         <Text style={{ fontSize: 12 * fontScale }} className={`font-semibold ${isLogin ? 'text-white' : 'text-slate-400'}`}>Iniciar Sesión</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity 
                                         onPress={() => { setIsLogin(false); setError(''); }}
+                                        disabled={isAuthenticating}
                                         className={`flex-1 py-3 items-center rounded-lg ${!isLogin ? 'bg-[#334155]' : ''}`}
                                     >
                                         <Text style={{ fontSize: 12 * fontScale }} className={`font-semibold ${!isLogin ? 'text-white' : 'text-slate-400'}`}>Registrarse</Text>
@@ -215,23 +214,23 @@ export default function AuthScreen() {
                                     </View>
 
                                     <TouchableOpacity 
-                                        onPress={handleAuth}
-                                        disabled={loading}
-                                        className="mt-6 rounded-2xl overflow-hidden shadow-lg shadow-blue-500/40"
-                                        activeOpacity={0.8}
-                                    >
-                                        <View 
-                                            className="bg-[#2196F3] py-5 items-center justify-center"
-                                        >
-                                            {loading ? (
-                                                <ActivityIndicator color="white" size="small" />
-                                            ) : (
-                                                <Text style={{ fontSize: 16 * fontScale }} className="text-white font-bold tracking-wide">
-                                                    {isLogin ? 'Entrar' : 'Crear Cuenta'}
-                                                </Text>
-                                            )}
-                                        </View>
-                                    </TouchableOpacity>
+                                         onPress={handleAuth}
+                                         disabled={isAuthenticating}
+                                         className="mt-6 rounded-2xl overflow-hidden shadow-lg shadow-blue-500/40"
+                                         activeOpacity={0.8}
+                                     >
+                                         <View 
+                                             className="bg-[#2196F3] py-5 items-center justify-center"
+                                         >
+                                             {isAuthenticating ? (
+                                                 <ActivityIndicator color="white" size="small" />
+                                             ) : (
+                                                 <Text style={{ fontSize: 16 * fontScale }} className="text-white font-bold tracking-wide">
+                                                     {isLogin ? 'Entrar' : 'Crear Cuenta'}
+                                                 </Text>
+                                             )}
+                                         </View>
+                                     </TouchableOpacity>
                                 </View>
 
                                 {/* Social Buttons */}

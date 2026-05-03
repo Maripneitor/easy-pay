@@ -11,13 +11,19 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configurar CORS (Permitir todo para desarrollo móvil/local)
-origins = ["*"]
-
+# Configurar CORS (Permitir orígenes de frontend web y móvil)
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://192.168.1.11:5173",
+    "http://10.25.64.36:5173",
+    "http://localhost",
+]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=".*", # Soporte dinámico para móviles en LAN y Expo
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

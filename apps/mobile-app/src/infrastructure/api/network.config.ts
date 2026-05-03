@@ -1,19 +1,27 @@
+import Constants from 'expo-constants';
+
+export const getApiBaseUrl = () => {
+    // 1. Producción o variable explícita (.env)
+    if (process.env.EXPO_PUBLIC_API_URL) {
+        return process.env.EXPO_PUBLIC_API_URL;
+    }
+    
+    // 2. Detección automática en LAN (Dispositivos físicos vía Expo)
+    const hostUri = Constants.expoConfig?.hostUri;
+    if (hostUri) {
+        const ip = hostUri.split(':')[0];
+        return `http://${ip}:8000/api`;
+    }
+    
+    // 3. Fallback para Simulador iOS o localhost
+    return 'http://localhost:8000/api';
+};
 
 export const NETWORK_CONFIG = {
-  // Configuración de IP detectada automáticamente (Entorno UNACH/Local)
-  LOCAL_IP: '192.168.1.5',
-  PORT: '8000',
-  PROTO: 'http',
-  
-  // URL Completa
   get BASE_URL() {
-    return `${this.PROTO}://${this.LOCAL_IP}:${this.PORT}/api`;
+    return getApiBaseUrl();
   },
-
-  // Tiempo de espera para peticiones
   TIMEOUT: 15000,
-  
-  // Endpoints específicos
   ENDPOINTS: {
     AUTH: '/auth',
     USER: '/auth', 
@@ -21,5 +29,3 @@ export const NETWORK_CONFIG = {
     STATS: '/stats',
   }
 };
-
-export const getApiBaseUrl = () => NETWORK_CONFIG.BASE_URL;

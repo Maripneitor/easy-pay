@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { groupRepository, statsRepository, paymentRepository } from '../../../infrastructure/api/repositories';
 import { httpClient } from '../../../infrastructure/api/http-client';
+import { useAuthContext } from '../../context/AuthContext';
 
 export const useDashboard = () => {
     const [allActiveGroups, setAllActiveGroups] = useState<any[]>([]);
@@ -9,10 +10,12 @@ export const useDashboard = () => {
     const [stats, setStats] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [hasCards, setHasCards] = useState(true);
-    const userId = localStorage.getItem('userId');
+    const { user, isLoading: authLoading } = useAuthContext();
+    const userId = user?.id;
     const navigate = useNavigate();
 
     const fetchDashboardData = useCallback(async () => {
+        if (authLoading) return;
         if (!userId) {
             setIsLoading(false);
             navigate('/auth');
@@ -29,14 +32,12 @@ export const useDashboard = () => {
             }
 
             // 2. Obtener grupos del usuario
-            const groups = await httpClient.get(`/groups/user/${userId}`);
-            const data = groups.data;
+            const data = await groupRepository.findByUser(userId);
 
             if (Array.isArray(data)) {
                 const groupsWithBalances = await Promise.all(data.map(async (group: any) => {
                     try {
-                        const resBalance = await httpClient.get(`/groups/${group.id}/balances`);
-                        const bData = resBalance.data;
+                        const bData = await groupRepository.getBalances(group.id);
                         const bList = bData.balance_detallado || bData.balances || [];
                         const myInfo = bList.find((b: any) => b.usuario_id === userId);
 
@@ -68,7 +69,7 @@ export const useDashboard = () => {
             setIsLoading(false);
         }
 
-    }, [userId, navigate]);
+    }, [userId, navigate, authLoading]);
 
     useEffect(() => {
         fetchDashboardData();
@@ -78,10 +79,7 @@ export const useDashboard = () => {
 
     const deleteGroup = async (groupId: string) => {
         try {
-            await groupRepository.removeItem(groupId, ""); // Mocking or adjusting if needed
-            // En realidad el repo tiene deleteGroup pero el mobile usa removeItem para items.
-            // Ajustamos para que use el endpoint de borrar grupo real
-            await httpClient.delete(`/groups/delete/${groupId}`);
+            await groupRepository.deleteGroup(groupId);
             fetchDashboardData();
         } catch (error: any) {
             throw error;

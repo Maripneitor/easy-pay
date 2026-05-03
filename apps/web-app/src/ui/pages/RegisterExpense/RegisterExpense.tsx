@@ -7,18 +7,21 @@ import {
     Users,
     ArrowLeft,
     Receipt,
-    Pencil
+    Pencil,
+    PieChart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@infrastructure/utils';
 import { PageHeader } from '@ui/components/PageHeader';
 import { useRegisterExpense } from './useRegisterExpense';
+import OcrService from '../../../infrastructure/services/OcrService';
 
 export const RegisterExpense = () => {
-    const { itemId } = useParams();
+    const { itemId, groupId } = useParams();
     const isEditing = Boolean(itemId);
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
     const navigate = useNavigate();
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const {
         formData,
@@ -29,10 +32,36 @@ export const RegisterExpense = () => {
         toggleParticipante
     } = useRegisterExpense();
 
+    const handleOcr = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        toast.promise(OcrService.extractTicketData(file), {
+            loading: 'Analizando ticket...',
+            success: (data) => {
+                setFormData(prev => ({
+                    ...prev,
+                    nombre: data.restaurantName || prev.nombre,
+                    precio: data.total.toString()
+                }));
+                return 'Ticket analizado con éxito';
+            },
+            error: 'No se pudo leer el ticket'
+        });
+    };
+
     const currentComprador = integrantes.find(i => i.id === formData.comprador_id);
 
     return (
         <div className="min-h-screen flex flex-col bg-[var(--bg-body)] font-display text-[var(--text-primary)] antialiased overflow-x-hidden">
+            <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleOcr} 
+            />
+            
             <div className="fixed inset-0 pointer-events-none">
                 <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-[var(--primary)] opacity-[0.03] blur-[120px] rounded-full" />
                 <div className="absolute bottom-[-5%] left-[-5%] w-[300px] h-[300px] bg-blue-500 opacity-[0.03] blur-[100px] rounded-full" />
@@ -45,10 +74,11 @@ export const RegisterExpense = () => {
                     onBack={() => navigate(-1)}
                     rightSlot={
                         <button
-                            className="p-2 text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors"
-                            onClick={() => navigate(-1)}
+                            className="p-2.5 bg-[var(--primary)]/10 text-[var(--primary)] rounded-xl hover:bg-[var(--primary)] transition-all hover:text-white"
+                            onClick={() => fileInputRef.current?.click()}
+                            title="Escanear Ticket"
                         >
-                            <ArrowLeft size={22} />
+                            <Receipt size={22} />
                         </button>
                     }
                 />
@@ -104,6 +134,33 @@ export const RegisterExpense = () => {
                             <div className="h-px bg-gradient-to-r from-transparent via-[var(--border-color)] to-transparent" />
 
                             <div className="flex items-center gap-5">
+                                <div className="w-14 h-14 rounded-2xl bg-indigo-500/5 flex items-center justify-center text-indigo-500 border border-indigo-500/10">
+                                    <PieChart size={24} />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest mb-2 opacity-50">Categoría</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {['Comida', 'Transporte', 'Entretenimiento', 'Otros'].map(cat => (
+                                            <button
+                                                key={cat}
+                                                onClick={() => setFormData({...formData, categoria: cat})}
+                                                className={cn(
+                                                    "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
+                                                    formData.categoria === cat 
+                                                        ? "bg-indigo-500 text-white border-indigo-500 shadow-lg shadow-indigo-500/20"
+                                                        : "bg-black/5 text-slate-400 border-transparent hover:border-slate-300"
+                                                )}
+                                            >
+                                                {cat}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="h-px bg-gradient-to-r from-transparent via-[var(--border-color)] to-transparent" />
+
+                            <div className="flex items-center gap-5">
                                 <div className="w-14 h-14 rounded-2xl bg-emerald-500/5 flex items-center justify-center text-emerald-500 border border-emerald-500/10">
                                     <User size={24} />
                                 </div>
@@ -143,7 +200,7 @@ export const RegisterExpense = () => {
                             <AnimatePresence mode="popLayout">
                                 {integrantes.map((user, index) => {
                                     const isSelected = formData.participantes_ids.includes(user.id);
-                                    const initial = user.nombre.charAt(0).toUpperCase();
+                                    const initial = user.nombre?.charAt(0).toUpperCase() || '?';
 
                                     return (
                                         <motion.div
@@ -168,7 +225,7 @@ export const RegisterExpense = () => {
                                                 </div>
                                                 <div className="flex flex-col">
                                                     <span className={cn("font-bold text-base", isSelected ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]")}>
-                                                        {user.nombre}
+                                                        {user.nombre || 'Usuario'}
                                                     </span>
                                                     <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Participante</span>
                                                 </div>

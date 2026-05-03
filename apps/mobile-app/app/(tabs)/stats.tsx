@@ -61,8 +61,8 @@ export default function StatsScreen() {
             <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
                 {/* Header */}
                 <View className="mb-8">
-                    <Text style={{ color: theme.text, fontSize: 32 * fontScale }} className="font-black tracking-tight">Mi Análisis</Text>
-                    <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale }} className="font-medium opacity-60">Visualiza tu comportamiento financiero</Text>
+                    <Text style={{ color: theme.text, fontSize: 32 * fontScale }} className="font-black tracking-tight">Mi Historial</Text>
+                    <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale }} className="font-medium opacity-60">Visualiza tu actividad y balance histórico</Text>
                 </View>
 
                 {/* Summary Cards */}
@@ -106,12 +106,12 @@ export default function StatsScreen() {
                     </View>
 
                     <View style={{ backgroundColor: theme.card }} className="p-6 rounded-[2.5rem] border border-white/5">
-                        {stats?.categories?.map((cat: any, index: number) => (
+                        {stats?.expenses_by_category?.map((cat: any, index: number) => (
                             <View key={index} className="mb-6 last:mb-0">
                                 <View className="flex-row justify-between items-center mb-2">
                                     <View className="flex-row items-center">
-                                        <CategoryIcon name={cat.name} />
-                                        <Text style={{ color: theme.text }} className="font-bold ml-3 text-sm">{cat.name}</Text>
+                                        <CategoryIcon name={cat.category} />
+                                        <Text style={{ color: theme.text }} className="font-bold ml-3 text-sm">{cat.category}</Text>
                                     </View>
                                     <Text style={{ color: theme.textSecondary }} className="font-black text-xs">${cat.amount}</Text>
                                 </View>

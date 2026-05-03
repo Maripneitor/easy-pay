@@ -84,6 +84,15 @@ class MongoGroupRepository:
         )
         return result.modified_count > 0 or result.matched_count > 0
 
+    async def remove_member(self, group_id: str, user_id: str):
+        if not ObjectId.is_valid(group_id):
+            return False
+        result = await self.collection.update_one(
+            {"_id": ObjectId(group_id)},
+            {"$pull": {"integrantes": user_id}}
+        )
+        return result.modified_count > 0
+
     async def find_by_user(self, user_id: str):
         cursor = self.collection.find({"integrantes": user_id})
         groups = await cursor.to_list(length=100)

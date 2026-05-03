@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException
-from user.domain.models.user import UserCreate, UserLogin, PasswordChange, PasswordResetRequest
+from fastapi import APIRouter, HTTPException, Header, Depends
+from user.domain.models.user import UserCreate, UserLogin, PasswordChange, PasswordResetRequest, UserUpdate
 from user.application.register_user import RegisterUser
 from user.application.login_user import LoginUserUseCase
 from user.application.update_user import UpdateUserUseCase
@@ -8,12 +8,21 @@ from user.application.setup_2fa import Setup2FAUseCase
 from user.application.verify_2fa import Verify2FAUseCase
 from user.application.change_password import ChangePasswordUseCase
 from user.infrastructure.services.email_service import EmailService
+from user.infrastructure.security.auth_handler import decode_token
 
 # Ruta especifica para AUTH
 user_router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
 # --- Inyección de dependencias ---
 repo = MongoUserRepository()
+
+@user_router.get("/search")
+async def search_users(query: str, limit: int = 5):
+    """Busca usuarios registrados por nombre o email"""
+    if len(query) < 2:
+        return []
+    users = await repo.search_users(query, limit)
+    return users
 email_service = EmailService()
 
 resgister_use_case = RegisterUser(repo)
@@ -39,6 +48,12 @@ async def register(user_data: UserCreate):
 
     if result["status"] == "error":
         raise HTTPException(status_code=400, detail=result.get("message", "Error en registro"))
+    
+    # --- AUTO-ENVIAR CÓDIGO DE VERIFICACIÓN ---
+    user_id = result.get("user_id")
+    if user_id:
+        await setup_2fa_use_case.execute(user_id, user_data.email)
+        
     return result
 
 @user_router.post("/login")
@@ -47,16 +62,39 @@ async def login(login_data: UserLogin):
         identifier=login_data.identifier,
         password=login_data.password
     )
+    
+    # --- AUTO-ENVIAR CÓDIGO SI NO ESTÁ VERIFICADO ---
+    if result.get("status") == "not_verified":
+        await setup_2fa_use_case.execute(result["user_id"], result["email"])
+
     if result["status"] == "error":
         raise HTTPException(status_code=401, detail=result["message"])
     return result
 
-@user_router.put("/update/{user_id}")
-async def update_user(user_id: str, data: dict):
-    success = await update_user_use_case.execute(user_id, data)
-    if success:
-        return {"message": "Perfil actualizado"}
-    raise HTTPException(status_code=400, detail="No se pudo actualizar")
+
+async def get_current_user_id(authorization: str = Header(...)):
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Token inválido")
+    token = authorization.split(" ")[1]
+    payload = decode_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Token expirado o inválido")
+    return payload.get("sub")
+
+@user_router.put("/update")
+async def update_user(data: UserUpdate, user_id: str = Depends(get_current_user_id)):
+    result = await update_user_use_case.execute(user_id, data.dict(exclude_unset=True))
+    if result["status"] == "success":
+        return result
+    raise HTTPException(status_code=400, detail=result["message"])
+
+@user_router.put("/update/{user_id}") # Mantener por compatibilidad si es necesario, pero redirigir a seguro
+async def update_user_legacy(user_id: str, data: UserUpdate):
+    # En producción esto debería estar deprecado
+    result = await update_user_use_case.execute(user_id, data.dict(exclude_unset=True))
+    if result["status"] == "success":
+        return result
+    raise HTTPException(status_code=400, detail=result["message"])
 
 # --- SETUP 2FA ---
 @user_router.post("/2fa/setup/{user_id}")
@@ -112,6 +150,8 @@ async def change_password_route(user_id: str, data: PasswordChange): # Usamos el
     
     if result["status"] == "error":
         raise HTTPException(status_code=400, detail=result["message"])
+        
+    return result
         
 # --- GESTIÓN DE TARJETAS ---
 @user_router.get("/cards/{user_id}")

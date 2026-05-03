@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { toast } from 'sonner';
 
-const API_URL = import.meta.env.VITE_USER_SERVICE_URL ?? 'http://localhost:8001';
+import { userRepository } from '../../../infrastructure/api/repositories';
 
 export const RecoverPasswordPage = () => {
     const navigate = useNavigate();
@@ -23,16 +23,7 @@ export const RecoverPasswordPage = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            const response = await fetch(`${API_URL}/api/auth/request-password-reset`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
-            });
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.detail || data.message || 'Error al solicitar restablecimiento');
-            }
+            const data = await userRepository.requestPasswordReset(email);
             
             if (data.status === 'success') {
                 toast.success('Código enviado a tu correo');
@@ -40,14 +31,11 @@ export const RecoverPasswordPage = () => {
                     setUserId(data.user_id);
                     setStep(2);
                 } else {
-                    // Si por seguridad el backend no devuelve id cuando el correo no existe, mostramos el mensaje pero no avanzamos
-                    // O avanzamos para no dar pistas, pero aquí necesitamos el user_id para el paso 2.
-                    // En nuestra implementación el backend devuelve user_id o null.
                     toast.info(data.message);
                 }
             }
         } catch (error: any) {
-            toast.error(error.message);
+            toast.error(error.message || 'Error al solicitar restablecimiento');
         } finally {
             setLoading(false);
         }
@@ -57,23 +45,16 @@ export const RecoverPasswordPage = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            const response = await fetch(`${API_URL}/api/auth/2fa/verify/${userId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code }),
-            });
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.detail || data.message || 'Código inválido');
-            }
+            const data = await userRepository.verifyTwoFactor(userId, code);
             
             if (data.status === 'success') {
                 toast.success('Código verificado correctamente');
                 setStep(3);
+            } else {
+                toast.error(data.message || 'Código inválido');
             }
         } catch (error: any) {
-            toast.error(error.message);
+            toast.error(error.message || 'Error al verificar código');
         } finally {
             setLoading(false);
         }
@@ -88,26 +69,15 @@ export const RecoverPasswordPage = () => {
         
         setLoading(true);
         try {
-            const response = await fetch(`${API_URL}/api/auth/change-password/${userId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    new_password: newPassword,
-                    confirm_password: confirmPassword
-                }),
+            await userRepository.changePassword(userId, { 
+                new_password: newPassword,
+                confirm_password: confirmPassword
             });
-            const data = await response.json();
             
-            if (!response.ok) {
-                throw new Error(data.detail || data.message || 'Error al cambiar contraseña');
-            }
-            
-            if (data.status === 'success') {
-                toast.success('Contraseña actualizada correctamente');
-                navigate('/auth');
-            }
+            toast.success('Contraseña actualizada correctamente');
+            navigate('/auth');
         } catch (error: any) {
-            toast.error(error.message);
+            toast.error(error.message || 'Error al cambiar contraseña');
         } finally {
             setLoading(false);
         }

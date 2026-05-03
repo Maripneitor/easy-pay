@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
-// Agregamos Loader2 aquí abajo en la lista de imports
-import { Mail, Lock, Smartphone, ArrowRight, Sun, Moon, AlertCircle, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Mail, Lock, Sun, Moon, Loader2 } from 'lucide-react';
 import styles from './Auth.module.css';
 import { useAuth } from './useAuth';
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { useTheme } from '../../context/ThemeContext';
+import { ErrorToast } from '../../components/ErrorToast/ErrorToast';
 
 export const Auth = () => {
     const {
         mode,
         setMode,
-        loginType,
-        loading,
+        isAuthenticating,
         error,
         setError,
         register,
@@ -19,10 +19,18 @@ export const Auth = () => {
     } = useAuth();
 
     const { isDark, toggleTheme } = useTheme();
+    useDocumentTitle(mode === 'login' ? 'Iniciar Sesión' : 'Registrarse');
 
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
+    const [showErrorToast, setShowErrorToast] = useState(false);
+
+    useEffect(() => {
+        if (error) {
+            setShowErrorToast(true);
+        }
+    }, [error]);
 
     const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -31,7 +39,6 @@ export const Auth = () => {
         } catch (err: any) {
             setError("Error inesperado al intentar iniciar sesión.");
         }
-
     };
 
     const handleRegisterSubmit = async (e: React.FormEvent) => {
@@ -49,6 +56,13 @@ export const Auth = () => {
 
     return (
         <div className={styles.authPage}>
+            {showErrorToast && error && (
+                <ErrorToast 
+                    message={error} 
+                    onClose={() => setShowErrorToast(false)} 
+                />
+            )}
+            
             <button className={styles.themeToggle} onClick={toggleTheme}>
                 {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
@@ -70,25 +84,18 @@ export const Auth = () => {
                         <button
                             className={`${styles.tab} ${mode === 'login' ? styles.tabActive : ''}`}
                             onClick={() => { setMode('login'); setError(null); }}
-                            disabled={loading}
+                            disabled={isAuthenticating}
                         >
                             Iniciar Sesión
                         </button>
                         <button
                             className={`${styles.tab} ${mode === 'register' ? styles.tabActive : ''}`}
                             onClick={() => { setMode('register'); setError(null); }}
-                            disabled={loading}
+                            disabled={isAuthenticating}
                         >
                             Registrarse
                         </button>
                     </div>
-
-                    {error && (
-                        <div className={styles.errorMessage}>
-                            <AlertCircle size={16} />
-                            <span>{error}</span>
-                        </div>
-                    )}
 
                     {mode === 'login' && (
                         <form className={styles.form} onSubmit={handleLoginSubmit}>
@@ -103,7 +110,7 @@ export const Auth = () => {
                                         value={identifier}
                                         onChange={(e) => setIdentifier(e.target.value)}
                                         required
-                                        disabled={loading}
+                                        disabled={isAuthenticating}
                                     />
                                 </div>
                             </div>
@@ -129,13 +136,13 @@ export const Auth = () => {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
-                                        disabled={loading}
+                                        disabled={isAuthenticating}
                                     />
                                 </div>
                             </div>
 
-                            <button type="submit" className={styles.primaryBtn} disabled={loading}>
-                                {loading ? <Loader2 className="animate-spin" size={20} /> : 'Entrar'}
+                            <button type="submit" className={styles.primaryBtn} disabled={isAuthenticating}>
+                                {isAuthenticating ? <Loader2 className="animate-spin" size={20} /> : 'Entrar'}
                             </button>
                         </form>
                     )}
@@ -152,7 +159,7 @@ export const Auth = () => {
                                         value={fullName}
                                         onChange={(e) => setFullName(e.target.value)}
                                         required
-                                        disabled={loading}
+                                        disabled={isAuthenticating}
                                     />
                                 </div>
                             </div>
@@ -168,7 +175,7 @@ export const Auth = () => {
                                         value={identifier}
                                         onChange={(e) => setIdentifier(e.target.value)}
                                         required
-                                        disabled={loading}
+                                        disabled={isAuthenticating}
                                     />
                                 </div>
                             </div>
@@ -184,19 +191,18 @@ export const Auth = () => {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
-                                        disabled={loading}
+                                        disabled={isAuthenticating}
                                     />
                                 </div>
                             </div>
 
-                            <button type="submit" className={styles.primaryBtn} disabled={loading}>
-                                {loading ? <Loader2 className="animate-spin" size={20} /> : 'Crear Cuenta'}
+                            <button type="submit" className={styles.primaryBtn} disabled={isAuthenticating}>
+                                {isAuthenticating ? <Loader2 className="animate-spin" size={20} /> : 'Crear Cuenta'}
                             </button>
                         </form>
                     )}
                 </div>
-
             </main>
         </div>
     );
-};
+};

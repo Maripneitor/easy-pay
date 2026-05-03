@@ -47,6 +47,14 @@ async def get_items(group_id: str):
         return []
     return items
 
+@group_router.get("/{group_id}/items/{item_id}")
+async def get_item_by_id(group_id: str, item_id: str):
+    """Obtiene un gasto por su ID"""
+    item = await item_repo.find_by_id(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Gasto no encontrado")
+    return item
+
 @group_router.get("/{group_id}/balances")
 async def get_balances(group_id: str):
     result = await get_balances_uc.execute(group_id)
@@ -109,3 +117,29 @@ async def remove_item(group_id: str, item_id: str):
     if not success:
         raise HTTPException(status_code=404, detail="Gasto no encontrado")
     return {"message": "Gasto eliminado correctamente", "status": "success"}
+
+@group_router.post("/{group_id}/members")
+async def add_member(group_id: str, data: dict):
+    user_id = data.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="ID de usuario requerido")
+    
+    success = await group_repo.add_member(group_id, user_id)
+    if not success:
+        raise HTTPException(status_code=400, detail="No se pudo agregar al miembro")
+    return {"status": "success", "message": "Miembro agregado"}
+
+@group_router.delete("/{group_id}/members/{user_id}")
+async def remove_member(group_id: str, user_id: str):
+    # 1. Validar si el usuario tiene ítems asignados
+    has_items = await item_repo.has_assigned_items(user_id, group_id)
+    if has_items:
+        raise HTTPException(
+            status_code=400, 
+            detail="No se puede eliminar al miembro porque tiene gastos asignados. Reasigna sus gastos primero."
+        )
+    
+    success = await group_repo.remove_member(group_id, user_id)
+    if not success:
+        raise HTTPException(status_code=400, detail="No se pudo eliminar al miembro")
+    return {"status": "success", "message": "Miembro eliminado"}

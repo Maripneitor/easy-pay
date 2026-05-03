@@ -25,6 +25,22 @@ class MongoUserRepository:
         })
         return user
 
+    # --- MÉTODO PARA BÚSQUEDA DE USUARIOS (AUTOCOMPLETE) ---
+    async def search_users(self, query: str, limit: int = 5):
+        """Busca usuarios por nombre o email que coincidan parcialmente con la query"""
+        cursor = self.collection.find({
+            "$or": [
+                {"nombre": {"$regex": query, "$options": "i"}},
+                {"email": {"$regex": query, "$options": "i"}}
+            ]
+        }, {"password": 0}).limit(limit)
+        
+        users = await cursor.to_list(length=limit)
+        for u in users:
+            u["id"] = str(u["_id"])
+            del u["_id"]
+        return users
+
     # --- MÉTODO PARA ACTUALIZACIONES GENERALES ---
     async def update_user(self, user_id: str, update_data: dict):
         """Actualiza campos específicos de un usuario por su ID"""
@@ -64,6 +80,20 @@ class MongoUserRepository:
         if user and "two_factor" in user:
             return user["two_factor"]
         return None
+    
+    async def enable_2fa(self, user_id: str):
+        """Activa la cuenta marcándola como verificada y limpia los códigos OTP"""
+        if not ObjectId.is_valid(user_id):
+            return False
+        await self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {
+                "is_verified": True,
+                "two_factor.otp_code": None,
+                "two_factor.otp_expires": None
+            }}
+        )
+        return True
     
     # --- ACTIVACIÓN FINAL Y VERIFICACIÓN ---
     # --- GESTIÓN DE TARJETAS (PAYMENT METHODS) ---

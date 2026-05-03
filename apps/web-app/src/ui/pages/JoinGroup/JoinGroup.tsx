@@ -52,7 +52,7 @@ export const JoinGroup = () => {
                             </button>
 
                             <div className="mb-10">
-                                <h1 className="text-4xl font-black text-white mb-2 tracking-tighter uppercase">Unirse a Mesa</h1>
+                                <h1 className="text-4xl font-black text-white mb-2 tracking-tighter uppercase">Unirse a Grupo</h1>
                                 <p className="text-[var(--text-secondary)] font-medium">Ingresa el código de 6 dígitos que aparece en el dispositivo del anfitrión.</p>
                             </div>
 
@@ -82,7 +82,7 @@ export const JoinGroup = () => {
                                             <Loader2 size={20} className="text-white animate-spin" />
                                         ) : (
                                             <>
-                                                <span className="text-white font-black uppercase tracking-widest">Entrar a la mesa</span>
+                                                <span className="text-white font-black uppercase tracking-widest">Entrar al grupo</span>
                                                 <Send size={20} className="text-white" />
                                             </>
                                         )}
@@ -107,7 +107,7 @@ export const JoinGroup = () => {
                                 <div className="mb-6 inline-block p-6 bg-white rounded-[2rem] shadow-2xl shadow-black/50 border-4 border-[var(--primary)]/20">
                                     <QrCode size={180} className="text-black" />
                                 </div>
-                                <h3 className="text-white font-black uppercase tracking-widest text-sm mb-1">Código QR de Mesa</h3>
+                                <h3 className="text-white font-black uppercase tracking-widest text-sm mb-1">Código QR de Grupo</h3>
                                 <p className="text-[var(--text-secondary)] text-[10px] font-bold uppercase tracking-widest">Escaneo para Móviles</p>
                             </div>
 

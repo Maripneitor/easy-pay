@@ -1,36 +1,79 @@
 services:
-  # --- DATABASE (MongoDB Local) ---
-  mongodb:
-    image: mongo:latest
-    container_name: easy-pay-db
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # --- UNIFIED BACKEND (Python FastAPI) ---
-  api-backend:
+  # --- MICROSERVICES ---
+  auth-service:
     build:
       context: ./apps/api-backend
       dockerfile: Dockerfile
-    container_name: easy-pay-backend
+    container_name: easy-pay-auth
     volumes:
       - ./apps/api-backend:/app
     ports:
-      - "8000:8000"
+      - "8001:8001"
     env_file:
       - .env
     environment:
       - MONGO_URL=${MONGO_URL}
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    depends_on:
-      mongodb:
-        condition: service_healthy
+    command: uvicorn main_auth:app --host 0.0.0.0 --port 8001 --reload
+
+  group-service:
+    build:
+      context: ./apps/api-backend
+      dockerfile: Dockerfile
+    container_name: easy-pay-group
+    volumes:
+      - ./apps/api-backend:/app
+    ports:
+      - "8002:8002"
+    env_file:
+      - .env
+    environment:
+      - MONGO_URL=${MONGO_URL}
+    command: uvicorn main_groups:app --host 0.0.0.0 --port 8002 --reload
+
+  stats-service:
+    build:
+      context: ./apps/api-backend
+      dockerfile: Dockerfile
+    container_name: easy-pay-stats
+    volumes:
+      - ./apps/api-backend:/app
+    ports:
+      - "8003:8003"
+    env_file:
+      - .env
+    environment:
+      - MONGO_URL=${MONGO_URL}
+    command: uvicorn main_stats:app --host 0.0.0.0 --port 8003 --reload
+
+  ocr-service:
+    build:
+      context: ./apps/api-backend
+      dockerfile: Dockerfile
+    container_name: easy-pay-ocr
+    volumes:
+      - ./apps/api-backend:/app
+    ports:
+      - "8004:8004"
+    env_file:
+      - .env
+    environment:
+      - MONGO_URL=${MONGO_URL}
+    command: uvicorn main_ocr:app --host 0.0.0.0 --port 8004 --reload
+
+  notification-service:
+    build:
+      context: ./apps/api-backend
+      dockerfile: Dockerfile
+    container_name: easy-pay-notification
+    volumes:
+      - ./apps/api-backend:/app
+    ports:
+      - "8005:8005"
+    env_file:
+      - .env
+    environment:
+      - MONGO_URL=${MONGO_URL}
+    command: uvicorn main_notification:app --host 0.0.0.0 --port 8005 --reload
 
   # --- WEB APP (React / Vite) ---
   web-app:
@@ -48,19 +91,23 @@ services:
     env_file:
       - .env
     environment:
-      - VITE_API_URL=http://localhost:8000/api
-      - VITE_API_BASE_URL=http://localhost:8000/api
-      - VITE_USER_SERVICE_URL=http://localhost:8000/api
-      - VITE_GROUP_SERVICE_URL=http://localhost:8000/api
-      - VITE_STATS_SERVICE_URL=http://localhost:8000/api
+      - VITE_API_URL=http://localhost:8001
+      - VITE_API_BASE_URL=http://localhost:8001
+      - VITE_USER_SERVICE_URL=http://localhost:8001
+      - VITE_GROUP_SERVICE_URL=http://localhost:8002
+      - VITE_STATS_SERVICE_URL=http://localhost:8003
+      - VITE_OCR_SERVICE_URL=http://localhost:8004
+      - VITE_NOTIFICATION_SERVICE_URL=http://localhost:8005
       - NODE_ENV=development
     stdin_open: true
     tty: true
     command: >
-      sh -c "npm run dev:web"
+      sh -c "npm install && npm run dev:web"
     depends_on:
-      api-backend:
+      auth-service:
+        condition: service_started
+      group-service:
+        condition: service_started
+      stats-service:
         condition: service_started
 
-volumes:
-  mongodb_data:

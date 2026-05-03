@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
 import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
-// import { MotiView } from 'moti';
-const MotiView = ({ children, style, ...props }: any) => <View style={style} {...props}>{children}</View>;
+import { MotiView } from 'moti';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';

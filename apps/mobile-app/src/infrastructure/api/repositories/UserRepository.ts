@@ -12,13 +12,15 @@ class UserRepository {
         return response.data;
     }
 
-    async updateUser(userId: string, data: any): Promise<any> {
-        const response = await httpClient.put(`${NETWORK_CONFIG.ENDPOINTS.USER}/update/${userId}`, data);
+    async updateUser(data: any): Promise<any> {
+        // ✅ Usamos el endpoint seguro que extrae el ID del Token
+        const response = await httpClient.put(`${NETWORK_CONFIG.ENDPOINTS.USER}/update`, data);
         return response.data;
     }
 
-    async changePassword(userId: string, data: any): Promise<void> {
-        await httpClient.post(`${NETWORK_CONFIG.ENDPOINTS.USER}/change-password/${userId}`, data);
+    async changePassword(userId: string, data: any): Promise<any> {
+        const response = await httpClient.post(`${NETWORK_CONFIG.ENDPOINTS.USER}/change-password/${userId}`, data);
+        return response.data;
     }
 
     async setupTwoFactor(userId: string): Promise<any> {

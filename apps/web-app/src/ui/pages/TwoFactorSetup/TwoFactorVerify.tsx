@@ -1,36 +1,114 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { userRepository } from '../../../infrastructure/api/repositories';
+import { setAuthToken } from '../../../infrastructure/api/http-client';
+import { toast } from 'sonner';
 
 export const TwoFactorVerify = () => {
     const navigate = useNavigate();
     const [code, setCode] = useState(['', '', '', '', '', '']);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [isVerified, setIsVerified] = useState(false);
+    const [resendTimer, setResendTimer] = useState(0);
+    const userId = localStorage.getItem('temp_userId');
 
-    const handleConfirm = () => {
-        // En un caso real, validar el código 2FA
-        navigate('/dashboard'); // O donde sea el flujo normal
+    // Countdown logic for resend button
+    useEffect(() => {
+        let interval: any;
+        if (resendTimer > 0) {
+            interval = setInterval(() => {
+                setResendTimer(prev => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [resendTimer]);
+
+    // Auto-submit when all 6 digits are entered
+    useEffect(() => {
+        if (code.every(digit => digit !== '') && !isVerified && !isVerifying) {
+            handleConfirm();
+        }
+    }, [code]);
+
+    const handleConfirm = async () => {
+        if (!userId) {
+            toast.error("Sesión expirada. Por favor inicia sesión de nuevo.");
+            navigate('/auth');
+            return;
+        }
+
+        const fullCode = code.join('');
+        if (fullCode.length < 6) {
+            toast.warning("Ingresa el código completo de 6 dígitos.");
+            return;
+        }
+
+        setIsVerifying(true);
+        try {
+            const result = await userRepository.verifyTwoFactor(userId, fullCode);
+            
+            if (result.status === 'success') {
+                // Si el backend nos da un token, lo guardamos para entrar directo
+                if (result.access_token) {
+                    setAuthToken(result.access_token);
+                    // Mapear usuario si viene
+                    if (result.user) {
+                        localStorage.setItem('ep_auth_user', JSON.stringify(result.user));
+                    }
+                }
+
+                setIsVerified(true);
+                toast.success("¡Cuenta verificada exitosamente!");
+                
+                // Pequeña espera para que vean el mensaje
+                setTimeout(() => {
+                    navigate('/dashboard');
+                }, 2000);
+            } else {
+                toast.error(result.message || "Código incorrecto");
+            }
+        } catch (error: any) {
+            toast.error(error.message || "Error al verificar el código");
+        } finally {
+            setIsVerifying(false);
+        }
     };
 
     const handleCancel = () => {
         navigate('/auth');
     };
 
+    const handleResend = async () => {
+        if (!userId || resendTimer > 0) return;
+        
+        try {
+            await userRepository.setupTwoFactor(userId);
+            toast.success("Código re-enviado a tu correo");
+            setResendTimer(5); // Start 5 second countdown
+        } catch (error) {
+            toast.error("No se pudo reenviar el código");
+        }
+    };
+
+    if (isVerified) {
+        return (
+            <div className="bg-[#0f172a] min-h-screen flex items-center justify-center p-6 text-center">
+                <div className="bg-slate-800/50 backdrop-blur-xl border border-blue-500/30 p-10 rounded-3xl shadow-2xl max-w-sm animate-bounce-subtle">
+                    <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-400">
+                        <span className="material-symbols-outlined text-5xl">check_circle</span>
+                    </div>
+                    <h1 className="text-3xl font-black text-white mb-2 uppercase tracking-tighter">¡Cuenta Verificada!</h1>
+                    <p className="text-slate-400 font-medium">Todo listo. Redirigiendo a tu dashboard...</p>
+                    <div className="mt-8 flex justify-center">
+                        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="bg-[#0f172a] text-slate-200 min-h-screen flex flex-col antialiased selection:bg-primary selection:text-white">
-            {/* Navbar for 2FA */}
-            <header className="flex items-center justify-between border-b border-white/5 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 lg:px-10">
-                <div className="flex items-center gap-3">
-                    <img src="/assets/images/logo-ep.png" alt="Logo Easy-Pay" className="h-8 w-8 object-contain" />
-                    <h2 className="text-white text-xl font-bold tracking-tight">Easy-Pay</h2>
-                </div>
-                <div className="flex items-center gap-6">
-                    <button className="hidden md:flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">help</span>
-                        <span className="text-sm font-medium">Ayuda</span>
-                    </button>
-                    <div className="h-8 w-[1px] bg-white/10 hidden md:block"></div>
-                </div>
-            </header>
-
             {/* Main Content */}
             <main className="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
@@ -39,23 +117,20 @@ export const TwoFactorVerify = () => {
                 </div>
 
                 <div className="bg-slate-800/40 backdrop-blur-md border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl flex flex-col animate-fade-in-up">
-                    <div className="p-6 sm:p-8 border-b border-white/5">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
-                                <span className="material-symbols-outlined">security</span>
+                    <div className="p-6 sm:p-8 border-b border-white/5 text-center">
+                        <div className="flex flex-col items-center gap-3 mb-2">
+                            <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-400 mb-2">
+                                <span className="material-symbols-outlined text-3xl">mark_email_read</span>
                             </div>
-                            <h1 className="text-2xl font-bold text-white tracking-tight">Seguridad: 2FA</h1>
+                            <h1 className="text-2xl font-black text-white tracking-tight uppercase">Verifica tu correo</h1>
                         </div>
-                        <p className="text-slate-400 text-sm leading-relaxed">
-                            Añade una capa extra de seguridad a tu cuenta. Ingresa el código de 6 dígitos generado por tu app de autenticación.
+                        <p className="text-slate-400 text-sm leading-relaxed max-w-[280px] mx-auto">
+                            Hemos enviado un código de 6 dígitos a tu bandeja de entrada.
                         </p>
                     </div>
 
                     <div className="p-6 sm:p-8 space-y-8">
                         <div className="space-y-4">
-                            <label className="block text-sm font-medium text-slate-300 text-center">
-                                Ingresa el código de 6 dígitos
-                            </label>
                             <div className="flex justify-center gap-2 sm:gap-3">
                                 {code.map((digit, i) => (
                                     <React.Fragment key={i}>
@@ -64,13 +139,16 @@ export const TwoFactorVerify = () => {
                                             inputMode="numeric"
                                             maxLength={1}
                                             autoFocus={i === 0}
-                                            placeholder="-"
+                                            placeholder="•"
                                             value={digit}
+                                            disabled={isVerifying}
                                             onChange={(e) => {
+                                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                                if (!val && e.target.value) return; 
                                                 const newCode = [...code];
-                                                newCode[i] = e.target.value;
+                                                newCode[i] = val.slice(-1);
                                                 setCode(newCode);
-                                                if (e.target.value && i < 5) {
+                                                if (val && i < 5) {
                                                     const nextInput = document.getElementById(`digit-${i + 1}`);
                                                     nextInput?.focus();
                                                 }
@@ -82,16 +160,19 @@ export const TwoFactorVerify = () => {
                                                 }
                                             }}
                                             id={`digit-${i}`}
-                                            className="w-12 h-14 sm:w-14 sm:h-16 bg-white/5 border border-white/10 rounded-xl text-center text-2xl font-bold text-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all placeholder-white/20"
+                                            className="w-12 h-14 sm:w-14 sm:h-16 bg-white/5 border border-white/10 rounded-xl text-center text-2xl font-bold text-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all placeholder-white/10"
                                         />
-                                        {i === 2 && <span className="flex items-center text-white/20 text-xl font-light">|</span>}
                                     </React.Fragment>
                                 ))}
                             </div>
                             <div className="flex justify-center mt-2">
-                                <button onClick={() => console.log('Reenviando código...')} className="text-blue-500 hover:text-blue-400 text-sm font-medium transition-colors flex items-center justify-center gap-1 group">
-                                    <span className="material-symbols-outlined text-[18px] group-hover:scale-110 transition-transform">refresh</span>
-                                    Reenviar código
+                                <button 
+                                    onClick={handleResend} 
+                                    disabled={resendTimer > 0}
+                                    className={`text-blue-500 hover:text-blue-400 text-sm font-bold transition-colors flex items-center justify-center gap-1 group ${resendTimer > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    <span className={`material-symbols-outlined text-[18px] ${resendTimer === 0 ? 'group-hover:rotate-180 transition-transform duration-500' : ''}`}>refresh</span>
+                                    {resendTimer > 0 ? `Reenviar en ${resendTimer}s` : '¿No recibiste el código? Reenviar'}
                                 </button>
                             </div>
                         </div>
@@ -99,16 +180,23 @@ export const TwoFactorVerify = () => {
                         <div className="flex flex-col gap-3 pt-2">
                             <button 
                                 onClick={handleConfirm}
-                                className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold rounded-lg shadow-lg shadow-blue-500/25 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+                                disabled={isVerifying}
+                                className="w-full py-4 px-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black rounded-xl shadow-xl shadow-blue-900/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-3 uppercase tracking-wider"
                             >
-                                <span>Confirmar Activación</span>
-                                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                                {isVerifying ? (
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                    <>
+                                        <span>Verificar ahora</span>
+                                        <span className="material-symbols-outlined">verified</span>
+                                    </>
+                                )}
                             </button>
                             <button 
                                 onClick={handleCancel}
-                                className="w-full py-3 px-4 bg-transparent border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-medium rounded-lg transition-all active:scale-[0.98]"
+                                className="w-full py-3 px-4 bg-transparent text-slate-500 hover:text-slate-300 font-bold rounded-lg transition-all text-sm"
                             >
-                                Cancelar
+                                Volver al inicio
                             </button>
                         </div>
                     </div>

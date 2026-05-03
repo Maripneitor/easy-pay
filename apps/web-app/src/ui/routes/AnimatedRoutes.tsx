@@ -21,6 +21,7 @@ const SettleUp = lazy(() => import('../pages/SettleUp').then(module => ({ defaul
 const RegisterExpense = lazy(() => import('../pages/RegisterExpense').then(module => ({ default: module.RegisterExpense })));
 const JoinGroup = lazy(() => import('../pages/JoinGroup').then(module => ({ default: module.JoinGroup })));
 const InvitationsPage = lazy(() => import('../pages/Invitations').then(module => ({ default: module.InvitationsPage })));
+const OCRScanner = lazy(() => import('../pages/OCRScanner').then(module => ({ default: module.OCRScanner })));
 
 // 2FA
 const TwoFactorSetup = lazy(() => import('../pages/TwoFactorSetup').then(module => ({ default: module.TwoFactorSetup })));
@@ -70,6 +71,7 @@ export const AnimatedRoutes = () => {
                             <Route path="/invitations" element={<PageTransition><InvitationsPage /></PageTransition>} />
                             <Route path="/profile" element={<PageTransition><ProfilePage /></PageTransition>} />
                             <Route path="/profile/personal-data" element={<PageTransition><PersonalData /></PageTransition>} />
+                            <Route path="/ocr-scanner" element={<PageTransition><OCRScanner /></PageTransition>} />
                         </Route>
                     </Route>
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -87,7 +87,7 @@ export const CommandPalette: React.FC = () => {
                             <input
                                 ref={inputRef}
                                 type="text"
-                                placeholder="Busca grupos, estadísticas, perfil..."
+                                placeholder="Busca grupos, historial, perfil..."
                                 className="flex-1 bg-transparent border-none outline-none text-[var(--text-primary)] placeholder-slate-500 font-medium"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
@@ -111,7 +111,7 @@ export const CommandPalette: React.FC = () => {
                                             </div>
                                             <div className="flex flex-col items-start">
                                                 <span className="text-sm font-bold text-[var(--text-primary)]">Grupos</span>
-                                                <span className="text-[10px] text-slate-500">Ver tus mesas activas</span>
+                                                <span className="text-[10px] text-slate-500">Ver tus grupos activos</span>
                                             </div>
                                             <span className="ml-auto text-[10px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">G</span>
                                         </button>
@@ -120,8 +120,8 @@ export const CommandPalette: React.FC = () => {
                                                 <BarChart3 size={18} />
                                             </div>
                                             <div className="flex flex-col items-start">
-                                                <span className="text-sm font-bold text-[var(--text-primary)]">Estadísticas</span>
-                                                <span className="text-[10px] text-slate-500">Análisis de gastos</span>
+                                                <span className="text-sm font-bold text-[var(--text-primary)]">Historial</span>
+                                                <span className="text-[10px] text-slate-500">Análisis de historial</span>
                                             </div>
                                             <span className="ml-auto text-[10px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">E</span>
                                         </button>

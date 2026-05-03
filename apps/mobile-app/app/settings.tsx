@@ -20,7 +20,7 @@ import { useAuth } from '../context/AuthContext';
 import { groupRepository } from '../src/infrastructure/api/repositories/GroupRepository';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const MotiView = View as any;
+import { MotiView } from 'moti';
 
 export default function SettingsScreen() {
     const { colorTheme, fontSize, theme, fontScale, setColorTheme, setFontSize } = useTheme();
@@ -129,9 +129,8 @@ export default function SettingsScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Stats Section */}
                 <View className="flex-row justify-between items-center mb-6">
-                    <SectionHeader title="Estadísticas" />
+                    <SectionHeader title="Historial" />
                     <TouchableOpacity onPress={() => router.push('/profile/stats')}>
                         <Text style={{ color: theme.primary }} className="text-[10px] font-black uppercase mb-4">Ver Detalles</Text>
                     </TouchableOpacity>

@@ -14,7 +14,7 @@ export const useProfileStats = (userId: string | undefined) => {
             setStats(data);
             setError(null);
         } catch (err) {
-            setError('No se pudieron cargar las estadísticas');
+            setError('No se pudieron cargar los datos del historial');
             console.error(err);
         } finally {
             setIsLoading(false);

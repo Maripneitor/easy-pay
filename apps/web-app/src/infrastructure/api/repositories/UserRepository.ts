@@ -38,6 +38,29 @@ class UserRepository {
         });
         return response.data;
     }
+
+    // ── Cards ──────────────────────────────────────────────────────────────────
+    async getCards(userId: string): Promise<any[]> {
+        const response = await httpClient.get(`/auth/cards/${userId}`);
+        return response.data;
+    }
+
+    async addCard(userId: string, card: any): Promise<any> {
+        const response = await httpClient.post(`/auth/cards/${userId}`, card);
+        return response.data;
+    }
+
+    async deleteCard(userId: string, cardId: string): Promise<any> {
+        const response = await httpClient.delete(`/auth/cards/${userId}/${cardId}`);
+        return response.data;
+    }
+
+    async searchUsers(query: string): Promise<any[]> {
+        const response = await httpClient.get(`/auth/search`, {
+            params: { query }
+        });
+        return response.data;
+    }
 }
 
 export const userRepository = new UserRepository();

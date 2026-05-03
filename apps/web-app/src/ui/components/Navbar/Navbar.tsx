@@ -18,9 +18,10 @@ export const Navbar = () => {
                 <img 
                     src="/assets/images/logo-ep.png"
                     alt="Easy-Pay Logo"
+                    aria-label="Logotipo de Easy-Pay"
                     className={styles.logoImage}
                 />
-                <span className={styles.logoText}>Easy-Pay</span>
+                <span className={styles.logoText} aria-hidden="true">Easy-Pay</span>
             </div>
 
             <div className={styles.navLinks}>
@@ -35,6 +36,7 @@ export const Navbar = () => {
                     <button
                         className={styles.loginBtn}
                         onClick={() => navigate('/auth')}
+                        aria-label="Ir a la página de inicio de sesión"
                     >
                         Entrar
                     </button>
@@ -43,6 +45,7 @@ export const Navbar = () => {
                         className={styles.profileBtn}
                         onClick={handleProfile}
                         title="Mi Perfil"
+                        aria-label="Ir a mi perfil de usuario"
                     >
                         {user?.avatarUrl ? (
                             <img src={user.avatarUrl} alt={user.name} className={styles.avatarMini} />

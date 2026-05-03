@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@ui/components/PageHeader';
 import {
@@ -12,29 +11,31 @@ import {
 } from 'lucide-react';
 import styles from './TwoFactorSetup.module.css';
 
+import { useAuthContext } from '../../context/AuthContext';
+import { userRepository } from '../../../infrastructure/api/repositories';
+import { toast } from 'sonner';
+
 export const TwoFactorSetup = () => {
     const navigate = useNavigate();
+    const { user } = useAuthContext();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [codeSent, setCodeSent] = useState(false);
 
-    // 1. CORRECCIÓN CRÍTICA: Priorizamos temp_userId que viene del registro
-    // Si no hay userId (login), buscamos temp_userId (registro)
-    const userId = localStorage.getItem('userId') || localStorage.getItem('temp_userId');
-    const userEmail = localStorage.getItem('userEmail') || "tu correo";
+    const userId = user?.id;
+    const userEmail = user?.email || "tu correo";
 
-    // 2. Seguridad: Si el usuario entra aquí sin ningún ID, lo regresamos al auth
     useEffect(() => {
-        if (!userId || userId === 'null') {
+        if (!userId) {
             console.error("No se detectó ID de usuario. Regresando...");
             navigate('/auth');
         }
     }, [userId, navigate]);
 
-    const goBack = () => navigate('/auth');
+    const goBack = () => navigate(-1);
 
     const handleRequestCode = async () => {
-        if (!userId || userId === 'null') {
+        if (!userId) {
             setError('Error de sesión: No se encontró el ID del usuario.');
             return;
         }
@@ -43,21 +44,20 @@ export const TwoFactorSetup = () => {
             setLoading(true);
             setError('');
 
-            // Llamamos al endpoint de setup usando el ID correcto
-            const API_URL = `${import.meta.env.VITE_USER_SERVICE_URL ?? 'http://localhost:8001'}/api`;
-            await axios.post(`${API_URL}/auth/2fa/setup/${userId}`);
+            await userRepository.setupTwoFactor(userId);
 
             setCodeSent(true);
+            toast.success("Código enviado exitosamente");
 
-            // Pequeña espera para feedback visual antes de ir a verificar
             setTimeout(() => {
                 navigate('/2fa-verify');
             }, 2000);
 
         } catch (err: any) {
             console.error("Error en Setup 2FA:", err);
-            const message = err.response?.data?.detail || 'No pudimos enviar el código. Revisa tu conexión.';
+            const message = err.message || 'No pudimos enviar el código. Revisa tu conexión.';
             setError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }

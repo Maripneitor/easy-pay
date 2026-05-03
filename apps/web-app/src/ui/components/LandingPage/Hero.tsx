@@ -24,13 +24,13 @@ export const Hero = () => {
                         <div className={styles.ctaCard}>
                             <div className={styles.cardHeader}>
                                 <PlusCircle className={styles.cardIcon} size={32} />
-                                <h3 className={styles.cardTitle}>Nueva Mesa</h3>
+                                <h3 className={styles.cardTitle}>Nuevo Grupo</h3>
                             </div>
                             <p className={styles.cardDescription}>
                                 Eres el anfitrión. Crea un código.
                             </p>
-                            <button className={styles.primaryBtn} onClick={() => console.log('Crear Mesa')}>
-                                Crear Mesa
+                            <button className={styles.primaryBtn} onClick={() => console.log('Crear Grupo')}>
+                                Crear Grupo
                             </button>
                         </div>
 
@@ -51,7 +51,7 @@ export const Hero = () => {
                     <div className={styles.hint}>
                         <span className={styles.hintEmoji}>💡</span>
                         <p className={styles.hintText}>
-                            El anfitrión crea la mesa y comparte el código.
+                            El anfitrión crea el grupo y comparte el código.
                         </p>
                     </div>
                 </div>

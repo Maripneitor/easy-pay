@@ -126,7 +126,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="stats"
         options={{
-          title: 'Análisis',
+          title: 'Historial',
           tabBarIcon: ({ color, focused }) => (
             <View>
               <MaterialIcons name="bar-chart" size={26} color={color} />

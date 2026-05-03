@@ -1,6 +1,6 @@
-import React from 'react';
+import React from 'react'; // Re-saved to force HMR
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, PlusSquare, CreditCard, BarChart3, Settings, LogOut, Users as LucideUsers, ChevronLeft, Menu } from 'lucide-react';
+import { Home, PlusSquare, CreditCard, BarChart3, Settings, LogOut, Users as LucideUsers, ChevronLeft, Menu, Clock } from 'lucide-react';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -19,24 +19,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onLogout, use
 
     const menuItems = [
         { icon: <Home size={22} />, label: 'Inicio', path: '/dashboard' },
-        { icon: <PlusSquare size={22} />, label: 'Nueva Mesa', path: '/create-group' },
+        { icon: <PlusSquare size={22} />, label: 'Mis Grupos', path: '/create-group' },
         { icon: <CreditCard size={22} />, label: 'Mis Pagos', path: '/my-payments' },
-        { icon: <BarChart3 size={22} />, label: 'Estadísticas', path: '/stats' },
+        { icon: <BarChart3 size={22} />, label: 'Gráficas', path: '/stats' },
         { icon: <LucideUsers size={22} />, label: 'Invitaciones', path: '/invitations', badge: 0 },
     ];
 
     return (
         <aside className={`flex flex-col h-screen bg-[var(--bg-sidebar)] border-r border-[var(--border-color)] transition-all duration-300 relative z-50 overflow-hidden ${isOpen ? 'w-64' : 'w-20'}`}>
-            <div className={`p-8 flex-shrink-0 relative flex flex-col items-center transition-all duration-300 ${!isOpen ? 'p-4 mt-4' : ''}`}>
+            <div className={`p-8 flex-shrink-0 relative flex flex-col items-center transition-all duration-300 ${!isOpen ? 'p-6 mt-4' : ''}`}>
                 <button 
                     onClick={onClose}
-                    className={`absolute p-2 hover:bg-[var(--hover-bg)] rounded-xl transition-all text-slate-400 md:flex hidden ${isOpen ? 'right-4 top-1/2 -translate-y-1/2' : 'relative right-0 top-0 mb-6'}`}
+                    aria-label={isOpen ? "Colapsar menú" : "Expandir menú"}
+                    className={`absolute p-2.5 hover:bg-[var(--hover-bg)] rounded-xl transition-all text-slate-400 md:flex hidden ${isOpen ? 'right-4 top-1/2 -translate-y-1/2' : 'relative right-0 top-0 mb-8 border border-[var(--border-color)] bg-white shadow-sm'}`}
                 >
                     {isOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
                 </button>
                 <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigate('/dashboard')}>
                     <div className="transition-transform duration-300 group-hover:scale-110">
-                        <img src="/assets/images/logo-ep.png" alt="Logo" className={`h-auto drop-shadow-md transition-all ${isOpen ? 'w-16' : 'w-10'}`} />
+                        <img src="/assets/images/logo-ep.png" alt="Logo" className={`h-auto drop-shadow-md transition-all ${isOpen ? 'w-20' : 'w-12'}`} />
                     </div>
                     {isOpen && <h1 className="text-xl font-black tracking-tighter text-[var(--text-primary)]">Easy-Pay</h1>}
                 </div>

@@ -22,16 +22,22 @@ async def get_user_stats(user_id: str):
     """
     Endpoint genérico de estadísticas para el Dashboard.
     """
-    # Por ahora devolvemos un mock que satisfaga al frontend o datos reales si es posible
-    expenses = await repo.get_user_expenses_by_category(user_id)
-    total_spent = sum(e['amount'] for e in expenses)
-    
-    return {
-        "total_spent": total_spent,
-        "owed_to_user": 0, # Mock por ahora
-        "user_owes": 0,    # Mock por ahora
-        "expenses_by_category": expenses
-    }
+    try:
+        expenses = await repo.get_user_expenses_by_category(user_id)
+        # Aseguramos queexpenses sea una lista y tenga montos válidos
+        total_spent = sum(float(e.get('amount', 0)) for e in expenses) if expenses else 0.0
+        
+        balances = await repo.get_user_balances(user_id)
+        
+        return {
+            "total_spent": round(total_spent, 2),
+            "owed_to_user": balances.get("owed_to_user", 0.0),
+            "user_owes": balances.get("user_owes", 0.0),
+            "by_category": expenses if expenses else []  # Match con el frontend ProfilePage.tsx
+        }
+    except Exception as e:
+        print(f"Error en get_user_stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error interno al calcular estadísticas: {str(e)}")
 
 @router.get("/global")
 async def get_global_stats():

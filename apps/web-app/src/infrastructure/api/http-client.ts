@@ -16,14 +16,22 @@ const getAuthToken = (): string | null => {
 };
 
 // ─── Axios instance ───────────────────────────────────────────────────────────
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
-
-if (!import.meta.env.VITE_API_BASE_URL) {
-    console.warn('[http-client] VITE_API_BASE_URL is not defined — falling back to http://localhost:8000');
-}
+const getDynamicApiUrl = () => {
+    let url = import.meta.env.VITE_API_BASE_URL;
+    
+    // Si no está definido o es localhost en Docker, usar el host actual
+    if (!url || url.includes('localhost')) {
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        url = isLocal ? 'http://localhost:5173' : `${window.location.protocol}//${window.location.hostname}:5173`;
+    }
+    
+    // Asegurar que siempre termine en /api para los repositorios
+    const base = url.replace(/\/api\/?$/, '');
+    return `${base}/api`;
+};
 
 export const httpClient: AxiosInstance = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: getDynamicApiUrl(),
     timeout: 10_000,
     headers: {
         'Content-Type': 'application/json',
@@ -47,7 +55,9 @@ httpClient.interceptors.request.use(
 httpClient.interceptors.response.use(
     (response: AxiosResponse) => response,
     (error: AxiosError) => {
-        if (error.response?.status === 401) {
+        const isAuthEndpoint = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/register');
+        
+        if (error.response?.status === 401 && !isAuthEndpoint) {
             // Token expired or invalid — clear and redirect to auth
             clearAuthToken();
             window.location.href = '/auth';

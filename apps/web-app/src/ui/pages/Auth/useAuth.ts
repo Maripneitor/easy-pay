@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userRepository } from '../../../infrastructure/api/repositories';
+import { STORAGE_KEYS } from '../../../infrastructure/localStorage/storage-keys';
+import { useAuthContext } from '../../context/AuthContext';
 
 export const useAuth = () => {
     const [mode, setMode] = useState<'login' | 'register'>('login');
     const [loginType, setLoginType] = useState<'email' | 'phone'>('email');
-    const [loading, setLoading] = useState(false);
+    const [isAuthenticating, setIsAuthenticating] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    const { loginWithEmail, logout: contextLogout } = useAuthContext();
 
     // --- REGISTRO ---
     const register = async (userData: any) => {
-        setLoading(true);
+        setIsAuthenticating(true);
         setError(null);
         try {
             const data = await userRepository.register(userData);
@@ -25,47 +28,40 @@ export const useAuth = () => {
         } catch (err: any) {
             setError(err.message || 'Error en el registro. Intenta con otro email.');
         } finally {
-            setLoading(false);
+            setIsAuthenticating(false);
         }
     };
 
     // --- LOGIN ---
     const login = async (identifier: string, password: string) => {
-        setLoading(true);
+        setIsAuthenticating(true);
         setError(null);
 
         try {
-            const data = await userRepository.login({ identifier, password });
+            const data = await loginWithEmail(identifier, password);
 
             if (data.status === 'success') {
-                localStorage.setItem('token', data.access_token);
-                localStorage.setItem('userId', data.user?.id || data.user?._id || data.user_id);
-                localStorage.setItem('userName', data.user?.nombre || identifier);
-                localStorage.setItem('userEmail', data.user?.email || identifier);
-                localStorage.setItem('2fa_enabled', data.user?.['2fa_enabled'] ? 'true' : 'false');
-                localStorage.removeItem('temp_userId');
                 navigate('/dashboard');
                 return;
             }
 
             if (data.status === '2fa_required' || data.status === 'not_verified') {
-                localStorage.setItem('temp_userId', data.user_id);
-                localStorage.setItem('userEmail', data.email || "");
+                localStorage.setItem('temp_userId', data.user_id || '');
+                localStorage.setItem('userEmail', data.user?.email || identifier || "");
                 navigate(data.status === 'not_verified' ? '/2fa-setup' : '/2fa-verify');
                 return;
             }
 
         } catch (err: any) {
-            setError(err.response?.data?.detail || 'Credenciales incorrectas o error de servidor');
+            setError(err.message || 'Credenciales incorrectas o error de servidor');
         } finally {
-            setLoading(false);
+            setIsAuthenticating(false);
         }
     };
 
     // --- LOGOUT ---
     const logout = () => {
-        localStorage.clear();
-        navigate('/auth');
+        contextLogout();
     };
 
 
@@ -74,7 +70,8 @@ export const useAuth = () => {
         setMode,
         loginType,
         setLoginType,
-        loading,
+        isAuthenticating,
+        loading: isAuthenticating, // Maintain backward compatibility for the view if needed
         error,
         setError,
         register,

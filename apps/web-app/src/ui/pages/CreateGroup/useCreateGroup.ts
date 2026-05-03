@@ -1,11 +1,23 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { httpClient } from '../../../infrastructure/api/http-client';
+import { useAuthContext } from '../../context/AuthContext';
 
 export const useCreateGroup = () => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'create' | 'join'>('create');
+    const [searchParams] = useSearchParams();
+    const { user } = useAuthContext();
+    const initialTab = searchParams.get('tab') === 'join' ? 'join' : 'create';
+    
+    const [activeTab, setActiveTab] = useState<'create' | 'join'>(initialTab);
     const [loading, setLoading] = useState(false);
+
+    // Actualizar tab si cambia el parámetro de búsqueda
+    useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab === 'join') setActiveTab('join');
+        if (tab === 'create') setActiveTab('create');
+    }, [searchParams]);
 
     // Estados para CREAR
     const [groupName, setGroupName] = useState('');
@@ -17,9 +29,8 @@ export const useCreateGroup = () => {
     const handleCreateGroup = async () => {
         if (!groupName) return alert("El nombre es obligatorio");
 
-        const userId = localStorage.getItem('userId');
+        const userId = user?.id;
         if (!userId) {
-            localStorage.clear();
             navigate('/auth');
             return;
         }
@@ -52,9 +63,8 @@ export const useCreateGroup = () => {
     const handleJoinGroup = async () => {
         if (joinCode.trim().length < 4) return alert("Ingresa un código válido");
 
-        const userId = localStorage.getItem('userId');
+        const userId = user?.id;
         if (!userId) {
-            localStorage.clear();
             navigate('/auth');
             return;
         }

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { PageHeader } from '@ui/components/PageHeader';
-import { useAuth } from '../Auth/useAuth';
+import { useAuthContext } from '../../context/AuthContext';
 import { useProfileStats } from './useProfileStats';
 import { useDashboard } from '../Dashboard/useDashboard';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
@@ -28,26 +28,32 @@ const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'
 export const ProfilePage = () => {
     const navigate = useNavigate();
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
-    const { logout } = useAuth();
+    const { logout, user } = useAuthContext();
     const { stats, loading: statsLoading } = useProfileStats();
     const { allActiveGroups, settledGroups } = useDashboard();
 
     // --- Cálculos Dinámicos ---
     const totalGrupos = (allActiveGroups?.length || 0) + (settledGroups?.length || 0);
-    const loQueDebe = allActiveGroups?.reduce((acc, g) => acc + (g.mi_balance < 0 ? Math.abs(g.mi_balance) : 0), 0) || 0;
-    const loQueLeDeben = allActiveGroups?.reduce((acc, g) => acc + (g.mi_balance > 0 ? g.mi_balance : 0), 0) || 0;
+    const loQueDebe = allActiveGroups?.reduce((acc, g) => {
+        const balance = Number(g.mi_balance || 0);
+        return acc + (balance < 0 ? Math.abs(balance) : 0);
+    }, 0) || 0;
+    const loQueLeDeben = allActiveGroups?.reduce((acc, g) => {
+        const balance = Number(g.mi_balance || 0);
+        return acc + (balance > 0 ? balance : 0);
+    }, 0) || 0;
     const gruposConDeudasActivas = allActiveGroups?.filter(g => g.mi_balance !== 0).length || 0;
 
     const { colorTheme, isDark, setTheme, toggleTheme, fontSize, setFontSize } = useTheme();
 
     // --- LÓGICA DE DATOS REALES ---
-    const userName = localStorage.getItem('userName') || "Usuario";
-    const userEmail = localStorage.getItem('userEmail') || "usuario@easypay.com";
+    const userName = user?.nombre || user?.name || "Usuario";
+    const userEmail = user?.email || "usuario@easypay.com";
 
     // CORRECCIÓN: Validamos si el 2FA está activo realmente en la sesión
-    const is2FAActive = localStorage.getItem('2fa_enabled') === 'true';
+    const is2FAActive = !!user?.two_factor?.enabled || user?.is_verified;
 
-    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=3b82f6&color=fff&bold=true`;
+    const avatarUrl = user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=3b82f6&color=fff&bold=true`;
 
     const handleThemeChange = (value: string) => {
         if (value === 'light') {
@@ -108,11 +114,10 @@ export const ProfilePage = () => {
                     </section>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Columna Izquierda: Estadísticas */}
                         <section className="lg:col-span-2">
-                            <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Estadísticas</h3>
+                            <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Historial</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {/* 1. Estadísticas de Gastado (Total histórico) */}
+                                {/* 1. Historial de Gastado (Total histórico) */}
                                 <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-xl p-5 shadow-sm dark:shadow-none">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-[var(--text-secondary)] text-sm font-medium">Total Gastado</span>
@@ -268,11 +273,11 @@ export const ProfilePage = () => {
                                     </div>
                                 </div>
 
-                                {/* Estadísticas */}
+                                {/* Historial */}
                                 <button onClick={() => navigate('/stats')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
                                     <div className="flex items-center gap-3">
                                         <BarChart3 className="text-[var(--text-secondary)]" size={20} />
-                                        <span className="text-sm font-medium text-[var(--text-secondary)]">Mis Estadísticas</span>
+                                        <span className="text-sm font-medium text-[var(--text-secondary)]">Gráficas y Análisis</span>
                                     </div>
                                     <ChevronRight className="text-slate-400" size={18} />
                                 </button>

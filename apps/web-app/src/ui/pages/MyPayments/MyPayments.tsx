@@ -16,7 +16,7 @@ import { AddCardModal } from './components/AddCardModal';
 
 export const MyPayments = () => {
     const { toggleSidebar, isSidebarOpen } = useOutletContext<{ toggleSidebar: () => void, isSidebarOpen: boolean }>();
-    const { cards, transactions } = useMyPayments();
+    const { cards, transactions, loading, refreshCards, handleDeleteCard } = useMyPayments();
     
     const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
     const [isAddCardOpen, setIsAddCardOpen] = useState(false);
@@ -43,38 +43,44 @@ export const MyPayments = () => {
                             <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest opacity-70">{cards.length} tarjetas activas</span>
                         </div>
                         
-                        {cards.length > 0 ? (
+                        {loading ? (
+                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {[1,2].map(i => (
+                                    <div key={i} className="h-56 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] animate-pulse" />
+                                ))}
+                             </div>
+                        ) : cards.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {cards.map((card) => (
-                                    <div key={card.id} className={`group relative h-56 rounded-3xl p-6 flex flex-col justify-between overflow-hidden border transition-all duration-300 ${card.isDefault ? 'bg-gradient-to-br from-[var(--primary)] to-[var(--primary)]/60 border-[var(--primary)] shadow-xl shadow-[var(--primary)]/20' : 'border-[var(--border-color)] bg-[var(--bg-card)] backdrop-blur-md'} hover:scale-[1.02]`}>
+                                    <div key={card.id} className={`group relative h-56 rounded-3xl p-6 flex flex-col justify-between overflow-hidden border transition-all duration-300 ${card.bankStyle || (card.isDefault ? 'bg-gradient-to-br from-[var(--primary)] to-[var(--primary)]/60' : 'bg-[var(--bg-card)]')} border-[var(--border-color)] hover:scale-[1.02] shadow-xl shadow-black/5`}>
                                         <div className="absolute inset-0 bg-black/10 mix-blend-overlay"></div>
                                         
-                                        <div className="relative z-10 flex justify-between items-start">
-                                            <div className={`w-12 h-9 rounded-lg ${card.isDefault ? 'bg-yellow-200/20 border border-yellow-200/40' : 'bg-[var(--bg-body)] border border-[var(--border-color)]'} relative overflow-hidden backdrop-blur-sm`}>
-                                                <div className={`absolute top-1/2 left-0 w-full h-[1px] ${card.isDefault ? 'bg-yellow-200/30' : 'bg-slate-400/20'}`}></div>
+                                        <div className="relative z-10 flex justify-between items-start text-white">
+                                            <div className={`w-12 h-9 rounded-lg bg-yellow-200/20 border border-yellow-200/40 relative overflow-hidden backdrop-blur-sm`}>
+                                                <div className={`absolute top-1/2 left-0 w-full h-[1px] bg-yellow-200/30`}></div>
                                             </div>
                                             <div className="flex gap-2">
-                                                <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-sm border border-white/10">
-                                                    <Edit2 size={16} />
-                                                </button>
-                                                <button className="p-2 rounded-xl bg-white/10 hover:bg-red-500/40 text-white transition-all backdrop-blur-sm border border-white/10">
+                                                <button 
+                                                    onClick={() => handleDeleteCard(card.id)}
+                                                    className="p-2 rounded-xl bg-white/10 hover:bg-red-500/40 text-white transition-all backdrop-blur-sm border border-white/10"
+                                                >
                                                     <Trash2 size={16} />
                                                 </button>
                                             </div>
                                         </div>
 
-                                        <div className="relative z-10 space-y-6">
-                                            <div className={`flex items-center gap-4 ${card.isDefault ? 'text-white' : 'text-[var(--text-primary)]'} font-mono text-xl tracking-[0.3em] drop-shadow-lg`}>
+                                        <div className="relative z-10 space-y-6 text-white">
+                                            <div className="flex items-center gap-4 font-mono text-xl tracking-[0.3em] drop-shadow-lg">
                                                 <span>****</span> <span>****</span> <span>****</span> <span>{card.lastFour}</span>
                                             </div>
                                             <div className="flex justify-between items-end">
                                                 <div className="space-y-1">
-                                                    <p className={`text-[10px] ${card.isDefault ? 'text-white/70' : 'text-[var(--text-secondary)]'} uppercase font-black tracking-widest`}>Titular</p>
-                                                    <p className={`text-sm ${card.isDefault ? 'text-white' : 'text-[var(--text-primary)]'} font-black tracking-widest uppercase`}>{card.holder}</p>
+                                                    <p className="text-[10px] text-white/70 uppercase font-black tracking-widest">Titular</p>
+                                                    <p className="text-sm text-white font-black tracking-widest uppercase">{card.holder}</p>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-2">
                                                     {card.isDefault && <span className="text-[10px] font-black uppercase bg-white/20 text-white px-2 py-1 rounded-md backdrop-blur-md border border-white/20">Predeterminada</span>}
-                                                    <span className={`font-black ${card.isDefault ? 'text-white' : 'text-[var(--text-primary)]'} text-2xl italic tracking-tighter`}>{card.brand}</span>
+                                                    <span className="font-black text-white text-2xl italic tracking-tighter uppercase">{card.brand}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -189,6 +195,7 @@ export const MyPayments = () => {
             <AddCardModal 
                 isOpen={isAddCardOpen}
                 onClose={() => setIsAddCardOpen(false)}
+                onSuccess={refreshCards}
             />
         </div>
     );

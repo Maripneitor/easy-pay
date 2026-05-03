@@ -9,12 +9,27 @@ export default defineConfig({
         watch: {
             usePolling: true
         },
-        // 👇 ESTO ES LO NUEVO
+        // 👇 PROXY PARA MICROSERVICIOS
         proxy: {
-            '/api': {
-                target: 'http://backend:8000', // 'backend' es el nombre del servicio en docker-compose
+            '/api/auth': {
+                target: 'http://auth-service:8001',
                 changeOrigin: true,
-                // rewrite: (path) => path.replace(/^\/api/, '') // Opcional: si quieres quitar el prefijo /api
+            },
+            '/api/groups': {
+                target: 'http://group-service:8002',
+                changeOrigin: true,
+            },
+            '/api/stats': {
+                target: 'http://stats-service:8003',
+                changeOrigin: true,
+            },
+            '/api/ocr': {
+                target: 'http://ocr-service:8004',
+                changeOrigin: true,
+            },
+            '/api/notifications': {
+                target: 'http://notification-service:8005',
+                changeOrigin: true,
             }
         }
     },

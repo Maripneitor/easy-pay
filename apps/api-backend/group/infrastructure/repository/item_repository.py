@@ -61,6 +61,16 @@ class MongoItemRepository:
         
         return items
 
+    async def find_by_id(self, item_id: str):
+        """Busca un gasto por su ID"""
+        if not ObjectId.is_valid(item_id):
+            return None
+        item = await self.items_collection.find_one({"_id": ObjectId(item_id)})
+        if item:
+            item["id"] = str(item["_id"])
+            del item["_id"]
+        return item
+
     async def update_item(self, item_id: str, item_data: dict):
         """Actualiza un gasto específico en la colección Items"""
         if not ObjectId.is_valid(item_id):
@@ -79,3 +89,11 @@ class MongoItemRepository:
             
         result = await self.items_collection.delete_one({"_id": ObjectId(item_id)})
         return result.deleted_count > 0
+
+    async def has_assigned_items(self, user_id: str, group_id: str):
+        """Verifica si un usuario tiene ítems asignados en un grupo específico"""
+        item = await self.items_collection.find_one({
+            "group_id": group_id,
+            "participantes_ids": user_id
+        })
+        return item is not None

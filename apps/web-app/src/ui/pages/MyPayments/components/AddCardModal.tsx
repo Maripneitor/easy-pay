@@ -1,65 +1,105 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CreditCard, ShieldCheck, Lock, Info } from 'lucide-react';
+import { X, CreditCard, ShieldCheck, Lock, Info, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+
+import { useAuthContext } from '../../../context/AuthContext';
+import { userRepository } from '../../../../infrastructure/api/repositories';
 
 interface AddCardModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onSuccess?: () => void;
 }
 
-export const AddCardModal: React.FC<AddCardModalProps> = ({ isOpen, onClose }) => {
+export const AddCardModal: React.FC<AddCardModalProps> = ({ isOpen, onClose, onSuccess }) => {
+    const { user } = useAuthContext();
     const [cardNumber, setCardNumber] = useState('');
     const [cardHolder, setCardHolder] = useState('');
     const [expiry, setExpiry] = useState('');
     const [cvv, setCvv] = useState('');
     const [isFlipped, setIsFlipped] = useState(false);
+    const [loading, setLoading] = useState(false);
+    
     const [bankStyle, setBankStyle] = useState('bg-gradient-to-br from-slate-800 to-slate-900');
     const [bankName, setBankName] = useState('EASY-PAY DEBIT');
+    const [cardBrand, setCardBrand] = useState('VISA');
 
     useEffect(() => {
-        // Simple logic for bank detection
         const num = cardNumber.replace(/\s/g, '');
-        if (num.startsWith('4152')) {
+        
+        // --- Mejor detección de bancos y marcas ---
+        if (num.startsWith('4152') || num.startsWith('4556')) {
             setBankStyle('bg-gradient-to-br from-purple-600 to-purple-800');
             setBankName('NU MÉXICO');
-        } else if (num.startsWith('4000')) {
+            setCardBrand('VISA');
+        } else if (num.startsWith('4000') || num.startsWith('4213')) {
             setBankStyle('bg-gradient-to-br from-blue-800 to-blue-950');
             setBankName('BBVA MÉXICO');
-        } else if (num.startsWith('5434')) {
+            setCardBrand('VISA');
+        } else if (num.startsWith('5434') || num.startsWith('5204')) {
             setBankStyle('bg-gradient-to-br from-red-600 to-red-800');
             setBankName('SANTANDER');
+            setCardBrand('MASTERCARD');
+        } else if (num.startsWith('37') || num.startsWith('34')) {
+            setBankStyle('bg-gradient-to-br from-cyan-600 to-blue-700');
+            setBankName('AMERICAN EXPRESS');
+            setCardBrand('AMEX');
+        } else if (num.startsWith('5')) {
+            setBankStyle('bg-gradient-to-br from-orange-600 to-red-600');
+            setBankName('MASTERCARD GOLD');
+            setCardBrand('MASTERCARD');
+        } else if (num.startsWith('4')) {
+            setBankStyle('bg-gradient-to-br from-blue-600 to-blue-800');
+            setBankName('VISA PLATINUM');
+            setCardBrand('VISA');
         } else {
             setBankStyle('bg-gradient-to-br from-slate-800 to-slate-900');
             setBankName('EASY-PAY DEBIT');
+            setCardBrand('VISA');
         }
     }, [cardNumber]);
 
     const formatCardNumber = (value: string) => {
         const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-        const matches = v.match(/\d{4,16}/g);
-        const match = matches && matches[0] || '';
         const parts = [];
 
-        for (let i = 0, len = match.length; i < len; i += 4) {
-            parts.push(match.substring(i, i + 4));
+        for (let i = 0, len = v.length; i < len; i += 4) {
+            parts.push(v.substring(i, i + 4));
         }
 
-        if (parts.length) {
-            return parts.join(' ');
-        } else {
-            return v;
-        }
+        return parts.join(' ').substring(0, 19);
     };
 
     const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setCardNumber(formatCardNumber(e.target.value));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        toast.success('Tarjeta agregada correctamente');
-        onClose();
+        if (!user?.id) return toast.error('Sesión no válida');
+
+        setLoading(true);
+        try {
+            await userRepository.addCard(user.id, {
+                number: cardNumber.replace(/\s/g, ''),
+                holder: cardHolder,
+                expiry,
+                cvv,
+                brand: cardBrand,
+                bank_name: bankName,
+                bank_style: bankStyle,
+                last_four: cardNumber.slice(-4)
+            });
+
+            toast.success('Tarjeta guardada exitosamente');
+            if (onSuccess) onSuccess();
+            onClose();
+        } catch (error: any) {
+            toast.error(error.message || 'No se pudo guardar la tarjeta');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -213,9 +253,11 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ isOpen, onClose }) =
                                 <div className="pt-4">
                                     <button 
                                         type="submit"
-                                        className="w-full py-5 bg-[var(--primary)] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-[var(--primary)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                                        disabled={loading}
+                                        className="w-full py-5 bg-[var(--primary)] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-[var(--primary)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        <ShieldCheck size={20} /> Guardar Tarjeta
+                                        {loading ? <Loader2 className="animate-spin" size={20} /> : <ShieldCheck size={20} />}
+                                        {loading ? 'Guardando...' : 'Guardar Tarjeta'}
                                     </button>
                                 </div>
                             </form>

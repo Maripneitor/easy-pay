@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "install:all": "npm install",
+    "setup": "node setup.js",
     "gama": "node setup-gama.js",
     "gama:unach": "node setup-gama.js --unach",
     "gama:usb": "node setup-gama.js --usb",
