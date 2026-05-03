@@ -112,20 +112,20 @@ export const TwoFactorVerify = () => {
             {/* Main Content */}
             <main className="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]"></div>
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>
+                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/5 rounded-full blur-[120px]"></div>
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/5 rounded-full blur-[120px]"></div>
                 </div>
 
-                <div className="bg-slate-800/40 backdrop-blur-md border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl flex flex-col animate-fade-in-up">
+                <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 w-full max-w-lg rounded-3xl shadow-[0_32px_64px_-15px_rgba(0,0,0,0.5)] flex flex-col animate-fade-in-up">
                     <div className="p-6 sm:p-8 border-b border-white/5 text-center">
                         <div className="flex flex-col items-center gap-3 mb-2">
-                            <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-400 mb-2">
+                            <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-400 mb-2 border border-blue-500/10">
                                 <span className="material-symbols-outlined text-3xl">mark_email_read</span>
                             </div>
-                            <h1 className="text-2xl font-black text-white tracking-tight uppercase">Verifica tu correo</h1>
+                            <h1 className="text-2xl font-bold text-white tracking-tight uppercase">Verifica tu correo</h1>
                         </div>
                         <p className="text-slate-400 text-sm leading-relaxed max-w-[280px] mx-auto">
-                            Hemos enviado un código de 6 dígitos a tu bandeja de entrada.
+                            Ingresa el código de 6 dígitos que enviamos a tu bandeja de entrada.
                         </p>
                     </div>
 
@@ -160,7 +160,7 @@ export const TwoFactorVerify = () => {
                                                 }
                                             }}
                                             id={`digit-${i}`}
-                                            className="w-12 h-14 sm:w-14 sm:h-16 bg-white/5 border border-white/10 rounded-xl text-center text-2xl font-bold text-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all placeholder-white/10"
+                                            className="w-12 h-14 sm:w-14 sm:h-16 bg-slate-950/50 border border-white/10 rounded-2xl text-center text-2xl font-black text-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all placeholder-white/5 shadow-inner"
                                         />
                                     </React.Fragment>
                                 ))}

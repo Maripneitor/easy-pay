@@ -80,38 +80,38 @@ export const TwoFactorSetup = () => {
             </header>
 
             <main className="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
-                {/* Background glow effects */}
+                {/* Background glow effects - refined to be subtler */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]"></div>
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>
+                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/5 rounded-full blur-[120px]"></div>
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/5 rounded-full blur-[120px]"></div>
                 </div>
 
-                <div className="bg-slate-800/40 backdrop-blur-md border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl flex flex-col animate-fade-in-up">
+                <div className="bg-[#111827] border border-white/10 w-full max-w-lg rounded-3xl shadow-[0_32px_64px_-15px_rgba(0,0,0,0.8)] flex flex-col animate-fade-in-up relative z-10">
                     <div className="p-6 sm:p-8 border-b border-white/5">
                         <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
+                            <div className="p-2.5 bg-blue-500/10 rounded-xl text-blue-400 border border-blue-500/20">
                                 <ShieldCheck size={24} />
                             </div>
                             <h1 className="text-2xl font-bold text-white tracking-tight">
-                                {codeSent ? "¡Código Enviado!" : "Verificación por Correo"}
+                                {codeSent ? "¡Código Enviado!" : "Verificación en Dos Pasos"}
                             </h1>
                         </div>
                         <p className="text-slate-400 text-sm leading-relaxed">
                             {codeSent
-                                ? `Revisa la bandeja de entrada de ${userEmail}.`
-                                : `Para proteger tu cuenta de Easy-Pay, te enviaremos un código de seguridad de 6 dígitos a tu correo registrado.`
+                                ? `Hemos enviado un código de seguridad a ${userEmail}.`
+                                : `Añade una capa extra de seguridad. Te enviaremos un código de 6 dígitos a tu correo para confirmar tu identidad.`
                             }
                         </p>
                     </div>
 
                     <div className="p-6 sm:p-8 space-y-6">
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
-                                <Mail size={24} />
+                        <div className="bg-[#1e293b] border border-white/10 rounded-3xl p-6 flex items-center gap-5 shadow-inner">
+                            <div className="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400 border border-blue-500/20">
+                                <Mail size={28} />
                             </div>
-                            <div className="flex-1">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Correo de recuperación</p>
-                                <p className="text-white font-medium">{userEmail}</p>
+                            <div className="flex-1 overflow-hidden">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Correo de verificación</p>
+                                <p className="text-white font-bold text-lg truncate drop-shadow-sm">{userEmail}</p>
                             </div>
                         </div>
 
@@ -143,7 +143,7 @@ export const TwoFactorSetup = () => {
                     </div>
 
                     <div className="p-6 text-center border-t border-white/5">
-                        <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">
                             © 2026 Easy-Pay Security. Software Engineering.
                         </p>
                     </div>
