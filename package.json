@@ -8,7 +8,6 @@
   ],
   "scripts": {
     "install:all": "npm install",
-    "setup": "node setup.js",
     "gama": "node setup-gama.js",
     "gama:unach": "node setup-gama.js --unach",
     "gama:usb": "node setup-gama.js --usb",
@@ -17,8 +16,8 @@
     "dev:mobile": "cd apps/mobile-app && npx expo start -c --lan",
     "dev:web": "npm run dev --workspace=apps/web-app -- --port 5173 --host",
     "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:web\" \"npm run dev:mobile\"",
-    "dev": "docker compose up",
-    "clean": "npx rimraf node_modules apps/*/node_modules packages/*/node_modules package-lock.json && npm install",
+    "dev": "npm run dev:all",
+    "clean": "npx rimraf node_modules apps/*/node_modules packages/*/node_modules package-lock.json && npm install --legacy-peer-deps",
     "android": "expo run:android",
     "ios": "expo run:ios"
   },

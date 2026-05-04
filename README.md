@@ -1,99 +1,122 @@
 # 💸 EASY-PAY: Ecosistema de Gestión de Gastos Compartidos
 
-¡Bienvenido a **EASY-PAY**! Esta es una plataforma integral diseñada para facilitar el registro y la liquidación de gastos entre amigos y grupos. El sistema combina una aplicación móvil nativa, un backend potente y una interfaz web de administración, todo orquestado mediante **Docker**.
+¡Bienvenido a **EASY-PAY**! Esta es una plataforma integral diseñada para facilitar el registro y la liquidación de gastos entre amigos y grupos.
 
 ---
 
-## 🏗️ 1. Arquitectura del Sistema (100% Dockerizado)
-
-El proyecto está estructurado como un **Monorepositorio** con servicios orquestados:
-
-- **🐍 API Backend (`apps/api-backend`)**: API Unificada basada en **FastAPI**. Gestiona Auth, Grupos, Gastos y Estadísticas en un solo punto de entrada (Puerto 8000).
-- **🌐 Web App (`apps/web-app`)**: Panel administrativo construido con **React + Vite**.
-- **📱 Mobile App (`apps/mobile-app`)**: App nativa con **Expo SDK 54**. (Se corre localmente para conectar con Expo Go).
-- **🗄️ Database**: **MongoDB** local persistente mediante volúmenes de Docker.
+## 🛠️ 1. Requisitos Previos
+Antes de empezar, asegúrate de tener instalado:
+*   **Node.js (v20+)**
+*   **Docker Desktop** (Para la base de datos y el backend)
+*   **Git**
 
 ---
 
+## 🚀 2. Instalación por Primera Vez (Quick Start)
+Sigue estos pasos para tener el proyecto funcional en menos de 5 minutos:
+
+1.  **Clonar el proyecto:**
+    ```bash
+    git clone https://github.com/tu-usuario/easy-pay.git
+    cd Easy-Pay
+    ```
+
+2.  **Instalar dependencias:**
+    ```bash
+    npm install --legacy-peer-deps
+    ```
+
+3.  **Configurar Variables:**
+    Copia el archivo de ejemplo y cámbiale el nombre a `.env`:
+    ```bash
+    cp .env.example .env
+    ```
+
 ---
 
-## 🚀 2. Inicio Rápido (The One-Command Start)
+## 💻 3. Cómo Correr el Proyecto
 
-Para levantar todo el ecosistema (Backend + Web + DB) con un solo comando:
-
-### Método A: Script de Automatización (Recomendado)
-Usa el script PowerShell para configurar IP, puertos y servicios automáticamente:
+### Opción A: Script Automático (Recomendado para Windows)
+Este script detecta tu IP, configura los archivos `.env` y abre todas las terminales por ti:
 ```powershell
 ./dev.ps1
 ```
 
-### Método B: Comandos Globales (Manual)
-Si prefieres usar `npm` directamente:
+### Opción B: Comandos Manuales
+Si prefieres control total, abre 3 terminales y ejecuta:
+
+1.  **Backend & DB:** `docker-compose up -d`
+2.  **Web App:** `npm run dev:web`
+3.  **Mobile App:** `npm run dev:mobile`
+
+---
+
+## 🚀 Guía de Inicio y Flujo de Trabajo para el Equipo
+
+Para garantizar que todos trabajemos bajo el mismo entorno y evitar los clásicos conflictos de dependencias (como errores con `package-lock.json` o módulos faltantes), utilizaremos Docker Compose como nuestra fuente de la verdad.
+
+Sigue estos pasos cada vez que clones el proyecto por primera vez o bajes cambios importantes.
+
+### 1. Variables de Entorno (Archivos Ignorados)
+Por seguridad, los archivos `.env` no se suben a Git. Antes de levantar el proyecto, asegúrate de tener tus variables de entorno locales configuradas.
+
+Copia el archivo de ejemplo en las rutas correspondientes:
 ```bash
-# Levanta Backend, Web (5173) y Mobile simultáneamente
-npm run dev:all
-
-# Limpiar puertos rápidamente en Windows/Mac
-npx kill-port 3000 5173 8000
+# Ejemplo para el backend y frontend
+cp .env.example .env
 ```
 
----
+### 2. Flujo de Trabajo: Bajar Cambios y Limpieza Profunda
+Si alguien añadió nuevas librerías, hacer un simple `git pull` puede romper tu entorno local. Usa esta secuencia para bajar cambios, limpiar la basura residual y reinstalar todo desde cero.
 
-## 💻 3. Guía Rápida de Desarrollo (Windows)
-
-Si prefieres levantar los servicios por separado para mayor control:
-
-1.  **Backend (FastAPI + Mongo):**
-    ```bash
-    docker-compose up -d
-    ```
-2.  **Web App (Admin Panel):**
-    ```bash
-    cd apps/web-app
-    npm run dev -- --port 5173 --host
-    ```
-3.  **Mobile App (Expo):**
-    ```bash
-    cd apps/mobile-app
-    npx expo start -c --lan
-    ```
-
-> [!IMPORTANT]
-> Los comandos anteriores están configurados para detectar la IP de la red automáticamente. Asegúrate de estar en la misma red Wi-Fi que el celular.
-
----
-
-## 🛠️ 4. Comandos de Mantenimiento y Rescate
-
-Si el entorno se vuelve inestable o quieres empezar desde cero:
-
-### Limpieza Profunda (Rescue Script)
-Ejecuta el script de rescate para borrar caches, `node_modules` y carpetas temporales:
+**Ejecuta esto en la terminal (Raíz del proyecto):**
 ```powershell
-./clean-install.ps1
+# 1. Traer los últimos cambios del repositorio
+git pull origin main
+
+# 2. Borrar dependencias locales y archivos de caché conflictivos (Windows Powershell)
+rm -Recurse -Force node_modules, package-lock.json
+npm cache clean --force
+
+# 3. Reinstalar dependencias limpias
+npm install --legacy-peer-deps
 ```
 
-### Comandos Útiles de Docker
-- **Ver Logs:** `docker-compose logs -f`
-- **Bajar Todo:** `docker-compose down`
-- **Reiniciar Limpio:** `docker system prune -a` (Borra imágenes y contenedores huérfanos).
-- **Reinstalar en Docker:** `docker-compose up --build --force-recreate`
+### 3. Levantar el Proyecto (Contenedores)
+Ya con el código limpio, deja que Docker se encargue de orquestar la base de datos, el backend y el frontend. 
+
+**Para encender el proyecto forzando una reconstrucción limpia:**
+```bash
+docker-compose up --build
+```
+*El flag `--build` es la regla de oro: le dice a Docker que vuelva a leer los `package.json` e instale cualquier dependencia nueva dentro del contenedor, asegurando que el entorno sea idéntico al de tus compañeros.*
+
+### 🧹 Comandos de Rescate (Troubleshooting)
+Si sientes que el proyecto hace cosas raras, los puertos se quedan pegados o los contenedores no reflejan tus cambios, ejecuta esta limpieza total (nuke) de Docker:
+
+```bash
+# Apagar y borrar contenedores, redes y volúmenes huérfanos
+docker-compose down -v --remove-orphans
+
+# Limpiar todo el sistema de Docker (Precaución: borra imágenes sin uso)
+docker system prune -a --volumes -f
+```
+Después de esto, vuelve a ejecutar `docker-compose up --build` y tendrás un entorno 100% fresco.
 
 ---
 
-## ⚙️ 4. Configuración de Red (Mobile)
-
-Para que el celular (Expo Go) se conecte al backend de la PC:
-1. Asegúrate de que ambos estén en la misma red Wi-Fi.
-2. El archivo `.env` debe tener `EXPO_PUBLIC_API_URL=http://<TU_IP_LOCAL>:8000`.
-3. Si la red bloquea conexiones directas, usa el modo **Localtunnel** incluido en el script de inicio.
-
----
-
-## 📜 5. Documentación Oficial
-- [Requerimientos del Proyecto](./requerimientos.md): Especificaciones técnicas y funcionales.
-- [Diagnóstico de Red](./DIAGNOSTICO.md): Guía para resolver problemas de conexión en la UNACH.
-- [Estado del Despliegue](./ESTADO_DEL_DESPLIEGUE.md): Resumen de la infraestructura actual.
+## 📱 5. Configuración de Red (Mobile)
+Para que el celular (Expo Go) se conecte al backend:
+1. Asegúrate de estar en la **misma red Wi-Fi** que la PC.
+2. Si usas `./dev.ps1`, la IP se configura sola.
+3. Si lo haces manual, pon tu IP local en el `.env` de `apps/mobile-app`.
 
 ---
-*Última Actualización DevOps: Abril 2026*
+
+## 🏗️ Estructura del Monorepo
+- **`apps/api-backend`**: FastAPI + MongoDB.
+- **`apps/web-app`**: React + Vite (Panel Admin).
+- **`apps/mobile-app`**: Expo SDK 54 (App Nativa).
+
+---
+*Última Actualización: Mayo 2026*

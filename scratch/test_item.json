@@ -1,8 +1,0 @@
-{
-  "group_id": "69e7d857d777356c05282eb0",
-  "nombre": "Pizza Familiar Test",
-  "precio": 25.50,
-  "cantidad": 1,
-  "comprador_id": "user123",
-  "participantes_ids": ["user123"]
-}
