@@ -63,18 +63,32 @@ async def register(user_data: UserCreate):
 
 @user_router.post("/login")
 async def login(login_data: UserLogin):
-    result = await login_use_case.execute(
-        identifier=login_data.identifier,
-        password=login_data.password
-    )
-    
-    # --- AUTO-ENVIAR CÓDIGO SI NO ESTÁ VERIFICADO ---
-    if result.get("status") == "not_verified":
-        await setup_2fa_use_case.execute(result["user_id"], result["email"])
+    try:
+        result = await login_use_case.execute(
+            identifier=login_data.identifier,
+            password=login_data.password
+        )
+        
+        # --- AUTO-ENVIAR CÓDIGO SI NO ESTÁ VERIFICADO ---
+        if result.get("status") == "not_verified":
+            try:
+                await setup_2fa_use_case.execute(result["user_id"], result["email"])
+            except Exception as e:
+                print(f"⚠️ Login OK pero falló envío de verificación: {e}")
 
-    if result["status"] == "error":
-        raise HTTPException(status_code=401, detail=result["message"])
-    return result
+        if result["status"] == "error":
+            raise HTTPException(status_code=401, detail=result["message"])
+        return result
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        import traceback
+        print(f"💥 Error crítico en login: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error interno en el servidor de autenticación: {str(e)}"
+        )
 
 
 async def get_current_user_id(authorization: str = Header(...)):

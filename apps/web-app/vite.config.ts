@@ -2,11 +2,12 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path';
 
-// SIEMPRE usar 127.0.0.1 porque Vite corre en el HOST, no dentro de Docker.
-// Los puertos de los contenedores están mapeados al host: 0.0.0.0:8001->8001, etc.
-// Los nombres de servicio Docker (auth-service, group-service) SOLO son resolvibles
-// dentro de la red interna de Docker — no desde el proceso Node.js del host.
-const getTarget = (port: number) => `http://127.0.0.1:${port}`;
+// En Docker, debemos usar los nombres de servicio (auth-service, etc.)
+// En Local (fuera de Docker), usamos 127.0.0.1
+const isDocker = process.env.IS_DOCKER === 'true';
+
+const getTarget = (service: string, port: number) => 
+  isDocker ? `http://${service}:${port}` : `http://127.0.0.1:${port}`;
 
 export default defineConfig({
   plugins: [react()],
@@ -23,7 +24,7 @@ export default defineConfig({
     },
     proxy: {
       '/api/auth': {
-        target: getTarget(8001),
+        target: getTarget('auth-service', 8001),
         changeOrigin: true,
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
@@ -32,7 +33,7 @@ export default defineConfig({
         },
       },
       '/api/groups': {
-        target: getTarget(8002),
+        target: getTarget('group-service', 8002),
         changeOrigin: true,
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
@@ -41,15 +42,15 @@ export default defineConfig({
         },
       },
       '/api/stats': {
-        target: getTarget(8003),
+        target: getTarget('stats-service', 8003),
         changeOrigin: true,
       },
       '/api/ocr': {
-        target: getTarget(8004),
+        target: getTarget('ocr-service', 8004),
         changeOrigin: true,
       },
       '/api/notifications': {
-        target: getTarget(8005),
+        target: getTarget('notification-service', 8005),
         changeOrigin: true,
       }
     }

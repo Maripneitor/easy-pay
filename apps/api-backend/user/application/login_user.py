@@ -15,10 +15,21 @@ class LoginUserUseCase:
         
         # 2. Validación de existencia y Contraseña
         # checkpw requiere bytes, por eso usamos .encode('utf-8')
-        if not user_data or not bcrypt.checkpw(
-            password.encode('utf-8'),
-            user_data["password_hash"].encode('utf-8')
-        ):
+        password_hash = user_data.get("password_hash")
+        
+        if not user_data or not password_hash or not isinstance(password_hash, str):
+            return {"status": "error", "message": "Credenciales incorrectas"}
+
+        try:
+            is_valid = bcrypt.checkpw(
+                password.encode('utf-8'),
+                password_hash.encode('utf-8')
+            )
+        except Exception as e:
+            print(f"⚠️ Error verificando password hash: {e}")
+            return {"status": "error", "message": "Error al verificar credenciales"}
+
+        if not is_valid:
             return {"status": "error", "message": "Credenciales incorrectas"}
         
         # 3. Validación de cuenta verificada (Email)

@@ -66,6 +66,12 @@ Copia el archivo de ejemplo en las rutas correspondientes:
 cp .env.example .env
 ```
 
+**⚠️ ¡IMPORTANTE PARA DOCKER!**
+Si vas a levantar el proyecto usando Docker Compose, asegúrate de agregar la siguiente línea en el archivo `.env` del frontend (`apps/web-app/.env`). Esto le dirá a Vite que enrute las peticiones a la red interna de contenedores y no a localhost (esto ya está automatizado en `docker-compose.yml`, pero es vital tenerlo en cuenta):
+```env
+IS_DOCKER=true
+```
+
 ### 2. Flujo de Trabajo: Bajar Cambios y Limpieza Profunda
 Si alguien añadió nuevas librerías, hacer un simple `git pull` puede romper tu entorno local. Usa esta secuencia para bajar cambios, limpiar la basura residual y reinstalar todo desde cero.
 
