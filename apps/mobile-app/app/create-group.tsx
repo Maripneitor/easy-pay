@@ -38,8 +38,8 @@ export default function CreateGroupScreen() {
 
         setIsLoading(true);
         try {
-            await createGrupo(groupName, user.id);
-            router.replace('/new-group');
+            const groupId = await createGrupo(groupName, user.id);
+            router.replace(`/(tabs)/group/${groupId}`);
         } catch (error) {
             Alert.alert('Error', 'No se pudo crear el grupo. Revisa tu conexión.');
         } finally {

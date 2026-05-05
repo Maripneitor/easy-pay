@@ -43,8 +43,8 @@ export class ApiMobileGroupRepository implements GroupRepository {
         return this.getGroup(response.data.group_id);
     }
 
-    async closeGroup(groupId: string): Promise<void> {
-        await httpClient.post(`/groups/${groupId}/close`, {});
+    async closeGroup(groupId: string, data: any = {}): Promise<void> {
+        await httpClient.post(`/groups/${groupId}/close`, data);
     }
 
     async startSettlement(groupId: string, selectedBankAccounts: any[]): Promise<void> {

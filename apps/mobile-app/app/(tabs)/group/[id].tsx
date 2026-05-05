@@ -392,7 +392,7 @@ export default function GroupDetailScreen() {
                 onComplete={async (data) => {
                     console.log('Liquidando grupo:', id);
                     try {
-                        await groupRepository.closeGroup(id as string);
+                        await groupRepository.closeGroup(id as string, data);
                         fetchData(true);
                         import('react-native').then(({ Alert }) => {
                             Alert.alert('¡Éxito!', 'El grupo ha sido liquidado correctamente.');

@@ -22,7 +22,7 @@ interface GrupoContextData {
     pendingCount: number;
     
     // Actions
-    createGrupo: (nombre: string, liderId: string) => Promise<void>;
+    createGrupo: (nombre: string, liderId: string) => Promise<string>;
     joinGrupo: (codigo: string) => Promise<boolean>;
     addItem: (item: Omit<Item, 'id'>) => Promise<void>;
     updateItem: (id: string, updates: Partial<Item>) => Promise<void>;
@@ -144,7 +144,7 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [syncQueue, activeGrupo?.id, syncStatus]);
 
     // 5. Actions
-    const createGrupo = async (nombre: string, liderId: string) => {
+    const createGrupo = async (nombre: string, liderId: string): Promise<string> => {
         try {
             // In the mobile app, we usually have the full user object in AuthContext. 
             // Here we just need the id and basic info to satisfy the repository interface.
@@ -166,6 +166,7 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             };
             
             setActiveGrupo(newGrupo);
+            return group.id;
         } catch (error) {
             console.error('Error creating group:', error);
             throw error;
