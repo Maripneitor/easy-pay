@@ -76,7 +76,7 @@ export const GroupDetail = () => {
         isRefreshing, refresh, removeMember,
         deleteGroup, confirmDeleteGroup, deleteItem,
         is2FAModalOpen, setIs2FAModalOpen, leaderProfile,
-        pendingSettlements, approveSettlement
+        pendingSettlements,
         approveSettlement,
         rejectSettlement
     } = useGroupDetail(finalId);

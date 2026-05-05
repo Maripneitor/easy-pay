@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PieChart } from 'react-native-chart-kit';
 import { 
     View, 
     Text, 
@@ -145,6 +146,28 @@ export default function StatsScreen() {
                     </View>
 
                     <View style={{ backgroundColor: theme.card }} className="p-6 rounded-[2.5rem] border border-white/5">
+                        {stats?.expenses_by_category?.length > 0 && (
+                            <View style={{ alignItems: 'center', marginBottom: 20 }}>
+                                <PieChart
+                                    data={stats.expenses_by_category.map((cat: any, index: number) => ({
+                                        name: cat.category,
+                                        population: cat.amount,
+                                        color: index === 0 ? theme.primary : index === 1 ? '#10b981' : index === 2 ? '#f59e0b' : '#6366f1',
+                                        legendFontColor: theme.textSecondary,
+                                        legendFontSize: 11
+                                    }))}
+                                    width={width - 80}
+                                    height={180}
+                                    chartConfig={{
+                                        color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                                    }}
+                                    accessor={"population"}
+                                    backgroundColor={"transparent"}
+                                    paddingLeft={"15"}
+                                    absolute
+                                />
+                            </View>
+                        )}
                         {(stats?.expenses_by_category?.length > 0) ? stats.expenses_by_category.map((cat: any, index: number) => (
                             <View key={index} className="mb-6 last:mb-0">
                                 <View className="flex-row justify-between items-center mb-2">

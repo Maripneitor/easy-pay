@@ -65,3 +65,25 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+import { ErrorBoundaryProps } from 'expo-router';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#050a15', padding: 24 }}>
+      <MaterialIcons name="wifi-off" size={64} color="#f43f5e" />
+      <Text style={{ color: 'white', fontSize: 20, fontWeight: '900', marginTop: 16, textAlign: 'center' }}>Error de conexión</Text>
+      <Text style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', marginTop: 12, lineHeight: 20 }}>
+        No se pudo cargar la página. Esto suele ocurrir si el servidor de desarrollo se reinició.
+      </Text>
+      <TouchableOpacity 
+        onPress={retry}
+        style={{ marginTop: 32, paddingVertical: 14, paddingHorizontal: 32, backgroundColor: '#3b82f6', borderRadius: 16 }}
+      >
+        <Text style={{ color: 'white', fontWeight: '900', fontSize: 16 }}>Reintentar</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
