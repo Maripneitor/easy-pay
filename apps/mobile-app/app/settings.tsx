@@ -156,6 +156,42 @@ export default function SettingsScreen() {
                     </TouchableOpacity>
                 </View>
 
+                {/* Account Actions */}
+                <SectionHeader title="Cuenta" />
+                <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="p-2 rounded-[40px] border mb-10 overflow-hidden">
+                    <TouchableOpacity 
+                        onPress={() => router.push('/profile/edit')}
+                        className="flex-row items-center justify-between p-6 border-b border-white/5"
+                    >
+                        <View className="flex-row items-center gap-4">
+                            <View style={{ backgroundColor: '#6366f115' }} className="w-12 h-12 rounded-2xl items-center justify-center">
+                                <MaterialIcons name="account-balance" size={24} color="#6366f1" />
+                            </View>
+                            <View>
+                                <Text style={{ color: theme.text }} className="font-black text-sm uppercase tracking-wider">Perfil Financiero</Text>
+                                <Text style={{ color: theme.textSecondary }} className="text-[10px] font-bold uppercase opacity-60">Mis cuentas bancarias</Text>
+                            </View>
+                        </View>
+                        <MaterialIcons name="chevron-right" size={24} color={theme.textSecondary} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                        onPress={() => router.push('/payments' as any)}
+                        className="flex-row items-center justify-between p-6"
+                    >
+                        <View className="flex-row items-center gap-4">
+                            <View style={{ backgroundColor: '#10b98115' }} className="w-12 h-12 rounded-2xl items-center justify-center">
+                                <MaterialIcons name="history" size={24} color="#10b981" />
+                            </View>
+                            <View>
+                                <Text style={{ color: theme.text }} className="font-black text-sm uppercase tracking-wider">Historial de Pagos</Text>
+                                <Text style={{ color: theme.textSecondary }} className="text-[10px] font-bold uppercase opacity-60">Actividad de cartera</Text>
+                            </View>
+                        </View>
+                        <MaterialIcons name="chevron-right" size={24} color={theme.textSecondary} />
+                    </TouchableOpacity>
+                </View>
+
                 {/* Personalization Section */}
                 <SectionHeader title="Personalización" />
                 <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="p-6 rounded-[40px] border mb-10">
@@ -205,33 +241,7 @@ export default function SettingsScreen() {
                     </View>
                 </View>
 
-                {/* Ajustes Section */}
-                <SectionHeader title="Seguridad" />
-                <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="rounded-[40px] border overflow-hidden mb-10">
-                    <TouchableOpacity 
-                        onPress={() => router.push('/profile/change-password')}
-                        style={{ borderBottomColor: theme.border }} 
-                        className="p-6 flex-row items-center justify-between border-b"
-                    >
-                        <View className="flex-row items-center gap-4">
-                            <MaterialIcons name="lock-outline" size={24} color="#94a3b8" />
-                            <Text style={{ color: theme.text, fontSize: 15 * fontScale }} className="font-bold">Cambiar Contraseña</Text>
-                        </View>
-                        <MaterialIcons name="chevron-right" size={24} color={theme.textSecondary} />
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                        onPress={() => router.push('/profile/two-factor-setup')}
-                        className="p-6 flex-row items-center justify-between"
-                    >
-                        <View className="flex-row items-center gap-4">
-                            <MaterialIcons name="security" size={24} color="#94a3b8" />
-                            <Text style={{ color: theme.text, fontSize: 15 * fontScale }} className="font-bold">Seguridad 2FA</Text>
-                        </View>
-                        <View className="px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20">
-                            <Text className="text-emerald-500 text-[9px] font-black uppercase tracking-widest">Configurar</Text>
-                        </View>
-                    </TouchableOpacity>
-                </View>
+
 
                 {/* Logout Button */}
                 <TouchableOpacity 

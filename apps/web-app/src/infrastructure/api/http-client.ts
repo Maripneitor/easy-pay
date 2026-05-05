@@ -58,7 +58,7 @@ httpClient.interceptors.response.use(
         if (error.response?.status === 401 && !isAuthEndpoint) {
             // Token expired or invalid — clear and redirect to auth
             clearAuthToken();
-            window.location.href = '/auth';
+            window.location.href = '/autenticacion';
         }
 
         // Normalize error message for UI consumption

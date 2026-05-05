@@ -5,7 +5,11 @@ import {
     Send, 
     Edit3,
     CheckCircle,
-    ArrowLeft
+    ArrowLeft,
+    Info,
+    User,
+    Copy,
+    Check
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { cn } from '../../../infrastructure/utils';
@@ -13,11 +17,14 @@ import { useGroupDetail } from '../GroupDetail/useGroupDetail';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useClipboard } from '../../hooks/useClipboard';
+import { httpClient } from '../../../infrastructure/api/http-client';
+import { useAuthContext } from '../../context/AuthContext';
+
 
 export const SettleUp = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { userShare, balances, integrantes_data, isFetchingGroup: loading } = useGroupDetail(id || "");
+    const { userShare, balances, membersData, selectedBankAccounts, status, isFetchingGroup: loading } = useGroupDetail(id || "");
     const { copyToClipboard, copiedId } = useClipboard();
     
     // Identificar al acreedor (quien tiene el mayor saldo a favor)
@@ -27,8 +34,8 @@ export const SettleUp = () => {
         if (positiveBalances.length === 0) return null;
         
         const top = [...positiveBalances].sort((a, b) => b.monto - a.monto)[0];
-        return integrantes_data.find(i => i.id === top.usuario_id) || null;
-    }, [balances, integrantes_data]);
+        return membersData.find(i => i.id === top.usuario_id) || null;
+    }, [balances, membersData]);
     
     const [amount, setAmount] = useState(userShare?.toString() || "0");
     const [method, setMethod] = useState<'cash' | 'card' | 'transfer'>('cash');
@@ -42,19 +49,40 @@ export const SettleUp = () => {
         }
     }, [loading, userShare]);
 
-    const handleSettle = () => {
+    const { user } = useAuthContext();
+    
+    const handleSettle = async () => {
         const numericAmount = parseFloat(amount);
         if (isNaN(numericAmount) || numericAmount <= 0) {
             toast.error('Por favor ingresa un monto válido');
             return;
         }
 
+        if (!id || !creditor || !user) {
+            toast.error('No se pudo identificar al acreedor o al usuario');
+            return;
+        }
+
         setIsProcessing(true);
-        setTimeout(() => {
-            setIsProcessing(false);
-            toast.success('¡Deuda liquidada correctamente!');
+        try {
+            await httpClient.post(`/groups/${id}/settlements`, {
+                group_id: id,
+                payer_id: user.id,
+                receiver_id: creditor.id,
+                amount: numericAmount,
+                proof_url: method === 'transfer' ? 'pending_upload' : null
+            });
+
+
+            toast.success('¡Solicitud de liquidación enviada!');
+            toast.info(`Se ha notificado a ${creditor.nombre.split(' ')[0]}. Esperando su aprobación.`);
+            
             navigate(-1);
-        }, 2000);
+        } catch (error: any) {
+            toast.error(error.message || 'Error al procesar la liquidación');
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     if (loading) return (
@@ -126,8 +154,8 @@ export const SettleUp = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {[
                         { id: 'cash', icon: Banknote, label: 'Efectivo', desc: 'Pago manual', color: 'emerald' },
-                        { id: 'transfer', icon: Send, label: 'Transferencia', desc: 'SPEI / Directo', color: 'blue' },
-                        { id: 'card', icon: CardIcon, label: 'Tarjeta', desc: 'Débito / Crédito', color: 'purple' }
+                        { id: 'card', icon: CardIcon, label: 'Tarjeta', desc: 'Débito / Crédito', color: 'purple' },
+                        { id: 'transfer', icon: Send, label: 'Transferencia', desc: 'SPEI / CoDi', color: 'blue' }
                     ].map((m) => (
                         <button 
                             key={m.id}
@@ -166,83 +194,60 @@ export const SettleUp = () => {
                     ))}
                 </div>
 
-                {/* Transfer Info Section */}
+                {/* Info de Transferencia (Selected Group Accounts) */}
                 <AnimatePresence>
-                    {method === 'transfer' && (
+                    {method === 'transfer' && selectedBankAccounts && selectedBankAccounts.length > 0 && (
                         <motion.div 
-                            initial={{ opacity: 0, height: 0, y: -20 }}
-                            animate={{ opacity: 1, height: 'auto', y: 0 }}
-                            exit={{ opacity: 0, height: 0, y: -20 }}
-                            className="overflow-hidden"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            className="space-y-4"
                         >
-                            <div className="bg-blue-500/5 border border-blue-500/20 rounded-[2.5rem] p-8 space-y-6">
-                                <div className="flex items-center gap-3 border-b border-blue-500/10 pb-4">
-                                    <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-                                        <Info size={20} />
+                            <div className="flex items-center gap-3 mb-2 px-4">
+                                <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
+                                    <Info size={16} />
                                     </div>
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Datos Bancarios</p>
-                                        <p className="text-xs font-bold text-slate-500 uppercase">Realiza tu SPEI con estos datos</p>
-                                    </div>
-                                </div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Cuentas Autorizadas por el Líder</p>
+                            </div>
 
-                                <div className="grid grid-cols-1 gap-4">
-                                    {[
-                                        { 
-                                            label: 'Beneficiario', 
-                                            value: creditor?.financial_profile?.beneficiario || creditor?.nombre || 'Pendiente de configurar', 
-                                            id: 'beneficiary',
-                                            icon: User
-                                        },
-                                        { 
-                                            label: 'Institución Financiera', 
-                                            value: creditor?.financial_profile?.entidad_financiera || 'No especificada', 
-                                            id: 'bank',
-                                            icon: Send
-                                        },
-                                        { 
-                                            label: 'Número de CLABE', 
-                                            value: creditor?.financial_profile?.clabe || 'N/A', 
-                                            id: 'clabe',
-                                            icon: CardIcon
-                                        }
-                                    ].map((item) => (
-                                        <div key={item.id} className="group/item relative">
-                                            <div className="flex items-center justify-between p-6 bg-white/40 dark:bg-slate-900/40 rounded-3xl border border-blue-500/10 group-hover/item:border-blue-500/30 transition-all shadow-sm backdrop-blur-md">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
-                                                        <item.icon size={18} />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-400 mb-0.5">{item.label}</p>
-                                                        <p className="text-sm font-black text-slate-700 dark:text-white uppercase tracking-tight">{item.value}</p>
-                                                    </div>
-                                                </div>
-                                                <button 
-                                                    onClick={() => {
-                                                        if (item.value !== 'N/A' && item.value !== 'No especificada' && item.value !== 'Pendiente de configurar') {
-                                                            copyToClipboard(item.value, item.id);
-                                                        } else {
-                                                            toast.error("Dato no disponible para copiar");
-                                                        }
-                                                    }}
-                                                    className={cn(
-                                                        "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95",
-                                                        copiedId === item.id 
-                                                            ? "bg-emerald-500 text-white shadow-emerald-500/20" 
-                                                            : "bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-500"
-                                                    )}
-                                                >
-                                                    {copiedId === item.id ? '¡Copiado!' : 'Copiar'}
-                                                </button>
+                            <div className="grid gap-3">
+                                {selectedBankAccounts.map((acc: any, index: number) => (
+                                    <div key={index} className="bg-blue-500/5 border border-blue-500/10 rounded-[2rem] p-6 space-y-4 group/card hover:bg-blue-500/10 transition-colors">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">{acc.entidad_financiera}</p>
+                                                <p className="text-lg font-mono font-black text-[var(--text-primary)]">{acc.clabe}</p>
+                                            </div>
+                                            <button 
+                                                onClick={() => copyToClipboard(acc.clabe, `clabe-${index}`)}
+                                                className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700"
+                                            >
+                                                {copiedId === `clabe-${index}` ? <Check size={18} className="text-emerald-500" /> : <Copy size={18} className="text-slate-400" />}
+                                            </button>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-blue-500/10">
+                                            <div>
+                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">TIPO / BANCO</p>
+                                                <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase">CUENTA {index + 1}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">BENEFICIARIO</p>
+                                                <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase">{creditor?.nombre || 'Líder del Grupo'}</p>
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+                                    </div>
+                                ))}
                             </div>
+                            
+                            <p className="text-[8px] font-bold text-blue-500/60 uppercase tracking-tighter text-center pt-2">
+                                Transfiere el monto exacto a cualquiera de estas cuentas.
+                            </p>
                         </motion.div>
                     )}
                 </AnimatePresence>
+
+
             </div>
 
             {/* Confirm Button */}

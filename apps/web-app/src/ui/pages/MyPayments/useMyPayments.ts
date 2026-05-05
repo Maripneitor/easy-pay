@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthContext } from '../../context/AuthContext';
-import { userRepository } from '../../../infrastructure/api/repositories';
+import { useAuthContext } from '@ui/context/AuthContext';
+import { userRepository } from '@infrastructure/api/repositories';
 import { toast } from 'sonner';
 
 export interface PaymentCard {

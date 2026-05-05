@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { paymentRepository } from '../api/repositories/PaymentRepository';
+import { useAuth } from '../../../context/AuthContext';
 
 const STORAGE_KEY = 'easypay_payments';
 
@@ -59,9 +61,9 @@ interface PaymentContextType {
     cards: SavedCard[];
     addDebt: (debt: Omit<Debt, 'id' | 'createdAt'>) => void;
     removeDebt: (id: string) => void;
-    addCard: (card: Omit<SavedCard, 'id' | 'createdAt' | 'isDefault'>) => void;
-    removeCard: (id: string) => void;
-    setDefaultCard: (id: string) => void;
+    addCard: (card: Omit<SavedCard, 'id' | 'createdAt' | 'isDefault'>) => Promise<void>;
+    removeCard: (id: string) => Promise<void>;
+    setDefaultCard: (id: string) => Promise<void>;
     initiatePayment: (data: Omit<Payment, 'id' | 'createdAt' | 'status'>) => Promise<Payment>;
     confirmPaymentAsReceiver: (paymentId: string) => void;
     confirmPaymentAsWitness: (paymentId: string) => void;
@@ -80,25 +82,51 @@ function makeId() {
 }
 
 export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { user } = useAuth();
     const [debts, setDebts] = useState<Debt[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
     const [cards, setCards] = useState<SavedCard[]>([]);
 
-    // Persistencia
+    // ── Sync with API ────────────────────────────────────────────────────────────
+    const fetchCards = useCallback(async () => {
+        if (!user?.id) return;
+        try {
+            const data = await paymentRepository.getCards(user.id);
+            const mappedCards: SavedCard[] = data.map((c: any) => ({
+                id: c.id || c._id,
+                token: c.token || '',
+                last4: c.last_four || '****',
+                brand: c.brand || 'VISA',
+                holder: c.holder || 'TITULAR',
+                expiry: c.expiry || '00/00',
+                colors: c.colors || ['#1e293b', '#0f172a'],
+                isDefault: c.is_default || false,
+                createdAt: c.created_at || Date.now()
+            }));
+            setCards(mappedCards);
+        } catch (error) {
+            console.error('❌ Error fetching cards:', error);
+        }
+    }, [user?.id]);
+
+    useEffect(() => {
+        fetchCards();
+    }, [fetchCards]);
+
+    // Persistencia local para Deudas y Pagos
     useEffect(() => {
         AsyncStorage.getItem(STORAGE_KEY).then(stored => {
             if (stored) {
                 const parsed = JSON.parse(stored);
                 setDebts(parsed.debts ?? []);
                 setPayments(parsed.payments ?? []);
-                setCards(parsed.cards ?? []);
             }
         }).catch(() => {});
     }, []);
 
     useEffect(() => {
-        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ debts, payments, cards })).catch(() => {});
-    }, [debts, payments, cards]);
+        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ debts, payments })).catch(() => {});
+    }, [debts, payments]);
 
     // ── Deudas ───────────────────────────────────────────────────────────────────
     const addDebt = useCallback((debt: Omit<Debt, 'id' | 'createdAt'>) => {
@@ -109,26 +137,46 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setDebts(prev => prev.filter(d => d.id !== id));
     }, []);
 
-    // ── Tarjetas ─────────────────────────────────────────────────────────────────
-    const addCard = useCallback((card: Omit<SavedCard, 'id' | 'createdAt' | 'isDefault'>) => {
-        setCards(prev => {
-            const isFirst = prev.length === 0;
-            return [...prev, {
-                ...card,
-                id: makeId(),
-                createdAt: Date.now(),
-                isDefault: isFirst,
-            }];
-        });
-    }, []);
+    // ── Tarjetas (Connected to API) ───────────────────────────────────────────────
+    const addCard = useCallback(async (card: Omit<SavedCard, 'id' | 'createdAt' | 'isDefault'>) => {
+        if (!user?.id) return;
+        try {
+            const backendCard = {
+                token: card.token,
+                last_four: card.last4,
+                brand: card.brand,
+                holder: card.holder,
+                expiry: card.expiry,
+                colors: card.colors,
+                is_default: cards.length === 0
+            };
+            await paymentRepository.addCard(user.id, backendCard);
+            await fetchCards();
+        } catch (error) {
+            console.error('❌ Error adding card:', error);
+            throw error;
+        }
+    }, [user?.id, cards.length, fetchCards]);
 
-    const removeCard = useCallback((id: string) => {
-        setCards(prev => prev.filter(c => c.id !== id));
-    }, []);
+    const removeCard = useCallback(async (id: string) => {
+        if (!user?.id) return;
+        try {
+            await paymentRepository.removeCard(user.id, id);
+            await fetchCards();
+        } catch (error) {
+            console.error('❌ Error removing card:', error);
+        }
+    }, [user?.id, fetchCards]);
 
-    const setDefaultCard = useCallback((id: string) => {
-        setCards(prev => prev.map(c => ({ ...c, isDefault: c.id === id })));
-    }, []);
+    const setDefaultCard = useCallback(async (id: string) => {
+        if (!user?.id) return;
+        try {
+            await paymentRepository.setDefaultCard(user.id, id);
+            await fetchCards();
+        } catch (error) {
+            console.error('❌ Error setting default card:', error);
+        }
+    }, [user?.id, fetchCards]);
 
     // ── Pagos ────────────────────────────────────────────────────────────────────
     const initiatePayment = useCallback(async (data: Omit<Payment, 'id' | 'createdAt' | 'status'>): Promise<Payment> => {

@@ -33,11 +33,21 @@ export default function NewExpenseScreen() {
     const [nombre, setNombre] = useState((params.name as string) || '');
     const [precio, setPrecio] = useState((params.amount as string) || '');
     const [cantidad, setCantidad] = useState(1);
+    const [categoria, setCategoria] = useState((params.category as string) || 'Comida');
     
     const [members, setMembers] = useState<any[]>([]);
     const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+
+    const CATEGORIES = [
+        { id: 'Comida', icon: 'restaurant', color: '#f59e0b' },
+        { id: 'Transporte', icon: 'directions-car', color: '#3b82f6' },
+        { id: 'Súper', icon: 'shopping-cart', color: '#10b981' },
+        { id: 'Entretenimiento', icon: 'sports-esports', color: '#8b5cf6' },
+        { id: 'Hogar', icon: 'home', color: '#ec4899' },
+        { id: 'Otros', icon: 'more-horiz', color: '#64748b' }
+    ];
 
     useEffect(() => {
         const fetchMembers = async () => {
@@ -98,6 +108,7 @@ export default function NewExpenseScreen() {
                 nombre: nombre,
                 precio: parseFloat(precio),
                 quantity: cantidad,
+                category: categoria,
                 addedBy: user?.id || '',
                 assignedTo: selectedMembers
             });
@@ -214,6 +225,27 @@ export default function NewExpenseScreen() {
                                     ${(parseFloat(precio || '0') * cantidad).toFixed(2)}
                                 </Text>
                             </View>
+                        </View>
+
+                        {/* Category Section */}
+                        <View className="mb-10">
+                            <Text style={{ color: theme.text }} className="text-xl font-black mb-6 px-2">Categoría</Text>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row px-2">
+                                {CATEGORIES.map(cat => (
+                                    <TouchableOpacity 
+                                        key={cat.id}
+                                        onPress={() => setCategoria(cat.id)}
+                                        style={{ 
+                                            backgroundColor: categoria === cat.id ? cat.color + '20' : theme.cardSecondary,
+                                            borderColor: categoria === cat.id ? cat.color : 'transparent'
+                                        }}
+                                        className="mr-3 px-6 py-4 rounded-3xl border items-center gap-2"
+                                    >
+                                        <MaterialIcons name={cat.icon as any} size={24} color={categoria === cat.id ? cat.color : theme.textSecondary} />
+                                        <Text style={{ color: categoria === cat.id ? theme.text : theme.textSecondary }} className="text-[10px] font-black uppercase tracking-widest">{cat.id}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
                         </View>
 
                         {/* Assignment Section */}

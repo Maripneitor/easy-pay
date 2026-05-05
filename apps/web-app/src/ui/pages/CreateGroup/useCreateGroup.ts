@@ -2,21 +2,23 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { httpClient } from '../../../infrastructure/api/http-client';
 import { useAuthContext } from '../../context/AuthContext';
+import { ROUTES } from '../../../infrastructure/routes';
 
 export const useCreateGroup = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { user } = useAuthContext();
-    const initialTab = searchParams.get('tab') === 'join' ? 'join' : 'create';
+    const tabParam = searchParams.get('tab');
+    const initialTab = (tabParam === 'unirse' || tabParam === 'join') ? 'unirse' : 'crear';
     
-    const [activeTab, setActiveTab] = useState<'create' | 'join'>(initialTab);
+    const [activeTab, setActiveTab] = useState<'crear' | 'unirse'>(initialTab);
     const [loading, setLoading] = useState(false);
 
     // Actualizar tab si cambia el parámetro de búsqueda
     useEffect(() => {
         const tab = searchParams.get('tab');
-        if (tab === 'join') setActiveTab('join');
-        if (tab === 'create') setActiveTab('create');
+        if (tab === 'unirse' || tab === 'join') setActiveTab('unirse');
+        if (tab === 'crear' || tab === 'create') setActiveTab('crear');
     }, [searchParams]);
 
     // Estados para CREAR
@@ -31,7 +33,7 @@ export const useCreateGroup = () => {
 
         const userId = user?.id;
         if (!userId) {
-            navigate('/auth');
+            navigate(ROUTES.AUTH);
             return;
         }
 
@@ -47,7 +49,7 @@ export const useCreateGroup = () => {
             const response = await httpClient.post('/groups/create', payload);
 
             if (response.status === 200 || response.status === 201) {
-                navigate('/dashboard');
+                navigate(ROUTES.DASHBOARD);
             } else {
                 console.error("Error al crear:", response.data);
                 alert(`Error al crear el grupo.`);
@@ -65,7 +67,7 @@ export const useCreateGroup = () => {
 
         const userId = user?.id;
         if (!userId) {
-            navigate('/auth');
+            navigate(ROUTES.AUTH);
             return;
         }
 
@@ -79,7 +81,7 @@ export const useCreateGroup = () => {
             const response = await httpClient.post('/groups/join', payload);
 
             if (response.status === 200 || response.status === 201) {
-                navigate('/dashboard');
+                navigate(ROUTES.DASHBOARD);
             } else {
                 console.error("Error al unirse:", response.data);
                 alert(response.data?.detail || "Código inválido o ya estás en el grupo");

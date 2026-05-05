@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { groupRepository, userRepository } from '../../../infrastructure/api/repositories';
 import { useAuthContext } from '../../context/AuthContext';
+import { useGroupContext } from '../../context/GroupContext';
 import { toast } from 'sonner';
 
 const normalizeId = (id: any) => {
@@ -11,54 +12,12 @@ const normalizeId = (id: any) => {
 };
 
 export const useGroups = () => {
-    const [groups, setGroups] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { groups, isLoading: groupsLoading, refreshGroups } = useGroupContext();
     const { user } = useAuthContext();
     const userId = user?.id;
     const navigate = useNavigate();
     const [is2FAModalOpen, setIs2FAModalOpen] = useState(false);
     const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
-
-    const fetchGroups = useCallback(async () => {
-        if (!userId) return;
-        setIsLoading(true);
-        try {
-            const data = await groupRepository.findByUser(userId);
-            if (Array.isArray(data)) {
-                const groupsWithBalances = await Promise.all(data.map(async (group: any) => {
-                    try {
-                        const bData = await groupRepository.getBalances(group.id);
-                        const bList = bData.balance_detallado || bData.balances || [];
-                        const myInfo = bList.find((b: any) => normalizeId(b.usuario_id) === normalizeId(userId));
-
-                        return {
-                            ...group,
-                            id: normalizeId(group.id || group._id),
-                            admin_id: normalizeId(group.admin_id || group.administrador_id),
-                            total_gastado: bData.total_gastado_en_grupo || 0,
-                            mi_balance: myInfo?.balance || 0,
-                            integrantes: (group.integrantes || []).map((i: any) => ({
-                                ...i,
-                                id: normalizeId(i.id || i._id)
-                            }))
-                        };
-                    } catch (e) {
-                        return { ...group, total_gastado: 0, mi_balance: 0 };
-                    }
-                }));
-                setGroups(groupsWithBalances);
-            }
-        } catch (error) {
-            console.error("Error fetching groups:", error);
-            toast.error("Error al cargar los grupos");
-        } finally {
-            setIsLoading(false);
-        }
-    }, [userId]);
-
-    useEffect(() => {
-        fetchGroups();
-    }, [fetchGroups]);
 
     const [groupsToDelete, setGroupsToDelete] = useState<string[]>([]);
     const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -124,7 +83,7 @@ export const useGroups = () => {
             setDeletedGroups(trimmedHistory);
             localStorage.setItem('recently_deleted_groups', JSON.stringify(trimmedHistory));
 
-            setGroups(prev => prev.filter(g => !groupsToDelete.includes(g.id)));
+            await refreshGroups();
             toast.success(groupsToDelete.length === 1 ? "Grupo eliminado" : `${groupsToDelete.length} grupos eliminados`);
             
             setIs2FAModalOpen(false);
@@ -144,7 +103,7 @@ export const useGroups = () => {
             if (description) {
                 await groupRepository.updateGroup(newGroup.id, name, description);
             }
-            fetchGroups();
+            await refreshGroups();
             toast.success("Grupo creado correctamente");
             return newGroup;
         } catch (error) {
@@ -156,7 +115,7 @@ export const useGroups = () => {
     const updateGroup = async (groupId: string, name: string, description: string) => {
         try {
             await groupRepository.updateGroup(groupId, name, description);
-            setGroups(prev => prev.map(g => g.id === groupId ? { ...g, nombre: name, descripcion: description } : g));
+            await refreshGroups();
             toast.success("Grupo actualizado correctamente");
         } catch (error) {
             toast.error("Error al actualizar el grupo");
@@ -168,7 +127,7 @@ export const useGroups = () => {
         if (!user) return;
         try {
             await groupRepository.joinGroup(code, user as any);
-            fetchGroups();
+            await refreshGroups();
             toast.success("Te has unido al grupo");
         } catch (error: any) {
             toast.error(error.message || "Código inválido o ya estás en el grupo");
@@ -178,7 +137,7 @@ export const useGroups = () => {
 
     return {
         groups,
-        isLoading,
+        isLoading: groupsLoading,
         deleteGroup,
         confirmDeleteGroup,
         is2FAModalOpen,
@@ -193,7 +152,7 @@ export const useGroups = () => {
         selectedIds,
         toggleIdSelection,
         deleteSelectedGroups,
-        refresh: fetchGroups,
+        refresh: refreshGroups,
         navigate
     };
 };

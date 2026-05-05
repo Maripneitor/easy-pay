@@ -11,12 +11,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 import { useTheme } from '../../../src/infrastructure/context/ThemeContext';
 import { usePayments } from '../../../src/infrastructure/context/PaymentContext';
-import MercadoPagoService from '../../../src/infrastructure/services/MercadoPagoService';
+import { useAuth } from '../../../context/AuthContext';
+import { TwoFactorModal } from '../../../components/Security/TwoFactorModal';
 
 const { width } = Dimensions.get('window');
 
 export default function RegisterCardScreen() {
     const { theme, fontScale } = useTheme();
+    const { user } = useAuth();
     const { addCard } = usePayments();
 
     const [cardNumber, setCardNumber] = useState('');
@@ -25,15 +27,20 @@ export default function RegisterCardScreen() {
     const [cvv, setCvv] = useState('');
     const [docNumber, setDocNumber] = useState('');
     const [loading, setLoading] = useState(false);
+    const [is2FAModalOpen, setIs2FAModalOpen] = useState(false);
 
     const brand = MercadoPagoService.detectCardBrand(cardNumber);
+    const isSantander = cardNumber.replace(/\s/g, '').startsWith('5579') || cardNumber.replace(/\s/g, '').startsWith('5434');
+
     const brandColors: Record<string, string[]> = {
         visa:       ['#1a1f71', '#2196F3'],
         mastercard: ['#eb001b', '#f79e1b'],
         amex:       ['#007bc1', '#00b4d8'],
+        santander:  ['#ec0000', '#b30000'],
         'credit-card': [theme.primary, '#4f46e5'],
     };
-    const cardColors = brandColors[brand] ?? brandColors['credit-card'];
+
+    const cardColors = isSantander ? brandColors.santander : (brandColors[brand] ?? brandColors['credit-card']);
 
     const isValid = cardNumber.replace(/\s/g, '').length === 16
         && cardName.length > 2
@@ -45,6 +52,11 @@ export default function RegisterCardScreen() {
             Alert.alert('Datos incompletos', 'Por favor completa todos los campos correctamente.');
             return;
         }
+        setIs2FAModalOpen(true);
+    };
+
+    const onVerified = async () => {
+        setIs2FAModalOpen(false);
         setLoading(true);
         try {
             const [month, year] = expiry.split('/');
@@ -63,7 +75,7 @@ export default function RegisterCardScreen() {
             addCard({
                 token,
                 last4: cardNumber.replace(/\s/g, '').slice(-4),
-                brand: brand === 'credit-card' ? 'CARD' : brand.toUpperCase(),
+                brand: isSantander ? 'SANTANDER' : (brand === 'credit-card' ? 'CARD' : brand.toUpperCase()),
                 holder: cardName.toUpperCase(),
                 expiry,
                 colors: cardColors,
@@ -113,7 +125,9 @@ export default function RegisterCardScreen() {
                             <View className="w-14 h-10 bg-white/20 rounded-lg items-center justify-center">
                                 <MaterialIcons name="contactless" size={28} color="white" />
                             </View>
-                            <Text className="text-white font-black italic text-xl uppercase">{brand === 'credit-card' ? 'CARD' : brand}</Text>
+                            <Text className="text-white font-black italic text-xl uppercase">
+                                {isSantander ? 'SANTANDER' : (brand === 'credit-card' ? 'CARD' : brand)}
+                            </Text>
                         </View>
                         <View>
                             <Text className="text-white font-mono text-2xl tracking-[4px] mb-4">
@@ -249,6 +263,15 @@ export default function RegisterCardScreen() {
                     </LinearGradient>
                 </TouchableOpacity>
             </View>
+
+            <TwoFactorModal 
+                visible={is2FAModalOpen}
+                onClose={() => setIs2FAModalOpen(false)}
+                onVerified={onVerified}
+                userId={user?.id || ''}
+                actionTitle="Verificar Identidad"
+                actionDescription="Para agregar un nuevo método de pago, por favor verifica tu identidad."
+            />
         </SafeAreaView>
     );
 }

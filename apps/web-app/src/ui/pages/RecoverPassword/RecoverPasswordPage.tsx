@@ -4,6 +4,7 @@ import styles from './RecoverPassword.module.css';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuthContext } from '../../context/AuthContext';
+import { ROUTES } from '../../../infrastructure/routes';
 import { toast } from 'sonner';
 
 import { userRepository } from '../../../infrastructure/api/repositories';
@@ -95,7 +96,7 @@ export const RecoverPasswordPage = () => {
             });
             
             toast.success('Contraseña actualizada correctamente');
-            navigate('/auth');
+            navigate(ROUTES.AUTH);
         } catch (error: any) {
             toast.error(error.message || 'Error al cambiar contraseña');
         } finally {
@@ -254,7 +255,7 @@ export const RecoverPasswordPage = () => {
                         <button
                             type="button"
                             className={styles.switchBtn}
-                            onClick={() => navigate(isAuthenticated ? '/profile' : '/auth')}
+                            onClick={() => navigate(isAuthenticated ? ROUTES.PROFILE : ROUTES.AUTH)}
                             style={{ margin: '0 auto' }}
                             disabled={loading}
                         >

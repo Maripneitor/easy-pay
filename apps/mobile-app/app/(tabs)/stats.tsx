@@ -5,19 +5,36 @@ import {
     ScrollView, 
     TouchableOpacity, 
     Dimensions,
-    SafeAreaView,
-    ActivityIndicator
+    ActivityIndicator,
+    Alert
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
+import { usePayments, PaymentMethod } from '../../src/infrastructure/context/PaymentContext';
 import { getApiBaseUrl } from '../../src/infrastructure/api/network.config';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
+
+const METHOD_META: Record<PaymentMethod, { label: string; icon: string; color: string }> = {
+    cash:     { label: 'Efectivo',      icon: 'payments',      color: '#4ade80' },
+    card:     { label: 'Tarjeta',       icon: 'credit-card',   color: '#60a5fa' },
+    transfer: { label: 'Transferencia', icon: 'swap-horiz',    color: '#a78bfa' },
+};
+
+const STATUS_META = {
+    pending:              { label: 'Pendiente',   color: '#f59e0b' },
+    waiting_confirmation: { label: 'Confirmando', color: '#60a5fa' },
+    confirmed:            { label: 'Confirmado',  color: '#4ade80' },
+    rejected:             { label: 'Rechazado',   color: '#ef4444' },
+};
 
 export default function StatsScreen() {
     const { theme, fontScale } = useTheme();
     const { user } = useAuth();
+    const { payments } = usePayments();
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
@@ -38,6 +55,10 @@ export default function StatsScreen() {
         loadStats();
     }, [user?.id]);
 
+    const handleExportPDF = () => {
+        Alert.alert("Reporte PDF", "Generando reporte mensual de gastos... Esta función estará disponible en la próxima actualización móvil.");
+    };
+
     if (loading) {
         return (
             <View className="flex-1 justify-center items-center" style={{ backgroundColor: theme.bg }}>
@@ -51,18 +72,34 @@ export default function StatsScreen() {
             'Comida': 'restaurant',
             'Transporte': 'directions-car',
             'Entretenimiento': 'sports-esports',
+            'Súper': 'shopping-cart',
+            'Hogar': 'home',
+            'Salud': 'medical-services',
+            'Viajes': 'flight',
             'Otros': 'more-horiz'
         };
         return <MaterialIcons name={icons[name] || 'receipt'} size={20} color={theme.textSecondary} />;
     };
 
+    const userId = user?.id ?? '';
+    const allPayments = payments.filter(p => p.fromUserId === userId || p.toUserId === userId);
+
     return (
         <SafeAreaView className="flex-1" style={{ backgroundColor: theme.bg }}>
             <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
                 {/* Header */}
-                <View className="mb-8">
-                    <Text style={{ color: theme.text, fontSize: 32 * fontScale }} className="font-black tracking-tight">Mi Historial</Text>
-                    <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale }} className="font-medium opacity-60">Visualiza tu actividad y balance histórico</Text>
+                <View className="mb-8 flex-row justify-between items-start">
+                    <View className="flex-1">
+                        <Text style={{ color: theme.text, fontSize: 32 * fontScale }} className="font-black tracking-tight">Estadísticas</Text>
+                        <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale }} className="font-medium opacity-60">Visualiza tu actividad y balance</Text>
+                    </View>
+                    <TouchableOpacity 
+                        onPress={handleExportPDF}
+                        style={{ backgroundColor: theme.primary + '20' }} 
+                        className="p-3 rounded-2xl border border-white/5"
+                    >
+                        <MaterialIcons name="picture-as-pdf" size={24} color={theme.primary} />
+                    </TouchableOpacity>
                 </View>
 
                 {/* Summary Cards */}
@@ -84,7 +121,12 @@ export default function StatsScreen() {
                 </View>
 
                 {/* Main Spent Card */}
-                <View style={{ backgroundColor: theme.primary }} className="p-8 rounded-[3rem] mb-8 shadow-xl shadow-blue-500/20">
+                <LinearGradient 
+                    colors={['#0f172a', '#1e3a8a', '#1e40af']} 
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    className="p-8 rounded-[3rem] mb-8 shadow-xl shadow-blue-500/20"
+                >
                     <View className="flex-row justify-between items-center mb-4">
                         <Text className="text-white/60 font-black uppercase tracking-[0.3em] text-[10px]">Gasto Total Histórico</Text>
                         <FontAwesome5 name="wallet" size={20} color="white" />
@@ -92,21 +134,18 @@ export default function StatsScreen() {
                     <Text className="text-white font-black text-4xl tracking-tighter">${stats?.total_spent?.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</Text>
                     <View className="flex-row items-center mt-4">
                         <Ionicons name="arrow-up" size={14} color="#34d399" />
-                        <Text className="text-[#34d399] font-black text-[10px] uppercase ml-1">12% este mes</Text>
+                        <Text className="text-[#34d399] font-black text-[10px] uppercase ml-1">Análisis Dinámico</Text>
                     </View>
-                </View>
+                </LinearGradient>
 
                 {/* Categories */}
                 <View className="mb-8">
                     <View className="flex-row justify-between items-center mb-6">
                         <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black tracking-tight">Por Categoría</Text>
-                        <TouchableOpacity>
-                            <Text style={{ color: theme.primary, fontSize: 12 * fontScale }} className="font-black uppercase tracking-widest">Ver todo</Text>
-                        </TouchableOpacity>
                     </View>
 
                     <View style={{ backgroundColor: theme.card }} className="p-6 rounded-[2.5rem] border border-white/5">
-                        {stats?.expenses_by_category?.map((cat: any, index: number) => (
+                        {(stats?.expenses_by_category?.length > 0) ? stats.expenses_by_category.map((cat: any, index: number) => (
                             <View key={index} className="mb-6 last:mb-0">
                                 <View className="flex-row justify-between items-center mb-2">
                                     <View className="flex-row items-center">
@@ -125,19 +164,53 @@ export default function StatsScreen() {
                                     />
                                 </View>
                             </View>
-                        ))}
+                        )) : (
+                            <Text style={{ color: theme.textSecondary }} className="text-center py-4">No hay datos de categorías aún.</Text>
+                        )}
                     </View>
                 </View>
 
-                {/* Insight */}
-                <View style={{ backgroundColor: `${theme.primary}10`, borderColor: `${theme.primary}20` }} className="p-6 rounded-3xl border border-dashed mb-12">
-                    <View className="flex-row items-center mb-2">
-                        <MaterialIcons name="lightbulb" size={18} color={theme.primary} />
-                        <Text style={{ color: theme.primary }} className="font-black text-[10px] uppercase tracking-widest ml-2">Tip de Ahorro</Text>
-                    </View>
-                    <Text style={{ color: theme.textSecondary }} className="text-xs font-medium leading-relaxed">
-                        Has gastado un <Text style={{ color: theme.text }} className="font-bold">15% menos</Text> en la categoría de Comida comparado con el mes pasado. ¡Sigue así!
-                    </Text>
+                {/* Historial de Pagos */}
+                <View className="mb-10">
+                    <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black tracking-tight mb-6">Historial de Pagos</Text>
+                    {allPayments.length === 0 ? (
+                        <View style={{ backgroundColor: theme.card, borderColor: theme.border }} className="border rounded-[2.5rem] p-10 items-center">
+                            <MaterialIcons name="history" size={36} color={theme.textSecondary} />
+                            <Text style={{ color: theme.text }} className="font-black mt-3 text-center">Sin actividad</Text>
+                        </View>
+                    ) : (
+                        <View style={{ backgroundColor: theme.card, borderColor: theme.border }} className="border rounded-[2.5rem] overflow-hidden p-2">
+                            {allPayments.map((tx, i) => {
+                                const method = METHOD_META[tx.method] || METHOD_META.cash;
+                                const status = STATUS_META[tx.status as keyof typeof STATUS_META] || STATUS_META.pending;
+                                const isOutgoing = tx.fromUserId === userId;
+                                return (
+                                    <View
+                                        key={tx.id}
+                                        className={`p-5 flex-row items-center justify-between mb-2 rounded-[2rem] ${i % 2 === 0 ? 'bg-white/5' : ''}`}
+                                    >
+                                        <View className="flex-row items-center gap-4 flex-1">
+                                            <View style={{ backgroundColor: method.color + '15' }} className="w-12 h-12 rounded-2xl items-center justify-center">
+                                                <MaterialIcons name={method.icon as any} size={20} color={method.color} />
+                                            </View>
+                                            <View className="flex-1">
+                                                <Text style={{ fontSize: 14 * fontScale, color: theme.text }} className="font-black" numberOfLines={1}>
+                                                    {isOutgoing ? `A: ${tx.toUserName}` : `De: ${tx.fromUserName}`}
+                                                </Text>
+                                                <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">{tx.groupName}</Text>
+                                            </View>
+                                        </View>
+                                        <View className="items-end ml-4">
+                                            <Text style={{ color: isOutgoing ? '#ef4444' : '#4ade80' }} className="font-black text-sm">
+                                                {isOutgoing ? '-' : '+'}${tx.amount.toFixed(2)}
+                                            </Text>
+                                            <Text style={{ color: status.color }} className="text-[8px] font-black uppercase mt-1">{status.label}</Text>
+                                        </View>
+                                    </View>
+                                );
+                            })}
+                        </View>
+                    )}
                 </View>
 
                 <View className="h-20" />

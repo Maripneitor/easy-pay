@@ -4,7 +4,7 @@ import styles from './Auth.module.css';
 import { useAuth } from './useAuth';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { useTheme } from '../../context/ThemeContext';
-import { ErrorToast } from '../../components/ErrorToast/ErrorToast';
+import { toast } from 'sonner';
 
 export const Auth = () => {
     const {
@@ -24,13 +24,13 @@ export const Auth = () => {
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
-    const [showErrorToast, setShowErrorToast] = useState(false);
 
     useEffect(() => {
         if (error) {
-            setShowErrorToast(true);
+            toast.error(error);
+            setError(null);
         }
-    }, [error]);
+    }, [error, setError]);
 
     const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -56,12 +56,6 @@ export const Auth = () => {
 
     return (
         <div className={styles.authPage}>
-            {showErrorToast && error && (
-                <ErrorToast 
-                    message={error} 
-                    onClose={() => setShowErrorToast(false)} 
-                />
-            )}
             
             <button className={styles.themeToggle} onClick={toggleTheme}>
                 {isDark ? <Sun size={20} /> : <Moon size={20} />}

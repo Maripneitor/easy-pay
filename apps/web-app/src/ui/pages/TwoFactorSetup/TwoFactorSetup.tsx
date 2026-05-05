@@ -13,6 +13,7 @@ import styles from './TwoFactorSetup.module.css';
 
 import { useAuthContext } from '../../context/AuthContext';
 import { userRepository } from '../../../infrastructure/api/repositories';
+import { ROUTES } from '../../../infrastructure/routes';
 import { toast } from 'sonner';
 
 export const TwoFactorSetup = () => {
@@ -28,7 +29,7 @@ export const TwoFactorSetup = () => {
     useEffect(() => {
         if (!userId) {
             console.error("No se detectó ID de usuario. Regresando...");
-            navigate('/auth');
+            navigate(ROUTES.AUTH);
         }
     }, [userId, navigate]);
 
@@ -50,7 +51,7 @@ export const TwoFactorSetup = () => {
             toast.success("Código enviado exitosamente");
 
             setTimeout(() => {
-                navigate('/2fa-verify');
+                navigate(ROUTES.TWO_FACTOR_VERIFY);
             }, 2000);
 
         } catch (err: any) {

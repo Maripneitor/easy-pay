@@ -13,9 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-const MotiView = View as any;
-const MotiText = Text as any;
-const AnimatePresence = ({ children }: any) => children;;
+import { MotiView, AnimatePresence } from 'moti';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useGrupo } from '../context/GrupoContext';
@@ -23,6 +21,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SyncStatus } from '../src/components/SyncStatus';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const I18N_TEXTS = {
+    TOAST: {
+        CLOSED: '¡Cuenta Cerrada!',
+        ERROR_CLOSE: 'Error al cerrar cuenta',
+        LEADER_ONLY: 'Solo el líder puede asignar ítems',
+    },
+    TABS: {
+        MEMBERS: 'Integrantes',
+        ITEMS: 'Consumos',
+        TOTALS: 'Totales'
+    }
+} as const;
 
 export default function NewGrupoScreen() {
     const { theme, fontScale } = useTheme();
@@ -47,9 +58,8 @@ export default function NewGrupoScreen() {
     if (!activeGrupo) return null;
 
     const isLeader = activeGrupo?.liderId === user?.id;
-    const GRAN_TOTAL_TICKET = 850; 
-    const pendingAmount = Math.max(0, GRAN_TOTAL_TICKET - activeGrupo.subtotal);
-    const isReadyToClose = pendingAmount <= 0;
+    const isReadyToClose = activeGrupo.items.length > 0;
+    const pendingAmount = 0; // Removiendo lógica hardcoded de 850
 
     const triggerToast = (msg: string) => {
         setToastMsg(msg);
@@ -81,9 +91,9 @@ export default function NewGrupoScreen() {
             await closeGrupo();
             setViewState('summary');
             setIsClosing(false);
-            triggerToast('Â¡Cuenta Cerrada!');
+            triggerToast(I18N_TEXTS.TOAST.CLOSED);
         } catch (e) {
-            triggerToast('Error al cerrar cuenta');
+            triggerToast(I18N_TEXTS.TOAST.ERROR_CLOSE);
         } finally {
             setIsLoading(false);
         }
@@ -91,7 +101,7 @@ export default function NewGrupoScreen() {
 
     const toggleAssignment = async (itemId: string, participantId: string) => {
         if (!isLeader) {
-            triggerToast('Solo el lÃ­der puede asignar Ã­tems');
+            triggerToast(I18N_TEXTS.TOAST.LEADER_ONLY);
             return;
         }
         const item = activeGrupo.items.find(i => i.id === itemId);
@@ -106,6 +116,15 @@ export default function NewGrupoScreen() {
         triggerToast(isAssigned ? 'Participante eliminado' : 'Platillo asignado');
     };
 
+    const handleDeleteItem = async (itemId: string) => {
+        if (!isLeader) {
+            triggerToast('Solo el líder puede eliminar ítems');
+            return;
+        }
+        await deleteItem(itemId);
+        triggerToast('Ítem eliminado');
+    };
+
     const TabSelector = () => (
         <View className="px-6 py-4">
             <View className="flex-row bg-slate-900/50 p-1 rounded-2xl border border-white/5">
@@ -116,7 +135,7 @@ export default function NewGrupoScreen() {
                         className={`flex-1 py-3 items-center rounded-xl ${activeTab === id ? 'bg-slate-800 border border-white/5 shadow-sm' : ''}`}
                     >
                         <Text style={{ color: activeTab === id ? theme.text : theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-widest">
-                            {id === 'members' ? 'Miembros' : id === 'items' ? 'Ãtems' : 'Totales'}
+                            {id === 'members' ? 'Miembros' : id === 'items' ? 'Ítems' : 'Totales'}
                         </Text>
                     </TouchableOpacity>
                 ))}
@@ -143,7 +162,7 @@ export default function NewGrupoScreen() {
                 </View>
                 <ScrollView showsVerticalScrollIndicator={false} className="px-6">
                     <View style={{ backgroundColor: theme.primary }} className="p-8 rounded-[40px] items-center mb-8">
-                        <Text className="text-slate-900/60 font-black uppercase tracking-[4px] mb-2">TÃº debes pagar</Text>
+                        <Text className="text-slate-900/60 font-black uppercase tracking-[4px] mb-2">Tú debes pagar</Text>
                         <Text style={{ fontSize: 56 * fontScale }} className="text-slate-900 font-black tracking-tighter">${calculateUserDebt(user?.id || '1').toFixed(2)}</Text>
                     </View>
                     
@@ -202,7 +221,7 @@ export default function NewGrupoScreen() {
                                 <View className="flex-row items-center gap-4">
                                     <Image source={{ uri: p.avatar }} className="w-12 h-12 rounded-full border-2" style={{ borderColor: p.color }} />
                                     <View>
-                                        <Text style={{ color: theme.text }} className="font-bold">{p.nombre} {p.isLeader ? '(LÃ­der)' : ''}</Text>
+                                        <Text style={{ color: theme.text }} className="font-bold">{p.nombre} {p.isLeader ? '(Líder)' : ''}</Text>
                                         <Text className="text-emerald-400 text-[10px] font-bold">{p.status}</Text>
                                     </View>
                                 </View>
@@ -226,7 +245,14 @@ export default function NewGrupoScreen() {
                                 onPress={() => router.push({ pathname: '/item-detail', params: { id: item.id, name: item.nombre, price: item.precio, quantity: item.cantidad }})}
                                 style={{ backgroundColor: theme.cardSecondary }} className="p-5 rounded-[40px] border border-white/10">
                                 <View className="flex-row items-center justify-between mb-4">
-                                    <Text style={{ color: theme.text }} className="text-lg font-black">{item.nombre}</Text>
+                                    <View className="flex-row items-center gap-2">
+                                        <Text style={{ color: theme.text }} className="text-lg font-black">{item.nombre}</Text>
+                                        {isLeader && (
+                                            <TouchableOpacity onPress={() => handleDeleteItem(item.id)}>
+                                                <MaterialIcons name="delete-outline" size={20} color="#f43f5e" />
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
                                     <Text style={{ color: theme.text }} className="text-lg font-black">${item.precio * item.cantidad}</Text>
                                 </View>
                                 <View className="flex-row flex-wrap gap-2 pt-4 border-t border-white/5">
@@ -260,7 +286,7 @@ export default function NewGrupoScreen() {
                     </TouchableOpacity>
                 ) : (
                     <View className="bg-slate-900/80 py-5 rounded-[28px] items-center justify-center border border-white/5">
-                        <Text className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Esperando que el lÃ­der cierre la cuenta</Text>
+                        <Text className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Esperando que el líder cierre la cuenta</Text>
                     </View>
                 )}
             </View>

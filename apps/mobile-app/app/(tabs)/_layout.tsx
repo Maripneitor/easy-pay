@@ -113,28 +113,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="payments"
-        options={{
-          title: 'Cartera',
-          tabBarIcon: ({ color, focused }) => (
-            <View>
-              <MaterialIcons name="account-balance-wallet" size={26} color={color} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="stats"
-        options={{
-          title: 'Historial',
-          tabBarIcon: ({ color, focused }) => (
-            <View>
-              <MaterialIcons name="bar-chart" size={26} color={color} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="notifications"
         options={{
           title: 'Alertas',
@@ -151,10 +129,12 @@ export default function TabLayout() {
         }}
       />
       
-      {/* Hide internal/deprecated routes from tab bar */}
+      {/* Hide internal/deprecated/moved routes from tab bar */}
+      <Tabs.Screen name="stats" options={{ href: null }} />
+
       <Tabs.Screen name="friends_list" options={{ href: null }} />
-      <Tabs.Screen name="two" options={{ href: null }} />
       <Tabs.Screen name="group/[id]" options={{ href: null }} />
+      <Tabs.Screen name="payments" options={{ href: null }} />
     </Tabs>
   );
 }

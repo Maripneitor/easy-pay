@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search, UserPlus, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, Search, UserPlus, Loader2, CheckCircle2, Info } from 'lucide-react';
 import { userRepository } from '../../../../infrastructure/api/repositories/UserRepository';
 import { groupRepository } from '../../../../infrastructure/api/repositories/GroupRepository';
 import { toast } from 'sonner';

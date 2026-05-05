@@ -35,8 +35,18 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     const { user } = useAuth();
     const [nombre, setNombre] = useState('');
     const [precio, setPrecio] = useState('');
+    const [categoria, setCategoria] = useState('Comida');
     const [loading, setLoading] = useState(false);
     const [selectedMembers, setSelectedMembers] = useState<string[]>(members.map(m => m.id));
+
+    const CATEGORIES = [
+        { id: 'Comida', icon: 'restaurant', color: '#f59e0b' },
+        { id: 'Transporte', icon: 'directions-car', color: '#3b82f6' },
+        { id: 'Súper', icon: 'shopping-cart', color: '#10b981' },
+        { id: 'Entretenimiento', icon: 'sports-esports', color: '#8b5cf6' },
+        { id: 'Hogar', icon: 'home', color: '#ec4899' },
+        { id: 'Otros', icon: 'more-horiz', color: '#64748b' }
+    ];
 
     const toggleMember = (id: string) => {
         setSelectedMembers(prev => 
@@ -56,6 +66,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 nombre: nombre.trim(),
                 precio: parseFloat(precio),
                 cantidad: 1,
+                categoria: categoria,
                 comprador_id: user?.id || 'me', 
                 participantes_ids: selectedMembers
             };
@@ -71,6 +82,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 onClose();
                 setNombre('');
                 setPrecio('');
+                setCategoria('Comida');
             } else {
                 alert('Error al registrar gasto');
             }
@@ -138,6 +150,27 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                                         onChangeText={setPrecio}
                                     />
                                 </View>
+                            </View>
+
+                            {/* Categoría */}
+                            <View className="mb-8">
+                                <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-widest mb-4 ml-1">Categoría</Text>
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                                    {CATEGORIES.map(cat => (
+                                        <TouchableOpacity 
+                                            key={cat.id}
+                                            onPress={() => setCategoria(cat.id)}
+                                            style={{ 
+                                                backgroundColor: categoria === cat.id ? cat.color + '20' : theme.cardSecondary,
+                                                borderColor: categoria === cat.id ? cat.color : 'transparent'
+                                            }}
+                                            className="mr-3 px-6 py-4 rounded-3xl border items-center gap-2"
+                                        >
+                                            <MaterialIcons name={cat.icon as any} size={24} color={categoria === cat.id ? cat.color : theme.textSecondary} />
+                                            <Text style={{ color: categoria === cat.id ? theme.text : theme.textSecondary }} className="text-[10px] font-black uppercase tracking-widest">{cat.id}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </ScrollView>
                             </View>
 
                             {/* Participantes */}

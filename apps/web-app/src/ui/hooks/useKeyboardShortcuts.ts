@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@infrastructure/routes';
 import { toast } from 'sonner';
 
 export const useKeyboardShortcuts = (closeModals?: () => void) => {
@@ -38,15 +39,15 @@ export const useKeyboardShortcuts = (closeModals?: () => void) => {
                 switch (key) {
                     case 'g':
                         toast.success('Navegando a Grupos...');
-                        navigate('/dashboard');
+                        navigate(ROUTES.DASHBOARD);
                         break;
                     case 'e':
                         toast.success('Navegando a Estadísticas...');
-                        navigate('/stats');
+                        navigate(ROUTES.STATS);
                         break;
                     case 'p':
                         toast.success('Navegando a Perfil...');
-                        navigate('/profile');
+                        navigate(ROUTES.PROFILE);
                         break;
                     default:
                         break;

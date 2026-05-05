@@ -78,11 +78,7 @@ export class ApiGroupRepository implements GroupRepository {
         try {
             await httpClient.post(`/groups/add-item`, {
                 group_id: groupId,
-                nombre: item.description,
-                precio: item.amount,
-                cantidad: 1,
-                comprador_id: item.addedBy,
-                participantes_ids: item.assignedTo
+                ...toApiItem(item)
             });
         } catch (e) {
             return handleApiError(e);
@@ -101,7 +97,7 @@ export class ApiGroupRepository implements GroupRepository {
     // ── assignItem ────────────────────────────────────────────────────────────
     async assignItem(groupId: string, itemId: string, memberIds: string[]): Promise<void> {
         try {
-            await httpClient.put(`/groups/${groupId}/items/${itemId}`, { assigned_to: memberIds });
+            await httpClient.put(`/groups/${groupId}/items/${itemId}`, { participantes_ids: memberIds });
         } catch (e) {
             return handleApiError(e);
         }

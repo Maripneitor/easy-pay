@@ -3,27 +3,33 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { QrCode, ArrowLeft, Send, Hash, Info, Loader2 } from 'lucide-react';
 import { groupRepository } from '../../../infrastructure/api/repositories';
+import { ROUTES } from '../../../infrastructure/routes';
 import { toast } from 'sonner';
+import { useAuthContext } from '../../context/AuthContext';
 import styles from './JoinGroup.module.css';
 
 export const JoinGroup = () => {
     const navigate = useNavigate();
+    const { user } = useAuthContext();
     const [code, setCode] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleJoin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (code.length === 6) {
+        if (code.length >= 4) { // Allow flexibility but 8 is standard
             setLoading(true);
             try {
-                const userId = localStorage.getItem('userId');
-                if (!userId) throw new Error("Debes iniciar sesión");
+                if (!user?.id) throw new Error("Debes iniciar sesión");
                 
                 // Unirse al grupo usando el repositorio sincronizado
-                const group = await groupRepository.joinGroup(code, { id: userId, nombre: localStorage.getItem('userName') || "Usuario", role: 'member' });
+                const group = await groupRepository.joinGroup(code, { 
+                    id: user.id, 
+                    nombre: user.nombre || "Usuario", 
+                    role: 'member' 
+                });
                 
                 toast.success(`Te has unido a: ${group.name}`);
-                navigate(`/group/${group.id}`);
+                navigate(ROUTES.GROUP_DETAIL(group.id));
             } catch (error: any) {
                 toast.error(error.message || "No se pudo unir al grupo. Verifica el código.");
             } finally {
@@ -46,7 +52,7 @@ export const JoinGroup = () => {
                         <div className="flex-1 p-8 lg:p-12 border-b md:border-b-0 md:border-r border-white/5">
                             <button 
                                 className="mb-8 p-2 hover:bg-white/5 rounded-full transition-colors text-[var(--text-secondary)]"
-                                onClick={() => navigate('/dashboard')}
+                                onClick={() => navigate(ROUTES.DASHBOARD)}
                             >
                                 <ArrowLeft size={24} />
                             </button>
@@ -63,18 +69,18 @@ export const JoinGroup = () => {
                                     </div>
                                     <input
                                         type="text"
-                                        maxLength={6}
+                                        maxLength={8}
                                         value={code}
                                         onChange={(e) => setCode(e.target.value.toUpperCase())}
-                                        placeholder="EX: ABC123"
+                                        placeholder="EX: ABC123XY"
                                         disabled={loading}
                                         className="w-full bg-black/40 border-2 border-white/10 rounded-2xl py-6 pl-14 pr-6 text-2xl font-mono font-black text-white tracking-[0.5em] placeholder:tracking-normal placeholder:font-sans placeholder:text-white/20 focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary)]/20 transition-all outline-none"
                                     />
                                 </div>
-
+                                
                                 <button 
                                     type="submit" 
-                                    disabled={code.length !== 6 || loading}
+                                    disabled={code.length < 4 || loading}
                                     className="w-full group relative py-6 bg-[var(--primary)] disabled:opacity-30 disabled:grayscale rounded-2xl overflow-hidden transition-all shadow-glow hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     <div className="relative z-10 flex items-center justify-center gap-3">

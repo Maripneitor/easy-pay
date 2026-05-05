@@ -27,10 +27,10 @@ export const RegisterExpense = () => {
     const {
         formData,
         setFormData,
-        integrantes,
+        members,
         handleSubmit,
         loading,
-        toggleParticipante
+        toggleParticipant
     } = useRegisterExpense();
 
     const handleOcr = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,7 +51,7 @@ export const RegisterExpense = () => {
         });
     };
 
-    const currentComprador = integrantes.find(i => i.id === formData.comprador_id);
+    const currentBuyer = members.find(i => i.id === formData.comprador_id);
 
     return (
         <div className="min-h-screen flex flex-col bg-[var(--bg-body)] font-display text-[var(--text-primary)] antialiased overflow-x-hidden">
@@ -144,13 +144,13 @@ export const RegisterExpense = () => {
                                 <div className="flex-1">
                                     <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest mb-2 opacity-50">Categoría</p>
                                     <div className="flex flex-wrap gap-2">
-                                        {['Comida', 'Transporte', 'Entretenimiento', 'Otros'].map(cat => (
+                                        {['Comida', 'Transporte', 'Entretenimiento', 'Súper', 'Hogar', 'Salud', 'Viajes', 'Otros'].map(cat => (
                                             <button
-                                                key={cat}
-                                                onClick={() => setFormData({...formData, categoria: cat})}
+                                                key={cat} // Logical reference
+                                                onClick={() => setFormData({...formData, categoria: cat})} // Logical reference
                                                 className={cn(
                                                     "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
-                                                    formData.categoria === cat 
+                                                    formData.categoria === cat // Logical reference
                                                         ? "bg-indigo-500 text-white border-indigo-500 shadow-lg shadow-indigo-500/20"
                                                         : "bg-black/5 text-slate-400 border-transparent hover:border-slate-300"
                                                 )}
@@ -172,12 +172,12 @@ export const RegisterExpense = () => {
                                     <div className="flex-1">
                                         <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.3em] mb-4 opacity-50">Pagado por</p>
                                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                            {integrantes.map(user => {
-                                                const isSelected = formData.comprador_id === user.id;
+                                            {members.map(user => {
+                                                const isSelected = formData.comprador_id === user.id; // Logical reference
                                                 return (
                                                     <button
-                                                        key={user.id}
-                                                        onClick={() => setFormData({...formData, comprador_id: user.id})}
+                                                        key={user.id} // Logical reference
+                                                        onClick={() => setFormData({...formData, comprador_id: user.id})} // Logical reference
                                                         className={cn(
                                                             "p-4 rounded-2xl border transition-all flex flex-col items-center gap-3 relative overflow-hidden group/payer",
                                                             isSelected 
@@ -253,18 +253,33 @@ export const RegisterExpense = () => {
                                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--primary)]" />
                                 Dividir entre
                             </h3>
-                                <div className="flex items-center gap-2 text-[var(--primary)] bg-[var(--primary)]/10 px-4 py-1.5 rounded-full border border-[var(--primary)]/20 shadow-sm">
-                                    <Users size={14} />
-                                    <span className="text-[10px] font-black uppercase tracking-tighter">
-                                        {formData.participantes_ids.length} Seleccionados
-                                    </span>
+                                <div className="flex items-center gap-3">
+                                    <button 
+                                        onClick={() => setFormData({...formData, participantes_ids: members.map(m => m.id)})}
+                                        className="text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors px-3 py-1 bg-black/5 rounded-lg border border-transparent hover:border-[var(--primary)]/20"
+                                    >
+                                        Todos
+                                    </button>
+                                    <button 
+                                        onClick={() => setFormData({...formData, participantes_ids: [formData.comprador_id]})}
+                                        className="text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors px-3 py-1 bg-black/5 rounded-lg border border-transparent hover:border-[var(--primary)]/20"
+                                    >
+                                        Solo Yo
+                                    </button>
+                                    <div className="w-px h-4 bg-slate-200 mx-1" />
+                                    <div className="flex items-center gap-2 text-[var(--primary)] bg-[var(--primary)]/10 px-4 py-1.5 rounded-full border border-[var(--primary)]/20 shadow-sm">
+                                        <Users size={14} />
+                                        <span className="text-[10px] font-black uppercase tracking-tighter">
+                                            {formData.participantes_ids.length} Seleccionados
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="grid gap-3 max-h-[60vh] overflow-y-auto pr-2 overflow-x-hidden no-scrollbar">
                             <AnimatePresence mode="popLayout">
-                                {integrantes.map((user, index) => {
-                                    const isSelected = formData.participantes_ids.includes(user.id);
+                                {members.map((user, index) => {
+                                    const isSelected = formData.participantes_ids.includes(user.id); // Logical reference
                                     const initial = user.nombre?.charAt(0).toUpperCase() || '?';
 
                                     return (
@@ -273,7 +288,7 @@ export const RegisterExpense = () => {
                                             initial={{ opacity: 0, x: -10 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: index * 0.05 }}
-                                            onClick={() => toggleParticipante(user.id)}
+                                            onClick={() => toggleParticipant(user.id)}
                                             className={cn(
                                                 "group flex items-center justify-between p-6 rounded-[2.5rem] border transition-all cursor-pointer active:scale-[0.98] relative overflow-hidden",
                                                 isSelected
@@ -300,7 +315,7 @@ export const RegisterExpense = () => {
                                                 </div>
                                                 
                                                 <div className="flex items-center gap-4">
-                                                    {isSelected && formData.precio && parseFloat(formData.precio) > 0 && (
+                                                    {isSelected && formData.precio && parseFloat(formData.precio) > 0 && ( // Logical reference
                                                         <motion.div 
                                                             initial={{ opacity: 0, scale: 0.8 }}
                                                             animate={{ opacity: 1, scale: 1 }}

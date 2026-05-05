@@ -1,59 +1,74 @@
 # dev.ps1
 # Senior DevOps Automation for Easy-Pay (Windows)
+# Este script prepara y lanza TODO el ecosistema de desarrollo.
 
-Write-Host "🚀 Iniciando Entorno Easy-Pay (Windows One-Click)..." -ForegroundColor Cyan
+Write-Host "--- Lanzando Entorno Easy-Pay ---" -ForegroundColor Cyan
 
-# 1. Limpieza de Puertos (Kill process using port)
-$ports = @(8000, 3000, 5173)
+# 1. Limpieza de Puertos (Evita el error 'Port in use')
+$ports = @(8000, 3000, 5173, 8081)
 foreach ($port in $ports) {
     $proc = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
     if ($proc) {
-        Write-Host "🧹 Limpiando puerto $port..." -ForegroundColor Yellow
+        Write-Host "Limpiando puerto $port..." -ForegroundColor Yellow
         $proc | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
     }
 }
 
-# 2. Detección de IP Local
-$ip = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -like '*Wi-Fi*' -or $_.InterfaceAlias -like '*Ethernet*' -or $_.IPAddress -like '10.*' } | Select-Object -First 1).IPAddress
-if (-not $ip) { $ip = "10.25.64.36" } # Fallback si no se detecta
-Write-Host "🌐 IP Detectada para Desarrollo: $ip" -ForegroundColor Green
+# 2. Deteccion de IP Local (Para que el movil pueda conectar con la API)
+$localIp = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { 
+    $_.InterfaceAlias -like '*Wi-Fi*' -or 
+    $_.InterfaceAlias -like '*Ethernet*' -or 
+    $_.IPAddress -like '172.*' -or 
+    $_.IPAddress -like '192.*' 
+} | Select-Object -First 1).IPAddress
 
-# 3. Actualización Automática de archivos .env
-Write-Host "📝 Sincronizando variables de entorno..." -ForegroundColor Blue
+if (-not $localIp) { $localIp = "127.0.0.1" }
+Write-Host "IP Detectada: $localIp" -ForegroundColor Green
 
+# 3. Actualizacion de variables .env
 function Update-EnvVar($path, $key, $value) {
     if (Test-Path $path) {
-        $content = Get-Content $path
-        if ($content -match "^$key=") {
-            $content -replace "^$key=.*", "$key=$value" | Set-Content $path
-        } else {
-            Add-Content $path "`n$key=$value"
+        $lines = Get-Content $path
+        $found = $false
+        $newLines = @()
+        foreach ($line in $lines) {
+            if ($line -match "^$key=") {
+                $newLines += "$key=$value"
+                $found = $true
+            } else { $newLines += $line }
         }
+        if (-not $found) { $newLines += "$key=$value" }
+        $newLines | Set-Content $path -Encoding UTF8
     }
 }
 
-# Web App Config
-Update-EnvVar "apps/web-app/.env" "VITE_API_URL" "http://$($ip):8000/api"
-Update-EnvVar "apps/web-app/.env" "VITE_API_BASE_URL" "http://$($ip):8000/api"
+$apiUrl = "http://${localIp}:8000/api"
+$apiBase = "http://${localIp}:8000"
 
-# Mobile App Config
-Update-EnvVar "apps/mobile-app/.env" "EXPO_PUBLIC_API_URL" "http://$($ip):8000"
+Update-EnvVar "apps/web-app/.env" "VITE_API_URL" "$apiUrl"
+Update-EnvVar "apps/web-app/.env" "VITE_API_BASE_URL" "$apiUrl"
+Update-EnvVar "apps/mobile-app/.env" "EXPO_PUBLIC_API_URL" "$apiBase"
 
-# 4. Lanzamiento de Servicios en nuevas terminales
-Write-Host "🚀 Lanzando Ecosistema..." -ForegroundColor Cyan
+# 4. Lanzamiento de Servicios
+Write-Host "`n1. Verificando Docker..." -ForegroundColor Gray
+docker ps > $null 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "ERROR: Docker Desktop no esta corriendo." -ForegroundColor Red
+    exit
+}
 
-# Backend (Docker) - Background mode
-Write-Host "📦 Levantando Docker (Backend & DB)..."
-docker-compose up -d
+Write-Host "2. Levantando Backend (Docker)..." -ForegroundColor Cyan
+docker-compose up -d unified-api
 
-# Abrir Web App en nueva pestaña
-Write-Host "🌐 Iniciando Web App (Puerto 5173)..."
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd apps/web-app; npm run dev -- --port 5173 --host"
+Write-Host "3. Iniciando Web App (Vite)..." -ForegroundColor Cyan
+# Usamos el script estandarizado del package.json
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "npm run dev:web"
 
-# Abrir Mobile App en nueva pestaña (Metro con limpieza)
-Write-Host "📱 Iniciando Metro Bundler (Expo)..."
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd apps/mobile-app; npx expo start -c --lan"
+Write-Host "4. Iniciando Mobile App (Metro)..." -ForegroundColor Cyan
+# Usamos el script con parche para Node 23/24
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "npm run dev:mobile"
 
-Write-Host "✅ ¡Éxito! El entorno está corriendo." -ForegroundColor Green
-Write-Host "🔗 Web: http://localhost:5173" -ForegroundColor White
-Write-Host "🔗 API: http://$($ip):8000/api/health" -ForegroundColor White
+Write-Host "`n--- TODO LISTO ---" -ForegroundColor Green
+Write-Host "Web: http://localhost:5173"
+Write-Host "API: http://${localIp}:8000/api/health"
+Write-Host "Metro: Escanea el QR en la nueva ventana de terminal."

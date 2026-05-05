@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
+import { ROUTES } from '../../infrastructure/routes';
 import { STORAGE_KEYS } from '../../infrastructure/localStorage/storage-keys';
 
 export const ProtectedRoute = () => {
@@ -13,7 +14,7 @@ export const ProtectedRoute = () => {
     }
 
     // 1. Definimos las rutas de "paso seguro" para el flujo de 2FA
-    const securityRoutes = ['/2fa-setup', '/2fa-verify'];
+    const securityRoutes = [ROUTES.TWO_FACTOR_SETUP, ROUTES.TWO_FACTOR_VERIFY];
 
     // 2. Si el usuario va a una de estas rutas y tenemos su ID temporal, lo dejamos pasar
     if (securityRoutes.includes(location.pathname) && tempUserId) {
@@ -22,7 +23,7 @@ export const ProtectedRoute = () => {
 
     // 3. Si no está autenticado (y tampoco hay token físico), lo mandamos al login (Auth)
     if (!isAuthenticated && !token) {
-        return <Navigate to="/auth" replace />;
+        return <Navigate to={ROUTES.AUTH} replace />;
     }
 
     // 4. Si está autenticado, puede ver el Dashboard y lo demás

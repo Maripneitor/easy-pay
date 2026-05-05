@@ -20,9 +20,12 @@ interface VirtualTicketCardProps {
     items: Item[];
     serviceFee: number;
     groupId?: string;
+    onEditItem?: (item: Item) => void;
+    canAdd?: boolean;
+    canEdit?: boolean;
 }
 
-export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({ items, serviceFee, groupId }) => {
+export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({ items, serviceFee, groupId, onEditItem, canAdd = true, canEdit = true }) => {
     const { theme, fontScale } = useTheme();
 
     return (
@@ -35,16 +38,18 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({ items, ser
             <View className="flex-row justify-between items-center mb-6">
                 <View>
                     <Text style={{ color: theme.text }} className="text-xl font-black">Detalle del Ticket</Text>
-                    <Text style={{ color: theme.textSecondary }} className="text-xs font-medium">Asigna y divide consumos</Text>
+                    <Text style={{ color: theme.textSecondary }} className="text-xs font-medium">{canAdd ? 'Asigna y divide consumos' : 'Consulta tus consumos registrados'}</Text>
                 </View>
-                <TouchableOpacity 
-                    onPress={() => router.push({ pathname: '/new-expense', params: { groupId } } as any)}
-                    style={{ backgroundColor: theme.primary }}
-                    className="flex-row items-center gap-2 px-4 py-2 rounded-xl shadow-lg shadow-blue-500/20"
-                >
-                    <Ionicons name="add-circle" size={18} color="black" />
-                    <Text className="text-black font-black text-xs uppercase">Añadir</Text>
-                </TouchableOpacity>
+                {canAdd && (
+                    <TouchableOpacity 
+                        onPress={() => router.push({ pathname: '/new-expense', params: { groupId } } as any)}
+                        style={{ backgroundColor: theme.primary }}
+                        className="flex-row items-center gap-2 px-4 py-2 rounded-xl shadow-lg shadow-blue-500/20"
+                    >
+                        <Ionicons name="add-circle" size={18} color="black" />
+                        <Text className="text-black font-black text-xs uppercase">Añadir</Text>
+                    </TouchableOpacity>
+                )}
             </View>
 
             {/* Virtual Ticket Container */}
@@ -76,7 +81,11 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({ items, ser
                     ) : (
                         <View className="gap-y-6">
                             {items.map((item) => (
-                                <View key={item.id}>
+                                <TouchableOpacity 
+                                    key={item.id}
+                                    onPress={() => canEdit && onEditItem?.(item)}
+                                    activeOpacity={canEdit ? 0.7 : 1}
+                                >
                                     <View className="flex-row justify-between items-start mb-2">
                                         <View className="flex-1 pr-4">
                                             <Text className="text-slate-900 font-black text-base uppercase leading-tight">{item.name}</Text>
@@ -93,7 +102,7 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({ items, ser
                                             </View>
                                         ))}
                                     </View>
-                                </View>
+                                </TouchableOpacity>
                             ))}
                         </View>
                     )}
@@ -136,7 +145,9 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({ items, ser
             {/* Hint */}
             <View className="mt-6 flex-row items-center justify-center gap-2 opacity-50">
                 <Ionicons name="information-circle" size={14} color={theme.textSecondary} />
-                <Text style={{ color: theme.textSecondary }} className="text-[10px] font-bold">Puedes editar cualquier item tocándolo en la lista.</Text>
+                <Text style={{ color: theme.textSecondary }} className="text-[10px] font-bold">
+                    {canEdit ? 'Puedes editar cualquier item tocándolo en la lista.' : 'Solo el líder del grupo puede gestionar los ítems.'}
+                </Text>
             </View>
         </MotiView>
     );

@@ -23,6 +23,10 @@ import { PageHeader } from '@ui/components/PageHeader';
 import { useAuthContext } from '../../context/AuthContext';
 import { useProfileStats } from './useProfileStats';
 import { useDashboard } from '../Dashboard/useDashboard';
+import { ROUTES } from '../../../infrastructure/routes';
+import { generateFinancialReport } from '../../../infrastructure/services/PdfService';
+import { toast } from 'sonner';
+import { Download } from 'lucide-react';
 import { PieChart as RePieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
@@ -34,17 +38,17 @@ export const ProfilePage = () => {
     const { stats, loading: statsLoading } = useProfileStats();
     const { allActiveGroups, settledGroups } = useDashboard();
 
-    // --- Cálculos Dinámicos ---
-    const totalGrupos = (allActiveGroups?.length || 0) + (settledGroups?.length || 0);
-    const loQueDebe = allActiveGroups?.reduce((acc, g) => {
-        const balance = Number(g.mi_balance || 0);
+    // --- Dynamic Calculations ---
+    const totalGroups = (allActiveGroups?.length || 0) + (settledGroups?.length || 0);
+    const amountIOwe = allActiveGroups?.reduce((acc, g) => {
+        const balance = Number(g.mi_balance || 0); // Logical reference
         return acc + (balance < 0 ? Math.abs(balance) : 0);
     }, 0) || 0;
-    const loQueLeDeben = allActiveGroups?.reduce((acc, g) => {
-        const balance = Number(g.mi_balance || 0);
+    const amountOwedToMe = allActiveGroups?.reduce((acc, g) => {
+        const balance = Number(g.mi_balance || 0); // Logical reference
         return acc + (balance > 0 ? balance : 0);
     }, 0) || 0;
-    const gruposConDeudasActivas = allActiveGroups?.filter(g => g.mi_balance !== 0).length || 0;
+    const activeDebtGroupsCount = allActiveGroups?.filter(g => g.mi_balance !== 0).length || 0; // Logical reference
 
     const { colorTheme, isDark, setTheme, toggleTheme, fontSize, setFontSize } = useTheme();
 
@@ -58,9 +62,9 @@ export const ProfilePage = () => {
     const avatarUrl = user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=3b82f6&color=fff&bold=true`;
 
     const handleThemeChange = (value: string) => {
-        if (value === 'light') {
+        if (value === 'light') { // Logical reference
             if (isDark) toggleTheme();
-            setTheme('default');
+            setTheme('default'); // Logical reference
         } else {
             if (!isDark) toggleTheme();
             setTheme(value as any);
@@ -75,7 +79,7 @@ export const ProfilePage = () => {
                     title="MI PERFIL"
                     subtitle="Gestiona tu cuenta"
                     showStats
-                    onStatsClick={() => navigate('/stats')}
+                    onStatsClick={() => navigate(ROUTES.STATS)}
                 />
             </div>
 
@@ -103,7 +107,7 @@ export const ProfilePage = () => {
                                 <p className="text-slate-400 dark:text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest">Miembro desde: Marzo 2026</p>
 
                                 <button
-                                    onClick={() => navigate('/profile/personal-data')}
+                                    onClick={() => navigate(ROUTES.PERSONAL_DATA)}
                                     className="mt-6 px-6 py-2 rounded-full border border-[var(--primary)] bg-transparent text-[var(--primary)] text-sm font-medium hover:bg-[var(--primary)]/10 transition-all flex items-center gap-2 shadow-sm duration-300"
                                 >
                                     <Edit2 size={16} />
@@ -135,7 +139,7 @@ export const ProfilePage = () => {
                                         <Users className="text-slate-400 dark:text-slate-500" size={20} />
                                     </div>
                                     <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">
-                                        {totalGrupos}
+                                        {totalGroups}
                                     </div>
                                 </div>
 
@@ -144,12 +148,12 @@ export const ProfilePage = () => {
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-[var(--text-secondary)] text-sm font-medium">Lo que debo</span>
                                         <div className="flex items-center gap-1 text-rose-500">
-                                            {gruposConDeudasActivas > 0 && <span className="text-[10px] font-bold bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">{gruposConDeudasActivas} activas</span>}
+                                            {activeDebtGroupsCount > 0 && <span className="text-[10px] font-bold bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">{activeDebtGroupsCount} activas</span>}
                                             <ArrowDownRight size={20} />
                                         </div>
                                     </div>
                                     <div className="text-2xl font-mono font-bold text-rose-500 dark:text-rose-400">
-                                        ${loQueDebe.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                        ${amountIOwe.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                                     </div>
                                 </div>
 
@@ -160,7 +164,7 @@ export const ProfilePage = () => {
                                         <ArrowUpRight className="text-emerald-500 dark:text-emerald-400" size={20} />
                                     </div>
                                     <div className="text-2xl font-mono font-bold text-emerald-500 dark:text-emerald-400">
-                                        ${loQueLeDeben.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                        ${amountOwedToMe.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                                     </div>
                                 </div>
                             </div>
@@ -259,7 +263,7 @@ export const ProfilePage = () => {
                                         <span className="text-sm font-medium text-[var(--text-primary)]">Tema</span>
                                     </div>
                                     <select
-                                        value={!isDark ? 'light' : colorTheme}
+                                        value={!isDark ? 'light' : colorTheme} // Logical reference
                                         onChange={(e) => handleThemeChange(e.target.value)}
                                         className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] text-[var(--text-primary)] text-sm rounded-lg p-2.5 outline-none cursor-pointer transition-all"
                                     >
@@ -279,11 +283,11 @@ export const ProfilePage = () => {
                                         <span className="text-sm font-medium text-[var(--text-primary)]">Tamaño de Texto</span>
                                     </div>
                                     <div className="flex p-1 bg-[var(--bg-body)] rounded-xl border border-[var(--border-color)]">
-                                        {['small', 'medium', 'large'].map((size) => (
+                                        {['small', 'medium', 'large'].map((size) => ( // Logical reference
                                             <button
-                                                key={size}
-                                                onClick={() => setFontSize(size as any)}
-                                                className={`flex-1 py-1 rounded-lg text-[10px] font-bold uppercase transition-all ${fontSize === size ? 'bg-[var(--primary)] text-white' : 'text-slate-500'
+                                                key={size} // Logical reference
+                                                onClick={() => setFontSize(size as any)} // Logical reference
+                                                className={`flex-1 py-1 rounded-lg text-[10px] font-bold uppercase transition-all ${fontSize === size ? 'bg-[var(--primary)] text-white' : 'text-slate-500' // Logical reference
                                                     }`}
                                             >
                                                 {size === 'small' ? 'Chico' : size === 'medium' ? 'Normal' : 'Grande'}
@@ -293,7 +297,7 @@ export const ProfilePage = () => {
                                 </div>
 
                                 {/* Historial */}
-                                <button onClick={() => navigate('/stats')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
+                                <button onClick={() => navigate(ROUTES.STATS)} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
                                     <div className="flex items-center gap-3">
                                         <BarChart3 className="text-[var(--text-secondary)]" size={20} />
                                         <span className="text-sm font-medium text-[var(--text-secondary)]">Gráficas y Análisis</span>
@@ -301,8 +305,29 @@ export const ProfilePage = () => {
                                     <ChevronRight className="text-slate-400" size={18} />
                                 </button>
 
+                                {/* Exportar Reporte PDF (New Location) */}
+                                <button 
+                                    onClick={() => {
+                                        if (stats) {
+                                            toast.promise(generateFinancialReport({ user, stats, transactions: stats.transactions }), {
+                                                loading: 'Generando Reporte Financiero PDF...',
+                                                success: 'Reporte Mensual exportado correctamente',
+                                                error: 'Error al generar el PDF'
+                                            });
+                                        }
+                                    }}
+                                    className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group border-y border-slate-100 dark:border-slate-700/50"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Download className="text-[var(--primary)]" size={20} />
+                                        <span className="text-sm font-bold text-[var(--text-primary)]">Exportar Reporte (PDF)</span>
+                                    </div>
+                                    <div className="bg-[var(--primary)]/10 px-2 py-0.5 rounded text-[10px] font-bold text-[var(--primary)]">PRO</div>
+                                </button>
+
+
                                 {/* Cambiar contraseña */}
-                                <button onClick={() => navigate('/recover-password')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
+                                <button onClick={() => navigate(ROUTES.RECOVER_PASSWORD)} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
                                     <div className="flex items-center gap-3">
                                         <Lock className="text-[var(--text-secondary)]" size={20} />
                                         <span className="text-sm font-medium text-[var(--text-secondary)]">Cambiar contraseña</span>
@@ -311,7 +336,7 @@ export const ProfilePage = () => {
                                 </button>
 
                                 {/* CORRECCIÓN: Seguridad 2FA Dinámica */}
-                                <button onClick={() => navigate('/2fa-setup')} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
+                                <button onClick={() => navigate(ROUTES.TWO_FACTOR_SETUP)} className="w-full p-4 flex items-center justify-between hover:bg-[var(--hover-bg)] transition-colors group">
                                     <div className="flex items-center gap-3">
                                         <Smartphone className="text-[var(--text-secondary)]" size={20} />
                                         <span className="text-sm font-medium text-[var(--text-secondary)]">Seguridad 2FA</span>

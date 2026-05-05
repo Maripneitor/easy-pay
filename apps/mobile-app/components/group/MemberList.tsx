@@ -16,7 +16,8 @@ interface Member {
     paidText: string;
     pendingText: string;
     paidTextClass?: string;
-    paidBgClass?: string;
+    trustScore?: number;
+    fastPaymentsCount?: number;
 }
 
 interface MemberListProps {
@@ -55,7 +56,16 @@ export const MemberList: React.FC<MemberListProps> = ({ members }) => {
                         )}
                         <View className="flex-1">
                             <View className="flex-row justify-between items-start">
-                                <Text style={{ color: theme.text, fontSize: 16 * fontScale, fontFamily: 'Manrope' }} className="font-bold">{m.name}</Text>
+                                <View>
+                                    <View className="flex-row items-center gap-2">
+                                        <Text style={{ color: theme.text, fontSize: 16 * fontScale, fontFamily: 'Manrope' }} className="font-bold">{m.name}</Text>
+                                        {(m.trustScore && m.trustScore >= 5) && (
+                                            <View style={{ backgroundColor: '#10B98120' }} className="px-1.5 py-0.5 rounded-full flex-row items-center gap-1">
+                                                <Text style={{ color: '#10B981', fontSize: 8, fontWeight: 'bold' }}>★</Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                </View>
                                 <View className={`px-2 py-0.5 rounded-md ${m.isMe ? 'bg-[#10B981]/10' : (m.paidBgClass ? 'bg-amber-500/10' : 'bg-[#10B981]/10')}`}>
                                     <Text style={{ fontSize: 11 * fontScale, fontFamily: 'Inter' }} className={`font-medium ${m.isMe ? 'text-[#10B981]' : (m.paidTextClass || 'text-[#10B981]')}`}>
                                         {m.paidText}

@@ -3,8 +3,9 @@ import { Plus, Search, Users, Filter, LayoutGrid, List as ListIcon, Trash2, X } 
 import { PageHeader } from '@ui/components/PageHeader';
 import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '../../../infrastructure/utils';
+import { cn } from '@infrastructure/utils';
 import { useGroups } from './useGroups';
+import { ROUTES } from '@infrastructure/routes';
 import { GroupCard } from '../Dashboard/components/GroupCard';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { CreateGroupModal } from './components/CreateGroupModal';
@@ -86,29 +87,10 @@ export const GroupsPage: React.FC = () => {
                 title="MIS GRUPOS"
                 subtitle="Gestiona tus cuentas compartidas"
                 onMenuClick={toggleSidebar}
-                rightSlot={
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={toggleSelectionMode}
-                            className={cn(
-                                "flex items-center gap-2 px-6 py-3 border rounded-2xl text-xs font-black uppercase tracking-widest transition-all",
-                                isSelectionMode 
-                                    ? "bg-slate-800 text-white border-slate-800 shadow-xl" 
-                                    : "bg-white border-[var(--border-color)] text-slate-600 hover:border-slate-400"
-                            )}
-                        >
-                            {isSelectionMode ? <X size={18} /> : <Trash2 size={18} />}
-                            {isSelectionMode ? "Cancelar" : "Edición / Eliminar"}
-                        </button>
-                        <button
-                            onClick={() => setIsCreateModalOpen(true)}
-                            className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-[var(--primary)]/20 hover:scale-105 active:scale-95 transition-all"
-                        >
-                            <Plus size={18} /> Nuevo Grupo
-                        </button>
-                    </div>
-                }
             />
+
+
+
 
             <main className="max-w-[1600px] mx-auto px-4 py-8 md:px-8 space-y-8">
                 {/* Tabs */}
@@ -165,31 +147,61 @@ export const GroupsPage: React.FC = () => {
                 </AnimatePresence>
 
                 {/* Search and Filters */}
-                <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-[var(--bg-card)] border border-[var(--border-color)] p-4 rounded-3xl shadow-sm">
-                    <div className="relative w-full md:w-96">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Buscar en la lista..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3 bg-[var(--bg-body)] border border-[var(--border-color)] rounded-2xl focus:outline-none focus:border-[var(--primary)] transition-all font-bold text-sm"
-                        />
+                <div className="flex flex-col lg:flex-row gap-6 justify-between items-center bg-[var(--bg-card)] border border-[var(--border-color)] p-6 rounded-[2.5rem] shadow-sm">
+                    <div className="flex flex-col md:flex-row items-center gap-4 w-full lg:w-auto">
+                        <div className="relative w-full md:w-80">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Buscar en la lista..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-12 pr-4 py-3 bg-[var(--bg-body)] border border-[var(--border-color)] rounded-2xl focus:outline-none focus:border-[var(--primary)] transition-all font-bold text-sm"
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-2 w-full md:w-auto">
+                            <button
+                                onClick={() => setIsCreateModalOpen(true)}
+                                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-[var(--primary)] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[var(--primary)]/20 hover:scale-105 active:scale-95 transition-all"
+                            >
+                                <Plus size={16} /> Nuevo
+                            </button>
+                            <button
+                                onClick={() => navigate(ROUTES.JOIN_GROUP)}
+                                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 border border-[var(--primary)] text-[var(--primary)] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[var(--primary)]/5 transition-all"
+                            >
+                                <Users size={16} /> Entrar
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-4 w-full lg:w-auto justify-end">
+                        <button
+                            onClick={toggleSelectionMode}
+                            className={cn(
+                                "flex items-center gap-2 px-6 py-3 border rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                isSelectionMode 
+                                    ? "bg-slate-800 text-white border-slate-800 shadow-xl" 
+                                    : "bg-white border-[var(--border-color)] text-slate-600 hover:border-slate-400"
+                            )}
+                        >
+                            {isSelectionMode ? <X size={16} /> : <Trash2 size={16} />}
+                            {isSelectionMode ? "Cerrar" : "Editar"}
+                        </button>
+
                         <div className="flex bg-[var(--bg-body)] p-1 rounded-xl border border-[var(--border-color)]">
                             <button 
                                 onClick={() => setViewMode('grid')}
                                 className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-[var(--primary)] text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
                             >
-                                <LayoutGrid size={18} />
+                                <LayoutGrid size={16} />
                             </button>
                             <button 
                                 onClick={() => setViewMode('list')}
                                 className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-[var(--primary)] text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
                             >
-                                <ListIcon size={18} />
+                                <ListIcon size={16} />
                             </button>
                         </div>
                     </div>
@@ -228,7 +240,7 @@ export const GroupsPage: React.FC = () => {
                                     >
                                         <GroupCard
                                             group={mappedGroup}
-                                            onClick={() => activeTab === 'activos' && navigate(`/group/${group.id}`)}
+                                            onClick={() => activeTab === 'activos' && navigate(ROUTES.GROUP_DETAIL(group.id))}
                                             onDelete={activeTab === 'activos' && mappedGroup.isAdmin ? (e) => handleDelete(e, group.id, mappedGroup.name) : undefined}
                                             onEdit={activeTab === 'activos' && mappedGroup.isAdmin ? (e) => handleEdit(e, group) : undefined}
                                             appearance={appearance}

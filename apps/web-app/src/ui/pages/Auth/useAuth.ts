@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { userRepository } from '../../../infrastructure/api/repositories';
 import { STORAGE_KEYS } from '../../../infrastructure/localStorage/storage-keys';
 import { useAuthContext } from '../../context/AuthContext';
+import { ROUTES } from '../../../infrastructure/routes';
 
 export const useAuth = () => {
     const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -23,7 +24,7 @@ export const useAuth = () => {
                 const actualId = data.user_id || data.id || data._id;
                 localStorage.setItem('temp_userId', actualId);
                 localStorage.setItem('userEmail', userData.email);
-                navigate('/2fa-verify');
+                navigate(ROUTES.TWO_FACTOR_VERIFY);
             }
         } catch (err: any) {
             setError(err.message || 'Error en el registro. Intenta con otro email.');
@@ -41,14 +42,14 @@ export const useAuth = () => {
             const data = await loginWithEmail(identifier, password);
 
             if (data.status === 'success') {
-                navigate('/dashboard');
+                navigate(ROUTES.DASHBOARD);
                 return;
             }
 
             if (data.status === '2fa_required' || data.status === 'not_verified') {
                 localStorage.setItem('temp_userId', data.user_id || '');
                 localStorage.setItem('userEmail', data.user?.email || identifier || "");
-                navigate(data.status === 'not_verified' ? '/2fa-setup' : '/2fa-verify');
+                navigate(data.status === 'not_verified' ? ROUTES.TWO_FACTOR_SETUP : ROUTES.TWO_FACTOR_VERIFY);
                 return;
             }
 

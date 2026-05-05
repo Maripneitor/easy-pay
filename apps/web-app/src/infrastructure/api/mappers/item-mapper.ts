@@ -5,10 +5,10 @@ import { Item } from '@easy-pay/domain';
  */
 export interface ApiItem {
     id: string;
-    description: string;
-    amount: number;
-    assigned_to: string[];  // Array of member ids
-    added_by: string;       // Member id
+    nombre: string;
+    precio: number;
+    participantes_ids: string[];  // Array of member ids
+    comprador_id: string;       // Member id
 }
 
 /**
@@ -16,10 +16,10 @@ export interface ApiItem {
  */
 export const toItem = (apiItem: ApiItem): Item => ({
     id:          apiItem.id,
-    description: apiItem.description,
-    amount:      apiItem.amount,
-    assignedTo:  apiItem.assigned_to ?? [],
-    addedBy:     apiItem.added_by,
+    description: apiItem.nombre,
+    amount:      apiItem.precio,
+    assignedTo:  apiItem.participantes_ids ?? [],
+    addedBy:     apiItem.comprador_id,
 });
 
 export const toItemList = (apiItems: ApiItem[]): Item[] =>
@@ -28,8 +28,8 @@ export const toItemList = (apiItems: ApiItem[]): Item[] =>
 // ─── Reverse mapper (Domain → API) for write operations ──────────────────────
 
 export const toApiItem = (item: Omit<Item, 'id'>): Omit<ApiItem, 'id'> => ({
-    description: item.description,
-    amount:      item.amount,
-    assigned_to: item.assignedTo,
-    added_by:    item.addedBy,
+    nombre:            item.description,
+    precio:            item.amount,
+    participantes_ids: item.assignedTo,
+    comprador_id:      item.addedBy,
 });

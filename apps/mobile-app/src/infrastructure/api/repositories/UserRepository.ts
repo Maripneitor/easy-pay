@@ -18,6 +18,13 @@ class UserRepository {
         return response.data;
     }
 
+    async toggleTwoFactor(enabled: boolean): Promise<any> {
+        const response = await httpClient.post(`${NETWORK_CONFIG.ENDPOINTS.USER}/2fa/toggle`, {
+            enabled
+        });
+        return response.data;
+    }
+
     async changePassword(userId: string, data: any): Promise<any> {
         const response = await httpClient.post(`${NETWORK_CONFIG.ENDPOINTS.USER}/change-password/${userId}`, data);
         return response.data;
@@ -29,9 +36,11 @@ class UserRepository {
     }
 
     async verifyTwoFactor(userId: string, code: string): Promise<any> {
-        const response = await httpClient.post(`${NETWORK_CONFIG.ENDPOINTS.USER}/2fa/verify/${userId}`, {
-            code
-        });
+        // Soporte para ambos formatos (un argumento o dos) para retrocompatibilidad
+        const payload = typeof code === 'undefined' ? { code: userId } : { code };
+        const id = typeof code === 'undefined' ? 'me' : userId;
+        
+        const response = await httpClient.post(`${NETWORK_CONFIG.ENDPOINTS.USER}/2fa/verify/${id}`, payload);
         return response.data;
     }
 
@@ -39,6 +48,11 @@ class UserRepository {
         const response = await httpClient.post(`${NETWORK_CONFIG.ENDPOINTS.USER}/request-password-reset`, {
             email
         });
+        return response.data;
+    }
+
+    async getUserProfile(userId: string): Promise<any> {
+        const response = await httpClient.get(`${NETWORK_CONFIG.ENDPOINTS.USER}/profile/${userId}`);
         return response.data;
     }
 }

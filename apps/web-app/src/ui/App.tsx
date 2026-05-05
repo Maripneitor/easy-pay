@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
+import { PaymentProvider } from './context/PaymentContext';
+import { GroupProvider } from './context/GroupContext';
 import { AnimatedRoutes } from './routes/AnimatedRoutes';
 import './global.css';
 
@@ -22,12 +24,14 @@ export const App = () => {
     return (
         <QueryClientProvider client={queryClient}>
             <AuthProvider>
-                <ThemeProvider>
-                    <BrowserRouter>
-                        <AnimatedRoutes />
-                    </BrowserRouter>
-                    <Toaster 
-                        position="top-center" 
+                <PaymentProvider>
+                    <GroupProvider>
+                        <ThemeProvider>
+                            <BrowserRouter>
+                                <AnimatedRoutes />
+                            </BrowserRouter>
+                        <Toaster 
+                        position="top-right" 
                         richColors 
                         closeButton 
                         expand={false}
@@ -48,6 +52,8 @@ export const App = () => {
                         }}
                     />
                 </ThemeProvider>
+                    </GroupProvider>
+                </PaymentProvider>
             </AuthProvider>
         </QueryClientProvider>
     );

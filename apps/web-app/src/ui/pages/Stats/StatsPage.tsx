@@ -19,8 +19,15 @@ import {
     Plane,
     CheckCircle,
     RotateCw,
-    AlertCircle
+    AlertCircle,
+    Download,
+    FileText,
+    CreditCard,
+    Clock,
+    Film
 } from 'lucide-react';
+import { generateFinancialReport } from '../../../infrastructure/services/PdfService';
+import { useAuthContext } from '../../context/AuthContext';
 import { 
     BarChart,
     Bar,
@@ -188,10 +195,14 @@ const ExpenseLineChart = ({ data }: { data: any[] }) => {
 
 export const StatsPage = () => {
     const navigate = useNavigate();
+    const { user } = useAuthContext();
     const { stats, loading, refresh } = useProfileStats();
-
+    
+    // Transactions from hook
+    const transactions = stats?.transactions || [];
+    
     if (loading) return <Loader />;
-
+    
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: { 
@@ -237,9 +248,14 @@ export const StatsPage = () => {
                     animate="visible"
                     className="space-y-8 md:space-y-12"
                 >
+
+
                     {/* --- Summary Cards (KPIs) --- */}
                     <section className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                        <motion.div variants={itemVariants} className="p-6 md:p-8 bg-[var(--bg-card)] rounded-[2rem] md:rounded-[2.5rem] border border-[var(--border-color)] shadow-sm group hover:border-[var(--primary)]/30 transition-all backdrop-blur-xl">
+                        <motion.div variants={itemVariants} className="p-6 md:p-8 bg-[var(--bg-card)] rounded-[2rem] md:rounded-[2.5rem] border border-[var(--border-color)] shadow-sm group hover:border-[var(--primary)]/30 transition-all backdrop-blur-xl relative overflow-hidden">
+                             <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                                <Wallet size={64} />
+                            </div>
                             <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Total Transaccionado</span>
                             <h2 className="text-3xl md:text-4xl font-black mt-2 tracking-tighter text-[var(--text-primary)]">
                                 ${Number(stats?.total_spent || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
@@ -249,7 +265,10 @@ export const StatsPage = () => {
                             </div>
                         </motion.div>
 
-                        <motion.div variants={itemVariants} className="p-6 md:p-8 bg-[var(--bg-card)] rounded-[2rem] md:rounded-[2.5rem] border border-[var(--border-color)] shadow-sm group hover:border-emerald-500/30 transition-all backdrop-blur-xl">
+                        <motion.div variants={itemVariants} className="p-6 md:p-8 bg-[var(--bg-card)] rounded-[2rem] md:rounded-[2.5rem] border border-[var(--border-color)] shadow-sm group hover:border-emerald-500/30 transition-all backdrop-blur-xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                                <ArrowUpRight size={64} />
+                            </div>
                             <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">A favor (Por cobrar)</span>
                             <h2 className="text-3xl md:text-4xl font-black mt-2 tracking-tighter text-emerald-500">
                                 ${Number(stats?.owed_to_user || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
@@ -259,7 +278,10 @@ export const StatsPage = () => {
                             </p>
                         </motion.div>
 
-                        <motion.div variants={itemVariants} className="p-6 md:p-8 bg-[var(--bg-card)] rounded-[2rem] md:rounded-[2.5rem] border border-[var(--border-color)] shadow-sm group hover:border-rose-500/30 transition-all backdrop-blur-xl">
+                        <motion.div variants={itemVariants} className="p-6 md:p-8 bg-[var(--bg-card)] rounded-[2rem] md:rounded-[2.5rem] border border-[var(--border-color)] shadow-sm group hover:border-rose-500/30 transition-all backdrop-blur-xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                                <ArrowDownLeft size={64} />
+                            </div>
                             <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Deudas (Por pagar)</span>
                             <h2 className="text-3xl md:text-4xl font-black mt-2 tracking-tighter text-rose-500">
                                 ${Number(stats?.user_owes || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
@@ -347,8 +369,8 @@ export const StatsPage = () => {
                         </div>
                     </motion.section>
 
-                    {/* --- Insights --- */}
-                    <motion.section variants={itemVariants} className="p-8 md:p-12 bg-gradient-to-br from-[var(--primary)] to-blue-700 rounded-[2rem] md:rounded-[3rem] text-white relative overflow-hidden shadow-2xl">
+                    {/* --- Análisis General (Insights) --- */}
+                    <motion.section variants={itemVariants} className="p-8 md:p-12 bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#1e40af] rounded-[2rem] md:rounded-[3rem] text-white relative overflow-hidden shadow-2xl border border-white/10">
                         <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
                             <Activity size={180} strokeWidth={1} />
                         </div>
@@ -356,22 +378,43 @@ export const StatsPage = () => {
                             <div className="flex-1 space-y-6 w-full">
                                 <div className="flex items-center gap-3">
                                     <Calendar size={20} className="text-blue-200" />
-                                    <h3 className="text-lg md:text-xl font-black uppercase tracking-tighter">Insights Globales</h3>
+                                    <h3 className="text-lg md:text-xl font-black uppercase tracking-tighter">Análisis General</h3>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 md:p-6 border border-white/10 flex items-center gap-4">
-                                        <ShoppingBag size={24} className="text-blue-200 shrink-0" />
-                                        <p className="text-sm font-medium">Categoría principal: <strong>{categories[0]?.category || 'N/A'}</strong></p>
+                                    <div className="bg-white/10 backdrop-blur-md rounded-[1.25rem] p-5 md:p-6 border border-white/10 flex items-center gap-4 group hover:bg-white/20 transition-all">
+                                        <div className="p-3 bg-white/10 rounded-xl group-hover:scale-110 transition-transform">
+                                            <ShoppingBag size={24} className="text-blue-100 shrink-0" />
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-100/70 mb-1">Categoría Mayoritaria</p>
+                                            <p className="text-sm font-black tracking-tight text-white">
+                                                {categories.length > 0 ? (
+                                                    <span className="uppercase">{categories[0]?.category}</span>
+                                                ) : (
+                                                    <span className="opacity-50 italic">SIN DATOS</span>
+                                                )}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 md:p-6 border border-white/10 flex items-center gap-4">
-                                        <Activity size={24} className="text-blue-200 shrink-0" />
-                                        <p className="text-sm font-medium">Balance neto: <strong>${(Number(stats?.owed_to_user || 0) - Number(stats?.user_owes || 0)).toLocaleString('es-MX')}</strong></p>
+                                    <div className="bg-white/10 backdrop-blur-md rounded-[1.25rem] p-5 md:p-6 border border-white/10 flex items-center gap-4 group hover:bg-white/20 transition-all">
+                                        <div className="p-3 bg-white/10 rounded-xl group-hover:scale-110 transition-transform">
+                                            <TrendingUp size={24} className="text-blue-100 shrink-0" />
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-100/70 mb-1">Balance de Flujo</p>
+                                            <p className="text-sm font-black tracking-tight text-white">
+                                                ${Math.abs(Number(stats?.owed_to_user || 0) - Number(stats?.user_owes || 0)).toLocaleString('es-MX')}
+                                                <span className="text-[10px] ml-2 opacity-70">
+                                                    {(Number(stats?.owed_to_user || 0) - Number(stats?.user_owes || 0)) >= 0 ? 'A FAVOR' : 'EN DEUDA'}
+                                                </span>
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div className="w-full lg:w-auto flex flex-col items-center gap-2 p-8 md:p-10 bg-black/10 rounded-[2rem] md:rounded-[2.5rem] border border-white/5 backdrop-blur-md">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-blue-200">Total Transaccionado</span>
-                                <h4 className="text-4xl md:text-5xl font-black tracking-tighter">
+                                <h4 className="text-4xl md:text-5xl font-black tracking-tighter text-white">
                                     ${Number(stats?.total_spent || 0).toLocaleString('es-MX')}
                                 </h4>
                                 <div className="flex items-center gap-2 mt-2 px-3 py-1 bg-emerald-500/20 rounded-full border border-emerald-500/20">
@@ -379,6 +422,80 @@ export const StatsPage = () => {
                                     <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-200">Actualizado</span>
                                 </div>
                             </div>
+                        </div>
+                    </motion.section>
+
+                    {/* --- Payment History (Migrated from MyPayments) --- */}
+                    <motion.section variants={itemVariants} className="space-y-6">
+                        <div className="flex justify-between items-center mb-6 px-2">
+                            <h2 className="text-sm font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] flex items-center gap-3">
+                                <Clock size={18} className="text-[var(--primary)]" />
+                                Historial de Pagos
+                            </h2>
+                            <button className="text-[10px] font-black text-[var(--primary)] hover:underline tracking-widest uppercase transition-colors">Ver todos</button>
+                        </div>
+                        <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[3rem] overflow-hidden shadow-xl backdrop-blur-xl">
+                            {transactions.length > 0 ? (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="border-b border-[var(--border-color)] text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] bg-black/5">
+                                                <th className="px-10 py-6">Transacción</th>
+                                                <th className="px-6 py-5">Fecha</th>
+                                                <th className="px-6 py-5">Estado</th>
+                                                <th className="px-8 py-5 text-right">Monto</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-[var(--border-color)] text-sm">
+                                            {transactions.map((tx) => (
+                                                <tr 
+                                                    key={tx.id} 
+                                                    className="group hover:bg-[var(--hover-bg)] transition-all cursor-pointer"
+                                                >
+                                                    <td className="px-8 py-5">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-12 h-12 rounded-2xl bg-[var(--bg-body)] flex items-center justify-center border border-[var(--border-color)] group-hover:border-[var(--primary)]/30 transition-all shadow-sm">
+                                                                {tx.icon === 'shopping-bag' ? (
+                                                                    <ShoppingBag className="text-[var(--primary)]" size={20} />
+                                                                ) : tx.icon === 'car' ? (
+                                                                    <Car className="text-[var(--primary)]" size={20} />
+                                                                ) : tx.icon === 'film' ? (
+                                                                    <Film size={20} className="text-[var(--primary)]" />
+                                                                ) : (
+                                                                    <CreditCard className="text-[var(--primary)]" size={20} />
+                                                                )}
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-black text-[var(--text-primary)] uppercase tracking-tight">{tx.description || tx.group_name}</p>
+                                                                <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest opacity-60">
+                                                                    {tx.category || (tx.is_incoming ? 'Ingreso' : 'Gasto')} • {tx.group_name}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-5 text-xs font-bold text-[var(--text-secondary)] uppercase">{tx.date}</td>
+                                                    <td className="px-6 py-5">
+                                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${tx.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
+                                                            <span className={`w-1.5 h-1.5 rounded-full ${tx.status === 'completed' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500 animate-pulse'}`}></span>
+                                                            {tx.status === 'completed' ? 'Aprobado' : 'Pendiente'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-8 py-5 text-right font-black text-[var(--text-primary)] group-hover:text-[var(--primary)] transition-colors font-mono text-lg">
+                                                        {tx.amount < 0 ? '-' : ''}${Math.abs(tx.amount).toFixed(2)}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <div className="py-20 text-center flex flex-col items-center justify-center opacity-40">
+                                    <div className="w-16 h-16 rounded-full bg-black/5 flex items-center justify-center mb-4">
+                                        <ShoppingBag size={32} />
+                                    </div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em]">No hay transacciones recientes</p>
+                                </div>
+                            )}
                         </div>
                     </motion.section>
                 </motion.div>

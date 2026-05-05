@@ -11,7 +11,9 @@ class Item(BaseModel):
     cantidad: int = 1
     comprador_id: str  
     participantes_ids: List[str]  
-    categoria: Optional[str] = "Otros"
+    categoria: str
+    impuesto_porcentaje: Optional[float] = 0.0
+    propina_porcentaje: Optional[float] = 0.0
     fecha_registro: datetime = Field(default_factory=datetime.utcnow)
 
 class ItemCreate(BaseModel):
@@ -21,7 +23,9 @@ class ItemCreate(BaseModel):
     cantidad: int = 1
     comprador_id: str
     participantes_ids: List[str]
-    categoria: Optional[str] = "Otros"
+    categoria: str
+    impuesto_porcentaje: Optional[float] = 0.0
+    propina_porcentaje: Optional[float] = 0.0
 
 class ItemUpdate(BaseModel):
     nombre: Optional[str] = None
@@ -29,3 +33,6 @@ class ItemUpdate(BaseModel):
     cantidad: Optional[int] = None
     comprador_id: Optional[str] = None
     participantes_ids: Optional[List[str]] = None
+    categoria: Optional[str] = None
+    impuesto_porcentaje: Optional[float] = None
+    propina_porcentaje: Optional[float] = None

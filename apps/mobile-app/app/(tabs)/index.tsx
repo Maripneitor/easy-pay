@@ -108,7 +108,7 @@ export default function DashboardScreen() {
                         style={{ fontSize: 20 * fontScale, color: theme.text }} 
                         className="font-black tracking-tighter"
                     >
-                        Hola, {user?.nombre?.split(' ')[0] || 'Usuario'}
+                        Hola, {user?.nombre ? user.nombre.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ').split(' ')[0] : 'Usuario'}
                     </Text>
                     <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-[3px]">Easy-Pay Dashboard</Text>
                 </View>

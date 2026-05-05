@@ -13,7 +13,7 @@ import {
     Loader2,
     FileUp
 } from 'lucide-react';
-import { cn } from '../../../infrastructure/utils';
+import { cn } from '@infrastructure/utils';
 import { StatusBadge } from '../../components/StatusBadge';
 import { PageHeader } from '@ui/components/PageHeader';
 import { useOCRScanner } from './useOCRScanner';

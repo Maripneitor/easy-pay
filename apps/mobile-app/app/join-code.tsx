@@ -4,8 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-const MotiView = View as any;
-const AnimatePresence = ({ children }: any) => children;;
+import { MotiView, AnimatePresence } from 'moti';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { useGrupo } from '../context/GrupoContext';
 
@@ -18,8 +17,8 @@ export default function JoinCodeScreen() {
     const [loading, setLoading] = useState(false);
 
     const handleJoin = async () => {
-        if (code.length < 4) {
-            setError('Ingresa un código de 4 a 6 dígitos');
+        if (code.length !== 8) {
+            setError('Ingresa el código de 8 dígitos');
             return;
         }
         setLoading(true);
@@ -27,7 +26,7 @@ export default function JoinCodeScreen() {
         try {
             const success = await joinGrupo(code);
             if (success) {
-                router.replace('/new-group');
+                router.replace('/(tabs)/groups');
             } else {
                 setError('Código inválido o grupo cerrado');
             }
@@ -65,20 +64,21 @@ export default function JoinCodeScreen() {
                 {/* Typography Context */}
                 <View className="text-center mb-10 items-center">
                     <Text className="font-bold text-3xl text-[#191C1E] mb-3">Ingresa el código</Text>
-                    <Text className="text-sm text-[#404752] text-center max-w-[280px] leading-relaxed">
-                        Pídele al líder del grupo el código numérico de 4 a 6 dígitos para unirte a la cuenta compartida.
+                    <Text className="text-sm text-[#404752] text-center max-w-[300px] leading-relaxed">
+                        Pídele al líder el código de 8 caracteres alfanuméricos para unirte al grupo.
                     </Text>
                 </View>
 
                 {/* OTP Input Area */}
                 <View className="w-full max-w-md items-center">
-                    <View className="flex-row space-x-2 mb-4">
-                        {[0, 1, 2, 3, 4, 5].map((idx) => (
+                    <View className="flex-row flex-wrap justify-center gap-2 mb-4">
+                        {[0, 1, 2, 3, 4, 5, 6, 7].map((idx) => (
                             <View 
                                 key={idx}
-                                className={`w-12 h-14 items-center justify-center bg-white border rounded-xl shadow-sm ${code.length === idx ? 'border-[#2196F3] border-2 bg-[#F7F9FB]' : 'border-[#bfc7d4]/30'}`}
+                                style={{ width: 40, height: 50 }}
+                                className={`items-center justify-center bg-white border rounded-xl shadow-sm ${code.length === idx ? 'border-[#2196F3] border-2 bg-[#F7F9FB]' : 'border-[#bfc7d4]/30'}`}
                             >
-                                <Text className="text-2xl font-bold text-[#191C1E]">
+                                <Text className="text-xl font-bold text-[#191C1E]">
                                     {code[idx] || ''}
                                 </Text>
                             </View>
@@ -87,9 +87,9 @@ export default function JoinCodeScreen() {
                     
                     <TextInput 
                         value={code}
-                        onChangeText={(val) => { setCode(val.replace(/[^0-9]/g, '')); setError(''); }}
-                        keyboardType="numeric"
-                        maxLength={6}
+                        onChangeText={(val) => { setCode(val.toUpperCase().replace(/[^A-Z0-9]/g, '')); setError(''); }}
+                        autoCapitalize="characters"
+                        maxLength={8}
                         autoFocus
                         style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%' }}
                     />
@@ -107,13 +107,13 @@ export default function JoinCodeScreen() {
             <View className="p-6 bg-white/80 border-t border-[#bfc7d4]/15">
                 <TouchableOpacity 
                     onPress={handleJoin}
-                    disabled={loading || code.length < 4}
-                    className={`w-full py-4 rounded-xl shadow-md flex-row justify-center items-center active:scale-[0.95] ${code.length >= 4 ? 'bg-[#0061a4]' : 'bg-[#bfc7d4]/30'}`}
+                    disabled={loading || code.length !== 8}
+                    className={`w-full py-4 rounded-xl shadow-md flex-row justify-center items-center active:scale-[0.95] ${code.length === 8 ? 'bg-[#0061a4]' : 'bg-[#bfc7d4]/30'}`}
                 >
                     {loading ? (
                         <ActivityIndicator color="white" />
                     ) : (
-                        <Text className={`font-bold text-lg ${code.length >= 4 ? 'text-white' : 'text-[#707883]'}`}>
+                        <Text className={`font-bold text-lg ${code.length === 8 ? 'text-white' : 'text-[#707883]'}`}>
                             Validar y Unirse
                         </Text>
                     )}

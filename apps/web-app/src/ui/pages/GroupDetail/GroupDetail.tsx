@@ -4,7 +4,10 @@ import {
     CreditCard, Pencil, Trash2, Users, Download, 
     PieChart, Activity, Info, Scan, Utensils, Car, Gamepad2, ShoppingBag, Briefcase,
     X,
-    Check
+    Check,
+    CheckCircle,
+    User,
+    DollarSign
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +15,7 @@ import { cn } from '../../../infrastructure/utils';
 import { useGroupDetail } from './useGroupDetail';
 import { PageHeader } from '@ui/components/PageHeader';
 import { useOutletContext, useParams, useNavigate } from 'react-router-dom';
+import { ROUTES } from '../../../infrastructure/routes';
 import { toast } from 'sonner';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
@@ -24,15 +28,38 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { AddMemberModal } from './components/AddMemberModal';
 import { useMyPayments } from '../MyPayments/useMyPayments';
 import { AddCardModal } from '../MyPayments/components/AddCardModal';
+import { PaymentCard } from '../../components/Dashboard/PaymentCard';
 import { groupRepository } from '../../../infrastructure/api/repositories';
 
 import { TwoFactorModal } from '../../components/Security/TwoFactorModal';
 import { EditGroupModal } from '../Groups/components/EditGroupModal';
 
+const I18N_TEXTS = {
+    TABS: {
+        ACTIVITIES: 'Actividad',
+        BALANCES: 'Saldos',
+        MEMBERS: 'Miembros',
+        PAYMENTS: 'Pagos'
+    },
+    BALANCES_TITLE: 'Balance de Cuentas',
+    BALANCES_DESC: 'Cómo se dividen los gastos actualmente',
+    SETTLE_GROUP: 'Liquidar Grupo',
+    STATUS: {
+        FAVOR: 'Saldo a favor',
+        DEBT: 'Deuda pendiente'
+    },
+    PAY_BUTTON: 'Pagar',
+    MEMBERS_TITLE: 'Miembros del Grupo',
+    MEMBERS_DESC_SUFFIX: 'personas conectadas',
+    EMPTY_CARDS_TITLE: 'No tienes tarjetas guardadas',
+    EMPTY_CARDS_DESC: 'Agrega una para liquidar tus deudas fácilmente',
+    HOLDER_LABEL: 'TITULAR'
+} as const;
+
 
 export const GroupDetail = () => {
     const params = useParams();
-    const idFinal = params.groupId || params.group_id || params.id || "";
+    const finalId = params.groupId || params.group_id || params.id || "";
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
     const navigate = useNavigate();
 
@@ -40,17 +67,19 @@ export const GroupDetail = () => {
     const [selectedExpense, setSelectedExpense] = useState<any>(null);
     const [isEditingGroupOpen, setIsEditingGroupOpen] = useState(false);
 
-    // Register shortcuts (Esc to close wizard)
     useKeyboardShortcuts(() => setIsWizardOpen(false));
 
     const {
         activeTab, setActiveTab, groupName, groupDescription, groupCode, totalSpent,
         userShare, userOwed, activities, balances, members,
-        integrantes_data, isFetchingGroup, adminId, currentUserId,
+        membersData, isFetchingGroup, adminId, currentUserId,
         isRefreshing, refresh, removeMember,
         deleteGroup, confirmDeleteGroup, deleteItem,
-        is2FAModalOpen, setIs2FAModalOpen
-    } = useGroupDetail(idFinal);
+        is2FAModalOpen, setIs2FAModalOpen, leaderProfile,
+        pendingSettlements, approveSettlement
+        approveSettlement,
+        rejectSettlement
+    } = useGroupDetail(finalId);
 
     const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
     const { 
@@ -59,10 +88,22 @@ export const GroupDetail = () => {
         setIsAddingCard: setIsAddCardOpen 
     } = useMyPayments();
     
-
-
     const isAdmin = adminId === currentUserId;
     useDocumentTitle(groupName ? `${groupName} - Detalle` : 'Detalle de Grupo');
+
+    const handleApprove = async (s: any) => {
+        const confirmed = window.confirm(`¿Confirmas que has recibido el pago de $${s.amount} por parte de ${membersData.find(m => m.id === s.payer_id)?.nombre || 'un miembro'}?`);
+        if (confirmed) {
+            await approveSettlement(s.id);
+        }
+    };
+
+    const handleReject = async (s: any) => {
+        const reason = window.prompt(`¿Por qué rechazas el pago de $${s.amount}?`, "No se visualiza en mi cuenta bancaria");
+        if (reason !== null) {
+            await rejectSettlement(s.id, reason);
+        }
+    };
 
     const handleExportPDF = () => {
         const doc = new jsPDF();
@@ -80,7 +121,7 @@ export const GroupDetail = () => {
 
         const tableData = activities.map(act => [
             act.nombre,
-            integrantes_data.find(i => i.id === act.comprador_id)?.nombre || "N/A",
+            membersData.find(i => i.id === act.comprador_id)?.nombre || "N/A",
             `$${Number(act.monto).toFixed(2)}`,
             act.fecha
         ]);
@@ -111,43 +152,85 @@ export const GroupDetail = () => {
             <PageHeader 
                 title={groupName || "Detalle de Grupo"}
                 onMenuClick={toggleSidebar}
-                onBack={() => navigate('/groups')}
+                onBack={() => navigate(ROUTES.GROUPS)}
                 rightSlot={
-                    <div className="flex gap-2">
-                        {isAdmin && (
-                            <div className="flex gap-2">
-                                <button 
-                                    onClick={() => setIsEditingGroupOpen(true)}
-                                    className="p-2.5 bg-white/10 hover:bg-blue-500/10 border border-white/20 rounded-xl transition-all text-blue-400"
-                                    title="Editar Grupo"
-                                >
-                                    <Pencil size={20} />
-                                </button>
-                                <button 
-                                    onClick={deleteGroup}
-                                    className="p-2.5 bg-white/10 hover:bg-rose-500/10 border border-white/20 rounded-xl transition-all text-rose-400"
-                                    title="Eliminar Grupo"
-                                >
-                                    <Trash2 size={20} />
-                                </button>
-                            </div>
-                        )}
+                    <div className="hidden md:flex items-center gap-3 bg-white/10 px-4 py-2 rounded-xl border border-white/10 backdrop-blur-sm">
+                        <div className="flex flex-col items-end">
+                            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">ID Grupo</span>
+                            <span className="font-mono text-xs font-black tracking-widest text-[var(--text-primary)]">{groupCode}</span>
+                        </div>
+                        <button 
+                            onClick={() => {
+                                navigator.clipboard.writeText(groupCode);
+                                toast.success("ID copiado");
+                            }}
+                            className="p-1.5 hover:bg-white/10 rounded-lg transition-all text-slate-400 hover:text-[var(--primary)]"
+                        >
+                            <Copy size={14} />
+                        </button>
                     </div>
                 }
             />
+
+            <div className="bg-white/50 dark:bg-white/5 border-b border-[var(--border-color)] backdrop-blur-md sticky top-[4.5rem] md:top-[6rem] z-40">
+                <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-4 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        {userOwed < -0.01 && (
+                            <button 
+                                onClick={() => navigate(ROUTES.SETTLE_UP(finalId))}
+                                className="px-6 py-3 bg-emerald-500 text-white rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                            >
+                                <DollarSign size={18} /> Saldar Deuda
+                            </button>
+                        )}
+                    </div>
+
+                    {isAdmin && (
+                        <div className="flex items-center gap-2">
+                            <button 
+                                onClick={() => setIsEditingGroupOpen(true)}
+                                className="flex items-center gap-2 px-6 py-3 border border-blue-500/30 text-blue-500 bg-blue-500/5 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-blue-500/10 transition-all"
+                            >
+                                <Pencil size={18} /> Editar Grupo
+                            </button>
+                            <button 
+                                onClick={deleteGroup}
+                                className="flex items-center gap-2 px-6 py-3 border border-rose-500/30 text-rose-500 bg-rose-500/5 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-rose-500/10 transition-all"
+                            >
+                                <Trash2 size={18} /> Eliminar Grupo
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+
 
             {/* Stats Cards (Mini) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
                     { label: "Total Gastado", value: totalSpent, icon: <Receipt size={20}/>, color: "var(--primary)" },
                     { label: "Tu Parte", value: userShare, icon: <UserCircle size={20}/>, color: "#10b981" },
-                    { label: "Te Deben", value: userOwed, icon: <PieChart size={20}/>, color: "#f59e0b" },
+                    { 
+                        label: userOwed >= 0 ? "Te Deben" : "Debes", 
+                        value: Math.abs(userOwed), 
+                        icon: userOwed >= 0 ? <PieChart size={20}/> : <DollarSign size={20}/>, 
+                        color: userOwed >= 0 ? "#f59e0b" : "#f43f5e",
+                        action: userOwed < -0.01 ? (
+                            <button 
+                                onClick={() => navigate(ROUTES.SETTLE_UP(finalId))}
+                                className="mt-2 px-4 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md"
+                            >
+                                Pagar Ahora
+                            </button>
+                        ) : null
+                    },
                 ].map((stat, i) => (
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
-                        key={stat.label}
+                        key={i}
                         className="p-6 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[2.5rem] flex items-center gap-6 shadow-sm group hover:border-[var(--primary)]/30 transition-all"
                     >
                         <div className="w-14 h-14 rounded-[1.5rem] flex items-center justify-center text-white shadow-lg" style={{ backgroundColor: stat.color }}>
@@ -156,6 +239,7 @@ export const GroupDetail = () => {
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">{stat.label}</p>
                             <p className="text-2xl font-black tracking-tighter text-[var(--text-primary)] group-hover:text-[var(--primary)] transition-colors">${Number(stat.value || 0).toFixed(2)}</p>
+                            {(stat as any).action}
                         </div>
                     </motion.div>
                 ))}
@@ -164,7 +248,7 @@ export const GroupDetail = () => {
             {/* Main Section */}
             <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[3rem] overflow-hidden shadow-sm">
                 <div className="flex border-b border-[var(--border-color)] overflow-x-auto no-scrollbar">
-                    {['actividades', 'saldos', 'integrantes', 'pagos'].map((tab) => (
+                    {(isAdmin ? ['actividades', 'saldos', 'miembros', 'ajustes'] : ['actividades', 'saldos', 'miembros']).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab as any)}
@@ -200,22 +284,26 @@ export const GroupDetail = () => {
                                          >
                                              <Download size={22} />
                                          </button>
-                                         <button 
-                                             onClick={() => navigate(`/group/${idFinal}/register-expense`)}
-                                             className="group flex items-center gap-3 px-8 py-4 bg-[var(--primary)] text-white rounded-[1.5rem] text-sm font-black uppercase tracking-widest shadow-2xl shadow-[var(--primary)]/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                                         >
-                                             <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center group-hover:rotate-90 transition-transform">
-                                                <Plus size={18} />
-                                             </div>
-                                             Nuevo Gasto
-                                         </button>
-                                         <button 
-                                             onClick={() => navigate('/ocr-scanner')}
-                                             className="p-4 bg-white border border-[var(--border-color)] text-[var(--text-secondary)] rounded-2xl hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all shadow-sm"
-                                             title="Escanear Ticket"
-                                         >
-                                             <Receipt size={22} />
-                                         </button>
+                                         {isAdmin && (
+                                            <>
+                                                <button 
+                                                    onClick={() => navigate(ROUTES.REGISTER_EXPENSE(finalId))}
+                                                    className="group flex items-center gap-3 px-8 py-4 bg-[var(--primary)] text-white rounded-[1.5rem] text-sm font-black uppercase tracking-widest shadow-2xl shadow-[var(--primary)]/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                                >
+                                                    <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center group-hover:rotate-90 transition-transform">
+                                                        <Plus size={18} />
+                                                    </div>
+                                                    Nuevo Gasto
+                                                </button>
+                                                <button 
+                                                    onClick={() => navigate(ROUTES.OCR_SCANNER)}
+                                                    className="p-4 bg-white border border-[var(--border-color)] text-[var(--text-secondary)] rounded-2xl hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all shadow-sm"
+                                                    title="Escanear Ticket"
+                                                >
+                                                    <Receipt size={22} />
+                                                </button>
+                                            </>
+                                         )}
                                      </div>
                                  </div>
 
@@ -232,7 +320,7 @@ export const GroupDetail = () => {
                                          </thead>
                                          <tbody>
                                              {activities.map((act) => {
-                                                 const comprador = integrantes_data.find(i => i.id === act.comprador_id);
+                                                 const comprador = membersData.find(i => i.id === act.comprador_id);
                                                  const category = act.categoria || "Otros";
                                                  const categoryStyles: any = {
                                                      "Comida": "bg-orange-100 text-orange-600 border-orange-200",
@@ -245,9 +333,9 @@ export const GroupDetail = () => {
                                                      <tr 
                                                          key={act.id} 
                                                          onClick={() => setSelectedExpense(act)}
-                                                         className="group bg-[var(--bg-body)] hover:bg-[var(--hover-bg)] transition-all cursor-pointer shadow-sm hover:shadow-md"
+                                                         className="group bg-white/40 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/5 hover:bg-white/60 dark:hover:bg-black/40 transition-all cursor-pointer shadow-sm hover:shadow-md font-display"
                                                      >
-                                                         <td className="py-6 pl-6 rounded-l-[2rem] border-y border-l border-[var(--border-color)] group-hover:border-[var(--primary)]/30">
+                                                         <td className="py-6 pl-6 rounded-l-[2rem] border-y border-l border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30">
                                                              <div className="flex items-center gap-4">
                                                                  <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center border shadow-inner transition-transform group-hover:scale-110", categoryStyles[category] || categoryStyles["Otros"])}>
                                                                      {category === "Comida" && <Utensils size={20} />}
@@ -257,52 +345,72 @@ export const GroupDetail = () => {
                                                                  </div>
                                                                  <div>
                                                                      <p className="font-black text-[var(--text-primary)] uppercase tracking-tight group-hover:text-[var(--primary)] transition-colors">{act.nombre}</p>
+                                                                     <div className="flex flex-wrap gap-1 mt-1 mb-2">
+                                                                         {Array.isArray(act.nombres_participantes) && act.nombres_participantes.length > 0 ? act.nombres_participantes.map((p: string, j: number) => (
+                                                                             <span key={j} className="text-[7px] font-black uppercase px-1.5 py-0.5 bg-black/5 dark:bg-white/5 rounded-md text-slate-500 dark:text-slate-300 group-hover:bg-[var(--primary)]/10 group-hover:text-[var(--primary)] transition-colors">
+                                                                                 {p.split(' ')[0]}
+                                                                             </span>
+                                                                         )) : (
+                                                                             <span className="text-[7px] font-black uppercase px-1.5 py-0.5 bg-black/5 dark:bg-white/5 rounded-md text-slate-400">Sin participantes</span>
+                                                                         )}
+                                                                     </div>
                                                                      <span className={cn("text-[9px] font-black uppercase px-2 py-0.5 rounded-md border tracking-widest", categoryStyles[category] || categoryStyles["Otros"])}>
                                                                          {category}
                                                                      </span>
                                                                  </div>
                                                              </div>
                                                          </td>
-                                                         <td className="py-6 border-y border-[var(--border-color)] group-hover:border-[var(--primary)]/30">
+                                                         <td className="py-6 border-y border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30">
                                                              <div className="flex items-center gap-2">
-                                                                 <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-black">
+                                                                 <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-black text-slate-700 dark:text-slate-200">
                                                                      {comprador?.nombre?.charAt(0) || "U"}
                                                                  </div>
-                                                                 <span className="text-xs font-bold text-slate-500 uppercase">{comprador?.nombre || "Usuario"}</span>
+                                                                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">{comprador?.nombre || "Usuario"}</span>
                                                              </div>
                                                          </td>
-                                                          <td className="py-6 border-y border-[var(--border-color)] group-hover:border-[var(--primary)]/30">
-                                                              <span className="font-black text-lg font-mono tracking-tighter text-[var(--text-primary)]">${Number(act.monto || act.precio || 0).toFixed(2)}</span>
+                                                          <td className="py-6 border-y border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30">
+                                                              {(() => {
+                                                                  const rawVal = act.monto ?? act.precio ?? 0;
+                                                                  const numVal = Number(rawVal);
+                                                                  const finalMonto = isNaN(numVal) ? 0 : numVal;
+                                                                  return (
+                                                                    <span className="font-black text-lg font-mono tracking-tighter text-[var(--text-primary)]">${finalMonto.toFixed(2)}</span>
+                                                                  );
+                                                              })()}
                                                           </td>
-                                                         <td className="py-6 border-y border-[var(--border-color)] group-hover:border-[var(--primary)]/30">
+                                                         <td className="py-6 border-y border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30">
                                                              <span className="text-xs font-bold text-slate-400 uppercase">{act.fecha}</span>
                                                          </td>
-                                                         <td className="py-6 pr-6 rounded-r-[2rem] border-y border-r border-[var(--border-color)] group-hover:border-[var(--primary)]/30 text-right">
+                                                         <td className="py-6 pr-6 rounded-r-[2rem] border-y border-r border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30 text-right">
                                                                  <div className="flex justify-end gap-2">
-                                                                    <button 
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            e.preventDefault();
-                                                                            navigate(`/group/${idFinal}/edit-item/${act.id}`);
-                                                                        }}
-                                                                        className="p-2 hover:bg-blue-500/10 rounded-xl text-blue-400 hover:text-blue-500 transition-all"
-                                                                        title="Editar"
-                                                                    >
-                                                                        <Pencil size={18} />
-                                                                    </button>
-                                                                    <button 
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            e.preventDefault();
-                                                                            if (window.confirm("¿Eliminar este gasto?")) {
-                                                                                deleteItem(act.id);
-                                                                            }
-                                                                        }}
-                                                                        className="p-2 hover:bg-rose-500/10 rounded-xl text-rose-400 hover:text-rose-500 transition-all"
-                                                                        title="Eliminar"
-                                                                    >
-                                                                        <Trash2 size={18} />
-                                                                    </button>
+                                                                    {isAdmin && (
+                                                                        <>
+                                                                            <button 
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    e.preventDefault();
+                                                                                    navigate(ROUTES.EDIT_EXPENSE(finalId, act.id));
+                                                                                }}
+                                                                                className="p-2 hover:bg-blue-500/10 rounded-xl text-blue-400 hover:text-blue-500 transition-all"
+                                                                                title="Editar"
+                                                                            >
+                                                                                <Pencil size={18} />
+                                                                            </button>
+                                                                            <button 
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    e.preventDefault();
+                                                                                    if (window.confirm("¿Eliminar este gasto?")) {
+                                                                                        deleteItem(act.id);
+                                                                                    }
+                                                                                }}
+                                                                                className="p-2 hover:bg-rose-500/10 rounded-xl text-rose-400 hover:text-rose-500 transition-all"
+                                                                                title="Eliminar"
+                                                                            >
+                                                                                <Trash2 size={18} />
+                                                                            </button>
+                                                                        </>
+                                                                    )}
                                                                     <button className="p-2 hover:bg-[var(--primary)]/10 rounded-xl text-slate-400 hover:text-[var(--primary)] transition-all">
                                                                         <Info size={18} />
                                                                     </button>
@@ -312,12 +420,10 @@ export const GroupDetail = () => {
                                                  );
                                              })}
                                          </tbody>
-                                    </table>
-                                </div>
+                                     </table>
+                                 </div>
                             </motion.div>
                         )}
-
-
 
                         {activeTab === 'saldos' && (
                             <motion.div 
@@ -328,15 +434,17 @@ export const GroupDetail = () => {
                             >
                                 <div className="flex justify-between items-center px-2">
                                     <div>
-                                        <h3 className="text-lg font-black uppercase tracking-tight">Balance de Cuentas</h3>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Cómo se dividen los gastos actualmente</p>
+                                        <h3 className="text-lg font-black uppercase tracking-tight">{I18N_TEXTS.BALANCES_TITLE}</h3>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{I18N_TEXTS.BALANCES_DESC}</p>
                                     </div>
-                                    <button 
-                                        onClick={() => setIsWizardOpen(true)}
-                                        className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
-                                    >
-                                        <Check size={18} /> Liquidar Grupo
-                                    </button>
+                                    {isAdmin && (
+                                        <button 
+                                            onClick={() => setIsWizardOpen(true)}
+                                            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
+                                        >
+                                            <Check size={18} /> {I18N_TEXTS.SETTLE_GROUP}
+                                        </button>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -364,24 +472,25 @@ export const GroupDetail = () => {
                                                     )}>
                                                         {balance.monto >= 0 ? "+" : ""}${Math.abs(Number(balance.monto || 0)).toFixed(2)}
                                                     </span>
-                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{balance.monto >= 0 ? "Saldo a favor" : "Deuda pendiente"}</p>
+                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{balance.monto >= 0 ? I18N_TEXTS.STATUS.FAVOR : I18N_TEXTS.STATUS.DEBT}</p>
                                                 </div>
                                                 {balance.monto < 0 && (
                                                     <button 
-                                                        onClick={() => navigate(`/group/${idFinal}/settle-up`)}
+                                                        onClick={() => navigate(ROUTES.SETTLE_UP(finalId))}
                                                         className="px-4 py-2 bg-[var(--primary)] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[var(--primary)]/20 hover:scale-105 active:scale-95 transition-all"
                                                     >
-                                                        Pagar
+                                                        {I18N_TEXTS.PAY_BUTTON}
                                                     </button>
                                                 )}
                                             </div>
                                         </motion.div>
                                     ))}
                                 </div>
+
                             </motion.div>
                         )}
 
-                        {activeTab === 'integrantes' && (
+                        {activeTab === 'miembros' && (
                             <motion.div 
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -390,17 +499,26 @@ export const GroupDetail = () => {
                             >
                                 <div className="flex justify-between items-center mb-8">
                                     <div>
-                                        <h3 className="text-lg font-black uppercase tracking-tight">Miembros del Grupo</h3>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{members.length} personas conectadas</p>
+                                        <h3 className="text-lg font-black uppercase tracking-tight">{I18N_TEXTS.MEMBERS_TITLE}</h3>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{members.length} {I18N_TEXTS.MEMBERS_DESC_SUFFIX}</p>
                                     </div>
-                                    <div className="p-3 bg-black/5 rounded-2xl border border-black/5 text-[var(--text-primary)] font-mono text-xs font-black flex items-center gap-2">
-                                        <Scan size={14} /> {groupCode}
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-black/5 rounded-2xl border border-black/5 text-[var(--text-primary)] font-mono text-xs font-black flex items-center gap-2">
+                                            <Scan size={14} /> {groupCode}
+                                        </div>
+                                        {isAdmin && (
+                                            <button 
+                                                onClick={() => setIsAddMemberOpen(true)}
+                                                className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-[var(--primary)]/20 hover:scale-105 active:scale-95 transition-all"
+                                            >
+                                                <Plus size={18} /> Agregar
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {members.map((member, i) => {
-                                        const fullMemberData = integrantes_data.find(it => it.id === member.id);
                                         return (
                                             <motion.div 
                                                 key={member.id}
@@ -420,7 +538,15 @@ export const GroupDetail = () => {
                                                     )}
                                                 </div>
                                                 <div className="flex-1">
-                                                    <p className="font-black text-[var(--text-primary)] uppercase tracking-tight text-sm">{member.nombre}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-black text-[var(--text-primary)] uppercase tracking-tight text-sm">{member.nombre}</p>
+                                                        {(member.trust_score >= 5 || member.fast_payments_count >= 10) && (
+                                                            <div className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center gap-1" title="Buen Pagador (>24h)">
+                                                                <Zap size={8} className="text-emerald-500 fill-emerald-500" />
+                                                                <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest">Buen Pagador</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{member.id === currentUserId ? "Tú" : (member.id === adminId ? "Organizador" : "Miembro")}</p>
                                                 </div>
                                                 
@@ -432,38 +558,144 @@ export const GroupDetail = () => {
                                                                 removeMember(member.id);
                                                             }
                                                         }}
-                                                        className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                                                        className="p-2.5 text-rose-400 hover:text-white hover:bg-rose-500 rounded-xl transition-all opacity-100 sm:opacity-0 group-hover:opacity-100"
                                                         title="Eliminar Miembro"
                                                     >
-                                                        <Trash2 size={16} />
+                                                        <Trash2 size={18} />
                                                     </button>
                                                 )}
                                             </motion.div>
                                         );
                                     })}
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'ajustes' && isAdmin && (
+                            <motion.div 
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                className="space-y-12 max-w-4xl mx-auto py-4"
+                            >
+                                {isAdmin && pendingSettlements.length > 0 && (
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                                                <Receipt size={20} />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-black uppercase tracking-tight">Pagos por Aprobar</h3>
+                                                <p className="text-[10px] font-black text-amber-500/60 uppercase tracking-widest mt-1">Verifica y confirma los pagos recibidos</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-1 gap-4">
+                                            {pendingSettlements.map((s: any) => (
+                                                <div key={s.id} className="p-6 bg-white rounded-3xl border border-amber-200 shadow-sm flex items-center justify-between group hover:border-amber-500 transition-all">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
+                                                            <User size={24} />
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-black text-slate-700 uppercase">{membersData.find(m => m.id === s.payer_id)?.nombre || 'Miembro'}</p>
+                                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Envió ${s.amount.toFixed(2)}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <button 
+                                                            onClick={() => handleReject(s)}
+                                                            className="px-6 py-3 border border-rose-500 text-rose-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500/5 transition-all"
+                                                        >
+                                                            Rechazar
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleApprove(s)}
+                                                            className="px-6 py-3 bg-amber-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                                                        >
+                                                            <Check size={16} /> Aprobar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="space-y-6">
+                                    <div>
+                                        <h3 className="text-xl font-black uppercase tracking-tight">Ajustes del Grupo</h3>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Configuración general y administración</p>
+                                    </div>
                                     
-                                    {isAdmin && (
-                                        <button 
-                                            onClick={() => setIsAddMemberOpen(true)}
-                                            className="p-5 border-2 border-dashed border-[var(--border-color)] rounded-3xl flex items-center justify-center gap-3 text-slate-400 hover:border-[var(--primary)]/30 hover:text-[var(--primary)] transition-all group"
-                                        >
-                                            <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
-                                            <span className="text-xs font-black uppercase tracking-widest">Agregar</span>
-                                        </button>
-                                    )}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-black/5 p-8 rounded-[2.5rem] border border-black/5">
+                                        <div className="space-y-4">
+                                            <p className="text-xs font-black uppercase tracking-widest text-slate-500">Información del Grupo</p>
+                                            <div className="space-y-4">
+                                                <div className="p-6 bg-white rounded-3xl border border-[var(--border-color)]">
+                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Nombre</p>
+                                                    <p className="font-black text-lg uppercase">{groupName}</p>
+                                                </div>
+                                                <div className="p-6 bg-white rounded-3xl border border-[var(--border-color)]">
+                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Descripción</p>
+                                                    <p className="font-bold text-sm text-slate-600">{groupDescription || "Sin descripción"}</p>
+                                                </div>
+                                                <button 
+                                                    onClick={() => setIsEditingGroupOpen(true)}
+                                                    className="w-full flex items-center justify-center gap-3 py-4 bg-white border border-[var(--border-color)] rounded-2xl text-xs font-black uppercase tracking-widest hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all"
+                                                >
+                                                    <Pencil size={18} /> Editar Información
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <p className="text-xs font-black uppercase tracking-widest text-slate-500">Invitación</p>
+                                            <div className="p-8 bg-white rounded-[2rem] border border-[var(--border-color)] flex flex-col items-center justify-center text-center space-y-6">
+                                                <div className="p-4 bg-black/5 rounded-2xl border border-black/5">
+                                                    <QRCodeSVG value={groupCode} size={120} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Código de Acceso</p>
+                                                    <p className="font-mono text-2xl font-black tracking-[0.2em]">{groupCode}</p>
+                                                </div>
+                                                <button 
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(groupCode);
+                                                        toast.success("Código copiado al portapapeles");
+                                                    }}
+                                                    className="px-6 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                                >
+                                                    Copiar Código
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {isAdmin && (
-                                    <div className="mt-12 pt-8 border-t border-rose-500/10">
-                                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-500 mb-6 px-2">Zona de Peligro</h4>
-                                        <div className="p-8 bg-rose-500/5 border border-rose-500/10 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6">
+                                    <div className="pt-8 border-t border-rose-500/20">
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                                                <Trash2 size={20} />
+                                            </div>
                                             <div>
+                                                <h4 className="text-xs font-black uppercase tracking-[0.2em] text-rose-500">Zona de Peligro</h4>
+                                                <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest">Acciones irreversibles</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="p-8 bg-rose-500/5 border border-rose-500/10 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6">
+                                            <div className="text-center md:text-left">
                                                 <p className="font-black text-rose-500 uppercase tracking-tight">Eliminar permanentemente este grupo</p>
-                                                <p className="text-[10px] font-black text-rose-500/60 uppercase tracking-widest mt-1">Esta acción no se puede deshacer y borrará todos los datos.</p>
+                                                <p className="text-[10px] font-black text-rose-500/60 uppercase tracking-widest mt-1 max-w-md">Esta acción borrará todos los gastos, saldos e integrantes de forma definitiva.</p>
                                             </div>
                                             <button 
-                                                onClick={deleteGroup}
-                                                className="w-full md:w-auto px-8 py-4 bg-rose-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-rose-500/20 hover:scale-105 active:scale-95 transition-all"
+                                                onClick={async () => {
+                                                    const success = await deleteGroup();
+                                                    if (success) navigate(ROUTES.GROUPS);
+                                                }}
+                                                className="w-full md:w-auto px-10 py-5 bg-rose-500 text-white rounded-[1.5rem] text-xs font-black uppercase tracking-widest shadow-xl shadow-rose-500/20 hover:scale-105 active:scale-95 transition-all"
                                             >
                                                 Eliminar Grupo
                                             </button>
@@ -472,119 +704,14 @@ export const GroupDetail = () => {
                                 )}
                             </motion.div>
                         )}
-                        {activeTab === 'pagos' && (
-                            <motion.div 
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 10 }}
-                                className="space-y-8"
-                            >
-                                <div className="flex justify-between items-center px-2">
-                                    <div>
-                                        <h3 className="text-lg font-black uppercase tracking-tight">Métodos de Pago</h3>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Gestiona tus tarjetas para liquidar deudas</p>
-                                    </div>
-                                    <button 
-                                        onClick={() => setIsAddCardOpen(true)}
-                                        className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-[var(--primary)]/20 hover:scale-105 active:scale-95 transition-all"
-                                    >
-                                        <Plus size={18} /> Nueva Tarjeta
-                                    </button>
-                                </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {isFetchingCards ? (
-                                        [1, 2].map(i => (
-                                            <div key={i} className="h-48 rounded-3xl bg-[var(--bg-body)] border border-[var(--border-color)] animate-pulse" />
-                                        ))
-                                    ) : cards.length > 0 ? (
-                                        cards.map((card: any) => (
-                                            <motion.div 
-                                                key={card.id}
-                                                layout
-                                                whileHover={{ scale: 1.02, translateY: -8, rotateX: 2, rotateY: -2 }}
-                                                className={cn(
-                                                    "p-8 rounded-[2rem] border border-white/20 transition-all relative overflow-hidden group/card shadow-xl hover:shadow-[var(--primary)]/30 preserve-3d perspective-1000",
-                                                    card.bankStyle || "bg-gradient-to-br from-slate-800 to-slate-900"
-                                                )}
-                                            >
-                                                {/* Premium Texture Overlay */}
-                                                <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
-                                                
-                                                {/* Animated Gloss Effect */}
-                                                <div className="absolute inset-0 translate-x-[-100%] group-hover/card:translate-x-[100%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-25deg]" />
-
-                                                <div className="relative z-10 flex flex-col justify-between h-44 text-white">
-                                                    <div className="flex justify-between items-start">
-                                                        <div className="flex flex-col">
-                                                            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-white/60 mb-1 drop-shadow-sm">{card.bankName || 'PLATINO GLOBAL'}</div>
-                                                            <div className="w-12 h-9 bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 rounded-lg border border-white/30 flex items-center justify-center p-1.5 shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)]">
-                                                                <div className="w-full h-full bg-black/10 rounded-sm grid grid-cols-4 gap-0.5 opacity-50">
-                                                                    {[...Array(8)].map((_, i) => <div key={i} className="border-r border-b border-white/10"></div>)}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <button 
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                if(window.confirm("¿Eliminar esta tarjeta?")) handleDeleteCard(card.id);
-                                                            }}
-                                                            className="p-3 bg-white/10 hover:bg-rose-500 border border-white/10 rounded-2xl transition-all opacity-0 group-hover/card:opacity-100 shadow-xl backdrop-blur-md"
-                                                            title="Eliminar Tarjeta"
-                                                        >
-                                                            <Trash2 size={18} />
-                                                        </button>
-                                                    </div>
-                                                    
-                                                    <div className="space-y-6">
-                                                        <div className="text-2xl font-mono tracking-[0.25em] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] text-white/95 filter contrast-125">
-                                                            •••• •••• •••• {card.lastFour}
-                                                        </div>
-    
-                                                        <div className="flex justify-between items-end">
-                                                            <div className="space-y-1">
-                                                                <p className="text-[9px] font-black uppercase tracking-[0.4em] text-white/50">TITULAR</p>
-                                                                <p className="text-sm font-black uppercase tracking-widest truncate max-w-[200px] text-white/90 drop-shadow-sm">{card.holder}</p>
-                                                            </div>
-                                                            <div className="flex flex-col items-end">
-                                                                <div className="h-10 flex items-center">
-                                                                    {card.brand?.toUpperCase() === 'VISA' && <span className="text-3xl font-black italic tracking-tighter text-white opacity-90 drop-shadow-lg">VISA</span>}
-                                                                    {card.brand?.toUpperCase() === 'MASTERCARD' && (
-                                                                        <div className="flex -space-x-3">
-                                                                            <div className="w-8 h-8 rounded-full bg-rose-500/80 mix-blend-screen" />
-                                                                            <div className="w-8 h-8 rounded-full bg-amber-500/80 mix-blend-screen" />
-                                                                        </div>
-                                                                    )}
-                                                                    {card.brand?.toUpperCase() === 'AMEX' && <div className="px-3 py-1 bg-cyan-500/20 border border-cyan-400/30 rounded text-xs font-black italic">AMEX</div>}
-                                                                    {!['VISA', 'MASTERCARD', 'AMEX'].includes(card.brand?.toUpperCase()) && <span className="text-lg font-black uppercase tracking-widest text-white/70">{card.brand}</span>}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        ))
-                                    ) : (
-                                        <div className="col-span-full py-12 bg-black/5 border-2 border-dashed border-[var(--border-color)] rounded-[2.5rem] flex flex-col items-center justify-center text-center space-y-4">
-                                            <div className="w-16 h-16 rounded-full bg-black/5 flex items-center justify-center text-slate-400">
-                                                <CreditCard size={32} />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-black uppercase tracking-widest text-slate-500">No tienes tarjetas guardadas</p>
-                                                <p className="text-[10px] text-slate-400 uppercase font-bold mt-1">Agrega una para liquidar tus deudas fácilmente</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.div>
-                        )}
                     </AnimatePresence>
                 </div>
 
                 <AddMemberModal 
                     isOpen={isAddMemberOpen}
                     onClose={() => setIsAddMemberOpen(false)}
-                    groupId={idFinal}
+                    groupId={finalId}
                     onSuccess={() => {
                         refresh();
                     }}
@@ -594,18 +721,18 @@ export const GroupDetail = () => {
                 <SettlementWizard 
                     isOpen={isWizardOpen}
                     onClose={() => setIsWizardOpen(false)}
-                    groupId={idFinal}
+                    groupId={finalId}
                     activities={activities}
                     members={members}
                     totalSpent={totalSpent}
-                    integrantesData={integrantes_data}
+                    membersData={membersData}
                 />
 
                 <TransactionDetailModal 
                     isOpen={!!selectedExpense}
                     onClose={() => setSelectedExpense(null)}
                     transaction={selectedExpense}
-                    members={integrantes_data}
+                    members={membersData}
                 />
 
                 <AddCardModal 
@@ -618,21 +745,11 @@ export const GroupDetail = () => {
                 <EditGroupModal 
                     isOpen={isEditingGroupOpen}
                     onClose={() => setIsEditingGroupOpen(false)}
-                    group={{ id: idFinal, nombre: groupName, descripcion: groupDescription }}
+                    group={{ id: finalId, nombre: groupName, descripcion: groupDescription }}
                     onSuccess={refresh}
                 />
 
-                <TwoFactorModal
-                    isOpen={is2FAModalOpen}
-                    onClose={() => setIs2FAModalOpen(false)}
-                    onVerified={async () => {
-                        const success = await confirmDeleteGroup();
-                        if (success) navigate('/groups');
-                    }}
-                    userId={currentUserId || ''}
-                    actionTitle="Eliminar Grupo"
-                    actionDescription="Esta acción es irreversible y eliminará todos los gastos y saldos asociados. Por favor verifica tu identidad."
-                />
+
             </div>
         </div>
     );

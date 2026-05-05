@@ -2,6 +2,7 @@ import React, { Suspense, lazy, Component } from 'react';
 import type { ReactNode, ErrorInfo } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
+import { ROUTES } from '../../infrastructure/routes';
 import { Loader } from '../components/Loader/Loader';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
@@ -74,7 +75,7 @@ const RecoverPasswordPage = lazy(() => import('../pages/RecoverPassword/RecoverP
 const Dashboard = lazy(() => import('../pages/Dashboard/Dashboard').then(m => ({ default: m.Dashboard })));
 const CreateGroup = lazy(() => import('../pages/CreateGroup').then(m => ({ default: m.CreateGroup })));
 const GroupDetail = lazy(() => import('../pages/GroupDetail').then(m => ({ default: m.GroupDetail })));
-const MyPayments = lazy(() => import('../pages/MyPayments').then(m => ({ default: m.MyPayments })));
+
 const StatsPage = lazy(() => import('../pages/Stats/StatsPage').then(m => ({ default: m.StatsPage })));
 const ProfilePage = lazy(() => import('../pages/Profile').then(m => ({ default: m.ProfilePage })));
 const PersonalData = lazy(() => import('../pages/Profile/PersonalData').then(m => ({ default: m.PersonalData })));
@@ -104,7 +105,7 @@ const PageTransition = ({ children }: { children: ReactNode }) => (
 const PublicOnlyRoute = ({ children }: { children: ReactNode }) => {
     const { isAuthenticated, isLoading } = useAuthContext();
     if (isLoading) return <Loader />;
-    if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+    if (isAuthenticated) return <Navigate to={ROUTES.DASHBOARD} replace />;
     return <>{children}</>;
 };
 
@@ -122,45 +123,45 @@ export const AnimatedRoutes = () => {
                 <Suspense fallback={<Loader />}>
                     <Routes location={location} key={location.pathname}>
                         {/* Rutas públicas con guard: si estás logueado, van al dashboard */}
-                        <Route path="/" element={
+                        <Route path={ROUTES.LANDING} element={
                             <PublicOnlyRoute>
                                 <PageTransition><LandingPage /></PageTransition>
                             </PublicOnlyRoute>
                         } />
-                        <Route path="/auth" element={
+                        <Route path={ROUTES.AUTH} element={
                             <PublicOnlyRoute>
                                 <PageTransition><Auth /></PageTransition>
                             </PublicOnlyRoute>
                         } />
 
                         {/* Rutas públicas sin guard */}
-                        <Route path="/recover-password" element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
-                        <Route path="/reset-password" element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
-                        <Route path="/qr-scanner" element={<PageTransition><JoinGroup /></PageTransition>} />
-                        <Route path="/2fa-setup" element={<PageTransition><TwoFactorSetup /></PageTransition>} />
-                        <Route path="/2fa-verify" element={<PageTransition><TwoFactorVerify /></PageTransition>} />
+                        <Route path={ROUTES.RECOVER_PASSWORD} element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
+                        <Route path={ROUTES.RESET_PASSWORD} element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
+                        <Route path={ROUTES.QR_SCANNER} element={<PageTransition><JoinGroup /></PageTransition>} />
+                        <Route path={ROUTES.TWO_FACTOR_SETUP} element={<PageTransition><TwoFactorSetup /></PageTransition>} />
+                        <Route path={ROUTES.TWO_FACTOR_VERIFY} element={<PageTransition><TwoFactorVerify /></PageTransition>} />
 
                         {/* Rutas protegidas */}
                         <Route element={<ProtectedRoute />}>
                             <Route element={<DashboardLayout />}>
-                                <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
-                                <Route path="/groups" element={<PageTransition><GroupsPage /></PageTransition>} />
-                                <Route path="/create-group" element={<PageTransition><CreateGroup /></PageTransition>} />
-                                <Route path="/group/:id" element={<PageTransition><GroupDetail /></PageTransition>} />
-                                <Route path="/group/:groupId/register-expense" element={<PageTransition><RegisterExpense /></PageTransition>} />
-                                <Route path="/group/:groupId/edit-item/:itemId" element={<PageTransition><RegisterExpense /></PageTransition>} />
-                                <Route path="/group/:id/settle-up" element={<PageTransition><SettleUp /></PageTransition>} />
-                                <Route path="/my-payments" element={<PageTransition><MyPayments /></PageTransition>} />
-                                <Route path="/stats" element={<PageTransition><StatsPage /></PageTransition>} />
-                                <Route path="/profile" element={<PageTransition><ProfilePage /></PageTransition>} />
-                                <Route path="/change-password" element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
-                                <Route path="/profile/personal-data" element={<PageTransition><PersonalData /></PageTransition>} />
-                                <Route path="/ocr-scanner" element={<PageTransition><OCRScanner /></PageTransition>} />
+                                <Route path={ROUTES.DASHBOARD} element={<PageTransition><Dashboard /></PageTransition>} />
+                                <Route path={ROUTES.GROUPS} element={<PageTransition><GroupsPage /></PageTransition>} />
+                                <Route path={ROUTES.CREATE_GROUP} element={<PageTransition><CreateGroup /></PageTransition>} />
+                                <Route path="/grupo/:id" element={<PageTransition><GroupDetail /></PageTransition>} />
+                                <Route path="/grupo/:groupId/registrar-gasto" element={<PageTransition><RegisterExpense /></PageTransition>} />
+                                <Route path="/grupo/:groupId/editar-item/:itemId" element={<PageTransition><RegisterExpense /></PageTransition>} />
+                                <Route path="/grupo/:id/liquidar" element={<PageTransition><SettleUp /></PageTransition>} />
+
+                                <Route path={ROUTES.STATS} element={<PageTransition><StatsPage /></PageTransition>} />
+                                <Route path={ROUTES.PROFILE} element={<PageTransition><ProfilePage /></PageTransition>} />
+                                <Route path={ROUTES.CHANGE_PASSWORD} element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
+                                <Route path={ROUTES.PERSONAL_DATA} element={<PageTransition><PersonalData /></PageTransition>} />
+                                <Route path={ROUTES.OCR_SCANNER} element={<PageTransition><OCRScanner /></PageTransition>} />
                             </Route>
                         </Route>
 
                         {/* Fallback */}
-                        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
                     </Routes>
                 </Suspense>
             </AnimatePresence>

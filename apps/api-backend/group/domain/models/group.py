@@ -11,6 +11,8 @@ class Group(BaseModel):
     integrantes: List[str] = []
     codigo_invitacion: str = Field(default_factory=lambda: str(uuid.uuid4())[:8].upper())
     fecha_creacion: datetime = Field(default_factory=datetime.utcnow)
+    status: str = "active" # active, settling, closed (finiquitado)
+    selected_bank_accounts: List[dict] = [] # Cuentas bancarias del líder elegidas para el finiquito
 
 # Modelo para crear grupo
 class GroupCreate(BaseModel):
@@ -37,3 +39,5 @@ class GroupDetailOut(BaseModel):
     codigo_invitacion: str
     integrantes: List[MemberOut] # Aquí devolvemos objetos, no strings
     fecha_creacion: datetime
+    status: str
+    selected_bank_accounts: List[dict] = []

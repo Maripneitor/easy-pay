@@ -5,7 +5,7 @@ import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { MotiView } from 'moti';
-import { useTheme } from '../../../src/infrastructure/context/ThemeContext';
+import { useTheme } from '@/src/infrastructure/context/ThemeContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

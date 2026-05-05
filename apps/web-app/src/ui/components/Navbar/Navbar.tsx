@@ -3,18 +3,19 @@ import { User } from 'lucide-react';
 import styles from './Navbar.module.css';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../context/AuthContext';
+import { ROUTES } from '../../../infrastructure/routes';
 
 export const Navbar = () => {
     const navigate = useNavigate();
     const { isAuthenticated, user } = useAuthContext();
 
     const handleProfile = () => {
-        navigate('/profile');
+        navigate(ROUTES.PROFILE);
     };
 
     return (
         <nav className={styles.navbar}>
-            <div className={styles.logoContainer} onClick={() => navigate('/')}>
+            <div className={styles.logoContainer} onClick={() => navigate(ROUTES.LANDING)}>
                 <img 
                     src="/assets/images/logo-ep.png"
                     alt="Easy-Pay Logo"
@@ -35,7 +36,7 @@ export const Navbar = () => {
                 {!isAuthenticated ? (
                     <button
                         className={styles.loginBtn}
-                        onClick={() => navigate('/auth')}
+                        onClick={() => navigate(ROUTES.AUTH)}
                         aria-label="Ir a la página de inicio de sesión"
                     >
                         Entrar

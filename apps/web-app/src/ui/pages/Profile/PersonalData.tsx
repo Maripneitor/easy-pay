@@ -22,11 +22,7 @@ export const PersonalData = () => {
     const [phone, setPhone] = useState(user?.phone || '');
     const [birthDate, setBirthDate] = useState(user?.birthDate || '');
     const [address, setAddress] = useState(user?.address || '');
-    
-    // Financial Profile state
-    const [beneficiary, setBeneficiary] = useState(user?.financial_profile?.beneficiario || (user?.id === '69eac36de44d7ae382683850' ? 'MARIO EFRAIN MOGUEL HERNANDEZ' : ''));
-    const [clabe, setClabe] = useState(user?.financial_profile?.clabe || (user?.id === '69eac36de44d7ae382683850' ? '638180000140716928' : ''));
-    const [bank, setBank] = useState(user?.financial_profile?.entidad_financiera || (user?.id === '69eac36de44d7ae382683850' ? 'Nu México' : ''));
+    const [bankAccounts, setBankAccounts] = useState<any[]>(user?.bank_accounts || []);
     
     const [loading, setLoading] = useState(false);
     const [show2FAModal, setShow2FAModal] = useState(false);
@@ -43,6 +39,17 @@ export const PersonalData = () => {
         if (!email.trim()) newErrors.email = "El correo es obligatorio";
         else if (!emailRegex.test(email)) newErrors.email = "Formato de correo inválido";
 
+        // Validar cuentas
+        bankAccounts.forEach((acc, index) => {
+            if (!acc.beneficiario || !acc.clabe || !acc.entidad_financiera) {
+                toast.error(`La cuenta ${index + 1} tiene campos incompletos`);
+                newErrors[`account_${index}`] = "Incompleto";
+            } else if (acc.clabe.length !== 18) {
+                toast.error(`La CLABE de la cuenta ${index + 1} debe tener 18 dígitos`);
+                newErrors[`account_${index}`] = "CLABE inválida";
+            }
+        });
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -53,7 +60,7 @@ export const PersonalData = () => {
         setShow2FAModal(true);
     };
 
-    const handleFinalSave = async () => {
+    const handleFinalSave = async (vCode: string) => {
         setLoading(true);
         const toastId = toast.loading("Guardando cambios...");
 
@@ -62,13 +69,8 @@ export const PersonalData = () => {
                 nombre: name,
                 email: email,
                 phone: phone,
-                birthDate: birthDate,
-                address: address,
-                financial_profile: {
-                    beneficiario: beneficiary,
-                    clabe: clabe,
-                    entidad_financiera: bank
-                }
+                bank_accounts: bankAccounts,
+                verification_code: vCode
             });
 
             if (result.status === "success") {
@@ -77,13 +79,7 @@ export const PersonalData = () => {
                     nombre: name,
                     email: email,
                     phone: phone,
-                    birthDate: birthDate,
-                    address: address,
-                    financial_profile: {
-                        beneficiario: beneficiary,
-                        clabe: clabe,
-                        entidad_financiera: bank
-                    }
+                    bank_accounts: bankAccounts
                 }, result.new_token);
 
                 toast.success("¡Perfil actualizado con éxito!", { id: toastId });
@@ -96,6 +92,25 @@ export const PersonalData = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const addBankAccount = () => {
+        if (bankAccounts.length >= 3) return toast.warning("Máximo 3 cuentas permitidas");
+        setBankAccounts([...bankAccounts, { 
+            id: Math.random().toString(36).substr(2, 9), 
+            beneficiario: name, 
+            clabe: '', 
+            entidad_financiera: '',
+            is_default: bankAccounts.length === 0
+        }]);
+    };
+
+    const removeBankAccount = (id: string) => {
+        setBankAccounts(bankAccounts.filter(a => a.id !== id));
+    };
+
+    const updateBankAccount = (id: string, field: string, value: string) => {
+        setBankAccounts(bankAccounts.map(a => a.id === id ? { ...a, [field]: value } : a));
     };
 
     return (
@@ -229,60 +244,80 @@ export const PersonalData = () => {
                             />
                         </div>
                     </div>
-
-                    <div className="mt-12 pt-8 border-t border-[var(--border-color)]">
-                        <div className="mb-8">
-                            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[var(--primary)]">Perfil Financiero</h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Datos para recibir transferencias bancarias</p>
+                    
+                    <div className="mt-12">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xs font-black uppercase tracking-[3px] text-[var(--text-secondary)]">Cuentas Bancarias ({bankAccounts.length}/3)</h3>
+                            <button 
+                                onClick={addBankAccount}
+                                disabled={bankAccounts.length >= 3}
+                                className="px-4 py-1.5 bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-black uppercase rounded-full hover:bg-[var(--primary)]/20 transition-colors disabled:opacity-30"
+                            >
+                                Añadir Cuenta
+                            </button>
                         </div>
 
-                        <div className={`${styles.formSection} grid grid-cols-1 md:grid-cols-2 gap-6`}>
-                            <div className={styles.inputGroup}>
-                                <label className={styles.label}>
-                                    <UserIcon size={18} className={styles.icon} />
-                                    Beneficiario
-                                </label>
-                                <input
-                                    type="text"
-                                    value={beneficiary}
-                                    onChange={(e) => setBeneficiary(e.target.value)}
-                                    className={styles.input}
-                                    placeholder="Nombre del titular"
-                                />
-                            </div>
+                        <div className="space-y-6">
+                            {bankAccounts.length === 0 ? (
+                                <div className="p-10 border-2 border-dashed border-[var(--border-color)] rounded-[2rem] flex flex-col items-center justify-center opacity-40">
+                                    <Landmark size={40} className="mb-4" />
+                                    <p className="text-xs font-bold">No has registrado cuentas para recibir pagos</p>
+                                </div>
+                            ) : (
+                                bankAccounts.map((acc, index) => (
+                                    <motion.div 
+                                        key={acc.id}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        className="p-8 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[2.5rem] relative group"
+                                    >
+                                        <button 
+                                            onClick={() => removeBankAccount(acc.id)}
+                                            className="absolute top-6 right-6 p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors"
+                                        >
+                                            <X size={20} />
+                                        </button>
 
-                            <div className={styles.inputGroup}>
-                                <label className={styles.label}>
-                                    <CreditCard size={18} className={styles.icon} />
-                                    CLABE Interbancaria
-                                </label>
-                                <input
-                                    type="text"
-                                    value={clabe}
-                                    onChange={(e) => setClabe(e.target.value)}
-                                    className={styles.input}
-                                    placeholder="18 dígitos"
-                                    maxLength={18}
-                                />
-                            </div>
-
-                            <div className={`${styles.inputGroup} md:col-span-2`}>
-                                <label className={styles.label}>
-                                    <Landmark size={18} className={styles.icon} />
-                                    Entidad Financiera
-                                </label>
-                                <input
-                                    type="text"
-                                    value={bank}
-                                    onChange={(e) => setBank(e.target.value)}
-                                    className={styles.input}
-                                    placeholder="Nombre del banco (Ej. BBVA, Nu, Banorte)"
-                                />
-                            </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            <div className={styles.inputGroup}>
+                                                <label className={styles.label}>Banco</label>
+                                                <input
+                                                    type="text"
+                                                    value={acc.entidad_financiera}
+                                                    onChange={(e) => updateBankAccount(acc.id, 'entidad_financiera', e.target.value)}
+                                                    className={styles.input}
+                                                    placeholder="Ej. BBVA"
+                                                />
+                                            </div>
+                                            <div className={styles.inputGroup}>
+                                                <label className={styles.label}>CLABE (18 dígitos)</label>
+                                                <input
+                                                    type="text"
+                                                    value={acc.clabe}
+                                                    onChange={(e) => updateBankAccount(acc.id, 'clabe', e.target.value)}
+                                                    className={`${styles.input} font-mono`}
+                                                    maxLength={18}
+                                                    placeholder="000..."
+                                                />
+                                            </div>
+                                            <div className={styles.inputGroup}>
+                                                <label className={styles.label}>Beneficiario</label>
+                                                <input
+                                                    type="text"
+                                                    value={acc.beneficiario}
+                                                    onChange={(e) => updateBankAccount(acc.id, 'beneficiario', e.target.value)}
+                                                    className={styles.input}
+                                                    placeholder="Nombre titular"
+                                                />
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))
+                            )}
                         </div>
                     </div>
 
-                    <div className="pt-6">
+                    <div className="pt-12">
                         <button
                             className={styles.saveBtn}
                             onClick={handleSaveInitiate}

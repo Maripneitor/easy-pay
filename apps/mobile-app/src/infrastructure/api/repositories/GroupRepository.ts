@@ -44,7 +44,13 @@ export class ApiMobileGroupRepository implements GroupRepository {
     }
 
     async closeGroup(groupId: string): Promise<void> {
-        throw new Error('Not implemented');
+        await httpClient.post(`/groups/${groupId}/close`, {});
+    }
+
+    async startSettlement(groupId: string, selectedBankAccounts: any[]): Promise<void> {
+        await httpClient.post(`/groups/${groupId}/start-settlement`, {
+            selected_bank_accounts: selectedBankAccounts
+        });
     }
 
     async addItem(groupId: string, item: any): Promise<void> {
@@ -53,6 +59,7 @@ export class ApiMobileGroupRepository implements GroupRepository {
             nombre: item.description || item.nombre,
             precio: item.amount || item.precio,
             cantidad: item.quantity || 1,
+            categoria: item.category,
             comprador_id: item.addedBy || item.comprador_id,
             participantes_ids: item.assignedTo || item.participantes_ids
         });
@@ -72,9 +79,13 @@ export class ApiMobileGroupRepository implements GroupRepository {
         await httpClient.put(`/groups/${groupId}/items/${itemId}`, itemData);
     }
 
+    async updateGroup(groupId: string, data: { nombre?: string, descripcion?: string }): Promise<void> {
+        await httpClient.put(`/groups/${groupId}`, data);
+    }
+
 
     async markMemberAsPaid(groupId: string, memberId: string): Promise<void> {
-        // Backend logic here
+        await httpClient.patch(`/groups/${groupId}/members/${memberId}/paid`);
     }
 
     async findByUser(userId: string): Promise<any[]> {

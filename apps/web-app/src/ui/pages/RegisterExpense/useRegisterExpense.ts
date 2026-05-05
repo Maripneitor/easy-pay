@@ -7,15 +7,15 @@ export const useRegisterExpense = () => {
     const { groupId, itemId } = useParams<{ groupId: string, itemId: string }>();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-    const [integrantes, setIntegrantes] = useState<{ id: string, nombre: string }[]>([]);
+    const [members, setMembers] = useState<{ id: string, nombre: string }[]>([]);
 
     const [formData, setFormData] = useState({
-        nombre: '',
-        precio: '',
-        cantidad: 1,
-        categoria: 'Otros',
-        comprador_id: '',
-        participantes_ids: [] as string[]
+        nombre: '', // Logical reference
+        precio: '', // Logical reference
+        cantidad: 1, // Logical reference
+        categoria: 'Otros', // Logical reference
+        comprador_id: '', // Logical reference
+        participantes_ids: [] as string[] // Logical reference
     });
 
     const fetchGroupAndItem = useCallback(async () => {
@@ -30,11 +30,11 @@ export const useRegisterExpense = () => {
             const resGroup = await httpClient.get(`/groups/${cleanGroupId}`);
             if (resGroup.status === 200) {
                 const currentGroup = resGroup.data;
-                const listaFormateada = currentGroup.integrantes.map((m: any) => ({
+                const formattedList = currentGroup.integrantes.map((m: any) => ({
                     id: m.id,
                     nombre: m.id === userId ? `Yo (${m.nombre || 'Usuario'})` : (m.nombre || 'Usuario')
                 }));
-                setIntegrantes(listaFormateada);
+                setMembers(formattedList);
 
                 // If editing, fetch item details
                 if (itemId) {
@@ -56,9 +56,9 @@ export const useRegisterExpense = () => {
                     // Default for new expense
                     setFormData(prev => ({
                         ...prev,
-                        comprador_id: userId,
-                        categoria: 'Otros',
-                        participantes_ids: listaFormateada.map((m: any) => m.id)
+                        comprador_id: userId, // Logical reference
+                        categoria: 'Otros', // Logical reference
+                        participantes_ids: formattedList.map((m: any) => m.id) // Logical reference
                     }));
                 }
             }
@@ -74,10 +74,10 @@ export const useRegisterExpense = () => {
         fetchGroupAndItem();
     }, [fetchGroupAndItem]);
 
-    const toggleParticipante = (id: string) => {
+    const toggleParticipant = (id: string) => {
         setFormData(prev => ({
             ...prev,
-            participantes_ids: prev.participantes_ids.includes(id)
+            participantes_ids: prev.participantes_ids.includes(id) // Logical reference
                 ? prev.participantes_ids.filter(p => p !== id)
                 : [...prev.participantes_ids, id]
         }));
@@ -127,10 +127,10 @@ export const useRegisterExpense = () => {
     return { 
         formData, 
         setFormData, 
-        integrantes, 
+        members, 
         handleSubmit, 
         loading, 
-        toggleParticipante,
+        toggleParticipant,
         isSubmittingExpense: loading // For backward compatibility if needed
     };
 };

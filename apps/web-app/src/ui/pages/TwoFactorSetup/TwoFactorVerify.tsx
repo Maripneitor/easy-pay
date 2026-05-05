@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userRepository } from '../../../infrastructure/api/repositories';
 import { setAuthToken } from '../../../infrastructure/api/http-client';
+import { ROUTES } from '../../../infrastructure/routes';
 import { toast } from 'sonner';
 
 export const TwoFactorVerify = () => {
@@ -33,7 +34,7 @@ export const TwoFactorVerify = () => {
     const handleConfirm = async () => {
         if (!userId) {
             toast.error("Sesión expirada. Por favor inicia sesión de nuevo.");
-            navigate('/auth');
+            navigate(ROUTES.AUTH);
             return;
         }
 
@@ -62,7 +63,7 @@ export const TwoFactorVerify = () => {
                 
                 // Pequeña espera para que vean el mensaje
                 setTimeout(() => {
-                    navigate('/dashboard');
+                    navigate(ROUTES.DASHBOARD);
                 }, 2000);
             } else {
                 toast.error(result.message || "Código incorrecto");
@@ -75,7 +76,7 @@ export const TwoFactorVerify = () => {
     };
 
     const handleCancel = () => {
-        navigate('/auth');
+        navigate(ROUTES.AUTH);
     };
 
     const handleResend = async () => {

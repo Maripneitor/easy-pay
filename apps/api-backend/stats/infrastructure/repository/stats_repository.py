@@ -79,3 +79,30 @@ class StatsRepository:
             {"month": "Jun", "total": 1200.0},
             {"month": "Jul", "total": 750.0}
         ]
+
+    async def get_user_transactions(self, user_id: str):
+        """
+        Obtiene el historial real de transacciones (pagos liquidados e ítems pagados).
+        """
+        transactions_col = self.db.get_collection("Transactions")
+        # Buscamos transacciones donde el usuario sea pagador o receptor
+        cursor = transactions_col.find({
+            "$or": [{"payer_id": user_id}, {"receiver_id": user_id}]
+        }).sort("date", -1)
+        
+        transactions = await cursor.to_list(length=50)
+        result = []
+        
+        for t in transactions:
+            group = await self.groups.find_one({"_id": ObjectId(t["group_id"])}) if t.get("group_id") else None
+            result.append({
+                "id": str(t["_id"]),
+                "type": t.get("type", "payment"),
+                "group_name": group.get("nombre", "Individual") if group else "Individual",
+                "amount": t["amount"],
+                "date": t["date"].isoformat() if t.get("date") else None,
+                "status": t.get("status", "completed"),
+                "is_incoming": t.get("receiver_id") == user_id
+            })
+            
+        return result

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { 
     View, 
     Text, 
@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
+import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
 
 interface SettlementWizardProps {
     isVisible: boolean;
@@ -32,13 +34,17 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
     const [step, setStep] = useState(1);
     const [tipPercent, setTipPercent] = useState(10);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { user } = useAuth();
+    const [selectedAccounts, setSelectedAccounts] = useState<string[]>(
+        (user?.bank_accounts || []).filter((a: any) => a.is_default).map((a: any) => a.id)
+    );
 
     const subtotal = balances?.total_gastado_en_grupo || 0;
     const tipAmount = subtotal * (tipPercent / 100);
     const total = subtotal + tipAmount;
 
     const handleNext = () => {
-        if (step < 3) setStep(step + 1);
+        if (step < 4) setStep(step + 1);
         else handleSubmit();
     };
 
@@ -48,14 +54,33 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
     };
 
     const handleSubmit = async () => {
+        if (selectedAccounts.length === 0) {
+            import('react-native').then(({ Alert }) => {
+                Alert.alert('Error', 'Debes seleccionar al menos una cuenta bancaria.');
+            });
+            return;
+        }
+
         setIsSubmitting(true);
-        // Simular llamada a API
-        setTimeout(() => {
+        try {
+            const accountsToShow = (user?.bank_accounts || []).filter((a: any) => selectedAccounts.includes(a.id));
+            
+            // Start settlement with selected accounts
+            await groupRepository.startSettlement(groupData.id || groupData._id, accountsToShow);
+            
+            // Close group with totals
+            await onComplete({ tipPercent, total });
+            
             setIsSubmitting(false);
-            onComplete({ tipPercent, total });
             onClose();
             setStep(1);
-        }, 2000);
+        } catch (err) {
+            console.error('Error starting settlement:', err);
+            setIsSubmitting(false);
+            import('react-native').then(({ Alert }) => {
+                Alert.alert('Error', 'No se pudo iniciar la liquidación.');
+            });
+        }
     };
 
     return (
@@ -70,9 +95,8 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                     <View className="flex-row justify-between items-center mb-8">
                         <TouchableOpacity onPress={handleBack} className="p-2">
                             <Ionicons name={step === 1 ? "close" : "arrow-back"} size={24} color={theme.text} />
-                        </TouchableOpacity>
-                        <View className="items-center">
-                            <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-[0.2em]">Paso {step} de 3</Text>
+                        </TouchableOpacity>                        <View className="items-center">
+                            <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-[0.2em]">Paso {step} de 4</Text>
                             <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black">Liquidar Grupo</Text>
                         </View>
                         <View className="w-10" />
@@ -80,7 +104,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
 
                     {/* Progress Bar */}
                     <View className="flex-row gap-2 mb-10">
-                        {[1, 2, 3].map(s => (
+                        {[1, 2, 3, 4].map(s => (
                             <View 
                                 key={s} 
                                 className="h-1.5 flex-1 rounded-full" 
@@ -102,16 +126,15 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                     </Text>
                                 </View>
 
-                                <View className="gap-y-3">
-                                    {items.slice(0, 5).map((item, idx) => (
-                                        <View key={idx} style={{ backgroundColor: theme.cardSecondary }} className="p-4 rounded-2xl flex-row justify-between items-center">
-                                            <Text style={{ color: theme.text }} className="font-bold text-sm">{item.description || item.nombre || "Gasto"}</Text>
-                                            <Text style={{ color: theme.primary }} className="font-black">${Number(item.amount || item.monto || 0).toFixed(2)}</Text>
-                                        </View>
-                                    ))}
-                                    {items.length > 5 && (
-                                        <Text style={{ color: theme.textSecondary }} className="text-center text-xs mt-2 italic">Y {items.length - 5} ítems más...</Text>
-                                    )}
+                                <View className="p-8 bg-emerald-500/10 rounded-[2.5rem] border border-emerald-500/20">
+                                    <View className="flex-row justify-between mb-4">
+                                        <Text style={{ color: theme.textSecondary }} className="font-bold">Subtotal</Text>
+                                        <Text style={{ color: theme.text }} className="font-black text-xl">${subtotal.toFixed(2)}</Text>
+                                    </View>
+                                    <View className="flex-row justify-between">
+                                        <Text style={{ color: theme.textSecondary }} className="font-bold">Propina ({tipPercent}%)</Text>
+                                        <Text style={{ color: '#10b981' }} className="font-black text-xl">+${tipAmount.toFixed(2)}</Text>
+                                    </View>
                                 </View>
                             </View>
                         )}
@@ -176,12 +199,67 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                         {step === 3 && (
                             <View className="animate-in fade-in">
                                 <View className="items-center mb-8">
+                                    <View style={{ backgroundColor: '#6366f115' }} className="w-20 h-20 rounded-[2rem] items-center justify-center mb-4">
+                                        <MaterialIcons name="account-balance" size={40} color="#6366f1" />
+                                    </View>
+                                    <Text style={{ color: theme.text, fontSize: 24 * fontScale }} className="font-black text-center">Cuentas de Cobro</Text>
+                                    <Text style={{ color: theme.textSecondary, fontSize: 13 * fontScale }} className="font-medium text-center mt-2 opacity-60">
+                                        Selecciona qué cuentas mostrar para recibir pagos.
+                                    </Text>
+                                </View>
+
+                                <View className="gap-3 mb-8">
+                                    {(!user?.bank_accounts || user.bank_accounts.length === 0) ? (
+                                        <View style={{ backgroundColor: theme.cardSecondary }} className="p-10 rounded-[2.5rem] items-center border border-dashed border-rose-500/30">
+                                            <MaterialIcons name="error-outline" size={32} color="#f43f5e" />
+                                            <Text style={{ color: '#f43f5e' }} className="font-black mt-2 text-sm uppercase tracking-widest">Sin cuentas registradas</Text>
+                                            <Text style={{ color: theme.textSecondary }} className="text-center text-xs mt-2 opacity-60">Configura tus cuentas en el perfil antes de liquidar.</Text>
+                                        </View>
+                                    ) : (
+                                        user.bank_accounts.map((acc: any) => {
+                                            const isSelected = selectedAccounts.includes(acc.id);
+                                            return (
+                                                <TouchableOpacity 
+                                                    key={acc.id}
+                                                    onPress={() => {
+                                                        if (isSelected) setSelectedAccounts(selectedAccounts.filter(id => id !== acc.id));
+                                                        else setSelectedAccounts([...selectedAccounts, acc.id]);
+                                                    }}
+                                                    style={{ 
+                                                        backgroundColor: isSelected ? '#6366f110' : theme.cardSecondary,
+                                                        borderColor: isSelected ? '#6366f1' : theme.border
+                                                    }}
+                                                    className="p-6 rounded-[2rem] border-2 flex-row items-center justify-between"
+                                                >
+                                                    <View className="flex-row items-center flex-1">
+                                                        <View style={{ backgroundColor: isSelected ? '#6366f1' : theme.border }} className="w-10 h-10 rounded-xl items-center justify-center mr-4">
+                                                            <MaterialIcons name="account-balance" size={20} color={isSelected ? "white" : theme.textSecondary} />
+                                                        </View>
+                                                        <View className="flex-1">
+                                                            <Text style={{ color: theme.text }} className="font-black text-sm uppercase">{acc.entidad_financiera}</Text>
+                                                            <Text style={{ color: theme.textSecondary }} className="text-xs font-mono">{acc.clabe}</Text>
+                                                        </View>
+                                                    </View>
+                                                    <View style={{ borderColor: isSelected ? '#6366f1' : theme.textSecondary, backgroundColor: isSelected ? '#6366f1' : 'transparent' }} className="w-6 h-6 rounded-full border-2 items-center justify-center">
+                                                        {isSelected && <Ionicons name="checkmark" size={14} color="white" />}
+                                                    </View>
+                                                </TouchableOpacity>
+                                            );
+                                        })
+                                    )}
+                                </View>
+                            </View>
+                        )}
+
+                        {step === 4 && (
+                            <View className="animate-in fade-in">
+                                <View className="items-center mb-8">
                                     <View style={{ backgroundColor: `${theme.primary}15` }} className="w-20 h-20 rounded-[2rem] items-center justify-center mb-4">
                                         <MaterialIcons name="auto-awesome" size={40} color={theme.primary} />
                                     </View>
                                     <Text style={{ color: theme.text, fontSize: 24 * fontScale }} className="font-black text-center">Resumen Final</Text>
                                     <Text style={{ color: theme.textSecondary, fontSize: 13 * fontScale }} className="font-medium text-center mt-2 opacity-60">
-                                        El grupo se cerrará y se enviarán los saldos a cada integrante.
+                                        El grupo se cerrará y se mostrarán las {selectedAccounts.length} cuentas seleccionadas.
                                     </Text>
                                 </View>
 
@@ -227,7 +305,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                         <TouchableOpacity 
                             onPress={handleNext}
                             disabled={isSubmitting}
-                            style={{ backgroundColor: step === 3 ? '#10b981' : theme.primary }}
+                            style={{ backgroundColor: step === 4 ? '#10b981' : theme.primary }}
                             className="flex-[2] py-5 rounded-2xl flex-row items-center justify-center gap-3 shadow-lg"
                         >
                             {isSubmitting ? (
@@ -235,9 +313,9 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                             ) : (
                                 <>
                                     <Text className="text-white font-black uppercase tracking-widest text-xs">
-                                        {step === 3 ? "Finalizar y Cerrar" : "Siguiente"}
+                                        {step === 4 ? "Finalizar y Cerrar" : "Siguiente"}
                                     </Text>
-                                    <Ionicons name={step === 3 ? "checkmark-circle" : "arrow-forward"} size={18} color="white" />
+                                    <Ionicons name={step === 4 ? "checkmark-circle" : "arrow-forward"} size={18} color="white" />
                                 </>
                             )}
                         </TouchableOpacity>

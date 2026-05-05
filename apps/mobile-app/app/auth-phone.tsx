@@ -4,10 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, Stack } from 'expo-router';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-// \import { MotiView } from 'moti'
-const MotiView = View as any;
-const MotiText = Text as any;
-const AnimatePresence = ({ children }: any) => children;;
+import { MotiView, AnimatePresence } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function AuthPhoneScreen() {

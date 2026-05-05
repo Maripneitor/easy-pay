@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Users, BarChart3, User, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { groupRepository } from '../../../infrastructure/api/repositories';
+import { ROUTES } from '../../../infrastructure/routes';
 
 export const CommandPalette: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -105,7 +106,7 @@ export const CommandPalette: React.FC = () => {
                                 <div className="p-2">
                                     <p className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Navegación Rápida</p>
                                     <div className="space-y-1">
-                                        <button onClick={() => handleSelect('/dashboard')} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[var(--hover-bg)] transition-colors group">
+                                        <button onClick={() => handleSelect(ROUTES.GROUPS)} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[var(--hover-bg)] transition-colors group">
                                             <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
                                                 <Users size={18} />
                                             </div>
@@ -115,7 +116,7 @@ export const CommandPalette: React.FC = () => {
                                             </div>
                                             <span className="ml-auto text-[10px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">G</span>
                                         </button>
-                                        <button onClick={() => handleSelect('/stats')} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[var(--hover-bg)] transition-colors group">
+                                        <button onClick={() => handleSelect(ROUTES.STATS)} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[var(--hover-bg)] transition-colors group">
                                             <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500">
                                                 <BarChart3 size={18} />
                                             </div>
@@ -125,7 +126,7 @@ export const CommandPalette: React.FC = () => {
                                             </div>
                                             <span className="ml-auto text-[10px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">E</span>
                                         </button>
-                                        <button onClick={() => handleSelect('/profile')} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[var(--hover-bg)] transition-colors group">
+                                        <button onClick={() => handleSelect(ROUTES.PROFILE)} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[var(--hover-bg)] transition-colors group">
                                             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                                                 <User size={18} />
                                             </div>
@@ -146,7 +147,7 @@ export const CommandPalette: React.FC = () => {
                                         {results.map((group) => (
                                             <button 
                                                 key={group.id} 
-                                                onClick={() => handleSelect(`/group/${group.id}`)}
+                                                onClick={() => handleSelect(ROUTES.GROUP_DETAIL(group.id))}
                                                 className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[var(--hover-bg)] transition-colors"
                                             >
                                                 <div className="w-8 h-8 rounded-lg bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)] font-bold text-xs">

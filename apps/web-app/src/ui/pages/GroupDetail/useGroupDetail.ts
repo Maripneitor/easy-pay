@@ -1,12 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { groupRepository, userRepository } from '../../../infrastructure/api/repositories';
-import { useAuthContext } from '../../context/AuthContext';
+import { groupRepository, userRepository } from '@infrastructure/api/repositories';
+import { useAuthContext } from '@ui/context/AuthContext';
+import { ROUTES } from '@infrastructure/routes';
 import { toast } from 'sonner';
-import { httpClient } from '../../../infrastructure/api/http-client';
+import { httpClient } from '@infrastructure/api/http-client';
 
-export const useGroupDetail = (group_id: string) => {
-    const [activeTab, setActiveTab] = useState<'activity' | 'balances' | 'members' | 'payments' | 'asignación' | 'actividades' | 'saldos' | 'integrantes'>('actividades');
+export const useGroupDetail = (groupId: string) => {
+    const [activeTab, setActiveTab] = useState<'actividades' | 'saldos' | 'miembros' | 'ajustes' | 'pagos'>('actividades');
     const { user } = useAuthContext();
     const myId = user?.id;
 
@@ -17,17 +18,17 @@ export const useGroupDetail = (group_id: string) => {
     };
 
     const { data, isLoading, refetch, isFetching } = useQuery({
-        queryKey: ['group', group_id],
+        queryKey: ['group', groupId],
         queryFn: async () => {
-            if (!group_id || group_id === ':group_id' || group_id === 'undefined' || group_id === '') {
+            if (!groupId || groupId === ':groupId' || groupId === 'undefined' || groupId === '') {
                 return null;
             }
 
             // Fetch everything in parallel
             const [resGroup, resItems, resBalances] = await Promise.all([
-                httpClient.get(`/groups/${group_id}`),
-                httpClient.get(`/groups/${group_id}/items`),
-                httpClient.get(`/groups/${group_id}/balances`)
+                httpClient.get(`/groups/${groupId}`),
+                httpClient.get(`/groups/${groupId}/items`),
+                httpClient.get(`/groups/${groupId}/balances`)
             ]);
 
             const gData = resGroup.data;
@@ -38,6 +39,12 @@ export const useGroupDetail = (group_id: string) => {
                 throw new Error(gData.message || bData.message || "Error al cargar datos");
             }
 
+            // Fetch leader profile if not loaded
+            const lId = normalizeId(gData.administrador_id);
+            if (lId && !leaderProfile) {
+                httpClient.get(`/auth/profile/${lId}`).then(res => setLeaderProfile(res.data)).catch(console.error);
+            }
+
             const itemsList = (Array.isArray(itemsData) ? itemsData : (itemsData.items || []))
                 .map((item: any) => ({
                     ...item,
@@ -45,25 +52,25 @@ export const useGroupDetail = (group_id: string) => {
                     comprador_id: normalizeId(item.comprador_id)
                 }));
 
-            const rawIntegrantes = gData.integrantes || [];
-            let integrantes_data: any[] = [];
+            const rawMembers = gData.integrantes || [];
+            let membersData: any[] = [];
             let members: any[] = [];
 
-            if (rawIntegrantes.length > 0 && typeof rawIntegrantes[0] === 'object') {
-                integrantes_data = rawIntegrantes.map((m: any) => ({
+            if (rawMembers.length > 0 && typeof rawMembers[0] === 'object') {
+                membersData = rawMembers.map((m: any) => ({
                     ...m,
                     id: normalizeId(m.id || m._id)
                 }));
-                members = integrantes_data;
+                members = membersData;
             } else {
-                members = rawIntegrantes.map((id: string) => ({ id: normalizeId(id), nombre: 'Usuario' }));
-                integrantes_data = members;
+                members = rawMembers.map((id: string) => ({ id: normalizeId(id), nombre: 'Usuario' }));
+                membersData = members;
             }
 
             const detailedBalances = Array.isArray(bData.balance_detallado) 
                 ? bData.balance_detallado.map((b: any) => {
                     const uId = normalizeId(b.usuario_id);
-                    const foundUser = integrantes_data.find(i => i.id === uId);
+                    const foundUser = membersData.find(i => i.id === uId);
                     return {
                         ...b,
                         usuario_id: uId,
@@ -77,22 +84,25 @@ export const useGroupDetail = (group_id: string) => {
                 groupDescription: gData.descripcion || "",
                 groupCode: gData.codigo_invitacion || "---",
                 adminId: normalizeId(gData.administrador_id),
+                status: gData.status || "active",
+                selectedBankAccounts: gData.selected_bank_accounts || [],
                 members,
-                integrantes_data,
+                membersData,
                 activities: itemsList,
                 balances: detailedBalances,
                 totalSpent: bData.total_gastado_en_grupo || 0
             };
         },
         refetchInterval: 5000, 
-        enabled: !!group_id && group_id !== ':group_id'
+        enabled: !!groupId && groupId !== ':groupId'
     });
 
     const [is2FAModalOpen, setIs2FAModalOpen] = useState(false);
+    const [leaderProfile, setLeaderProfile] = useState<any>(null);
 
     const removeMember = async (userId: string) => {
         try {
-            await groupRepository.removeMember(group_id, userId);
+            await groupRepository.removeMember(groupId, userId);
             toast.success("Miembro eliminado");
             refetch();
         } catch (error: any) {
@@ -102,22 +112,25 @@ export const useGroupDetail = (group_id: string) => {
 
     const deleteGroup = async () => {
         if (!myId) return;
-        const toastId = toast.loading("Preparando verificación de seguridad...");
-        try {
-            await userRepository.setupTwoFactor(myId);
-            setIs2FAModalOpen(true);
-            toast.success("Código de verificación enviado", { id: toastId });
-        } catch (error: any) {
-            toast.error(error.message || "Error al preparar la seguridad", { id: toastId });
+        
+        // Verificar que todos los saldos estén en cero (saldados)
+        const hasUnsettledBalances = data?.balances.some((b: any) => Math.abs(b.balance) > 0.01);
+        
+        if (hasUnsettledBalances) {
+            toast.error("No se puede eliminar el grupo. Aún hay deudas o saldos pendientes de liquidar.");
+            return;
+        }
+
+        if (window.confirm("¿Estás seguro de que deseas eliminar permanentemente este grupo? Esta acción borrará todos los gastos e integrantes de forma definitiva.")) {
+            await confirmDeleteGroup();
         }
     };
 
     const confirmDeleteGroup = async () => {
         try {
-            await groupRepository.deleteGroup(group_id);
+            await groupRepository.deleteGroup(groupId);
             toast.success("Grupo eliminado correctamente");
-            setIs2FAModalOpen(false);
-            return true; // Navigation will be handled by the component
+            return true;
         } catch (error: any) {
             toast.error(error.message || "Error al eliminar grupo");
             return false;
@@ -126,7 +139,7 @@ export const useGroupDetail = (group_id: string) => {
 
     const deleteItem = async (itemId: string) => {
         try {
-            await groupRepository.removeItem(group_id, itemId);
+            await groupRepository.removeItem(groupId, itemId);
             toast.success("Gasto eliminado");
             refetch();
         } catch (error: any) {
@@ -137,25 +150,60 @@ export const useGroupDetail = (group_id: string) => {
     const stats = useMemo(() => {
         if (!data || !myId) return { userShare: 0, userOwed: 0 };
 
-        let miConsumoTotal = 0;
-        let miGastoEfectuado = 0;
+        let myTotalConsumption = 0;
+        let myTotalPaid = 0;
 
         data.activities.forEach((item: any) => {
-            const monto = parseFloat(item.monto || item.precio || 0);
-            const participantes = item.participantes_ids || [];
-            if (participantes.includes(myId)) {
-                miConsumoTotal += monto / (participantes.length || 1);
+            const amount = parseFloat(item.monto || item.precio || 0);
+            const participants = item.participantes_ids || [];
+            if (participants.includes(myId)) {
+                myTotalConsumption += amount / (participants.length || 1);
             }
             if (item.comprador_id === myId) {
-                miGastoEfectuado += monto;
+                myTotalPaid += amount;
             }
         });
 
         return {
-            userShare: isNaN(miConsumoTotal) ? 0 : miConsumoTotal,
-            userOwed: isNaN(miGastoEfectuado - miConsumoTotal) ? 0 : (miGastoEfectuado - miConsumoTotal)
+            userShare: isNaN(myTotalConsumption) ? 0 : myTotalConsumption,
+            userOwed: isNaN(myTotalPaid - myTotalConsumption) ? 0 : (myTotalPaid - myTotalConsumption)
         };
     }, [data, myId]);
+
+    const { data: pendingSettlements, refetch: refetchSettlements } = useQuery({
+        queryKey: ['pending-settlements', groupId],
+        queryFn: async () => {
+            if (!groupId || !data?.adminId || data.adminId !== myId) return [];
+            const res = await httpClient.get(`/groups/${groupId}/settlements/pending`);
+            return res.data;
+        },
+        enabled: !!groupId && !!data?.adminId && data.adminId === myId
+    });
+
+    const approveSettlement = async (settlementId: string) => {
+        try {
+            await httpClient.post(`/groups/${groupId}/settlements/${settlementId}/approve`, null, {
+                params: { current_user_id: myId }
+            });
+            toast.success("Liquidación aprobada correctamente");
+            refetchSettlements();
+            refetch(); // Update balances
+        } catch (error: any) {
+            toast.error(error.message || "Error al aprobar liquidación");
+        }
+    };
+    
+    const rejectSettlement = async (settlementId: string, reason: string) => {
+        try {
+            await httpClient.post(`/groups/${groupId}/settlements/${settlementId}/reject`, { reason }, {
+                params: { current_user_id: myId }
+            });
+            toast.success("Liquidación rechazada");
+            refetchSettlements();
+        } catch (error: any) {
+            toast.error(error.message || "Error al rechazar liquidación");
+        }
+    };
 
     return {
         activeTab, setActiveTab,
@@ -163,13 +211,15 @@ export const useGroupDetail = (group_id: string) => {
         groupDescription: data?.groupDescription || '',
         groupCode: data?.groupCode || '',
         members: data?.members || [],
-        integrantes_data: data?.integrantes_data || [],
+        membersData: data?.membersData || [],
         totalSpent: data?.totalSpent || 0,
         userShare: stats.userShare,
         userOwed: stats.userOwed,
         activities: data?.activities || [],
         balances: data?.balances || [],
         adminId: data?.adminId,
+        status: data?.status || 'active',
+        selectedBankAccounts: data?.selectedBankAccounts || [],
         currentUserId: normalizeId(myId),
         isFetchingGroup: isLoading,
         isRefreshing: isFetching, 
@@ -179,6 +229,10 @@ export const useGroupDetail = (group_id: string) => {
         confirmDeleteGroup,
         deleteItem,
         is2FAModalOpen,
-        setIs2FAModalOpen
+        setIs2FAModalOpen,
+        leaderProfile,
+        pendingSettlements: pendingSettlements || [],
+        approveSettlement,
+        rejectSettlement
     };
 };

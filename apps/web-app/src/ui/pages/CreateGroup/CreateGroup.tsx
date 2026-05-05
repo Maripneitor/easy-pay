@@ -24,7 +24,7 @@ export const CreateGroup = () => {
     return (
         <div className="min-h-screen bg-[var(--bg-body)] text-[var(--text-primary)] font-display antialiased">
             <PageHeader
-                title={activeTab === 'create' ? "Nuevo Grupo" : "Unirse a Grupo"}
+                title={activeTab === 'crear' ? "Nuevo Grupo" : "Unirse a Grupo"}
                 onBack={goBack}
             />
 
@@ -32,10 +32,10 @@ export const CreateGroup = () => {
                 {/* Selector de Modo */}
                 <div className="flex p-1.5 bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] shadow-inner">
                     <button
-                        onClick={() => setActiveTab('create')}
+                        onClick={() => setActiveTab('crear')}
                         className={cn(
                             "flex-1 py-3 rounded-xl text-xs font-black transition-all tracking-widest",
-                            activeTab === 'create'
+                            activeTab === 'crear'
                                 ? "bg-[var(--primary)] text-white shadow-lg"
                                 : "text-[var(--text-secondary)] opacity-50"
                         )}
@@ -43,10 +43,10 @@ export const CreateGroup = () => {
                         CREAR
                     </button>
                     <button
-                        onClick={() => setActiveTab('join')}
+                        onClick={() => setActiveTab('unirse')}
                         className={cn(
                             "flex-1 py-3 rounded-xl text-xs font-black transition-all tracking-widest",
-                            activeTab === 'join'
+                            activeTab === 'unirse'
                                 ? "bg-[var(--primary)] text-white shadow-lg"
                                 : "text-[var(--text-secondary)] opacity-50"
                         )}
@@ -55,7 +55,7 @@ export const CreateGroup = () => {
                     </button>
                 </div>
 
-                {activeTab === 'create' ? (
+                {activeTab === 'crear' ? (
                     /* SECCIÓN CREAR */
                     <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-300">
                         <div className="bg-[var(--bg-card)] p-6 rounded-3xl border border-[var(--border-color)] shadow-xl space-y-6">

@@ -42,3 +42,10 @@ async def get_user_stats(user_id: str):
 @router.get("/global")
 async def get_global_stats():
     return {"total_users": 0, "total_groups": 0, "total_expenses": 0}
+
+@router.get("/user/{user_id}/transactions")
+async def get_user_transactions(user_id: str):
+    """
+    Endpoint que devuelve el historial de transacciones reales.
+    """
+    return await repo.get_user_transactions(user_id)

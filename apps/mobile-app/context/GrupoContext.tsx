@@ -99,6 +99,50 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setSyncQueue(prev => [...prev, newItem]);
     };
 
+    // 6. Sync Processor
+    useEffect(() => {
+        const processQueue = async () => {
+            if (syncQueue.length === 0 || syncStatus === 'OFFLINE') return;
+
+            const nextItem = syncQueue[0];
+            try {
+                switch (nextItem.tipo) {
+                    case 'ADD_ITEM':
+                        await groupRepository.addItem(activeGrupo?.id!, nextItem.payload);
+                        break;
+                    case 'EDIT_ITEM':
+                        await groupRepository.editItem(activeGrupo?.id!, nextItem.payload.id, nextItem.payload);
+                        break;
+                    case 'DELETE_ITEM':
+                        await groupRepository.removeItem(activeGrupo?.id!, nextItem.payload.id);
+                        break;
+                    case 'ASSIGN_ITEM':
+                        await groupRepository.assignItem(activeGrupo?.id!, nextItem.payload.itemId, nextItem.payload.participantIds);
+                        break;
+                    case 'CLOSE_GRUPO':
+                        await groupRepository.closeGroup(activeGrupo?.id!);
+                        break;
+                }
+
+                // Success: Remove from queue
+                setSyncQueue(prev => prev.filter(item => item.id !== nextItem.id));
+            } catch (error) {
+                console.error(`❌ Error syncing ${nextItem.tipo}:`, error);
+                // Simple retry logic: if too many retries, stop for now
+                if (nextItem.reintentos > 3) {
+                    setSyncStatus('CONFLICT');
+                } else {
+                    setSyncQueue(prev => prev.map(item => 
+                        item.id === nextItem.id ? { ...item, reintentos: item.reintentos + 1 } : item
+                    ));
+                }
+            }
+        };
+
+        const timer = setTimeout(processQueue, 1000);
+        return () => clearTimeout(timer);
+    }, [syncQueue, activeGrupo?.id, syncStatus]);
+
     // 5. Actions
     const createGrupo = async (nombre: string, liderId: string) => {
         try {
@@ -232,7 +276,7 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             status: 'CERRADA' as GrupoStatus
         });
 
-        addToQueue('CLOSE_Grupo', { GrupoId: activeGrupo.id });
+        addToQueue('CLOSE_GRUPO', { grupoId: activeGrupo.id });
     };
 
     const clearGrupo = async () => {

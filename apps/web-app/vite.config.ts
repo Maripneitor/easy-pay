@@ -24,33 +24,23 @@ export default defineConfig({
     },
     proxy: {
       '/api/auth': {
-        target: getTarget('auth-service', 8001),
+        target: getTarget('unified-api', 8000),
         changeOrigin: true,
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('[vite-proxy] ❌ auth-service error:', err.message);
-          });
-        },
       },
       '/api/groups': {
-        target: getTarget('group-service', 8002),
+        target: getTarget('unified-api', 8000),
         changeOrigin: true,
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('[vite-proxy] ❌ group-service error:', err.message);
-          });
-        },
       },
       '/api/stats': {
-        target: getTarget('stats-service', 8003),
+        target: getTarget('unified-api', 8000),
         changeOrigin: true,
       },
       '/api/ocr': {
-        target: getTarget('ocr-service', 8004),
+        target: getTarget('unified-api', 8000),
         changeOrigin: true,
       },
       '/api/notifications': {
-        target: getTarget('notification-service', 8005),
+        target: getTarget('unified-api', 8000),
         changeOrigin: true,
       }
     }
@@ -59,8 +49,10 @@ export default defineConfig({
     alias: {
       '@easy-pay/domain': path.resolve(__dirname, '../../packages/domain/src/index.ts'),
       '@ui': path.resolve(__dirname, './src/ui'),
+      '@services': path.resolve(__dirname, './src/services'),
       '@application': path.resolve(__dirname, './src/application'),
       '@infrastructure': path.resolve(__dirname, './src/infrastructure'),
+      '@domain': path.resolve(__dirname, './src/domain'),
     },
     dedupe: ['react', 'react-dom']
   }

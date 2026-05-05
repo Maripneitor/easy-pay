@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from datetime import datetime
+from utils.security import get_current_user_id
 from group.infrastructure.repository.group_repository import MongoGroupRepository
 from group.infrastructure.repository.item_repository import MongoItemRepository
 from group.domain.models.group import GroupCreate
@@ -10,6 +12,7 @@ from group.application.join_group import JoinGroupUseCase
 from group.application.delete_group import DeleteGroupUseCase
 from group.application.create_group import CreateGroupUseCase
 from group.application.add_item import AddItemUseCase
+from group.domain.models.settlement import SettlementCreate
 
 group_router = APIRouter(prefix="/api/groups", tags=["Groups"], redirect_slashes=False)
 
@@ -66,7 +69,22 @@ async def get_balances(group_id: str):
 @group_router.get("/user/{user_id}")
 async def get_user_groups(user_id: str):
     groups = await group_repo.find_by_user(user_id)
-    return groups if groups else []
+    if not groups:
+        return []
+    
+    # Enriquecer cada grupo con el total gastado y estado
+    enriched_groups = []
+    for g in groups:
+        group_id = g["id"]
+        items = await item_repo.find_by_group(group_id)
+        total = sum((item.get("precio") or item.get("monto") or 0) * item.get("cantidad", 1) for item in items)
+        
+        g["total_gastado"] = round(total, 2)
+        # Soportamos tanto 'estado' como 'status' por compatibilidad
+        g["is_settled"] = (g.get("estado") == "closed" or g.get("status") == "closed")
+        enriched_groups.append(g)
+        
+    return enriched_groups
 
 
 @group_router.get("/{group_id}")
@@ -98,10 +116,17 @@ async def edit_item(group_id: str, item_id: str, item_data: ItemUpdate):
 
 @group_router.delete("/{group_id}", tags=["Groups"])
 @group_router.delete("/delete/{group_id}", include_in_schema=False)
-async def delete_group_route(group_id: str):
+async def delete_group_route(group_id: str, current_user_id: str = Depends(get_current_user_id)):
     """
-    Elimina un grupo permanentemente por su ID.
+    Elimina un grupo permanentemente por su ID. Solo el líder puede hacerlo.
     """
+    group = await group_repo.find_by_id(group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail="Grupo no encontrado")
+        
+    if group.get("admin_id") != current_user_id:
+        raise HTTPException(status_code=403, detail="Solo el administrador del grupo puede eliminarlo")
+        
     result = await delete_group_uc.execute(group_id)
     
     if result["status"] == "error":
@@ -140,6 +165,22 @@ async def add_member(group_id: str, data: dict):
         raise HTTPException(status_code=400, detail="No se pudo agregar al miembro")
     return {"status": "success", "message": "Miembro agregado"}
 
+@group_router.post("/{group_id}/start-settlement")
+async def start_settlement(group_id: str, data: dict):
+    """
+    Inicia la fase de liquidación. El líder selecciona las cuentas bancarias.
+    """
+    accounts = data.get("selected_bank_accounts", [])
+    update_data = {
+        "status": "settling",
+        "selected_bank_accounts": accounts,
+        "settlement_started_at": datetime.utcnow()
+    }
+    success = await group_repo.update_group(group_id, update_data)
+    if not success:
+        raise HTTPException(status_code=400, detail="No se pudo iniciar la liquidación")
+    return {"status": "success", "message": "Fase de liquidación iniciada"}
+
 @group_router.post("/{group_id}/close")
 async def close_group(group_id: str, data: dict):
     from datetime import datetime
@@ -148,10 +189,11 @@ async def close_group(group_id: str, data: dict):
         "final_total": data.get("final_total", 0),
         "fecha_cierre": datetime.utcnow().isoformat()
     }
+    # Forzar el status a 'closed' en el repo
     success = await group_repo.close_group(group_id, final_data)
     if not success:
         raise HTTPException(status_code=400, detail="No se pudo cerrar el grupo")
-    return {"status": "success", "message": "Grupo cerrado correctamente"}
+    return {"status": "success", "message": "Grupo finiquitado correctamente"}
 
 @group_router.delete("/{group_id}/members/{user_id}")
 async def remove_member(group_id: str, user_id: str):
@@ -167,3 +209,52 @@ async def remove_member(group_id: str, user_id: str):
     if not success:
         raise HTTPException(status_code=400, detail="No se pudo eliminar al miembro")
     return {"status": "success", "message": "Miembro eliminado"}
+
+@group_router.post("/{group_id}/settlements")
+async def create_settlement(group_id: str, settlement: SettlementCreate):
+    """Crea una solicitud de liquidación (pago realizado)"""
+    settlement_dict = settlement.dict()
+    settlement_dict["status"] = "pending"
+    settlement_dict["created_at"] = datetime.utcnow()
+    settlement_dict["updated_at"] = datetime.utcnow()
+    
+    settlement_id = await group_repo.create_settlement(settlement_dict)
+    return {"id": settlement_id, "status": "pending"}
+
+@group_router.get("/{group_id}/settlements/pending")
+async def get_pending_settlements(group_id: str):
+    """Obtiene liquidaciones pendientes para que el líder las apruebe"""
+    return await group_repo.get_pending_settlements(group_id)
+
+@group_router.post("/{group_id}/settlements/{settlement_id}/approve")
+async def approve_settlement(group_id: str, settlement_id: str, current_user_id: str):
+    """Solo el líder puede aprobar una liquidación"""
+    group = await group_repo.find_by_id(group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail="Grupo no encontrado")
+        
+    if group.get("admin_id") != current_user_id:
+        raise HTTPException(status_code=403, detail="Solo el administrador del grupo puede aprobar liquidaciones")
+        
+    success = await group_repo.approve_settlement(settlement_id)
+    if not success:
+        raise HTTPException(status_code=400, detail="No se pudo aprobar la liquidación")
+        
+    return {"message": "Liquidación aprobada correctamente"}
+
+@group_router.post("/{group_id}/settlements/{settlement_id}/reject")
+async def reject_settlement(group_id: str, settlement_id: str, current_user_id: str, data: dict):
+    """Solo el líder puede rechazar una liquidación"""
+    group = await group_repo.find_by_id(group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail="Grupo no encontrado")
+        
+    if group.get("admin_id") != current_user_id:
+        raise HTTPException(status_code=403, detail="Solo el administrador del grupo puede rechazar liquidaciones")
+    
+    reason = data.get("reason", "Pago no verificado")
+    success = await group_repo.reject_settlement(settlement_id, reason)
+    if not success:
+        raise HTTPException(status_code=400, detail="No se pudo rechazar la liquidación")
+        
+    return {"message": "Liquidación rechazada. Se ha notificado al miembro.", "status": "rejected"}

@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './CTA.module.css';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../../../../../infrastructure/routes';
 
 export const CTA = () => {
     const navigate = useNavigate();
@@ -14,7 +15,7 @@ export const CTA = () => {
                     <p className={styles.text}>Únete a miles de comensales felices que ya no sufren con la cuenta.</p>
                     <button
                         className={styles.button}
-                        onClick={() => navigate('/auth')}
+                        onClick={() => navigate(ROUTES.AUTH)}
                     >
                         Crear mi cuenta gratis
                     </button>

@@ -20,8 +20,17 @@ class GetGroupBalancesUseCase:
 
         for item in items:
             # Soportamos 'monto' o 'precio' por si acaso
-            costo_total = (item.get("precio") or item.get("monto") or 0) * item.get("cantidad", 1)
-            total_grupo += costo_total
+            precio_base = (item.get("precio") or item.get("monto") or 0)
+            cantidad = item.get("cantidad", 1)
+            
+            # Aplicar impuestos y propina por ítem si existen
+            impuesto_val = item.get("impuesto_porcentaje", 0) / 100
+            propina_val = item.get("propina_porcentaje", 0) / 100
+            
+            precio_con_extra = precio_base * (1 + impuesto_val + propina_val)
+            costo_total = precio_con_extra * cantidad
+            
+            total_grupo += (precio_base * cantidad) # Mantenemos el subtotal limpio
             
             comprador = item.get("comprador_id")
             participantes = item.get("participantes_ids", [])
@@ -36,7 +45,22 @@ class GetGroupBalancesUseCase:
                 for p_id in participantes:
                     if p_id in balances_netos:
                         balances_netos[p_id] -= cuota_item
-                        consumos_individuales[p_id] += cuota_item # 🚩 Registro de gasto real
+                        consumos_individuales[p_id] += cuota_item
+
+        # --- AGREGADO: Liquidaciones (Settlements) ---
+        # Si un usuario ya pagó y fue aprobado, su balance de deuda disminuye (se acerca a 0)
+        # y el balance del receptor (líder) también disminuye (ya cobró).
+        settlements_col = self.group_repository.db.get_collection("Settlements")
+        approved_settlements_cursor = settlements_col.find({"group_id": group_id, "status": "approved"})
+        async for s in approved_settlements_cursor:
+            p_id = s["payer_id"]
+            r_id = s["receiver_id"]
+            amount = s["amount"]
+            
+            if p_id in balances_netos:
+                balances_netos[p_id] += amount # El pagador ya no debe esto
+            if r_id in balances_netos:
+                balances_netos[r_id] -= amount # El receptor ya recibió esto
 
         # 🚩 Cálculo de Propina Dinámica (Regla Easy-Pay)
         # < $3000 -> 10% | >= $3000 -> 5%

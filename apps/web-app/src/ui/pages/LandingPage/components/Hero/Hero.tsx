@@ -2,6 +2,7 @@ import React from 'react';
 import { PlusCircle, Users, Store, DollarSign, QrCode } from 'lucide-react';
 import styles from './Hero.module.css';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../../../../../infrastructure/routes';
 import { cn } from '../../../../../infrastructure/utils';
 
 export const Hero = () => {
@@ -39,7 +40,7 @@ export const Hero = () => {
                     <div className={styles.actions}>
                         <button 
                             className={styles.mainCtaBtn}
-                            onClick={() => navigate('/auth')}
+                            onClick={() => navigate(ROUTES.AUTH)}
                         >
                             <QrCode size={20} />
                             <span>Comenzar ahora</span>

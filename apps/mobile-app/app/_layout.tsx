@@ -7,13 +7,13 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { DependenciesProvider } from '../src/infrastructure/context/DependenciesContext';
-import { ThemeProvider as AppThemeProvider } from '../src/infrastructure/context/ThemeContext';
-import { NotificationProvider } from '../src/infrastructure/context/NotificationContext';
+import { DependenciesProvider } from '@/src/infrastructure/context/DependenciesContext';
+import { ThemeProvider as AppThemeProvider } from '@/src/infrastructure/context/ThemeContext';
+import { NotificationProvider } from '@/src/infrastructure/context/NotificationContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from '../context/AuthContext';
-import { GrupoProvider } from '../context/GrupoContext';
-import { PaymentProvider } from '../src/infrastructure/context/PaymentContext';
+import { AuthProvider } from '@/context/AuthContext';
+import { GrupoProvider } from '@/context/GrupoContext';
+import { PaymentProvider } from '@/src/infrastructure/context/PaymentContext';
 
 SplashScreen.preventAutoHideAsync();
 

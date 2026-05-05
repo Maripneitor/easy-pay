@@ -20,6 +20,19 @@ repo = MongoUserRepository()
 async def ping():
     return {"status": "ok", "message": "Pong from Auth Service"}
 
+@user_router.get("/profile/{user_id}")
+async def get_user_profile(user_id: str):
+    user = await repo.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    return {
+        "id": str(user["_id"]),
+        "nombre": user.get("nombre"),
+        "email": user.get("email"),
+        "financial_profile": user.get("financial_profile") or {}
+    }
+
 @user_router.get("/search")
 async def search_users(query: str, limit: int = 5):
     """Busca usuarios registrados por nombre o email"""
@@ -91,18 +104,36 @@ async def login(login_data: UserLogin):
         )
 
 
-async def get_current_user_id(authorization: str = Header(...)):
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Token inválido")
-    token = authorization.split(" ")[1]
-    payload = decode_token(token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Token expirado o inválido")
-    return payload.get("sub")
+from utils.security import get_current_user_id
 
 @user_router.put("/update")
 async def update_user(data: UserUpdate, user_id: str = Depends(get_current_user_id)):
-    result = await update_user_use_case.execute(user_id, data.dict(exclude_unset=True))
+    update_dict = data.dict(exclude_unset=True)
+    
+    # 🛡️ BLINDAJE CRÍTICO: Si se intenta cambiar el email o datos bancarios, EXIGIR código de verificación
+    sensitive_fields = ["email", "bank_accounts", "financial_profile"]
+    if any(field in update_dict for field in sensitive_fields):
+        v_code = update_dict.get("verification_code")
+        if not v_code:
+            raise HTTPException(
+                status_code=400, 
+                detail="Se requiere un código de verificación para modificar datos sensibles (Email / Cuentas Bancarias)."
+            )
+        
+        # Verificar el código
+        verify_result = await verify_2fa_use_case.execute(user_id, v_code)
+        if verify_result["status"] == "error":
+            raise HTTPException(status_code=400, detail="Código de verificación inválido o expirado.")
+        
+        # Enforce max 3 bank accounts
+        if "bank_accounts" in update_dict:
+            if len(update_dict["bank_accounts"]) > 3:
+                raise HTTPException(status_code=400, detail="Solo se permiten hasta 3 cuentas bancarias.")
+
+        # Eliminar el código del dict para que no se guarde en el perfil del usuario
+        del update_dict["verification_code"]
+
+    result = await update_user_use_case.execute(user_id, update_dict)
     if result["status"] == "success":
         return result
     raise HTTPException(status_code=400, detail=result["message"])

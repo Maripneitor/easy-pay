@@ -55,18 +55,39 @@ export default function GroupListScreen() {
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
                 }
             >
-                <View className="flex-row justify-between items-center mb-10 py-4">
-                    <View>
-                        <Text style={{ color: theme.text, fontSize: 32 * fontScale }} className="font-black tracking-tighter leading-none uppercase">Mis Grupos</Text>
-                        <Text style={{ color: theme.primary, fontSize: 9 * fontScale }} className="font-black uppercase tracking-[3px] mt-2">Gestos Compartidos</Text>
+                <View className="flex-col gap-6 mb-10 py-4">
+                    <View className="flex-row justify-between items-center">
+                        <View>
+                            <Text style={{ color: theme.text, fontSize: 32 * fontScale }} className="font-black tracking-tighter leading-none uppercase">Mis Grupos</Text>
+                            <Text style={{ color: theme.primary, fontSize: 9 * fontScale }} className="font-black uppercase tracking-[3px] mt-2">Gestión Compartida</Text>
+                        </View>
+                        <TouchableOpacity 
+                            onPress={() => router.push('/(tabs)/settings')}
+                            style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
+                            className="w-10 h-10 rounded-full items-center justify-center border"
+                        >
+                            <Ionicons name="settings-outline" size={20} color={theme.textSecondary} />
+                        </TouchableOpacity>
                     </View>
-                    <TouchableOpacity 
-                        onPress={() => router.push('/create-group')}
-                        style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
-                        className="w-12 h-12 rounded-2xl items-center justify-center border"
-                    >
-                        <MaterialIcons name="add" size={24} color={theme.primary} />
-                    </TouchableOpacity>
+
+                    <View className="flex-row gap-3">
+                        <TouchableOpacity 
+                            onPress={() => router.push('/create-group')}
+                            style={{ backgroundColor: theme.primary }}
+                            className="flex-1 h-14 rounded-2xl items-center justify-center flex-row gap-2 shadow-lg shadow-blue-500/20"
+                        >
+                            <MaterialIcons name="add" size={20} color="black" />
+                            <Text style={{ fontSize: 12 * fontScale }} className="font-black uppercase tracking-widest text-black">Nuevo Grupo</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                            onPress={() => router.push('/join-group')}
+                            style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
+                            className="flex-1 h-14 rounded-2xl items-center justify-center border flex-row gap-2"
+                        >
+                            <MaterialIcons name="group-add" size={20} color={theme.primary} />
+                            <Text style={{ color: theme.primary, fontSize: 12 * fontScale }} className="font-black uppercase tracking-widest">Unirse</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 {/* Groups List */}

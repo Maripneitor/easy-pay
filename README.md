@@ -5,14 +5,12 @@
 ---
 
 ## 🛠️ 1. Requisitos Previos
-Antes de empezar, asegúrate de tener instalado:
-*   **Node.js (v20+)**
-*   **Docker Desktop** (Para la base de datos y el backend)
-*   **Git**
+- **Node.js:** Versión 20 (Usa `nvm use` si tienes `.nvmrc` activo).
+- **Docker & Docker Compose:** Para servicios de backend y bases de datos.
 
 ---
 
-## 🚀 2. Instalación por Primera Vez (Quick Start)
+## 📦 2. Instalación por Primera Vez (Quick Start)
 Sigue estos pasos para tener el proyecto funcional en menos de 5 minutos:
 
 1.  **Clonar el proyecto:**
@@ -26,30 +24,68 @@ Sigue estos pasos para tener el proyecto funcional en menos de 5 minutos:
     npm install --legacy-peer-deps
     ```
 
-3.  **Configurar Variables:**
-    Copia el archivo de ejemplo y cámbiale el nombre a `.env`:
-    ```bash
-    cp .env.example .env
-    ```
-
 ---
 
 ## 💻 3. Cómo Correr el Proyecto
 
-### Opción A: Script Automático (Recomendado para Windows)
+Para tener el control total en tres terminales separadas, ejecuta estos comandos desde la **carpeta raíz** del proyecto (`Easy-Pay`):
+
+### 1. Terminal BACKEND (Docker)
+Este comando levantará todos los microservicios en segundo plano.
+```powershell
+npm run dev:backend
+# o alternativamente: docker-compose up unified-api
+```
+
+### 2. Terminal WEB (Vite)
+Este comando iniciará el servidor de desarrollo para la aplicación web en el puerto 5173.
+```powershell
+npm run dev:web
+```
+
+### 3. Terminal MOBILE (Expo)
+Este comando iniciará el Metro Bundler para la aplicación móvil con la configuración de red local (LAN).
+```powershell
+npm run dev:mobile
+```
+
+---
+
+**Tip Pro:** Si prefieres ver todo en una sola terminal combinada (usando `concurrently`), puedes simplemente ejecutar:
+```powershell
+npm run dev
+```
+
+Pero si prefieres debuguear por separado, la opción de las 3 terminales anteriores es la mejor.
+
+También existe una Opción Automática (Recomendada para Windows):
 Este script detecta tu IP, configura los archivos `.env` y abre todas las terminales por ti:
 ```powershell
 ./dev.ps1
 ```
 
-### Opción B: Comandos Manuales
-Si prefieres control total, abre 3 terminales y ejecuta:
+---
 
-1.  **Backend & DB:** `docker-compose up -d`
-2.  **Web App:** `npm run dev:web`
-3.  **Mobile App:** `npm run dev:mobile`
+## 🗺️ 4. Estructura de Navegación
+
+El ecosistema Easy-Pay sigue los Estándares de Calidad 2026, lo que implica una interfaz limpia y paridad entre Web y Mobile. La navegación principal es:
+
+- **Inicio (Dashboard):** Resumen financiero, métricas clave y acceso rápido a grupos activos.
+- **Mis Grupos:** Centro de gestión para crear, unirse y liquidar grupos compartidos.
+- **Estadísticas (Gráficas):** Reportes financieros y gráficos del flujo de gastos.
+- **Configuración (Perfil):** Gestión de cuentas bancarias (hasta 3), ajustes de seguridad e **Historial de Movimientos**.
+
+*Nota: La antigua sección independiente de "Mis Pagos" ha sido removida y consolidada en las métricas y el historial para una UX más fluida.*
 
 ---
+
+## 🛠️ 5. Mantenimiento y Troubleshooting
+
+### ☢️ Reset Total (Senior DX)
+Si el entorno se corrompe o las dependencias fallan, usa el comando "Nuke". Este comando limpia Docker, borra `node_modules`, limpia caché y reinstala todo de cero:
+```bash
+npm run nuke
+```
 
 ## 🚀 Guía de Inicio y Flujo de Trabajo para el Equipo
 

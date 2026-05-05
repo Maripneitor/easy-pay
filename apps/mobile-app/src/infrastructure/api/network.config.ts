@@ -3,7 +3,8 @@ import Constants from 'expo-constants';
 export const getApiBaseUrl = () => {
     // 1. Producción o variable explícita (.env)
     if (process.env.EXPO_PUBLIC_API_URL) {
-        return process.env.EXPO_PUBLIC_API_URL;
+        const url = process.env.EXPO_PUBLIC_API_URL;
+        return url.endsWith('/api') ? url : `${url}/api`;
     }
     
     // 2. Detección automática en LAN (Dispositivos físicos vía Expo)

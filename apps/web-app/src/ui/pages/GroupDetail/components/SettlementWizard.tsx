@@ -9,7 +9,9 @@ import {
     Calculator, 
     Table,
     AlertCircle,
-    Download
+    Download,
+    Landmark,
+    Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../../../infrastructure/utils';
@@ -17,6 +19,8 @@ import { httpClient } from '../../../../infrastructure/api/http-client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { groupRepository } from '../../../../infrastructure/api/repositories';
+import { useAuthContext } from '../../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface SettlementWizardProps {
     isOpen: boolean;
@@ -25,71 +29,113 @@ interface SettlementWizardProps {
     activities: any[];
     members: any[];
     totalSpent: number;
-    integrantesData: any[];
+    membersData: any[]; // Changed from integrantesData for consistency
 }
 
 export const SettlementWizard: React.FC<SettlementWizardProps> = ({ 
-    isOpen, onClose, groupId, activities, members, totalSpent, integrantesData 
+    isOpen, onClose, groupId, activities, members, totalSpent, membersData 
 }) => {
+    const { user } = useAuthContext();
+    const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [tipPercentage, setTipPercentage] = useState(10);
     const [customTip, setCustomTip] = useState('');
     const [isClosing, setIsClosing] = useState(false);
+    const [localActivities, setLocalActivities] = useState(activities || []);
+
+    const handleUpdateItem = (itemId: string, updates: any) => {
+        setLocalActivities(prev => prev.map(item => 
+            item.id === itemId ? { ...item, ...updates } : item
+        ));
+    };
 
     const safeActivities = activities || [];
-    const safeIntegrantes = integrantesData || [];
+    const safeMembers = membersData || [];
 
-    const unassignedItems = safeActivities.filter(item => 
+    const unassignedItems = localActivities.filter(item => 
         !item.nombres_participantes || item.nombres_participantes.length === 0
     );
 
-    const tipAmount = tipPercentage === -1 ? Number(customTip) || 0 : (totalSpent * tipPercentage) / 100;
-    const finalTotal = totalSpent + tipAmount;
+    const subtotalLocal = localActivities.reduce((acc, item) => 
+        acc + (Number(item.monto || item.precio || 0) * (item.cantidad || 1)), 0);
+    
+    const perItemTaxes = localActivities.reduce((acc, item) => {
+        const base = Number(item.monto || item.precio || 0) * (item.cantidad || 1);
+        return acc + (base * (item.impuesto_porcentaje || 0) / 100);
+    }, 0);
+
+    const perItemTips = localActivities.reduce((acc, item) => {
+        const base = Number(item.monto || item.precio || 0) * (item.cantidad || 1);
+        return acc + (base * (item.propina_porcentaje || 0) / 100);
+    }, 0);
+
+    const globalTipAmount = tipPercentage === -1 ? Number(customTip) || 0 : (subtotalLocal * tipPercentage) / 100;
+    const finalTotal = subtotalLocal + perItemTaxes + perItemTips + globalTipAmount;
 
     // --- CÁLCULO DE RESUMEN POR INTEGRANTE ---
     // Calcula la porción de cada miembro basándose en los gastos reales asignados
-    const summary = safeIntegrantes.map(member => {
-        const spent = safeActivities
+    const summary = safeMembers.map(member => {
+        const spent = localActivities
             .filter(item => {
                 const pIds = item.participantes_ids || [];
                 return pIds.includes(member.id);
             })
             .reduce((acc, item) => {
-                const amount = Number(item.monto || item.precio || 0);
+                const base = Number(item.monto || item.precio || 0) * (item.cantidad || 1);
                 const participantsCount = Math.max((item.participantes_ids || []).length, 1);
-                return acc + (amount / participantsCount);
+                const extra = (item.impuesto_porcentaje || 0) / 100 + (item.propina_porcentaje || 0) / 100;
+                const totalItem = base * (1 + extra);
+                return acc + (totalItem / participantsCount);
             }, 0);
         
-        const shareOfTip = tipAmount / (safeIntegrantes.length || 1);
+        const shareOfGlobalTip = globalTipAmount / (safeMembers.length || 1);
         return {
             name: member.nombre || 'Usuario',
             subtotal: spent,
-            tip: shareOfTip,
-            total: spent + shareOfTip
+            tip: shareOfGlobalTip,
+            total: spent + shareOfGlobalTip
         };
     });
+
+    const [selectedAccounts, setSelectedAccounts] = useState<string[]>(
+        (user?.bank_accounts || []).filter((a: any) => a.is_default).map((a: any) => a.id)
+    );
 
     const handleNext = () => setStep(s => s + 1);
     const handleBack = () => setStep(s => s - 1);
 
     const queryClient = useQueryClient();
 
-    const handleCloseTable = async () => {
+    const handleStartSettlement = async () => {
+        if (selectedAccounts.length === 0) {
+            return toast.error("Debes seleccionar al menos una cuenta bancaria");
+        }
         setIsClosing(true);
         try {
-            await groupRepository.closeGroup(groupId, tipAmount, finalTotal);
+            // Buscamos los objetos de cuenta completos
+            const accountsToShow = (user?.bank_accounts || []).filter((a: any) => selectedAccounts.includes(a.id));
             
-            toast.success("Grupo cerrado correctamente");
-            // Invalidate all related data
+            await httpClient.post(`/groups/${groupId}/start-settlement`, {
+                selected_bank_accounts: accountsToShow
+            });
+            
+            // También enviamos el cierre (propina y totales)
+            // Update items on backend before starting settlement
+            await Promise.all(localActivities.map(item => 
+                httpClient.put(`/groups/${groupId}/items/${item.id}`, {
+                    impuesto_porcentaje: item.impuesto_porcentaje,
+                    propina_porcentaje: item.propina_porcentaje
+                })
+            ));
+
+            await groupRepository.closeGroup(groupId, globalTipAmount, finalTotal);
+            
+            toast.success("Liquidación iniciada y grupo actualizado");
             queryClient.invalidateQueries({ queryKey: ['group', groupId] });
-            queryClient.invalidateQueries({ queryKey: ['user-stats'] });
-            queryClient.invalidateQueries({ queryKey: ['user-charts'] });
-            
             onClose();
-            // We keep the reload as fallback for now if the user isn't in a React Query context elsewhere
             setTimeout(() => window.location.reload(), 500);
         } catch (error) {
-            toast.error("Error al cerrar el grupo");
+            toast.error("Error al iniciar la liquidación");
         } finally {
             setIsClosing(false);
         }
@@ -122,7 +168,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                             </div>
                             <div>
                                 <h2 className="text-xl font-black uppercase tracking-tighter text-[var(--text-primary)]">Asistente de Liquidación</h2>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Paso {step} de 3</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Paso {step} de 4</p>
                             </div>
                         </div>
                         <button onClick={onClose} className="p-2 hover:bg-[var(--hover-bg)] rounded-xl transition-colors">
@@ -134,12 +180,12 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                     <div className="w-full h-1 bg-black/5">
                         <motion.div 
                             className="h-full bg-emerald-500"
-                            animate={{ width: `${(step / 3) * 100}%` }}
+                            animate={{ width: `${(step / 4) * 100}%` }}
                         />
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 overflow-y-auto p-8">
+                    <div className="flex-1 overflow-y-auto p-8 no-scrollbar">
                         {step === 1 && (
                             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                                 <div className="flex flex-col items-center text-center mb-8">
@@ -156,14 +202,6 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                         <div>
                                             <p className="text-amber-200 font-bold text-sm">Gastos sin asignar detectados</p>
                                             <p className="text-amber-200/60 text-xs mt-1">Hay {unassignedItems.length} items que no tienen dueños. Asígnelos antes de continuar para un cálculo preciso.</p>
-                                            <div className="mt-4 space-y-2">
-                                                {unassignedItems.slice(0, 3).map((item, i) => (
-                                                    <div key={i} className="flex justify-between items-center text-[10px] font-mono text-amber-200/80 bg-black/20 p-2 rounded-lg">
-                                                        <span>{item.nombre}</span>
-                                                        <span>${item.monto}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
                                         </div>
                                     </div>
                                 ) : (
@@ -173,6 +211,55 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                         <p className="text-emerald-200/60 text-xs mt-2">Todos los {activities.length} gastos han sido asignados correctamente.</p>
                                     </div>
                                 )}
+
+                                <div className="space-y-3 mt-8">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Detalle del Comprobante</p>
+                                    <div className="grid gap-3">
+                                        {localActivities.map((item, i) => (
+                                            <div key={i} className="bg-black/5 border border-[var(--border-color)] p-4 rounded-3xl flex flex-col gap-4 group hover:border-[var(--primary)]/30 transition-all">
+                                                <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <p className="text-sm font-black uppercase tracking-tight text-[var(--text-primary)]">{item.nombre || item.description}</p>
+                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                            {(item.nombres_participantes || item.participants || []).map((p: string, j: number) => (
+                                                                <span key={j} className="text-[8px] font-black uppercase px-1.5 py-0.5 bg-black/10 rounded-md text-slate-400">
+                                                                    {p.split(' ')[0]}
+                                                                </span>
+                                                            ))}
+                                                            {!(item.nombres_participantes || item.participants || []).length && (
+                                                                <span className="text-[8px] font-black uppercase px-1.5 py-0.5 bg-rose-500/10 rounded-md text-rose-500">Sin asignar</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-sm font-black font-mono text-[var(--primary)]">${Number(item.monto || item.precio).toFixed(2)}</span>
+                                                </div>
+                                                
+                                                <div className="flex gap-4">
+                                                    <div className="flex-1 flex items-center gap-2 bg-white/5 p-2 px-3 rounded-xl border border-white/5">
+                                                        <span className="text-[9px] font-black uppercase text-slate-500">IVA %</span>
+                                                        <input 
+                                                            type="number"
+                                                            value={item.impuesto_porcentaje || 0}
+                                                            onChange={(e) => handleUpdateItem(item.id, { impuesto_porcentaje: Number(e.target.value) })}
+                                                            className="bg-transparent border-none outline-none text-[10px] font-black text-[var(--text-primary)] w-full text-right"
+                                                            placeholder="0"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1 flex items-center gap-2 bg-white/5 p-2 px-3 rounded-xl border border-white/5">
+                                                        <span className="text-[9px] font-black uppercase text-slate-500">TIP %</span>
+                                                        <input 
+                                                            type="number"
+                                                            value={item.propina_porcentaje || 0}
+                                                            onChange={(e) => handleUpdateItem(item.id, { propina_porcentaje: Number(e.target.value) })}
+                                                            className="bg-transparent border-none outline-none text-[10px] font-black text-[var(--text-primary)] w-full text-right"
+                                                            placeholder="0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </motion.div>
                         )}
 
@@ -235,6 +322,71 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
 
                         {step === 3 && (
                             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+                                <div className="flex flex-col items-center text-center">
+                                    <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/10 flex items-center justify-center text-indigo-500 mb-4">
+                                        <CreditCard size={40} />
+                                    </div>
+                                    <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tight">Cuentas para Cobro</h3>
+                                    <p className="text-sm text-[var(--text-secondary)] mt-2">Selecciona las cuentas donde quieres recibir los pagos.</p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {(!user?.bank_accounts || user.bank_accounts.length === 0) ? (
+                                        <div className="p-8 border-2 border-dashed border-rose-500/20 rounded-3xl text-center">
+                                            <p className="text-rose-500 font-black uppercase tracking-widest text-xs">Sin cuentas registradas</p>
+                                            <p className="text-slate-400 text-[10px] mt-2">Debes agregar al menos una cuenta en tu perfil para liquidar el grupo.</p>
+                                            <button 
+                                                onClick={() => navigate('/profile/personal-data')}
+                                                className="mt-4 px-6 py-2 bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
+                                            >
+                                                Configurar Perfil
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        user.bank_accounts.map((acc: any) => (
+                                            <button
+                                                key={acc.id}
+                                                onClick={() => {
+                                                    if (selectedAccounts.includes(acc.id)) {
+                                                        setSelectedAccounts(selectedAccounts.filter(id => id !== acc.id));
+                                                    } else {
+                                                        setSelectedAccounts([...selectedAccounts, acc.id]);
+                                                    }
+                                                }}
+                                                className={cn(
+                                                    "w-full p-6 rounded-3xl border-2 transition-all flex items-center justify-between",
+                                                    selectedAccounts.includes(acc.id)
+                                                        ? "bg-indigo-500/5 border-indigo-500"
+                                                        : "bg-[var(--bg-body)] border-[var(--border-color)] opacity-60"
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-4 text-left">
+                                                    <div className={cn(
+                                                        "w-10 h-10 rounded-xl flex items-center justify-center",
+                                                        selectedAccounts.includes(acc.id) ? "bg-indigo-500 text-white" : "bg-slate-200 text-slate-400"
+                                                    )}>
+                                                        <Landmark size={20} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-black text-sm uppercase text-[var(--text-primary)]">{acc.entidad_financiera}</p>
+                                                        <p className="text-[10px] font-bold font-mono text-slate-400 uppercase tracking-widest">{acc.clabe}</p>
+                                                    </div>
+                                                </div>
+                                                <div className={cn(
+                                                    "w-6 h-6 rounded-full border-2 flex items-center justify-center",
+                                                    selectedAccounts.includes(acc.id) ? "bg-indigo-500 border-indigo-500" : "border-slate-300"
+                                                )}>
+                                                    {selectedAccounts.includes(acc.id) && <Check size={14} className="text-white" />}
+                                                </div>
+                                            </button>
+                                        ))
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {step === 4 && (
+                            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                                 <div className="flex items-center gap-4 mb-6">
                                     <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                                         <Table size={24} />
@@ -268,7 +420,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                 <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-6 flex items-start gap-4">
                                     <Calculator size={20} className="text-blue-500 mt-1" />
                                     <p className="text-[10px] text-blue-400 font-medium leading-relaxed">
-                                        Este resumen incluye el desglose exacto de lo que cada persona debe aportar para cubrir el total de la cuenta incluyendo la propina seleccionada. Al cerrar el grupo, se enviará una notificación a todos los integrantes.
+                                        Se mostrarán {selectedAccounts.length} cuentas bancarias a los miembros para que realicen sus transferencias. El grupo entrará en estado de liquidación.
                                     </p>
                                 </div>
                             </motion.div>
@@ -285,16 +437,16 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                         </button>
 
                         <button 
-                            onClick={step === 3 ? handleCloseTable : handleNext}
-                            disabled={(step === 1 && unassignedItems.length > 0) || isClosing}
+                            onClick={step === 4 ? handleStartSettlement : handleNext}
+                            disabled={(step === 1 && unassignedItems.length > 0) || (step === 3 && selectedAccounts.length === 0) || isClosing}
                             className={cn(
                                 "flex items-center gap-2 px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-lg active:scale-95",
-                                step === 3 
+                                step === 4 
                                     ? "bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-500" 
                                     : "bg-[var(--primary)] text-white shadow-[var(--primary)]/20 hover:brightness-110 disabled:opacity-50 disabled:grayscale"
                             )}
                         >
-                            {isClosing ? 'Procesando...' : step === 3 ? 'Cerrar Grupo Definitivamente' : 'Siguiente'}
+                            {isClosing ? 'Procesando...' : step === 4 ? 'Iniciar Liquidación' : 'Siguiente'}
                             {!isClosing && <ArrowRight size={16} />}
                         </button>
                     </div>

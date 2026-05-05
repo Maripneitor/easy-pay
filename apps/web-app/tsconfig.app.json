@@ -31,6 +31,9 @@
       "@infrastructure/*": [
         "./src/infrastructure/*"
       ],
+      "@services/*": [
+        "./src/services/*"
+      ],
       "@application/*": [
         "./src/application/*"
       ],

@@ -1,12 +1,14 @@
+import { usePayment } from '../../context/usePayment';
+import { useAuthContext } from '../../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { statsRepository } from '../../../infrastructure/api/repositories';
-import { useAuthContext } from '../../context/AuthContext';
 
 export const useProfileStats = () => {
     const { user } = useAuthContext();
     const userId = user?.id || null;
+    const { transactions, isLoading: transactionsLoading, refreshTransactions } = usePayment();
 
-    // Fetch basic stats (Total spent, owed, etc.)
+    // Still use useQuery for complex charts and stats that might not be in the simple transaction list
     const statsQuery = useQuery({
         queryKey: ['user-stats', userId],
         queryFn: async () => {
@@ -14,10 +16,8 @@ export const useProfileStats = () => {
             return await statsRepository.getUserStats(userId);
         },
         enabled: !!userId,
-        staleTime: 1000 * 60 * 5,
     });
 
-    // Fetch chart data (Monthly trend, detailed categories)
     const chartsQuery = useQuery({
         queryKey: ['user-charts', userId],
         queryFn: async () => {
@@ -25,27 +25,24 @@ export const useProfileStats = () => {
             return await statsRepository.getUserCharts(userId);
         },
         enabled: !!userId,
-        staleTime: 1000 * 60 * 5,
     });
 
     const refresh = () => {
+        refreshTransactions();
         statsQuery.refetch();
         chartsQuery.refetch();
     };
 
-    // Combine data for the UI
     const combinedData = {
         ...(statsQuery.data || {}),
         ...(chartsQuery.data || {}),
-        // Ensure consistent field names
-        categories: chartsQuery.data?.by_category || statsQuery.data?.expenses_by_category || [],
-        monthly_trend: chartsQuery.data?.monthly_trend || []
+        transactions: transactions,
+        by_category: chartsQuery.data?.by_category || statsQuery.data?.expenses_by_category || []
     };
 
     return { 
         stats: combinedData, 
-        loading: statsQuery.isLoading || chartsQuery.isLoading,
-        error: statsQuery.isError || chartsQuery.isError,
+        loading: transactionsLoading || statsQuery.isLoading || chartsQuery.isLoading,
         refresh 
     };
 };

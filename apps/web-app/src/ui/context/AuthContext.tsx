@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { STORAGE_KEYS } from '../../infrastructure/localStorage/storage-keys';
-import { clearAuthToken } from '../../infrastructure/api/http-client';
-import { authService, type User } from '../../services/authService';
+import { STORAGE_KEYS } from '@infrastructure/localStorage/storage-keys';
+import { clearAuthToken } from '@infrastructure/api/http-client';
+import { authService, type User } from '@services/authService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

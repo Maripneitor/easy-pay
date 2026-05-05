@@ -14,21 +14,23 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useTheme } from '../../../src/infrastructure/context/ThemeContext';
+import { useTheme } from '@/src/infrastructure/context/ThemeContext';
 
 // Modular Components
-import { VirtualTicketCard } from '../../../components/group/VirtualTicketCard';
-import { MemberList } from '../../../components/group/MemberList';
-import { TotalsSummary } from '../../../components/group/TotalsSummary';
-import { PaymentMethodModal } from '../../../components/group/PaymentMethodModal';
-import { SettlementWizard } from '../../../components/group/SettlementWizard';
+import { VirtualTicketCard } from '@/components/group/VirtualTicketCard';
+import { MemberList } from '@/components/group/MemberList';
+import { TotalsSummary } from '@/components/group/TotalsSummary';
+import { PaymentMethodModal } from '@/components/group/PaymentMethodModal';
+import { SettlementWizard } from '@/components/group/SettlementWizard';
+import { EditItemModal } from '@/components/group/EditItemModal';
+import { EditGroupModal } from '@/components/group/EditGroupModal';
 
-import OcrTicketScanner from '../../../components/OcrTicketScanner';
-import { TicketData } from '../../../src/infrastructure/services/OcrService';
-import { groupRepository } from '../../../src/infrastructure/api/repositories/GroupRepository';
-import { useAuth } from '../../../context/AuthContext';
-import { useGrupo } from '../../../context/GrupoContext';
-import { getApiBaseUrl } from '../../../src/infrastructure/api/network.config';
+import OcrTicketScanner from '@/components/OcrTicketScanner';
+import { TicketData } from '@/src/infrastructure/services/OcrService';
+import { groupRepository } from '@/src/infrastructure/api/repositories/GroupRepository';
+import { useAuth } from '@/context/AuthContext';
+import { useGrupo } from '@/context/GrupoContext';
+import { getApiBaseUrl } from '@/src/infrastructure/api/network.config';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -55,7 +57,8 @@ export default function GroupDetailScreen() {
     const [isPaymentVisible, setIsPaymentVisible] = useState(false);
     const [isWizardVisible, setIsWizardVisible] = useState(false);
     const [showOcr, setShowOcr] = useState(false);
-
+    const [editingItem, setEditingItem] = useState<any>(null);
+    const [isEditGroupVisible, setIsEditGroupVisible] = useState(false);
     const fetchData = useCallback(async (silent = false) => {
         if (!id) return;
         if (!silent) setIsLoading(true);
@@ -95,11 +98,17 @@ export default function GroupDetailScreen() {
         setActiveTab(tab);
     };
 
-    const handlePaymentSelect = (method: 'cash' | 'card') => {
-        setIsPaymentVisible(false);
-        router.push({ pathname: '/settle-up', params: { method, amount: userOwed } } as any);
+    const handlePaymentSelect = () => {
+        router.push({ pathname: '/settle-up', params: { method: 'transfer', amount: userOwed, groupId: id } } as any);
     };
 
+    const handleEditItem = (item: any) => {
+        // Encontrar el item original del estado groupItems para tener todos los campos (ids de participantes, etc)
+        const originalItem = groupItems.find(i => i.id === item.id);
+        setEditingItem(originalItem || item);
+    };
+
+    const isLeader = groupData?.admin_id === user?.id || groupData?.lider_id === user?.id || groupData?.liderId === user?.id;
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
@@ -124,21 +133,38 @@ export default function GroupDetailScreen() {
                 <View className="items-center">
                     <Text style={{ color: theme.text, fontSize: 20 * fontScale, fontFamily: 'Manrope' }} className="font-bold">{groupData?.nombre || 'Grupo'}</Text>
                     <View className="flex-row items-center mt-0.5">
-                        <View style={{ backgroundColor: groupData?.status === 'ACTIVA' ? '#10B981' : groupData?.status === 'CERRANDO' ? '#F59E0B' : '#64748B' }} className="w-1.5 h-1.5 rounded-full mr-1.5" />
+                        <View style={{ backgroundColor: (groupData?.status?.toLowerCase() === 'active' || groupData?.status?.toLowerCase() === 'activa') ? '#10B981' : (groupData?.status?.toLowerCase() === 'closed' || groupData?.status?.toLowerCase() === 'cerrada') ? '#64748B' : '#F59E0B' }} className="w-1.5 h-1.5 rounded-full mr-1.5" />
                         <Text style={{ color: theme.textSecondary, fontSize: 11 * fontScale, fontFamily: 'Inter' }} className="font-medium opacity-80 uppercase tracking-widest">
-                            {groupData?.status === 'ACTIVA' ? 'Grupo Abierto' : groupData?.status || 'Sincronizando...'}
+                            {(groupData?.status?.toLowerCase() === 'active' || groupData?.status?.toLowerCase() === 'activa') ? 'Grupo Abierto' : (groupData?.status?.toLowerCase() === 'closed' || groupData?.status?.toLowerCase() === 'cerrada') ? 'Grupo Cerrado' : groupData?.status || 'Sincronizando...'}
                         </Text>
                     </View>
                 </View>
 
                 <View className="flex-row items-center gap-1">
                     {(groupData?.admin_id === user?.id || groupData?.lider_id === user?.id || groupData?.liderId === user?.id) && (
-                        <TouchableOpacity 
-                            onPress={async () => {
-                                import('react-native').then(({ Alert }) => {
+                        <>
+                            <TouchableOpacity 
+                                onPress={() => setIsEditGroupVisible(true)}
+                                className="p-2 rounded-full mr-1" 
+                                style={{ backgroundColor: theme.cardSecondary }}
+                            >
+                                <MaterialIcons name="edit" size={20} color={theme.text} />
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                onPress={async () => {
+                                    const { Alert } = await import('react-native');
+                                    
+                                    // Verificar que todos los saldos estén en cero (saldados)
+                                    const hasUnsettled = balances?.balance_detallado?.some((b: any) => Math.abs(b.balance) > 0.01);
+                                    
+                                    if (hasUnsettled) {
+                                        Alert.alert('No se puede eliminar', 'Aún hay deudas o saldos pendientes de liquidar en el grupo.');
+                                        return;
+                                    }
+
                                     Alert.alert(
                                         'Eliminar Grupo',
-                                        '¿Estás seguro de que deseas eliminar esta grupo? Esta acción no se puede deshacer.',
+                                        '¿Estás seguro de que deseas eliminar permanentemente este grupo? Esta acción borrará todos los gastos e integrantes de forma definitiva.',
                                         [
                                             { text: 'Cancelar', style: 'cancel' },
                                             { 
@@ -146,31 +172,32 @@ export default function GroupDetailScreen() {
                                                 style: 'destructive',
                                                 onPress: async () => {
                                                     try {
-                                                        await groupRepository.deleteGroup(id as string);
-                                                        router.back();
+                                                        await groupRepository.deleteGroup(id!);
+                                                        router.replace('/(tabs)/groups');
                                                     } catch (err) {
-                                                        console.error('Error al eliminar grupo:', err);
-                                                        Alert.alert('Error', 'No se pudo eliminar el grupo');
+                                                        Alert.alert('Error', 'No se pudo eliminar el grupo.');
                                                     }
                                                 }
                                             }
                                         ]
                                     );
-                                });
-                            }}
-                            className="p-2 rounded-full mr-1" 
-                            style={{ backgroundColor: theme.cardSecondary }}
+                                }}
+                                className="p-2 rounded-full mr-1" 
+                                style={{ backgroundColor: theme.cardSecondary }}
+                            >
+                                <MaterialIcons name="delete-outline" size={24} color="#f43f5e" />
+                            </TouchableOpacity>
+                        </>
+                    )}
+                    {isLeader && (
+                        <TouchableOpacity 
+                            onPress={() => setShowOcr(true)}
+                            className="p-2 rounded-full" 
+                            style={{ backgroundColor: theme.cardSecondary, opacity: (groupData?.status?.toLowerCase() === 'closed' || groupData?.status?.toLowerCase() === 'cerrada') ? 0.5 : 1 }}
                         >
-                            <MaterialIcons name="delete-outline" size={24} color="#f43f5e" />
+                            <MaterialIcons name="document-scanner" size={24} color={theme.primary} />
                         </TouchableOpacity>
                     )}
-                    <TouchableOpacity 
-                        onPress={() => setShowOcr(true)}
-                        className="p-2 rounded-full" 
-                        style={{ backgroundColor: theme.cardSecondary, opacity: groupData?.status === 'CERRADA' ? 0.5 : 1 }}
-                    >
-                        <MaterialIcons name="document-scanner" size={24} color={theme.primary} />
-                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -222,37 +249,58 @@ export default function GroupDetailScreen() {
                             <VirtualTicketCard 
                                 groupId={id}
                                 items={(groupItems).map((i: any) => ({
-                                  id: i.id,
-                                  description: i.description,
-                                  name: i.description ?? i.name ?? '',
-                                  amount: i.amount,
-                                  assignedTo: i.assignedTo ?? [],
-                                  avatars: i.avatars ?? [],
-                                  addedBy: i.addedBy ?? '',
+                                    id: i.id,
+                                    name: i.nombre || i.description || '',
+                                    detail: i.comprador_id || i.addedBy || '',
+                                    amount: i.precio || i.amount || 0,
+                                    participants: i.participantes_ids || i.assignedTo || [],
                                 }))}
                                 serviceFee={0} 
+                                onEditItem={handleEditItem}
+                                canAdd={isLeader}
+                                canEdit={isLeader}
                             />
                         )}
 
                         {activeTab === 'integrantes' && (
-                            <MemberList members={(groupData?.integrantes || []).map((m: any) => ({
-                                id: m.id || m,
-                                nombre: m.nombre || 'Miembro',
-                                avatar: '',
-                                isMe: (m.id || m) === user?.id
-                            }))} />
+                            <MemberList members={(groupData?.integrantes || []).map((m: any) => {
+                                const mId = m.id || m;
+                                const b = balances?.balance_detallado?.find((bal: any) => bal.usuario_id === mId);
+                                const balance = b?.balance || 0;
+                                const isMe = mId === user?.id;
+                                
+                                return {
+                                    id: mId,
+                                    name: m.nombre || 'Miembro',
+                                    avatar: `https://ui-avatars.com/api/?name=${m.nombre || 'M'}&background=random`,
+                                    isMe: isMe,
+                                    paid: b?.cuota_correspondiente || 0,
+                                    due: balance,
+                                    progress: balance >= 0 ? 100 : Math.max(0, Math.min(100, (1 - Math.abs(balance) / (b?.cuota_correspondiente || 1)) * 100)),
+                                    progressColor: balance >= 0 ? '#10B981' : '#F59E0B',
+                                    paidText: balance >= 0 ? 'Saldado' : 'Pendiente',
+                                    pendingText: balance >= 0 ? '¡Todo al día!' : `Debe $${Math.abs(balance).toFixed(2)}`,
+                                    paidTextClass: balance >= 0 ? 'text-[#10B981]' : 'text-amber-500',
+                                    paidBgClass: balance >= 0 ? 'bg-[#10B981]/10' : 'bg-amber-500/10',
+                                    trustScore: m.trust_score,
+                                    fastPaymentsCount: m.fast_payments_count
+                                };
+                            })} />
                         )}
 
                         {activeTab === 'saldos' && (
-                            <TotalsSummary 
-                                subtotal={balances?.total_gastado_en_grupo || 0}
-                                tax={0}
-                                service={0}
-                                tip={0}
-                                total={balances?.total_gastado_en_grupo || 0}
-                                paidAmount={0}
-                                pendingAmount={balances?.total_gastado_en_grupo || 0}
-                            />
+                            <View>
+                                <TotalsSummary 
+                                    subtotal={balances?.total_gastado_en_grupo || 0}
+                                    tax={0}
+                                    service={0}
+                                    tip={0}
+                                    total={balances?.total_gastado_en_grupo || 0}
+                                    paidAmount={0}
+                                    pendingAmount={balances?.total_gastado_en_grupo || 0}
+                                />
+
+                            </View>
                         )}
                     </>
                 )}
@@ -291,10 +339,19 @@ export default function GroupDetailScreen() {
                             <Text style={{ fontFamily: 'Manrope', color: 'white' }} className="font-bold text-lg mr-2">Liquidar Grupo</Text>
                             <MaterialIcons name="lock-outline" size={20} color="white" />
                         </TouchableOpacity>
+                    ) : (groupData?.status?.toLowerCase() === 'settling' || groupData?.status?.toLowerCase() === 'liquidando') ? (
+                        <TouchableOpacity 
+                            onPress={handlePaymentSelect}
+                            style={{ backgroundColor: theme.primary }} 
+                            className="w-row items-center justify-center py-4 rounded-xl shadow-lg active:scale-[0.98] flex-row"
+                        >
+                            <Text style={{ fontFamily: 'Manrope', color: 'white' }} className="font-bold text-lg mr-2">Pagar Deuda</Text>
+                            <MaterialIcons name="account-balance" size={20} color="white" />
+                        </TouchableOpacity>
                     ) : (
                         <View 
                             style={{ backgroundColor: theme.cardSecondary }} 
-                            className="w-row items-center justify-center py-4 rounded-xl opacity-60"
+                            className="w-row items-center justify-center py-4 rounded-xl opacity-60 flex-row"
                         >
                             <Text style={{ fontFamily: 'Manrope', color: theme.textSecondary }} className="font-bold text-lg mr-2">Esperando al Líder...</Text>
                             <ActivityIndicator size="small" color={theme.textSecondary} />
@@ -332,16 +389,36 @@ export default function GroupDetailScreen() {
                 groupData={groupData}
                 balances={balances}
                 items={groupItems}
-                onComplete={(data) => {
-                    console.log('Grupo liquidado:', data);
-                    // Actualizar estado local si es necesario
-                    fetchData(true);
+                onComplete={async (data) => {
+                    console.log('Liquidando grupo:', id);
+                    try {
+                        await groupRepository.closeGroup(id as string);
+                        fetchData(true);
+                        import('react-native').then(({ Alert }) => {
+                            Alert.alert('¡Éxito!', 'El grupo ha sido liquidado correctamente.');
+                        });
+                    } catch (err) {
+                        console.error('Error al liquidar grupo:', err);
+                        import('react-native').then(({ Alert }) => {
+                            Alert.alert('Error', 'No se pudo liquidar el grupo. Revisa tu conexión.');
+                        });
+                    }
                 }}
             />
-            <PaymentMethodModal 
-                isVisible={isPaymentVisible}
-                onClose={() => setIsPaymentVisible(false)}
-                onSelect={handlePaymentSelect}
+
+            <EditItemModal 
+                visible={!!editingItem}
+                onClose={() => setEditingItem(null)}
+                onSuccess={() => fetchData(true)}
+                item={editingItem}
+                groupId={id || ''}
+                members={groupData?.integrantes || []}
+            />
+            <EditGroupModal 
+                visible={isEditGroupVisible}
+                onClose={() => setIsEditGroupVisible(false)}
+                onSuccess={() => fetchData(true)}
+                group={groupData}
             />
         </SafeAreaView>
     );

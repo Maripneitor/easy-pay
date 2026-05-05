@@ -8,38 +8,35 @@ import { ApiMember, toMemberList } from './member-mapper';
  */
 export interface ApiGroup {
     id: string;
-    code: string;
-    name?: string;
-    leader_id: string;
-    members: ApiMember[];
-    items: ApiItem[];
-    status: string;         // 'active' | 'closed' | 'paying'
-    subtotal: number;
-    tip: number;
-    total: number;
+    codigo_invitacion: string;
+    nombre?: string;
+    admin_id: string;
+    integrantes: ApiMember[];
+    items?: ApiItem[];
+    status?: string;         // 'ACTIVA' | 'CERRADA'
+    subtotal?: number;
+    tip?: number;
+    total?: number;
     version?: number;
-    created_at?: string;
+    fecha_creacion?: string;
 }
 
 /**
- * Maps the API response (which may use "table" terminology)
- * to the domain `Group` entity (which uses "group" terminology).
- *
- * This is the ONLY place in the codebase that knows about the API's naming.
+ * Maps the API response to the domain `Group` entity.
  */
 export const toGroup = (apiGroup: ApiGroup): Group => ({
     id:        apiGroup.id,
-    code:      apiGroup.code,
-    name:      apiGroup.name,
-    leaderId:  apiGroup.leader_id,
-    members:   toMemberList(apiGroup.members ?? []),
+    code:      apiGroup.codigo_invitacion,
+    name:      apiGroup.nombre,
+    leaderId:  apiGroup.admin_id,
+    members:   toMemberList(apiGroup.integrantes ?? []),
     items:     toItemList(apiGroup.items ?? []),
-    status:    (apiGroup.status as GroupStatus) ?? 'active',
+    status:    (apiGroup.status?.toLowerCase() as GroupStatus) ?? 'active',
     subtotal:  apiGroup.subtotal ?? 0,
     tip:       apiGroup.tip ?? 0,
     total:     apiGroup.total ?? 0,
     version:   apiGroup.version ?? 1,
-    createdAt: apiGroup.created_at,
+    createdAt: apiGroup.fecha_creacion,
 });
 
 export const toGroupList = (apiGroups: ApiGroup[]): Group[] =>

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Sidebar } from '../components/Sidebar/Sidebar';
-import { useAuthContext } from '../context/AuthContext';
-import { CommandPalette } from '../components/CommandPalette/CommandPalette';
-import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { Sidebar } from '@ui/components/Sidebar/Sidebar';
+import { useAuthContext } from '@ui/context/AuthContext';
+import { CommandPalette } from '@ui/components/CommandPalette/CommandPalette';
+import { useKeyboardShortcuts } from '@ui/hooks/useKeyboardShortcuts';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Menu } from 'lucide-react';
 

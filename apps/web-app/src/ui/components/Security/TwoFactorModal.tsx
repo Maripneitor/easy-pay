@@ -7,7 +7,7 @@ import { userRepository } from '../../../infrastructure/api/repositories';
 interface TwoFactorModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onVerified: () => void;
+    onVerified: (code: string) => void;
     userId: string;
     actionTitle?: string;
     actionDescription?: string;
@@ -83,7 +83,7 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
             const res = await userRepository.verifyTwoFactor(userId, fullCode);
             if (res.status === "success" || res.verified) {
                 toast.success("Seguridad verificada", { id: toastId });
-                onVerified();
+                onVerified(fullCode);
                 onClose();
             } else {
                 toast.error("Código incorrecto", { id: toastId });
