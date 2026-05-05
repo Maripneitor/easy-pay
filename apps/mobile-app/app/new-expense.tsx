@@ -237,12 +237,21 @@ export default function NewExpenseScreen() {
                                         onPress={() => setCategoria(cat.id)}
                                         style={{ 
                                             backgroundColor: categoria === cat.id ? cat.color + '20' : theme.cardSecondary,
-                                            borderColor: categoria === cat.id ? cat.color : 'transparent'
+                                            borderColor: categoria === cat.id ? cat.color : 'transparent',
+                                            width: 120,
+                                            height: 100,
                                         }}
-                                        className="mr-3 px-6 py-4 rounded-3xl border items-center gap-2"
+                                        className="mr-3 rounded-3xl border items-center justify-center gap-2"
                                     >
-                                        <MaterialIcons name={cat.icon as any} size={24} color={categoria === cat.id ? cat.color : theme.textSecondary} />
-                                        <Text style={{ color: categoria === cat.id ? theme.text : theme.textSecondary }} className="text-[10px] font-black uppercase tracking-widest">{cat.id}</Text>
+                                        <MaterialIcons name={cat.icon as any} size={28} color={categoria === cat.id ? cat.color : theme.textSecondary} />
+                                        <Text 
+                                            style={{ color: categoria === cat.id ? theme.text : theme.textSecondary }} 
+                                            className="text-[9px] font-black uppercase tracking-widest text-center px-2"
+                                            numberOfLines={2}
+                                            adjustsFontSizeToFit
+                                        >
+                                            {cat.id}
+                                        </Text>
                                     </TouchableOpacity>
                                 ))}
                             </ScrollView>
