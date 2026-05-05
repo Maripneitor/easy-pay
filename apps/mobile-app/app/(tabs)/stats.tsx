@@ -146,10 +146,10 @@ export default function StatsScreen() {
                     </View>
 
                     <View style={{ backgroundColor: theme.card }} className="p-6 rounded-[2.5rem] border border-white/5">
-                        {stats?.expenses_by_category?.length > 0 && (
+                        {stats?.by_category?.length > 0 && (
                             <View style={{ alignItems: 'center', marginBottom: 20 }}>
                                 <PieChart
-                                    data={stats.expenses_by_category.map((cat: any, index: number) => ({
+                                    data={stats.by_category.map((cat: any, index: number) => ({
                                         name: cat.category,
                                         population: cat.amount,
                                         color: index === 0 ? theme.primary : index === 1 ? '#10b981' : index === 2 ? '#f59e0b' : '#6366f1',
@@ -168,7 +168,7 @@ export default function StatsScreen() {
                                 />
                             </View>
                         )}
-                        {(stats?.expenses_by_category?.length > 0) ? stats.expenses_by_category.map((cat: any, index: number) => (
+                        {(stats?.by_category?.length > 0) ? stats.by_category.map((cat: any, index: number) => (
                             <View key={index} className="mb-6 last:mb-0">
                                 <View className="flex-row justify-between items-center mb-2">
                                     <View className="flex-row items-center">

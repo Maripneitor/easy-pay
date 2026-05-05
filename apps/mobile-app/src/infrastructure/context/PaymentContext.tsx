@@ -73,6 +73,7 @@ interface PaymentContextType {
     getTotalOwed: (userId: string) => number;
     getTotalToReceive: (userId: string) => number;
     pendingConfirmations: (userId: string) => Payment[];
+    fetchFinancialData: () => Promise<void>;
 }
 
 const PaymentContext = createContext<PaymentContextType | undefined>(undefined);
@@ -86,6 +87,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const [debts, setDebts] = useState<Debt[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
     const [cards, setCards] = useState<SavedCard[]>([]);
+    const [realStats, setRealStats] = useState({ totalOwed: 0, totalToReceive: 0 });
 
     // ── Sync with API ────────────────────────────────────────────────────────────
     const fetchCards = useCallback(async () => {
@@ -109,9 +111,38 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
     }, [user?.id]);
 
+    const fetchFinancialData = useCallback(async () => {
+        if (!user?.id) return;
+        try {
+            const stats = await paymentRepository.getStats(user.id);
+            setRealStats({ totalOwed: stats.user_owes || 0, totalToReceive: stats.owed_to_user || 0 });
+            
+            const trans = await paymentRepository.getTransactions(user.id);
+            const mappedPayments: Payment[] = trans.map((t: any) => ({
+                id: t.id,
+                debtId: t.id,
+                groupId: '',
+                groupName: t.group_name || 'Individual',
+                fromUserId: t.is_incoming ? 'other' : user.id,
+                fromUserName: t.is_incoming ? 'Compañero' : user.nombre,
+                toUserId: t.is_incoming ? user.id : 'other',
+                toUserName: t.is_incoming ? user.nombre : 'Compañero',
+                amount: t.amount,
+                method: 'transfer',
+                status: t.status === 'completed' || t.status === 'approved' ? 'confirmed' : (t.status === 'pending' ? 'waiting_confirmation' : 'rejected'),
+                createdAt: new Date(t.date).getTime(),
+                concept: 'Pago'
+            }));
+            setPayments(mappedPayments);
+        } catch (error) {
+            console.error('Error fetching financial data:', error);
+        }
+    }, [user?.id, user?.nombre]);
+
     useEffect(() => {
         fetchCards();
-    }, [fetchCards]);
+        fetchFinancialData();
+    }, [fetchCards, fetchFinancialData]);
 
     // Persistencia local para Deudas y Pagos
     useEffect(() => {
@@ -221,11 +252,9 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const getPaymentsByGroup = useCallback((groupId: string) =>
         payments.filter(p => p.groupId === groupId), [payments]);
 
-    const getTotalOwed = useCallback((userId: string) =>
-        debts.filter(d => d.fromUserId === userId).reduce((acc, d) => acc + d.amount, 0), [debts]);
+    const getTotalOwed = useCallback((userId: string) => realStats.totalOwed, [realStats]);
 
-    const getTotalToReceive = useCallback((userId: string) =>
-        debts.filter(d => d.toUserId === userId).reduce((acc, d) => acc + d.amount, 0), [debts]);
+    const getTotalToReceive = useCallback((userId: string) => realStats.totalToReceive, [realStats]);
 
     const pendingConfirmations = useCallback((userId: string) =>
         payments.filter(p =>
@@ -241,7 +270,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
             initiatePayment,
             confirmPaymentAsReceiver, confirmPaymentAsWitness, rejectPayment,
             getDebtsByUser, getPaymentsByGroup,
-            getTotalOwed, getTotalToReceive, pendingConfirmations,
+            getTotalOwed, getTotalToReceive, pendingConfirmations, fetchFinancialData
         }}>
             {children}
         </PaymentContext.Provider>

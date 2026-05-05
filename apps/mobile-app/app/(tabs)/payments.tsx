@@ -321,9 +321,11 @@ export default function PaymentsScreen() {
         getDebtsByUser, getTotalOwed, getTotalToReceive,
         pendingConfirmations,
         confirmPaymentAsReceiver, confirmPaymentAsWitness, rejectPayment,
-        initiatePayment,
+        confirmPaymentAsReceiver, confirmPaymentAsWitness, rejectPayment,
+        initiatePayment, fetchFinancialData,
     } = usePayments();
     const scrollX = useRef(new Animated.Value(0)).current;
+    const [refreshing, setRefreshing] = useState(false);
 
     const userId = user?.id ?? '';
     const userName = user?.nombre ?? 'Usuario';
@@ -341,32 +343,16 @@ export default function PaymentsScreen() {
     const pending = pendingConfirmations(userId);
     const allPayments = payments.filter(p => p.fromUserId === userId || p.toUserId === userId);
 
-    const agregarDeudaPrueba = () => {
-        addDebt({
-            groupId: 'grupo-prueba-1',
-            groupName: 'Cena Konigs Bier',
-            fromUserId: userId || 'user-1',
-            fromUserName: userName || 'Yo',
-            toUserId: 'user-2',
-            toUserName: 'Carlos',
-            amount: 64.50,
-            concept: 'MARTES DE BONELESS 2',
-        });
-        addDebt({
-            groupId: 'grupo-prueba-1',
-            groupName: 'Cena Konigs Bier',
-            fromUserId: userId || 'user-1',
-            fromUserName: userName || 'Yo',
-            toUserId: 'user-3',
-            toUserName: 'Mario',
-            amount: 39.00,
-            concept: 'NARANJADA 450 ML',
-        });
-        Alert.alert('✅ Listo', 'Se agregaron 2 deudas de prueba.');
+    const refreshData = async () => {
+        setRefreshing(true);
+        try {
+            await fetchFinancialData();
+        } finally {
+            setRefreshing(false);
+        }
     };
 
-    // Tarjetas reales del contexto
-    const METHODS = cards.length > 0 ? cards : [];
+    // Tarjetas ya no se muestran en esta vista
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
@@ -378,7 +364,7 @@ export default function PaymentsScreen() {
                 {/* Header */}
                 <View className="px-6 py-8 flex-row justify-between items-center">
                     <View>
-                        <Text style={{ fontSize: 32 * fontScale, color: theme.text }} className="font-black tracking-tighter leading-none">CARTERA</Text>
+                        <Text style={{ fontSize: 32 * fontScale, color: theme.text }} className="font-black tracking-tighter leading-none">HISTORIAL</Text>
                         <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-[3px] mt-2">Personal & Grupos</Text>
                     </View>
                     <View className="flex-row gap-2">
@@ -386,11 +372,12 @@ export default function PaymentsScreen() {
                             <MaterialIcons name="security" size={24} color={theme.textSecondary} />
                         </TouchableOpacity>
                         <TouchableOpacity
-                            onPress={agregarDeudaPrueba}
-                            style={{ backgroundColor: '#f59e0b20', borderColor: '#f59e0b40' }}
+                            onPress={refreshData}
+                            disabled={refreshing}
+                            style={{ backgroundColor: '#f59e0b20', borderColor: '#f59e0b40', opacity: refreshing ? 0.5 : 1 }}
                             className="w-12 h-12 rounded-[18px] items-center justify-center border"
                         >
-                            <MaterialIcons name="add" size={24} color="#f59e0b" />
+                            <MaterialIcons name="refresh" size={24} color="#f59e0b" />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -438,7 +425,7 @@ export default function PaymentsScreen() {
                 {/* Mis deudas */}
                 <View className="px-6 mb-8">
                     <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-widest mb-3">
-                        Mis deudas ({myDebts.length})
+                        Balances Pendientes ({myDebts.length})
                     </Text>
                     {myDebts.length === 0 ? (
                         <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="border rounded-[28px] p-8 items-center">
@@ -475,86 +462,10 @@ export default function PaymentsScreen() {
                     ))}
                 </View>
 
-                {/* Tarjetas */}
-                <View className="mb-8">
-                    <View className="px-6 mb-4">
-                        <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-widest">Mis Tarjetas</Text>
-                    </View>
-                    <Animated.ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        snapToInterval={CARD_WIDTH + 14}
-                        decelerationRate="fast"
-                        contentContainerStyle={{ paddingHorizontal: CARD_SPACING }}
-                        onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: true })}
-                        scrollEventThrottle={16}
-                    >
-                        {METHODS.length === 0 ? (
-                            <TouchableOpacity
-                                onPress={() => router.push('/wallet/methods/new' as any)}
-                                style={{ width: CARD_WIDTH, borderColor: theme.border, backgroundColor: theme.cardSecondary }}
-                                className="h-52 rounded-[40px] border-2 border-dashed items-center justify-center gap-3 mr-3.5"
-                            >
-                                <View style={{ backgroundColor: theme.primary }} className="w-12 h-12 rounded-2xl items-center justify-center">
-                                    <MaterialIcons name="add" size={32} color="white" />
-                                </View>
-                                <Text style={{ color: theme.text }} className="font-black uppercase tracking-widest text-xs">AGREGAR TARJETA</Text>
-                            </TouchableOpacity>
-                        ) : (
-                            <>
-                                {METHODS.map((item, index) => {
-                                    const inputRange = [(index - 1) * (CARD_WIDTH + 14), index * (CARD_WIDTH + 14), (index + 1) * (CARD_WIDTH + 14)];
-                                    const scale = scrollX.interpolate({ inputRange, outputRange: [0.95, 1, 0.95], extrapolate: 'clamp' });
-                                    return (
-                                        <Animated.View key={item.id} style={{ width: CARD_WIDTH, transform: [{ scale }] }} className="mr-3.5">
-                                            <LinearGradient colors={item.colors as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="h-52 rounded-[40px] p-8 relative overflow-hidden">
-                                                <View className="absolute top-0 right-0 w-44 h-44 bg-white/10 rounded-full -mr-20 -mt-20" />
-                                                <View className="flex-row justify-between items-start mb-8">
-                                                    <View className="w-14 h-10 bg-white/20 rounded-lg items-center justify-center">
-                                                        <MaterialIcons name="contactless" size={28} color="white" />
-                                                    </View>
-                                                    <View className="flex-row items-center gap-2">
-                                                        <Text className="text-white font-black italic text-xl">{item.brand}</Text>
-                                                        {item.isDefault && (
-                                                            <View className="bg-white/20 px-2 py-0.5 rounded-full">
-                                                                <Text className="text-white text-[8px] font-black">DEFAULT</Text>
-                                                            </View>
-                                                        )}
-                                                    </View>
-                                                </View>
-                                                <Text className="text-white font-mono text-2xl tracking-[5px] mb-8">**** **** **** {item.last4}</Text>
-                                                <View className="flex-row justify-between items-end">
-                                                    <View>
-                                                        <Text className="text-white/40 text-[8px] font-black uppercase tracking-widest mb-1">TITULAR</Text>
-                                                        <Text className="text-white font-black uppercase text-xs">{item.holder}</Text>
-                                                    </View>
-                                                    <View className="items-end">
-                                                        <Text className="text-white/40 text-[8px] font-black uppercase tracking-widest mb-1">EXPIRA</Text>
-                                                        <Text className="text-white font-black uppercase text-xs">{item.expiry}</Text>
-                                                    </View>
-                                                </View>
-                                            </LinearGradient>
-                                        </Animated.View>
-                                    );
-                                })}
-                                {/* Botón agregar otra */}
-                                <TouchableOpacity
-                                    onPress={() => router.push('/wallet/methods/new' as any)}
-                                    style={{ width: CARD_WIDTH * 0.4, borderColor: theme.border, backgroundColor: theme.cardSecondary }}
-                                    className="h-52 rounded-[40px] border-2 border-dashed items-center justify-center gap-2 mr-3.5"
-                                >
-                                    <MaterialIcons name="add" size={28} color={theme.primary} />
-                                    <Text style={{ color: theme.textSecondary }} className="text-[9px] font-black uppercase text-center px-2">Nueva</Text>
-                                </TouchableOpacity>
-                            </>
-                        )}
-                    </Animated.ScrollView>
-                </View>
-
                 {/* Historial */}
                 <View className="px-6 mb-10">
                     <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-widest mb-4">
-                        Historial de pagos ({allPayments.length})
+                        Actividad de Pagos ({allPayments.length})
                     </Text>
                     {allPayments.length === 0 ? (
                         <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="border rounded-[28px] p-10 items-center">
