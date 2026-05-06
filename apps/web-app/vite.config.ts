@@ -6,7 +6,7 @@ import path from 'path';
 // En Local (fuera de Docker), usamos 127.0.0.1
 const isDocker = process.env.IS_DOCKER === 'true';
 
-const getTarget = (service: string, port: number) => 
+const getTarget = (service: string, port: number) =>
   isDocker ? `http://${service}:${port}` : `http://127.0.0.1:${port}`;
 
 export default defineConfig({
@@ -24,23 +24,23 @@ export default defineConfig({
     },
     proxy: {
       '/api/auth': {
-        target: getTarget('unified-api', 8000),
+        target: getTarget('user-service', 8000), // Antes apuntaba a unified-api:8000 [cite: 1, 33]
         changeOrigin: true,
       },
       '/api/groups': {
-        target: getTarget('unified-api', 8000),
+        target: getTarget('group-service', 8000), // Puerto correcto para grupos [cite: 3, 212]
         changeOrigin: true,
       },
       '/api/stats': {
-        target: getTarget('unified-api', 8000),
+        target: getTarget('stats-service', 8000), // Puerto para estadísticas [cite: 4, 212]
         changeOrigin: true,
       },
       '/api/ocr': {
-        target: getTarget('unified-api', 8000),
+        target: getTarget('ocr-service', 8000), // Puerto para OCR [cite: 3, 212]
         changeOrigin: true,
       },
       '/api/notifications': {
-        target: getTarget('unified-api', 8000),
+        target: getTarget('notification-service', 8000), // Puerto para notificaciones [cite: 6, 212]
         changeOrigin: true,
       }
     }

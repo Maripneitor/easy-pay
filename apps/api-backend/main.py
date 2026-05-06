@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-# IMPORTANTE: Asegúrate de importar el router de usuarios también
 from user.infrastructure.routes.route_user import user_router 
 from group.infrastructure.routes.route_group import group_router
 from stats.infrastructure.routes.routes_stats import router as stats_router
@@ -34,10 +33,7 @@ app.add_middleware(
 
 # Registramos los routers unificados
 app.include_router(user_router)
-app.include_router(group_router)
-app.include_router(stats_router)
-app.include_router(ocr_router)
-app.include_router(notification_router)
+
 
 @app.on_event("startup")
 async def startup_event():

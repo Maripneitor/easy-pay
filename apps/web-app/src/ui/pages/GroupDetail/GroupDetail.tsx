@@ -7,7 +7,9 @@ import {
     Check,
     CheckCircle,
     User,
-    DollarSign
+    DollarSign,
+    Copy,
+    Zap
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
