@@ -41,21 +41,21 @@ export default function DashboardScreen() {
 
     // Fetch real data from repository
     const [userGroups, setUserGroups] = useState<any[]>([]);
+    const [userStats, setUserStats] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const fetchGroups = useCallback(async () => {
-        if (!user?.id) {
-            console.log('⚠️ Dashboard: No user ID yet, skipping fetch');
-            return;
-        }
+    const fetchGroupsAndStats = useCallback(async () => {
+        if (!user?.id) return;
         setIsLoading(true);
-        console.log(`📡 Dashboard: Fetching groups for user ${user.id}...`);
         try {
-            const groups = await groupRepository.findByUser(user.id);
-            console.log(`✅ Dashboard: Found ${groups?.length || 0} groups`);
+            const [groups, statsRes] = await Promise.all([
+                groupRepository.findByUser(user.id),
+                fetch(`${getApiBaseUrl()}/stats/user/${user.id}`).then(r => r.json())
+            ]);
             setUserGroups(Array.isArray(groups) ? groups : []);
+            setUserStats(statsRes);
         } catch (err) {
-            console.error('❌ Dashboard: Error fetching groups:', err);
+            console.error('❌ Dashboard: Error fetching data:', err);
         } finally {
             setIsLoading(false);
             setRefreshing(false);
@@ -63,23 +63,20 @@ export default function DashboardScreen() {
     }, [user?.id]);
 
     useEffect(() => {
-        fetchGroups();
-    }, [fetchGroups]);
+        fetchGroupsAndStats();
+    }, [fetchGroupsAndStats]);
 
-    // Calculate dynamic stats based on real groups
-    const totalSpent = userGroups.reduce((acc, g) => acc + (g.total_gastado || 0), 0);
-    // In a real app, these would come from a balance endpoint, but for now we use mock/derived
     const STATS = [
-        { id: '1', label: 'Total Gastado', amount: totalSpent, color: [theme.primary, `${theme.primary}80`], icon: 'account-balance-wallet', trend: `${userGroups.length} Grupos` },
-        { id: '2', label: 'Te deben', amount: 0, color: ['#10b981', '#059669'], icon: 'trending-up', trend: 'Saldos +' },
-        { id: '3', label: 'Debes', amount: 0, color: ['#f43f5e', '#e11d48'], icon: 'trending-down', trend: 'Pendiente -' },
+        { id: '1', label: 'Total Gastado', amount: userStats?.total_spent || 0, color: [theme.primary, `${theme.primary}80`], icon: 'account-balance-wallet', trend: `${userGroups.length} Grupos` },
+        { id: '2', label: 'Te deben', amount: userStats?.owed_to_user || 0, color: ['#10b981', '#059669'], icon: 'trending-up', trend: 'Saldos +' },
+        { id: '3', label: 'Debes', amount: userStats?.user_owes || 0, color: ['#f43f5e', '#e11d48'], icon: 'trending-down', trend: 'Pendiente -' },
         { id: '4', label: 'Grupos Activos', amount: userGroups.filter(g => !g.is_settled).length, color: ['#8b5cf6', '#7c3aed'], icon: 'groups', trend: 'En curso' },
     ];
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
-        fetchGroups();
-    }, [fetchGroups]);
+        fetchGroupsAndStats();
+    }, [fetchGroupsAndStats]);
 
     const handleCreateGrupo = async () => {
         router.push('/create-group');

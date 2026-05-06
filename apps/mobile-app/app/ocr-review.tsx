@@ -40,7 +40,7 @@ export default function OCRReviewScreen() {
                     });
                 }
             }
-            router.replace('/new-group');
+            router.replace(`/(tabs)/group/${activeGrupo?.id || 'current'}`);
         } catch (e) {
             console.error(e);
         } finally {

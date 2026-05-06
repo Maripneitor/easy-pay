@@ -5,6 +5,9 @@
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { wsClient } from '../src/infrastructure/api/mobile-websocket';
+import { groupRepository } from '../src/infrastructure/api/repositories/GroupRepository';
+import { useAuth } from './AuthContext';
 
 const STORAGE_KEY = '@easy_pay_active_grupo';
 const SYNC_QUEUE_KEY = '@easy_pay_sync_queue';
@@ -67,7 +70,7 @@ interface GrupoContextData {
     syncStatus: AppSyncStatus;
     pendingCount: number;
 
-    createGrupo: (nombre: string, liderId: string) => Promise<void>;
+    createGrupo: (nombre: string, liderId: string) => Promise<string>;
     createMesa: (nombre: string, liderId: string) => Promise<void>; // Alias
     joinGrupo: (codigo: string) => Promise<boolean>;
     joinMesa: (codigo: string) => Promise<boolean>;                 // Alias
@@ -83,6 +86,7 @@ interface GrupoContextData {
     refreshGrupo: () => Promise<void>;
     refreshMesa: () => Promise<void>;                               // Alias
     calculateUserDebt: (participantId: string) => number;
+    loadGroupDetails: (id: string) => Promise<void>;
 }
 
 const GrupoContext = createContext<GrupoContextData>({} as GrupoContextData);
@@ -96,9 +100,11 @@ function makeId(): string {
 }
 
 export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { user, token } = useAuth();
     const [activeGrupo, setActiveGrupo] = useState<Grupo | null>(null);
     const [syncQueue, setSyncQueue] = useState<SyncQueueItem[]>([]);
     const [syncStatus, setSyncStatus] = useState<AppSyncStatus>('SYNCED');
+    const [isLoading, setIsLoading] = useState(false);
 
     // ── Persistencia ──────────────────────────────────────────────────────────
     useEffect(() => {
@@ -117,6 +123,26 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         AsyncStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(syncQueue)).catch(() => {});
         setSyncStatus(syncQueue.length > 0 ? 'PENDING' : 'SYNCED');
     }, [syncQueue]);
+
+    // WebSocket subscription
+    useEffect(() => {
+        if (activeGrupo?.id && token) {
+            console.info(`[GrupoContext] Connecting WS for group ${activeGrupo.id}`);
+            wsClient.connect(activeGrupo.id, token);
+            
+            wsClient.on('group_updated', (updatedData) => {
+                console.info('[GrupoContext] Group updated via WS');
+                setActiveGrupo(prev => ({ ...prev, ...updatedData }));
+                setSyncStatus('SYNCED');
+            });
+        }
+        return () => {
+            if (activeGrupo?.id) {
+                console.info(`[GrupoContext] Disconnecting WS for group ${activeGrupo.id}`);
+                wsClient.disconnect();
+            }
+        };
+    }, [activeGrupo?.id, token]);
 
     const loadPersistedData = async () => {
         try {
@@ -183,6 +209,7 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         };
         setActiveGrupo(newGrupo);
         addToQueue('CREATE_GRUPO', { grupoId: newGrupo.id, liderId });
+        return newGrupo.id;
     };
 
     const joinGrupo = async (codigo: string): Promise<boolean> => {
@@ -210,6 +237,7 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const addItem = async (itemData: Omit<Item, 'id'>) => {
         if (!activeGrupo) return;
+        setSyncStatus('PENDING');
         const newItem: Item = {
             ...itemData,
             id: makeId(),
@@ -219,7 +247,13 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const updatedItems = [...activeGrupo.items, newItem];
         const totals = recalculateTotals(updatedItems);
         setActiveGrupo({ ...activeGrupo, items: updatedItems, ...totals });
-        addToQueue('ADD_ITEM', newItem);
+        
+        try {
+            await groupRepository.addItem(activeGrupo.id, newItem);
+            setSyncStatus('SYNCED');
+        } catch (error) {
+            addToQueue('ADD_ITEM', newItem);
+        }
     };
 
     const updateItem = async (id: string, updates: Partial<Item>) => {
@@ -251,8 +285,15 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const closeGrupo = async () => {
         if (!activeGrupo) return;
-        setActiveGrupo({ ...activeGrupo, status: 'CERRADA' });
-        addToQueue('CLOSE_GRUPO', { grupoId: activeGrupo.id });
+        setSyncStatus('PENDING');
+        try {
+            await groupRepository.closeGroup(activeGrupo.id);
+            setActiveGrupo({ ...activeGrupo, status: 'CERRADA' });
+            setSyncStatus('SYNCED');
+        } catch (error) {
+            console.error(error);
+            addToQueue('CLOSE_GRUPO', { grupoId: activeGrupo.id });
+        }
     };
 
     const clearGrupo = async () => {
@@ -262,6 +303,17 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const refreshGrupo = async () => {
         await loadPersistedData();
+    };
+
+    const loadGroupDetails = async (id: string) => {
+        // Al ser una app móvil, intentamos cargar desde el repo real
+        try {
+            console.log(`📡 [GrupoContext] Cargando detalles reales para el grupo: ${id}`);
+            const data = await groupRepository.getGroup(id);
+            setActiveGrupo(data);
+        } catch (error) {
+            console.error("❌ [GrupoContext] Error cargando grupo:", error);
+        }
     };
 
     const value: GrupoContextData = {
@@ -285,6 +337,7 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         refreshGrupo,
         refreshMesa: refreshGrupo,      // Alias
         calculateUserDebt,
+        loadGroupDetails,
     };
 
     return (

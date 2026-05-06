@@ -5,9 +5,8 @@ Para tener el control total en tres terminales separadas, ejecuta estos comandos
 Este comando levantará todos los microservicios en segundo plano.
 
 ```powershell
+# Levanta la API Unificada (Auth, Groups, Stats, OCR, Notifications)
 npm run dev:backend
-
-docker-compose up unified-api
 ```
 
 ### 2. Terminal WEB (Vite)

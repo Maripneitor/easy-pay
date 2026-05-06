@@ -16,8 +16,8 @@ import { useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
-import { useAuth } from '../context/AuthContext';
 import { groupRepository } from '../src/infrastructure/api/repositories/GroupRepository';
+import { paymentRepository } from '../src/infrastructure/api/repositories/PaymentRepository';
 import { toTitleCase } from '../src/infrastructure/utils/format';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -30,14 +30,22 @@ export default function SettingsScreen() {
     const [notificationsEnabled, setNotificationsEnabled] = useState(true);
     const [showQR, setShowQR] = useState(false);
     const [userGroups, setUserGroups] = useState<any[]>([]);
+    const [realStats, setRealStats] = useState({ total_spent: 0, group_count: 0 });
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchStats = async () => {
             if (!user?.id) return;
             try {
-                const groups = await groupRepository.findByUser(user.id);
+                const [groups, stats] = await Promise.all([
+                    groupRepository.findByUser(user.id),
+                    paymentRepository.getStats(user.id)
+                ]);
                 setUserGroups(Array.isArray(groups) ? groups : []);
+                setRealStats({
+                    total_spent: stats.total_spent || 0,
+                    group_count: Array.isArray(groups) ? groups.length : 0
+                });
             } catch (err) {
                 console.error('Error fetching settings stats:', err);
             } finally {
@@ -47,7 +55,7 @@ export default function SettingsScreen() {
         fetchStats();
     }, [user?.id]);
 
-    const totalSpent = userGroups.reduce((acc, g) => acc + (g.total_gastado || 0), 0);
+    const totalSpent = realStats.total_spent;
     const paidGroups = userGroups.filter(g => g.is_settled).length;
 
     const SectionHeader = ({ title }: { title: string }) => (

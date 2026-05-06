@@ -161,4 +161,5 @@ Para que el celular (Expo Go) se conecte al backend:
 - **`apps/mobile-app`**: Expo SDK 54 (App Nativa).
 
 ---
-*Última Actualización: Mayo 2026*
+---
+*Última Actualización: Mayo 2026 - Versión Consolidada (Unified API & Banda Integrated)*

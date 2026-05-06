@@ -24,7 +24,7 @@ export default function ScanQRScreen() {
             if (success) {
                 setScanned(true);
                 setTimeout(() => {
-                    router.replace('/new-group');
+                    router.replace(`/(tabs)/group/${activeGrupo?.id || 'current'}`);
                 }, 800);
             }
         } catch (e) {
