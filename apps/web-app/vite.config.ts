@@ -24,23 +24,23 @@ export default defineConfig({
     },
     proxy: {
       '/api/auth': {
-        target: getTarget('user-service', 8000), // Antes apuntaba a unified-api:8000 [cite: 1, 33]
+        target: isDocker ? 'http://user-service:8000' : 'http://localhost:8001',
         changeOrigin: true,
       },
       '/api/groups': {
-        target: getTarget('group-service', 8000), // Puerto correcto para grupos [cite: 3, 212]
+        target: isDocker ? 'http://group-service:8000' : 'http://localhost:8002',
         changeOrigin: true,
       },
       '/api/stats': {
-        target: getTarget('stats-service', 8000), // Puerto para estadísticas [cite: 4, 212]
+        target: isDocker ? 'http://stats-service:8000' : 'http://localhost:8003',
         changeOrigin: true,
       },
       '/api/ocr': {
-        target: getTarget('ocr-service', 8000), // Puerto para OCR [cite: 3, 212]
+        target: isDocker ? 'http://ocr-service:8000' : 'http://localhost:8004',
         changeOrigin: true,
       },
       '/api/notifications': {
-        target: getTarget('notification-service', 8000), // Puerto para notificaciones [cite: 6, 212]
+        target: isDocker ? 'http://notification-service:8000' : 'http://localhost:8005',
         changeOrigin: true,
       }
     }
