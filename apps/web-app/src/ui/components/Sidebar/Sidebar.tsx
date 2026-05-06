@@ -131,7 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onLogout, use
                 </div>
 
                 <nav className={cn(
-                    "flex-1 px-4 space-y-2 custom-scrollbar overflow-y-auto min-h-0",
+                    "flex-1 px-4 space-y-2 custom-scrollbar overflow-y-auto overflow-x-hidden min-h-0",
                     !isOpen ? "px-0 opacity-0 pointer-events-none" : "opacity-100",
                     "md:opacity-100 md:pointer-events-auto",
                     !isOpen && "md:px-4"

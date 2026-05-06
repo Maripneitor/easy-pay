@@ -22,6 +22,7 @@ import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { MotiView, MotiText, AnimatePresence } from 'moti';
 import { useAuth } from '../../context/AuthContext';
 import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
+import { toTitleCase } from '../../src/infrastructure/utils/format';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.82;
@@ -108,7 +109,7 @@ export default function DashboardScreen() {
                         style={{ fontSize: 20 * fontScale, color: theme.text }} 
                         className="font-black tracking-tighter"
                     >
-                        Hola, {user?.nombre ? user.nombre.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ').split(' ')[0] : 'Usuario'}
+                        Hola, {user?.nombre ? toTitleCase(user.nombre).split(' ')[0] : 'Usuario'}
                     </Text>
                     <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-[3px]">Easy-Pay Dashboard</Text>
                 </View>
