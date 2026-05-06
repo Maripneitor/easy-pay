@@ -1,137 +1,197 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
-import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-
-const { width } = Dimensions.get('window');
+import ItemAssignModal from '../ItemAssignModal';
 
 interface Item {
     id: string;
     name: string;
-    detail: string;
+    detail?: string;
     amount: number;
-    participants: string[];
+    avatars: string[];
+    assignedTo: string[];
+    addedBy?: string;
+    description?: string;
+}
+
+interface Member {
+    id: string;
+    nombre: string;
+    color?: string;
 }
 
 interface VirtualTicketCardProps {
     items: Item[];
     serviceFee: number;
     groupId?: string;
-    onEditItem?: (item: Item) => void;
-    canAdd?: boolean;
-    canEdit?: boolean;
+    members?: Member[];
+    onAssign?: (itemId: string, assignedTo: string[]) => Promise<void>;
 }
 
-export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({ items, serviceFee, groupId, onEditItem, canAdd = true, canEdit = true }) => {
+export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({
+    items, serviceFee, groupId, members = [], onAssign
+}) => {
     const { theme, fontScale } = useTheme();
+    const [assignModal, setAssignModal] = useState<{ visible: boolean; item: Item | null }>({
+        visible: false, item: null,
+    });
+
+    const handleAssign = async (itemId: string, assignedTo: string[]) => {
+        if (onAssign) await onAssign(itemId, assignedTo);
+        setAssignModal({ visible: false, item: null });
+    };
+
+    // Color por miembro para los badges
+    const COLORS = ['#2196F3', '#f97316', '#a855f7', '#4ade80', '#f43f5e', '#f59e0b'];
+    const getMemberColor = (memberId: string) => {
+        const member = members.find(m => m.id === memberId);
+        if (member?.color) return member.color;
+        const idx = members.findIndex(m => m.id === memberId);
+        return COLORS[idx % COLORS.length];
+    };
+
+    const getMemberName = (memberId: string) => {
+        const member = members.find(m => m.id === memberId);
+        return member?.nombre?.substring(0, 2).toUpperCase() ?? '??';
+    };
 
     return (
-        <MotiView 
-            from={{ opacity: 0, scale: 0.95 }} 
-            animate={{ opacity: 1, scale: 1 }}
-            className="px-6"
+        <MotiView
+            from={{ opacity: 0, translateY: 10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 400 }}
+            className="px-4 pt-2"
         >
             {/* Header section with Add Button */}
             <View className="flex-row justify-between items-center mb-6">
                 <View>
-                    <Text style={{ color: theme.text }} className="text-xl font-black">Detalle del Ticket</Text>
-                    <Text style={{ color: theme.textSecondary }} className="text-xs font-medium">{canAdd ? 'Asigna y divide consumos' : 'Consulta tus consumos registrados'}</Text>
+                    <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-bold tracking-tight">
+                        Detalle de la cuenta
+                    </Text>
+                    <Text style={{ color: theme.textSecondary, fontSize: 13 * fontScale }} className="mt-1 opacity-80">
+                        Toca el lápiz para asignar quién consumió qué.
+                    </Text>
                 </View>
-                {canAdd && (
-                    <TouchableOpacity 
-                        onPress={() => router.push({ pathname: '/new-expense', params: { groupId } } as any)}
-                        style={{ backgroundColor: theme.primary }}
-                        className="flex-row items-center gap-2 px-4 py-2 rounded-xl shadow-lg shadow-blue-500/20"
-                    >
-                        <Ionicons name="add-circle" size={18} color="black" />
-                        <Text className="text-black font-black text-xs uppercase">Añadir</Text>
-                    </TouchableOpacity>
-                )}
+                <TouchableOpacity
+                    onPress={() => router.push({ pathname: '/new-expense', params: { groupId } } as any)}
+                    className="flex-row items-center gap-1 px-4 py-2 rounded-full active:opacity-70"
+                >
+                    <Ionicons name="add" size={16} color={theme.primary} />
+                    <Text style={{ color: theme.primary, fontSize: 14 * fontScale }} className="font-bold">Añadir</Text>
+                </TouchableOpacity>
             </View>
 
-            {/* Virtual Ticket Container */}
-            <View 
-                style={{ 
-                    backgroundColor: 'white', 
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 20 },
-                    shadowOpacity: 0.15,
-                    shadowRadius: 30,
-                    elevation: 10
-                }} 
-                className="rounded-[30px] overflow-hidden"
-            >
-                {/* Ticket Top Jagged Edge */}
-                <View className="flex-row justify-around -mt-2">
-                    {[...Array(15)].map((_, i) => (
-                        <View key={i} className="w-4 h-4 bg-slate-900 rounded-full" />
-                    ))}
-                </View>
+            <View className="gap-y-4">
+                {items.map((item) => {
+                    const assigned = item.assignedTo ?? [];
+                    const isAssigned = assigned.length > 0;
+                    const perPerson = isAssigned ? item.amount / assigned.length : null;
 
-                <View className="p-8">
-                    {/* Items List */}
-                    {items.length === 0 ? (
-                        <View className="py-10 items-center opacity-30">
-                            <FontAwesome5 name="receipt" size={40} color="black" />
-                            <Text className="text-slate-900 font-bold mt-4">Sin consumos registrados</Text>
-                        </View>
-                    ) : (
-                        <View className="gap-y-6">
-                            {items.map((item) => (
-                                <TouchableOpacity 
-                                    key={item.id}
-                                    onPress={() => canEdit && onEditItem?.(item)}
-                                    activeOpacity={canEdit ? 0.7 : 1}
-                                >
-                                    <View className="flex-row justify-between items-start mb-2">
-                                        <View className="flex-1 pr-4">
-                                            <Text className="text-slate-900 font-black text-base uppercase leading-tight">{item.name}</Text>
-                                            <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">{item.detail}</Text>
+                    return (
+                        <MotiView
+                            key={item.id}
+                            from={{ opacity: 0, scale: 0.97 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            style={{
+                                backgroundColor: theme.card,
+                                borderColor: isAssigned
+                                    ? getMemberColor(assigned[0]) + '30'
+                                    : theme.border + '26',
+                            }}
+                            className="rounded-xl p-5 border shadow-sm"
+                        >
+                            {/* Nombre y precio */}
+                            <View className="flex-row justify-between items-start mb-4">
+                                <View className="flex-1 pr-4">
+                                    <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-bold">
+                                        {item.name}
+                                    </Text>
+                                    {item.detail ? (
+                                        <Text style={{ color: theme.textSecondary, fontSize: 13 * fontScale }} className="mt-1 opacity-70">
+                                            {item.detail}
+                                        </Text>
+                                    ) : null}
+                                    {perPerson && (
+                                        <Text style={{ color: theme.textSecondary, fontSize: 11 * fontScale }} className="mt-1">
+                                            ${perPerson.toFixed(2)} por persona
+                                        </Text>
+                                    )}
+                                </View>
+                                <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black">
+                                    ${item.amount.toFixed(2)}
+                                </Text>
+                            </View>
+
+                            {/* Footer: asignados + botón editar */}
+                            <View
+                                className="flex-row items-center justify-between mt-2 pt-4 border-t"
+                                style={{ borderColor: theme.cardSecondary }}
+                            >
+                                {/* Badges de personas asignadas */}
+                                <View className="flex-row items-center gap-2 flex-1 flex-wrap">
+                                    {isAssigned ? (
+                                        assigned.map(memberId => {
+                                            const color = getMemberColor(memberId);
+                                            const initials = getMemberName(memberId);
+                                            return (
+                                                <View
+                                                    key={memberId}
+                                                    style={{ backgroundColor: color + '20', borderColor: color + '50' }}
+                                                    className="flex-row items-center px-2 py-1 rounded-full border gap-1"
+                                                >
+                                                    <View
+                                                        style={{ backgroundColor: color }}
+                                                        className="w-4 h-4 rounded-full items-center justify-center"
+                                                    >
+                                                        <Text className="text-white text-[8px] font-black">{initials}</Text>
+                                                    </View>
+                                                    <Text style={{ color, fontSize: 10 * fontScale }} className="font-bold">
+                                                        {members.find(m => m.id === memberId)?.nombre ?? memberId}
+                                                    </Text>
+                                                </View>
+                                            );
+                                        })
+                                    ) : (
+                                        <View style={{ backgroundColor: '#f59e0b15', borderColor: '#f59e0b30' }} className="flex-row items-center px-3 py-1.5 rounded-full border gap-1">
+                                            <MaterialIcons name="person-add" size={12} color="#f59e0b" />
+                                            <Text style={{ color: '#f59e0b', fontSize: 10 * fontScale }} className="font-bold">
+                                                Sin asignar
+                                            </Text>
                                         </View>
-                                        <Text className="text-slate-900 font-black text-lg">${item.amount.toFixed(2)}</Text>
-                                    </View>
-                                    
-                                    {/* Participants badges */}
-                                    <View className="flex-row flex-wrap gap-1.5 mt-2">
-                                        {item.participants.map((p, idx) => (
-                                            <View key={idx} className="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
-                                                <Text className="text-slate-600 text-[8px] font-black uppercase">{p.split(' ')[0]}</Text>
-                                            </View>
-                                        ))}
-                                    </View>
+                                    )}
+                                </View>
+
+                                {/* Botón editar — abre modal */}
+                                <TouchableOpacity
+                                    onPress={() => setAssignModal({ visible: true, item })}
+                                    style={{ backgroundColor: theme.cardSecondary }}
+                                    className="w-9 h-9 rounded-full items-center justify-center ml-2"
+                                >
+                                    <MaterialIcons name="edit" size={18} color={theme.primary} />
                                 </TouchableOpacity>
-                            ))}
-                        </View>
-                    )}
+                            </View>
+                        </MotiView>
+                    );
+                })}
 
-                    {/* Divider Line */}
-                    <View className="my-8 border-t border-dashed border-slate-300" />
-
-                    {/* Subtotal / Fees */}
-                    <View className="gap-y-3">
-                        <View className="flex-row justify-between">
-                            <Text className="text-slate-400 font-bold text-xs uppercase tracking-widest">Subtotal</Text>
-                            <Text className="text-slate-600 font-black text-xs">${items.reduce((acc, i) => acc + i.amount, 0).toFixed(2)}</Text>
+                {/* Propina */}
+                <View
+                    style={{ backgroundColor: theme.cardSecondary }}
+                    className="rounded-xl p-4 flex-row justify-between items-center mt-2"
+                >
+                    <View className="flex-row items-center gap-3">
+                        <View style={{ backgroundColor: theme.card }} className="w-8 h-8 rounded-full items-center justify-center">
+                            <MaterialIcons name="receipt-long" size={18} color={theme.textSecondary} />
                         </View>
-                        <View className="flex-row justify-between">
-                            <Text className="text-slate-400 font-bold text-xs uppercase tracking-widest">Servicio / Propina</Text>
-                            <Text className="text-slate-600 font-black text-xs">${serviceFee.toFixed(2)}</Text>
-                        </View>
-                    </View>
-
-                    {/* Total Section */}
-                    <View className="mt-8 bg-slate-900 rounded-2xl p-5 flex-row justify-between items-center shadow-lg">
                         <View>
-                            <Text className="text-white/50 text-[10px] font-black uppercase tracking-widest">Total a Pagar</Text>
-                            <Text className="text-white text-2xl font-black">${(items.reduce((acc, i) => acc + i.amount, 0) + serviceFee).toFixed(2)}</Text>
-                        </View>
-                        <View className="w-10 h-10 bg-white/10 rounded-full items-center justify-center">
-                            <MaterialIcons name="qr-code" size={20} color="white" />
+                            <Text style={{ color: theme.text, fontSize: 14 * fontScale }} className="font-bold">Propina y Servicio</Text>
+                            <Text style={{ color: theme.textSecondary, fontSize: 12 * fontScale }} className="mt-0.5 opacity-70">Dividido en partes iguales</Text>
                         </View>
                     </View>
+                    <Text style={{ color: theme.text, fontSize: 14 * fontScale }} className="font-bold">${serviceFee.toFixed(2)}</Text>
                 </View>
 
                 {/* Ticket Bottom Jagged Edge */}
@@ -149,6 +209,16 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({ items, ser
                     {canEdit ? 'Puedes editar cualquier item tocándolo en la lista.' : 'Solo el líder del grupo puede gestionar los ítems.'}
                 </Text>
             </View>
+
+            {/* Modal de asignación */}
+            <ItemAssignModal
+                visible={assignModal.visible}
+                onClose={() => setAssignModal({ visible: false, item: null })}
+                item={assignModal.item}
+                members={members}
+                theme={theme}
+                onConfirm={handleAssign}
+            />
         </MotiView>
     );
 };
