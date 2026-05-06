@@ -15,6 +15,7 @@ import { usePayments, Payment, PaymentMethod, timeAgoPayment } from '../../src/i
 import { useNotifications } from '../../src/infrastructure/context/NotificationContext';
 import MercadoPagoModal from '../../components/MercadoPagoModal';
 import { MPPaymentResult } from '../../src/infrastructure/services/MercadoPagoService';
+import { toTitleCase } from '../../src/infrastructure/utils/format';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
@@ -98,8 +99,8 @@ function CashPaymentModal({
                             <Text style={{ color: theme.text }} className="text-2xl font-black text-center">¡Pago registrado!</Text>
                             <Text style={{ color: theme.textSecondary }} className="text-center mt-2 px-8">
                                 {witnessName
-                                    ? `Esperando confirmación de ${witnessName} y ${debt?.toUserName}`
-                                    : `Esperando confirmación de ${debt?.toUserName}`}
+                                    ? `Esperando confirmación de ${toTitleCase(witnessName)} y ${toTitleCase(debt?.toUserName)}`
+                                    : `Esperando confirmación de ${toTitleCase(debt?.toUserName)}`}
                             </Text>
                         </MotiView>
                     ) : (
@@ -107,7 +108,7 @@ function CashPaymentModal({
                             <View style={{ backgroundColor: '#4ade8015', borderColor: '#4ade8030' }} className="p-6 rounded-[28px] border items-center mb-6">
                                 <Text style={{ color: theme.textSecondary }} className="text-xs font-black uppercase tracking-widest mb-1">Monto a pagar</Text>
                                 <Text className="text-green-400 text-4xl font-black">${debt?.amount?.toFixed(2)}</Text>
-                                <Text style={{ color: theme.textSecondary }} className="text-sm mt-1">a {debt?.toUserName} · {debt?.groupName}</Text>
+                                <Text style={{ color: theme.textSecondary }} className="text-sm mt-1">a {toTitleCase(debt?.toUserName)} · {debt?.groupName}</Text>
                             </View>
 
                             {/* Testigo */}
@@ -178,7 +179,7 @@ function PaymentMethodSelector({
                     <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="p-5 rounded-[24px] border items-center mb-4">
                         <Text style={{ color: theme.textSecondary }} className="text-xs font-black uppercase tracking-widest mb-1">Total a pagar</Text>
                         <Text style={{ color: theme.primary }} className="text-3xl font-black">${debt?.amount?.toFixed(2)}</Text>
-                        <Text style={{ color: theme.textSecondary }} className="text-sm mt-1">a {debt?.toUserName} · {debt?.groupName}</Text>
+                        <Text style={{ color: theme.textSecondary }} className="text-sm mt-1">a {toTitleCase(debt?.toUserName)} · {debt?.groupName}</Text>
                     </View>
 
                     {/* Efectivo */}
@@ -256,8 +257,8 @@ function ConfirmationModal({
 
                     <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="rounded-[28px] border p-5 mb-6">
                         {[
-                            { label: 'De', value: payment.fromUserName },
-                            { label: 'Para', value: payment.toUserName },
+                            { label: 'De', value: toTitleCase(payment.fromUserName) },
+                            { label: 'Para', value: toTitleCase(payment.toUserName) },
                             { label: 'Método', value: method.label, color: method.color },
                         ].map((row, i) => (
                             <View key={i} className="flex-row justify-between mb-3">
@@ -320,7 +321,6 @@ export default function PaymentsScreen() {
         addDebt, removeDebt,
         getDebtsByUser, getTotalOwed, getTotalToReceive,
         pendingConfirmations,
-        confirmPaymentAsReceiver, confirmPaymentAsWitness, rejectPayment,
         confirmPaymentAsReceiver, confirmPaymentAsWitness, rejectPayment,
         initiatePayment, fetchFinancialData,
     } = usePayments();
@@ -445,7 +445,7 @@ export default function PaymentsScreen() {
                             </View>
                             <View className="flex-1">
                                 <Text style={{ color: theme.text }} className="font-black text-sm">{debt.groupName}</Text>
-                                <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">A: {debt.toUserName} · {debt.concept}</Text>
+                                <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">A: {toTitleCase(debt.toUserName)} · {debt.concept}</Text>
                             </View>
                             <View className="items-end ml-3">
                                 <Text className="text-red-400 font-black text-lg">${debt.amount.toFixed(2)}</Text>
@@ -492,7 +492,7 @@ export default function PaymentsScreen() {
                                             </View>
                                             <View className="flex-1">
                                                 <Text style={{ fontSize: 14 * fontScale, color: theme.text }} className="font-black" numberOfLines={1}>
-                                                    {isOutgoing ? `→ ${tx.toUserName}` : `← ${tx.fromUserName}`}
+                                                    {isOutgoing ? `→ ${toTitleCase(tx.toUserName)}` : `← ${toTitleCase(tx.fromUserName)}`}
                                                 </Text>
                                                 <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">{tx.groupName}</Text>
                                                 <View className="flex-row items-center gap-2 mt-1">

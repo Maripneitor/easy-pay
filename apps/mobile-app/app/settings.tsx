@@ -18,6 +18,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { groupRepository } from '../src/infrastructure/api/repositories/GroupRepository';
+import { toTitleCase } from '../src/infrastructure/utils/format';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 import { MotiView } from 'moti';
@@ -116,7 +117,7 @@ export default function SettingsScreen() {
                         style={{ fontSize: 24 * fontScale, color: theme.text }} 
                         className="font-black tracking-tight mb-1"
                     >
-                        {user?.nombre || 'Usuario'}
+                        {user?.nombre ? toTitleCase(user.nombre) : 'Usuario'}
                     </Text>
                     <Text style={{ fontSize: 13 * fontScale, color: theme.textSecondary }} className="font-black uppercase tracking-widest mb-6">Personal Account</Text>
                     

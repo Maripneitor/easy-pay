@@ -4,6 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from user.infrastructure.routes.route_user import user_router 
 from group.infrastructure.routes.route_group import group_router
 from stats.infrastructure.routes.routes_stats import router as stats_router
+from ocr.infrastructure.routes.route_ocr import router as ocr_router
+from notification.infrastructure.routes.route_notification import router as notification_router, reminder_worker
+import asyncio
 
 app = FastAPI(
     title="Easy-Pay API",
@@ -33,6 +36,14 @@ app.add_middleware(
 app.include_router(user_router)
 app.include_router(group_router)
 app.include_router(stats_router)
+app.include_router(ocr_router)
+app.include_router(notification_router)
+
+@app.on_event("startup")
+async def startup_event():
+    # Iniciar worker de recordatorios en segundo plano
+    asyncio.create_task(reminder_worker())
+    print("🚀 Unified API started - Reminder Worker active")
 
 
 @app.get("/")
