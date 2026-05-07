@@ -84,6 +84,7 @@ interface EasyPayContextType {
     createGrupo: (nombre: string, liderId: string) => Promise<string>;
     joinGrupo: (codigo: string) => Promise<boolean>;
     addItem: (item: Omit<Item, 'id'>) => Promise<void>;
+    addItems: (items: Omit<Item, 'id'>[]) => Promise<void>;
     updateItem: (id: string, updates: Partial<Item>) => Promise<void>;
     deleteItem: (id: string) => Promise<void>;
     assignItem: (itemId: string, participantIds: string[]) => Promise<void>;
@@ -93,6 +94,7 @@ interface EasyPayContextType {
     clearGrupo: () => Promise<void>;
     calculateUserDebt: (participantId: string) => number;
     loadGroupDetails: (id: string) => Promise<void>;
+    normalizeGrupo: (raw: any) => Grupo;
 
     // Payments
     debts: Debt[];
@@ -108,6 +110,22 @@ interface EasyPayContextType {
     isOnline: boolean;
     lastRoute: string | null;
     saveLastRoute: (route: string) => Promise<void>;
+
+    // Settlement Approvals
+    pendingSettlements: any[];
+    pendingSettlementsCount: number;
+    fetchPendingSettlements: () => Promise<void>;
+
+    // Missing Financial Methods
+    getDebtsByUser: (userId: string) => Debt[];
+    getTotalOwed: (userId: string) => number;
+    getTotalToReceive: (userId: string) => number;
+    pendingConfirmations: (userId: string) => Payment[];
+    confirmPaymentAsReceiver: (paymentId: string) => Promise<void>;
+    confirmPaymentAsWitness: (paymentId: string) => Promise<void>;
+    rejectPayment: (paymentId: string) => Promise<void>;
+    addDebt: (debt: Omit<Debt, 'id' | 'createdAt'>) => void;
+    removeDebt: (debtId: string) => void;
 }
 
 const EasyPayContext = createContext<EasyPayContextType | undefined>(undefined);
@@ -135,6 +153,10 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const [cards, setCards] = useState<SavedCard[]>([]);
     const { notifyUserJoined, notifyGroupClosed, notifyItemAssigned } = useNotifications();
     const [realStats, setRealStats] = useState({ totalOwed: 0, totalToReceive: 0 });
+
+    // Settlement Approval State
+    const [pendingSettlements, setPendingSettlements] = useState<any[]>([]);
+    const [pendingSettlementsCount, setPendingSettlementsCount] = useState(0);
 
     // Connectivity State
     const [isOnline, setIsOnline] = useState(true);
@@ -222,12 +244,13 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
             });
 
             wsClient.on('payment_reported', (data) => {
-                // Podríamos mostrar una notificación local o simplemente dejar que refresque
                 console.log("[WS] Pago reportado:", data);
+                fetchPendingSettlements();
             });
 
             wsClient.on('settlement_updated', (data) => {
                 console.log("[WS] Liquidación actualizada:", data);
+                fetchPendingSettlements();
             });
 
             wsClient.on('group_updated', () => {
@@ -272,23 +295,61 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     const logout = async () => {
-        await TokenStorage.clear();
-        await AsyncStorage.removeItem(STORAGE_KEYS.USER);
-        await AsyncStorage.removeItem(STORAGE_KEYS.ACTIVE_GRUPO);
-        setToken(null);
-        setUser(null);
-        setActiveGrupo(null);
+        try {
+            wsClient.disconnect();
+            await TokenStorage.clear();
+            await AsyncStorage.removeItem(STORAGE_KEYS.USER);
+            await AsyncStorage.removeItem(STORAGE_KEYS.ACTIVE_GRUPO);
+            setToken(null);
+            setUser(null);
+            setActiveGrupo(null);
+            // Opcional: Limpiar cache de React Query si se usa
+            // queryClient.clear(); 
+        } catch (e) {
+            console.error("Error during logout:", e);
+        }
     };
 
     // --- Group Actions ---
     const recalculateTotals = (items: Item[]) => {
         const subtotal = items.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
+        const tax = subtotal * 0.16; // 16% IVA
+        const service = subtotal * 0.05; // 5% Servicio
         const tipPercent = subtotal < 3000 ? 0.10 : 0.05;
         const propina = subtotal * tipPercent;
-        return { subtotal, propina, total: subtotal + propina };
+        return { 
+            subtotal, 
+            tax,
+            service,
+            propina, 
+            total: subtotal + tax + service + propina 
+        };
     };
 
     const createGrupo = async (nombre: string, liderId: string) => {
+        if (isOnline) {
+            try {
+                const leader = { 
+                    id: liderId, 
+                    nombre: user?.nombre || 'Tú',
+                    avatar: user?.avatar || '',
+                    color: '#2196F3'
+                };
+                const newGroupResp = await groupRepository.createGroup(leader as any, nombre);
+                const normalized = normalizeGrupo(newGroupResp);
+                setActiveGrupo(normalized);
+                
+                // Pequeño respiro para asegurar que la DB asimile el insert antes de la navegación
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                return normalized.id;
+            } catch (error) {
+                console.error("Error creating group on backend:", error);
+                throw error;
+            }
+        }
+
+        // Fallback offline (Mock)
         const newId = makeId('grp');
         const newGrupo: Grupo = {
             id: newId,
@@ -304,7 +365,7 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 status: 'online',
                 avatar: user?.avatar || '',
                 debt: 0
-            } as any], // Cast because of slight type mismatches in project
+            } as any],
             items: [],
             subtotal: 0,
             propina: 0,
@@ -313,13 +374,34 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
             creadaEn: new Date().toISOString(),
         };
         setActiveGrupo(newGrupo);
-        // In a real app, we'd call groupRepository here if online
         return newId;
     };
 
     const joinGrupo = async (codigo: string): Promise<boolean> => {
-        // Mock join for now as in GrupoContext
-        return codigo.length >= 4 && codigo.length <= 6;
+        if (!user?.id) return false;
+        
+        try {
+            const member: any = {
+                id: user.id,
+                nombre: user.nombre,
+                avatar: user.avatar,
+                email: user.email
+            };
+            const groupData = await groupRepository.joinGroup(codigo, member);
+            if (groupData) {
+                const normalized = normalizeGrupo(groupData);
+                setActiveGrupo(normalized);
+                return true;
+            }
+            return false;
+        } catch (error: any) {
+            console.error("Error joining group:", error);
+            const detail = error.response?.data?.detail || "";
+            if (detail.includes("settling")) throw new Error("El grupo está en fase de liquidación, no acepta nuevos miembros");
+            if (detail.includes("closed")) throw new Error("El grupo ya está cerrado");
+            if (detail.includes("already a member")) throw new Error("Ya eres parte de este grupo");
+            throw new Error(detail || "Código inválido");
+        }
     };
 
     const addItem = async (itemData: Omit<Item, 'id'>) => {
@@ -334,6 +416,26 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 await groupRepository.addItem(activeGrupo.id, newItem);
             } catch (error) {
                 console.warn('Failed to sync item, will be cached locally');
+            }
+        }
+    };
+
+    const addItems = async (itemsData: Omit<Item, 'id'>[]) => {
+        if (!activeGrupo || itemsData.length === 0) return;
+        
+        const newItems = itemsData.map(data => ({ ...data, id: makeId('itm') }));
+        const updatedItems = [...activeGrupo.items, ...newItems];
+        const totals = recalculateTotals(updatedItems);
+        setActiveGrupo({ ...activeGrupo, items: updatedItems, ...totals });
+        
+        if (isOnline) {
+            try {
+                // Backend does not support bulk add yet, so we loop but only update state once
+                for (const item of newItems) {
+                    await groupRepository.addItem(activeGrupo.id, item);
+                }
+            } catch (error) {
+                console.warn('Failed to sync some items');
             }
         }
     };
@@ -409,33 +511,68 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const normalizeGrupo = (raw: any): Grupo => {
         if (!raw) return null as any;
-        return {
-            id: raw.id || raw._id,
-            nombre: raw.nombre || raw.name || 'Sin nombre',
-            liderId: raw.liderId || raw.admin_id,
-            codigo: raw.codigo || raw.codigo_invitacion || '000000',
-            participantes: (raw.participantes || raw.members || raw.integrantes || []).map((p: any) => ({
-                id: p.id || p._id,
-                nombre: p.nombre || p.name || 'Usuario',
+
+        const items = (raw.items || []).map((i: any) => ({
+            id: i.id || i._id || i.item_id || makeId('itm'),
+            nombre: i.nombre || i.description || 'Ítem',
+            precio: parseFloat(i.precio || i.amount || '0'),
+            cantidad: parseFloat(i.cantidad || i.quantity || '1'),
+            categoria: i.categoria || i.category || 'Otros',
+            autorId: i.autorId || i.addedBy || i.comprador_id || '',
+            asignadoA: i.asignadoA || i.assignedTo || i.participantes_ids || []
+        }));
+
+        // Recálculo local para consistencia absoluta en la UI
+        const subtotalValue = items.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
+        const taxValue = subtotalValue * 0.16;
+        const serviceValue = subtotalValue * 0.05;
+        const propinaValue = parseFloat(raw.propina || raw.propina_total || raw.tip || '0');
+        const totalValue = subtotalValue + taxValue + serviceValue + propinaValue;
+
+        const extraCharges = taxValue + serviceValue + propinaValue;
+        const groupSubtotal = subtotalValue || 1;
+
+        const participantes = (raw.participantes || raw.members || raw.integrantes || []).map((p: any) => {
+            const pId = p.id || p._id || (typeof p === 'string' ? p : makeId('usr'));
+            const pName = p.nombre || p.name || (typeof p === 'string' ? 'Usuario' : 'Usuario Desconocido');
+            
+            // Calcular deuda individual proporcional
+            const userSubtotal = items.reduce((acc, item) => {
+                const assigned = item.asignadoA || [];
+                if (assigned.includes(pId) && assigned.length > 0) {
+                    return acc + (item.precio * item.cantidad / assigned.length);
+                }
+                return acc;
+            }, 0);
+            
+            const proportion = userSubtotal / groupSubtotal;
+            const userDebt = userSubtotal + (extraCharges * proportion);
+
+            return {
+                id: pId,
+                nombre: pName,
                 avatar: p.avatar || '',
                 color: p.color || '#3b82f6',
-                isLeader: p.isLeader || p.role === 'leader' || (raw.liderId || raw.admin_id) === (p.id || p._id),
-                debt: p.debt || 0,
+                isLeader: p.isLeader || p.role === 'leader' || (raw.liderId || raw.admin_id) === pId,
+                debt: isNaN(userDebt) ? 0 : userDebt,
                 status: p.status || 'online'
-            })),
-            items: (raw.items || []).map((i: any) => ({
-                id: i.id || i._id,
-                nombre: i.nombre || i.description || 'Ítem',
-                precio: i.precio || i.amount || 0,
-                cantidad: i.cantidad || i.quantity || 1,
-                autorId: i.autorId || i.addedBy || i.comprador_id || '',
-                asignadoA: i.asignadoA || i.assignedTo || i.participantes_ids || []
-            })),
-            subtotal: raw.subtotal || raw.monto_final || 0,
-            propina: raw.propina || raw.propina_total || raw.tip || 0,
-            total: raw.total || raw.final_total || 0,
+            };
+        });
+
+        return {
+            id: raw.id || raw._id || raw.group_id || '',
+            nombre: raw.nombre || raw.name || 'Sin nombre',
+            liderId: raw.liderId || raw.admin_id || '',
+            codigo: raw.codigo || raw.codigo_invitacion || raw.invite_code || '000000',
+            participantes,
+            items,
+            subtotal: subtotalValue,
+            tax: taxValue,
+            service: serviceValue,
+            propina: propinaValue,
+            total: totalValue,
             status: (raw.status || raw.estado || 'active').toLowerCase() as GrupoStatus,
-            creadaEn: raw.creadaEn || raw.fecha_creacion || new Date().toISOString()
+            creadaEn: raw.creadaEn || raw.fecha_creacion || raw.created_at || new Date().toISOString()
         };
     };
 
@@ -463,25 +600,31 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     const calculateUserDebt = (userId: string): number => {
-        if (!activeGrupo || !activeGrupo.items) return 0;
+        if (!activeGrupo || !activeGrupo.items || activeGrupo.items.length === 0) return 0;
         
         try {
-            const base = activeGrupo.items.reduce((acc, item) => {
+            // 1. Calcular el subtotal personal (suma de partes de items asignados)
+            const userSubtotal = activeGrupo.items.reduce((acc, item) => {
                 const assigned = item.asignadoA || [];
                 if (assigned.includes(userId) && assigned.length > 0) {
                     const precio = parseFloat(item.precio?.toString() || '0');
                     const cantidad = parseFloat(item.cantidad?.toString() || '1');
-                    
-                    if (isNaN(precio) || isNaN(cantidad)) return acc;
-                    
                     return acc + (precio * cantidad / assigned.length);
                 }
                 return acc;
             }, 0);
 
-            const tipFactor = (activeGrupo.propina || 0) / 100;
-            const total = base + (base * tipFactor);
+            if (userSubtotal === 0) return 0;
+
+            // 2. Calcular la proporción del usuario en el grupo
+            const groupSubtotal = activeGrupo.subtotal || 1;
+            const proportion = userSubtotal / groupSubtotal;
+
+            // 3. Aplicar proporción a los cargos extra (IVA, Servicio, Propina)
+            const extraCharges = (activeGrupo.tax || 0) + (activeGrupo.service || 0) + (activeGrupo.propina || 0);
+            const userExtra = extraCharges * proportion;
             
+            const total = userSubtotal + userExtra;
             return isNaN(total) ? 0 : total;
         } catch (e) {
             console.error("[EasyPayContext] Error calculating debt:", e);
@@ -539,6 +682,30 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
     }, [user?.id, isOnline]);
 
+    const fetchPendingSettlements = useCallback(async () => {
+        if (!user?.id || !isOnline) return;
+        try {
+            // Buscamos los grupos del usuario
+            const groups = await groupRepository.findByUser(user.id);
+            const adminGroups = groups.filter(g => g.admin_id === user.id);
+            
+            let allPending: any[] = [];
+            for (const g of adminGroups) {
+                try {
+                    const pending = await groupRepository.getPendingSettlements(g.id);
+                    allPending = [...allPending, ...pending.map(p => ({ ...p, group_name: g.nombre }))];
+                } catch (e) {
+                    // Ignorar errores de un grupo específico
+                }
+            }
+            
+            setPendingSettlements(allPending);
+            setPendingSettlementsCount(allPending.length);
+        } catch (error) {
+            console.error('Error fetching pending settlements:', error);
+        }
+    }, [user?.id, isOnline]);
+
     const queryClient = useQueryClient();
 
     useEffect(() => {
@@ -546,9 +713,22 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
             queryClient.invalidateQueries();
             fetchCards();
             fetchFinancialData();
+            fetchPendingSettlements();
             if (activeGrupo?.id) loadGroupDetails(activeGrupo.id);
         }
-    }, [isOnline, fetchCards, fetchFinancialData, queryClient]);
+    }, [isOnline, fetchCards, fetchFinancialData, fetchPendingSettlements, queryClient]);
+
+    // Polling global para el badge (cada 30 segundos)
+    useEffect(() => {
+        if (!user?.id || !isOnline) return;
+        
+        const interval = setInterval(() => {
+            console.log('[Polling] Refrescando badge de pagos pendientes...');
+            fetchPendingSettlements();
+        }, 30000);
+        
+        return () => clearInterval(interval);
+    }, [user?.id, isOnline, fetchPendingSettlements]);
 
     const initiatePayment = useCallback(async (data: Omit<Payment, 'id' | 'createdAt' | 'status'>): Promise<Payment> => {
         const newPayment: Payment = {
@@ -590,11 +770,69 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
         await fetchCards();
     }, [user?.id, fetchCards, isOnline]);
 
+    const getDebtsByUser = useCallback((userId: string) => {
+        return debts.filter(d => d.fromUserId === userId);
+    }, [debts]);
+
+    const getTotalOwed = useCallback((userId: string) => {
+        return debts
+            .filter(d => d.fromUserId === userId)
+            .reduce((acc, d) => acc + d.amount, 0);
+    }, [debts]);
+
+    const getTotalToReceive = useCallback((userId: string) => {
+        return debts
+            .filter(d => d.toUserId === userId)
+            .reduce((acc, d) => acc + d.amount, 0);
+    }, [debts]);
+
+    const pendingConfirmations = useCallback((userId: string) => {
+        return payments.filter(p => 
+            (p.toUserId === userId && !p.receiverConfirmed) || 
+            (p.witnessId === userId && !p.witnessConfirmed)
+        );
+    }, [payments]);
+
+    const confirmPaymentAsReceiver = async (paymentId: string) => {
+        setPayments(prev => prev.map(p => 
+            p.id === paymentId ? { ...p, receiverConfirmed: true, status: p.witnessId ? (p.witnessConfirmed ? 'confirmed' : p.status) : 'confirmed' } : p
+        ));
+        // Sync with backend if needed
+    };
+
+    const confirmPaymentAsWitness = async (paymentId: string) => {
+        setPayments(prev => prev.map(p => 
+            p.id === paymentId ? { ...p, witnessConfirmed: true, status: p.receiverConfirmed ? 'confirmed' : p.status } : p
+        ));
+    };
+
+    const rejectPayment = async (paymentId: string) => {
+        setPayments(prev => prev.map(p => 
+            p.id === paymentId ? { ...p, status: 'rejected' } : p
+        ));
+    };
+
+    const addDebt = (debtData: Omit<Debt, 'id' | 'createdAt'>) => {
+        const newDebt: Debt = {
+            ...debtData,
+            id: makeId('debt'),
+            createdAt: Date.now()
+        };
+        setDebts(prev => [...prev, newDebt]);
+    };
+
+    const removeDebt = (debtId: string) => {
+        setDebts(prev => prev.filter(d => d.id !== debtId));
+    };
+
     const value: EasyPayContextType = {
         user, token, isLoading, saveSession, saveGuestSession, logout,
-        activeGrupo, refreshGrupo, createGrupo, joinGrupo, addItem, updateItem, deleteItem, assignItem, startSettlement, closeGrupo, finalizeGroup, clearGrupo, calculateUserDebt, loadGroupDetails,
+        activeGrupo, refreshGrupo, createGrupo, joinGrupo, addItem, addItems, updateItem, deleteItem, assignItem, startSettlement, closeGrupo, finalizeGroup, clearGrupo, calculateUserDebt, loadGroupDetails, normalizeGrupo,
         debts, payments, cards, initiatePayment, fetchFinancialData, addCard, removeCard, setDefaultCard,
-        isOnline, lastRoute, saveLastRoute
+        isOnline, lastRoute, saveLastRoute,
+        pendingSettlements, pendingSettlementsCount, fetchPendingSettlements,
+        getDebtsByUser, getTotalOwed, getTotalToReceive, pendingConfirmations,
+        confirmPaymentAsReceiver, confirmPaymentAsWitness, rejectPayment, addDebt, removeDebt
     };
 
     return (

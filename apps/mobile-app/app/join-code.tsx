@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { MotiView, AnimatePresence } from 'moti';
+
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { useEasyPay } from '../context/EasyPayContext';
 
@@ -19,8 +19,8 @@ export default function JoinCodeScreen() {
     const CODE_LENGTH = 8;
 
     const handleJoin = async () => {
-        if (code.length !== CODE_LENGTH) {
-            setError(`Ingresa el código de ${CODE_LENGTH} dígitos`);
+        if (code.length < 6) {
+            setError(`Ingresa el código completo`);
             return;
         }
         setLoading(true);
@@ -28,12 +28,13 @@ export default function JoinCodeScreen() {
         try {
             const success = await joinGrupo(code);
             if (success) {
-                router.replace(`/(tabs)/group/${activeGrupo?.id || 'current'}`);
+                // El contexto ya actualizó activeGrupo
+                router.replace('/(tabs)/groups');
             } else {
                 setError('Código inválido o grupo cerrado');
             }
-        } catch (e) {
-            setError('Error de conexión. Intenta de nuevo.');
+        } catch (e: any) {
+            setError(e.message || 'Error de conexión. Intenta de nuevo.');
         } finally {
             setLoading(false);
         }

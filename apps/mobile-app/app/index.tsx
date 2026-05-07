@@ -1,15 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Dimensions, StyleSheet, Image as RNImage } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Dimensions, StyleSheet, Image as RNImage, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MotiView, MotiText } from 'moti';
 
 import { useEasyPay } from '../context/EasyPayContext';
-import { useEffect } from 'react';
-import { ActivityIndicator } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -30,14 +27,11 @@ export default function LandingScreen() {
   const insets = useSafeAreaInsets();
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
-  // La navegación se manejará desde el layout raíz o manualmente para evitar bucles
   useEffect(() => {
     if (!isLoading && user) {
-      // Use replace to avoid going back to landing
-      const target = lastRoute || '/(tabs)';
-      router.replace(target as any);
+      router.replace('/(tabs)');
     }
-  }, [user, isLoading, lastRoute]);
+  }, [user, isLoading]);
 
   const toggleFaq = (index: number) => {
     setExpandedFaq(expandedFaq === index ? null : index);
@@ -106,52 +100,37 @@ export default function LandingScreen() {
           {/* Hero Section */}
           <View className="px-6 pt-12 pb-16 relative overflow-hidden">
             {/* Elementos Decorativos Flotantes */}
-            <MotiView
-              from={{ translateY: -10, rotate: '0deg' }}
-              animate={{ translateY: 10, rotate: '5deg' }}
-              transition={{ loop: true, type: 'timing', duration: 4000 }}
+            <View
               style={{ position: 'absolute', top: 40, right: -20, opacity: 0.2 }}
             >
               <MaterialCommunityIcons name="currency-usd" size={100} color="white" />
-            </MotiView>
-            <MotiView
-              from={{ translateY: 10, rotate: '0deg' }}
-              animate={{ translateY: -10, rotate: '-10deg' }}
-              transition={{ loop: true, type: 'timing', duration: 5000, delay: 500 }}
+            </View>
+            <View
               style={{ position: 'absolute', bottom: 100, left: -30, opacity: 0.15 }}
             >
               <Ionicons name="restaurant" size={80} color="white" />
-            </MotiView>
+            </View>
 
-            <MotiText
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ duration: 800 }}
+            <Text
               className="text-5xl font-black text-white leading-[55px] mb-6 shadow-sm"
             >
               La cuenta,{'\n'}
               dividida en{'\n'}
               <Text style={{ color: COLORS.coolSky }}>segundos.</Text>
-            </MotiText>
-            <MotiText
-              from={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1000, delay: 500 }}
+            </Text>
+            <Text
               className="text-lg text-white/80 font-light leading-7 mb-10 max-w-[90%]"
             >
               Cero estrés. Escanea, asigna y paga tu parte. Olvídate de las calculadoras y disfruta de la sobreGrupo.
-            </MotiText>
+            </Text>
 
             {/* Availability Badge */}
-            <MotiView
-              from={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1200, type: 'spring' }}
+            <View
               className="bg-sky-400/10 border border-sky-400/20 px-5 py-2.5 rounded-full flex-row items-center gap-3 self-start mb-8"
             >
               <Text className="text-base">✨</Text>
               <Text style={{ color: COLORS.coolSky }} className="font-bold tracking-wide uppercase text-[10px]">Ahora disponible en Android</Text>
-            </MotiView>
+            </View>
           </View>
 
           {/* Pain Points Section */}
@@ -291,21 +270,16 @@ export default function LandingScreen() {
                 >
                   <View className="flex-row justify-between items-center mb-2">
                     <Text className="text-white font-bold text-lg">{item.q}</Text>
-                    <MotiView
-                      animate={{ rotate: expandedFaq === index ? '180deg' : '0deg' }}
-                      transition={{ type: 'timing', duration: 300 }}
+                    <View
+                      style={{ transform: [{ rotate: expandedFaq === index ? '180deg' : '0deg' }] }}
                     >
                       <Ionicons name="chevron-down" size={20} color={COLORS.coolSky} />
-                    </MotiView>
+                    </View>
                   </View>
                   {expandedFaq === index && (
-                    <MotiView
-                      from={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      transition={{ type: 'timing', duration: 300 }}
-                    >
+                    <View>
                       <Text className="text-white/60 leading-5 pt-2">{item.a}</Text>
-                    </MotiView>
+                    </View>
                   )}
                 </TouchableOpacity>
               ))}

@@ -11,7 +11,7 @@ import {
     TextInput,
 } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
-import { MotiView, AnimatePresence } from 'moti';
+
 import OcrService, { TicketData, TicketItem } from '../src/infrastructure/services/OcrService';
 
 interface Props {
@@ -97,7 +97,7 @@ export default function OcrTicketScanner({ visible, onClose, onConfirm, theme }:
     };
 
     return (
-        <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
+        <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={handleClose}>
             <View style={{ flex: 1, backgroundColor: theme.bg }}>
 
                 {/* Header */}
@@ -119,11 +119,7 @@ export default function OcrTicketScanner({ visible, onClose, onConfirm, theme }:
 
                     {/* PASO 1: Seleccionar fuente */}
                     {step === 'select' && (
-                        <MotiView
-                            from={{ opacity: 0, translateY: 20 }}
-                            animate={{ opacity: 1, translateY: 0 }}
-                            className="px-6 pt-10"
-                        >
+                        <View className="px-6 pt-6">
                             <View className="items-center mb-10">
                                 <View style={{ backgroundColor: theme.primary + '20' }} className="w-24 h-24 rounded-[36px] items-center justify-center mb-4">
                                     <MaterialIcons name="document-scanner" size={48} color={theme.primary} />
@@ -174,16 +170,12 @@ export default function OcrTicketScanner({ visible, onClose, onConfirm, theme }:
                                     Para mejores resultados asegúrate de que el ticket esté bien iluminado y sin dobleces.
                                 </Text>
                             </View>
-                        </MotiView>
+                        </View>
                     )}
 
                     {/* PASO 2: Preview de la imagen */}
                     {step === 'preview' && imageUri && (
-                        <MotiView
-                            from={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="px-6 pt-6"
-                        >
+                        <View className="px-6 pt-6">
                             <Image
                                 source={{ uri: imageUri }}
                                 className="w-full rounded-[28px]"
@@ -206,16 +198,12 @@ export default function OcrTicketScanner({ visible, onClose, onConfirm, theme }:
                                     <Text style={{ color: theme.textSecondary }} className="font-bold">Tomar otra foto</Text>
                                 </TouchableOpacity>
                             </View>
-                        </MotiView>
+                        </View>
                     )}
 
                     {/* PASO 3: Procesando */}
                     {step === 'processing' && (
-                        <MotiView
-                            from={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="items-center justify-center px-6 pt-20"
-                        >
+                        <View className="items-center justify-center px-6 pt-20">
                             <View style={{ backgroundColor: theme.primary + '15' }} className="w-32 h-32 rounded-full items-center justify-center mb-6">
                                 <ActivityIndicator size="large" color={theme.primary} />
                             </View>
@@ -225,16 +213,12 @@ export default function OcrTicketScanner({ visible, onClose, onConfirm, theme }:
                             <Text style={{ color: theme.textSecondary }} className="text-center text-sm px-10">
                                 Detectando productos, precios y totales automáticamente.
                             </Text>
-                        </MotiView>
+                        </View>
                     )}
 
                     {/* PASO 4: Resultado */}
                     {step === 'result' && ticketData && (
-                        <MotiView
-                            from={{ opacity: 0, translateY: 20 }}
-                            animate={{ opacity: 1, translateY: 0 }}
-                            className="px-6 pt-6"
-                        >
+                        <View className="px-6 pt-6">
                             {/* Nombre del restaurante */}
                             <View style={{ backgroundColor: theme.primary + '15', borderColor: theme.primary + '30' }} className="p-5 rounded-[24px] border mb-5">
                                 <Text style={{ color: theme.primary }} className="text-[10px] font-black uppercase tracking-widest mb-1">Establecimiento</Text>
@@ -300,16 +284,12 @@ export default function OcrTicketScanner({ visible, onClose, onConfirm, theme }:
                                 <MaterialIcons name="edit" size={16} color={theme.textSecondary} />
                                 <Text style={{ color: theme.textSecondary }} className="font-bold text-sm">Editar items</Text>
                             </TouchableOpacity>
-                        </MotiView>
+                        </View>
                     )}
 
                     {/* PASO 5: Editar items */}
                     {step === 'edit' && (
-                        <MotiView
-                            from={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="px-6 pt-6"
-                        >
+                        <View className="px-6 pt-6">
                             <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-widest mb-4">
                                 Editar productos
                             </Text>
@@ -370,24 +350,24 @@ export default function OcrTicketScanner({ visible, onClose, onConfirm, theme }:
                             >
                                 <Text style={{ color: theme.text }} className="font-bold">← Volver al resumen</Text>
                             </TouchableOpacity>
-                        </MotiView>
+                        </View>
+                    )}
+
+                    {/* Botones de acción al final del scroll */}
+                    {(step === 'result' || step === 'edit') && (
+                        <View className="px-6 pb-20 pt-4">
+                            <TouchableOpacity
+                                onPress={handleConfirm}
+                                style={{ backgroundColor: theme.primary }}
+                                className="py-5 rounded-2xl items-center shadow-xl"
+                            >
+                                <Text className="text-white font-black text-base">
+                                    Usar este ticket ({editableItems.length} items)
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
                     )}
                 </ScrollView>
-
-                {/* Botón de confirmar fijo abajo */}
-                {(step === 'result' || step === 'edit') && (
-                    <View style={{ backgroundColor: theme.bg, borderTopColor: theme.border }} className="px-6 pb-10 pt-4 border-t">
-                        <TouchableOpacity
-                            onPress={handleConfirm}
-                            style={{ backgroundColor: theme.primary }}
-                            className="py-5 rounded-2xl items-center shadow-xl"
-                        >
-                            <Text className="text-white font-black text-base">
-                                Usar este ticket ({editableItems.length} items)
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
             </View>
         </Modal>
     );

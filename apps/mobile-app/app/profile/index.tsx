@@ -23,7 +23,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function ProfileScreen() {
     const { theme, fontScale } = useTheme();
-    const { user  } = useEasyPay();
+    const { user, logout } = useEasyPay();
     const router = useRouter();
     const [userGroups, setUserGroups] = useState<any[]>([]);
     const [realStats, setRealStats] = useState({ total_spent: 0, group_count: 0 });
@@ -198,6 +198,18 @@ export default function ProfileScreen() {
                         <MaterialIcons name="chevron-right" size={24} color={theme.textSecondary} />
                     </TouchableOpacity>
                 </View>
+
+                {/* Logout Button */}
+                <TouchableOpacity 
+                    onPress={async () => {
+                        await logout();
+                        router.replace('/');
+                    }}
+                    className="flex-row items-center justify-center gap-3 py-6 rounded-[32px] bg-rose-500/10 border border-rose-500/20 mb-10"
+                >
+                    <MaterialIcons name="logout" size={20} color="#f43f5e" />
+                    <Text style={{ fontSize: 13 * fontScale }} className="text-rose-500 font-black uppercase tracking-[3px]">Cerrar Sesión</Text>
+                </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>
     );

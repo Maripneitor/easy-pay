@@ -164,18 +164,28 @@ delete_group_uc = DeleteGroupUseCase(group_repo)
 
 
 @group_router.post("/create")
-async def create_group(data: GroupCreate):
+async def create_group(data: GroupCreate, current_user_id: str = Depends(get_current_user_id)):
+    if data.admin_id != current_user_id:
+        raise HTTPException(status_code=403, detail="No puedes crear un grupo para otro usuario")
     return await create_group_uc.execute(data)
 
 @group_router.post("/add-item")
-async def add_item(data: ItemCreate):
+async def add_item(data: ItemCreate, current_user_id: str = Depends(get_current_user_id)):
+    # Validar que el usuario pertenece al grupo
+    group = await group_repo.find_by_id(data.group_id)
+    if not group or current_user_id not in group.get("integrantes", []):
+        raise HTTPException(status_code=403, detail="No tienes permiso para agregar ítems a este grupo")
+        
     result = await add_item_uc.execute(data)
     if result.get("status") == "error":
         raise HTTPException(status_code=400, detail=result["message"])
     return result
 
 @group_router.post("/join")
-async def join_group(data: GroupJoin):
+async def join_group(data: GroupJoin, current_user_id: str = Depends(get_current_user_id)):
+    if data.user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="No puedes unir a otro usuario")
+        
     result = await join_group_uc.execute(data.codigo, data.user_id)
     if result["status"] == "error":
         status_code = 404 if "Código" in result["message"] else 400
@@ -183,29 +193,46 @@ async def join_group(data: GroupJoin):
     return result
 
 @group_router.get("/{group_id}/items")
-async def get_items(group_id: str):
+async def get_items(group_id: str, current_user_id: str = Depends(get_current_user_id)):
+    # Validar acceso
+    group = await group_repo.find_by_id(group_id)
+    if not group or current_user_id not in group.get("integrantes", []):
+        raise HTTPException(status_code=403, detail="No tienes acceso a este grupo")
+        
     items = await item_repo.find_by_group(group_id)
     if items is None:
         return []
     return items
 
 @group_router.get("/{group_id}/items/{item_id}")
-async def get_item_by_id(group_id: str, item_id: str):
+async def get_item_by_id(group_id: str, item_id: str, current_user_id: str = Depends(get_current_user_id)):
     """Obtiene un gasto por su ID"""
+    group = await group_repo.find_by_id(group_id)
+    if not group or current_user_id not in group.get("integrantes", []):
+        raise HTTPException(status_code=403, detail="No tienes acceso a este grupo")
+        
     item = await item_repo.find_by_id(item_id)
     if not item:
         raise HTTPException(status_code=404, detail="Gasto no encontrado")
     return item
 
 @group_router.get("/{group_id}/balances")
-async def get_balances(group_id: str):
+async def get_balances(group_id: str, current_user_id: str = Depends(get_current_user_id)):
+    # Validar acceso
+    group = await group_repo.find_by_id(group_id)
+    if not group or current_user_id not in group.get("integrantes", []):
+        raise HTTPException(status_code=403, detail="No tienes acceso a este grupo")
+        
     result = await get_balances_uc.execute(group_id)
     if result.get("status") == "error":
         raise HTTPException(status_code=404, detail=result["message"])
     return result
 
 @group_router.get("/user/{user_id}")
-async def get_user_groups(user_id: str):
+async def get_user_groups(user_id: str, current_user_id: str = Depends(get_current_user_id)):
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="No puedes consultar grupos de otro usuario")
+        
     groups = await group_repo.find_by_user(user_id)
     if not groups:
         return []
@@ -226,18 +253,33 @@ async def get_user_groups(user_id: str):
 
 
 @group_router.get("/{group_id}")
-async def get_group_by_id(group_id: str):
+async def get_group_by_id(
+    group_id: str, 
+    current_user_id: str = Depends(get_current_user_id)
+):
     group = await group_repo.find_by_id_detailed(group_id)
     if not group:
         raise HTTPException(status_code=404, detail="Grupo no encontrado")
+        
+    member_ids = [str(m.get("id")) for m in group.get("integrantes", [])]
+    if current_user_id not in member_ids and group.get("admin_id") != current_user_id:
+        raise HTTPException(
+            status_code=403, 
+            detail="Acceso denegado. No eres miembro de este grupo."
+        )
+
     return group
 
 @group_router.put("/{group_id}/items/{item_id}")
-async def edit_item(group_id: str, item_id: str, item_data: ItemUpdate):
+async def edit_item(group_id: str, item_id: str, item_data: ItemUpdate, current_user_id: str = Depends(get_current_user_id)):
     """
     Actualiza un gasto. Se usa group_id por estructura de URL, 
     pero la edición es directa por item_id.
     """
+    group = await group_repo.find_by_id(group_id)
+    if not group or current_user_id not in group.get("integrantes", []):
+        raise HTTPException(status_code=403, detail="No tienes permiso para editar ítems en este grupo")
+
     # Convertimos el esquema a diccionario ignorando los campos que el usuario no envió
     update_dict = item_data.dict(exclude_unset=True)
     
@@ -273,27 +315,39 @@ async def delete_group_route(group_id: str, current_user_id: str = Depends(get_c
     return result
 
 @group_router.put("/{group_id}")
-async def update_group(group_id: str, data: dict):
+async def update_group(group_id: str, data: dict, current_user_id: str = Depends(get_current_user_id)):
     """
     Actualiza los detalles de un grupo (nombre, descripción).
     """
+    group = await group_repo.find_by_id(group_id)
+    if not group or group.get("admin_id") != current_user_id:
+        raise HTTPException(status_code=403, detail="Solo el administrador puede actualizar el grupo")
+
     success = await group_repo.update_group(group_id, data)
     if not success:
         raise HTTPException(status_code=404, detail="Grupo no encontrado o sin cambios")
     return {"status": "success", "message": "Grupo actualizado correctamente"}
 
 @group_router.delete("/{group_id}/items/{item_id}")
-async def remove_item(group_id: str, item_id: str):
+async def remove_item(group_id: str, item_id: str, current_user_id: str = Depends(get_current_user_id)):
     """
     Elimina un gasto de un grupo.
     """
+    group = await group_repo.find_by_id(group_id)
+    if not group or current_user_id not in group.get("integrantes", []):
+        raise HTTPException(status_code=403, detail="No tienes permiso para eliminar ítems en este grupo")
+
     success = await item_repo.delete_item(item_id)
     if not success:
         raise HTTPException(status_code=404, detail="Gasto no encontrado")
     return {"message": "Gasto eliminado correctamente", "status": "success"}
 
 @group_router.post("/{group_id}/members")
-async def add_member(group_id: str, data: dict):
+async def add_member(group_id: str, data: dict, current_user_id: str = Depends(get_current_user_id)):
+    group = await group_repo.find_by_id(group_id)
+    if not group or group.get("admin_id") != current_user_id:
+        raise HTTPException(status_code=403, detail="Solo el administrador puede agregar miembros")
+
     user_id = data.get("user_id")
     if not user_id:
         raise HTTPException(status_code=400, detail="ID de usuario requerido")
@@ -304,10 +358,14 @@ async def add_member(group_id: str, data: dict):
     return {"status": "success", "message": "Miembro agregado"}
 
 @group_router.post("/{group_id}/start-settlement")
-async def start_settlement(group_id: str, data: dict):
+async def start_settlement(group_id: str, data: dict, current_user_id: str = Depends(get_current_user_id)):
     """
     Inicia la fase de liquidación. El líder selecciona las cuentas bancarias.
     """
+    group = await group_repo.find_by_id(group_id)
+    if not group or group.get("admin_id") != current_user_id:
+        raise HTTPException(status_code=403, detail="Solo el administrador puede iniciar la liquidación")
+
     accounts = data.get("selected_bank_accounts", [])
     update_data = {
         "status": "settling",
@@ -320,7 +378,11 @@ async def start_settlement(group_id: str, data: dict):
     return {"status": "success", "message": "Fase de liquidación iniciada"}
 
 @group_router.post("/{group_id}/close")
-async def close_group(group_id: str, data: dict):
+async def close_group(group_id: str, data: dict, current_user_id: str = Depends(get_current_user_id)):
+    group = await group_repo.find_by_id(group_id)
+    if not group or group.get("admin_id") != current_user_id:
+        raise HTTPException(status_code=403, detail="Solo el administrador puede cerrar el grupo")
+
     from datetime import datetime
     final_data = {
         "tip_amount": data.get("tip_amount", 0),
@@ -339,7 +401,11 @@ async def liquidate_group(group_id: str, current_user_id: str = Depends(get_curr
     return await liquidate_group_uc.execute(group_id, current_user_id)
 
 @group_router.delete("/{group_id}/members/{user_id}")
-async def remove_member(group_id: str, user_id: str):
+async def remove_member(group_id: str, user_id: str, current_user_id: str = Depends(get_current_user_id)):
+    group = await group_repo.find_by_id(group_id)
+    if not group or group.get("admin_id") != current_user_id:
+        raise HTTPException(status_code=403, detail="Solo el administrador puede eliminar miembros")
+
     # 1. Validar si el usuario tiene ítems asignados
     has_items = await item_repo.has_assigned_items(user_id, group_id)
     if has_items:
@@ -354,8 +420,12 @@ async def remove_member(group_id: str, user_id: str):
     return {"status": "success", "message": "Miembro eliminado"}
 
 @group_router.post("/{group_id}/settlements")
-async def create_settlement(group_id: str, settlement: SettlementCreate, background_tasks: BackgroundTasks):
+async def create_settlement(group_id: str, settlement: SettlementCreate, background_tasks: BackgroundTasks, current_user_id: str = Depends(get_current_user_id)):
     """Crea una solicitud de liquidación (pago realizado)"""
+    group = await group_repo.find_by_id(group_id)
+    if not group or current_user_id not in group.get("integrantes", []):
+        raise HTTPException(status_code=403, detail="No eres miembro de este grupo")
+
     settlement_dict = settlement.dict()
     settlement_dict["status"] = "pending"
     settlement_dict["created_at"] = datetime.utcnow()
@@ -376,12 +446,16 @@ async def create_settlement(group_id: str, settlement: SettlementCreate, backgro
     return {"id": settlement_id, "status": "pending"}
 
 @group_router.get("/{group_id}/settlements/pending")
-async def get_pending_settlements(group_id: str):
+async def get_pending_settlements(group_id: str, current_user_id: str = Depends(get_current_user_id)):
     """Obtiene liquidaciones pendientes para que el líder las apruebe"""
+    group = await group_repo.find_by_id(group_id)
+    if not group or current_user_id not in group.get("integrantes", []):
+        raise HTTPException(status_code=403, detail="No tienes acceso a este grupo")
+
     return await group_repo.get_pending_settlements(group_id)
 
 @group_router.post("/{group_id}/settlements/{settlement_id}/approve")
-async def approve_settlement(group_id: str, settlement_id: str, current_user_id: str, background_tasks: BackgroundTasks):
+async def approve_settlement(group_id: str, settlement_id: str, background_tasks: BackgroundTasks, current_user_id: str = Depends(get_current_user_id)):
     """Solo el líder puede aprobar una liquidación"""
     group = await group_repo.find_by_id(group_id)
     if not group:
@@ -410,7 +484,7 @@ async def approve_settlement(group_id: str, settlement_id: str, current_user_id:
     return {"message": "Liquidación aprobada correctamente"}
 
 @group_router.post("/{group_id}/settlements/{settlement_id}/reject")
-async def reject_settlement(group_id: str, settlement_id: str, current_user_id: str, data: dict, background_tasks: BackgroundTasks):
+async def reject_settlement(group_id: str, settlement_id: str, data: dict, background_tasks: BackgroundTasks, current_user_id: str = Depends(get_current_user_id)):
     """Solo el líder puede rechazar una liquidación"""
     group = await group_repo.find_by_id(group_id)
     if not group:

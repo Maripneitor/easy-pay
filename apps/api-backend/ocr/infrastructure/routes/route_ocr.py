@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
 from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime
 from typing import Optional
+from utils.security import get_current_user_id
+from group.infrastructure.repository.group_repository import MongoGroupRepository
 import httpx
 import os
 import re
@@ -18,6 +20,7 @@ OCR_API_KEY = os.getenv("OCR_API_KEY", "K88694858788957")
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
 ocr_collection = db["OsrMG"]
+group_repo = MongoGroupRepository()
 
 # ── Modelos ───────────────────────────────────────────────────────────
 class TicketItem(BaseModel):
@@ -43,6 +46,9 @@ def clean_price(text: str) -> float:
         return float(text)
     except:
         return 0.0
+
+def title_case(text: str) -> str:
+    return " ".join([w.capitalize() for w in text.split()])
 
 def parse_ticket_text(raw_text: str) -> dict:
     lines = [l.strip() for l in raw_text.split("\n") if l.strip()]
@@ -153,10 +159,18 @@ def parse_ticket_text(raw_text: str) -> dict:
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.post("/scan")
-async def scan_ticket(request: OcrRequest):
+async def scan_ticket(request: OcrRequest, current_user_id: str = Depends(get_current_user_id)):
+    if request.user_id and request.user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="No puedes procesar tickets para otro usuario")
+    
+    if request.group_id:
+        group = await group_repo.find_by_id(request.group_id)
+        if not group or current_user_id not in group.get("integrantes", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este grupo")
+
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.post(
+        async with httpx.AsyncClient(timeout=30) as client_http:
+            response = await client_http.post(
                 "https://api.ocr.space/parse/image",
                 headers={"apikey": OCR_API_KEY},
                 data={
@@ -181,7 +195,7 @@ async def scan_ticket(request: OcrRequest):
         doc = {
             **parsed,
             "group_id": request.group_id,
-            "user_id": request.user_id,
+            "user_id": current_user_id,
             "created_at": datetime.utcnow(),
             "status": "processed",
         }
@@ -199,7 +213,11 @@ async def scan_ticket(request: OcrRequest):
         raise HTTPException(status_code=500, detail=f"Error procesando ticket: {str(e)}")
 
 @router.get("/history/{group_id}")
-async def get_scan_history(group_id: str):
+async def get_scan_history(group_id: str, current_user_id: str = Depends(get_current_user_id)):
+    group = await group_repo.find_by_id(group_id)
+    if not group or current_user_id not in group.get("integrantes", []):
+        raise HTTPException(status_code=403, detail="No tienes acceso a este grupo")
+
     cursor = ocr_collection.find(
         {"group_id": group_id},
         {"raw_text": 0}
@@ -213,22 +231,43 @@ async def get_scan_history(group_id: str):
     return {"group_id": group_id, "scans": results}
 
 @router.get("/scan/{scan_id}")
-async def get_scan(scan_id: str):
+async def get_scan(scan_id: str, current_user_id: str = Depends(get_current_user_id)):
     try:
         doc = await ocr_collection.find_one({"_id": ObjectId(scan_id)})
         if not doc:
             raise HTTPException(status_code=404, detail="Escaneo no encontrado.")
+        
+        if doc.get("user_id") != current_user_id:
+            # Si tiene group_id, verificar si el usuario está en el grupo
+            if doc.get("group_id"):
+                group = await group_repo.find_by_id(doc["group_id"])
+                if not group or current_user_id not in group.get("integrantes", []):
+                    raise HTTPException(status_code=403, detail="No tienes acceso a este escaneo")
+            else:
+                raise HTTPException(status_code=403, detail="No tienes acceso a este escaneo")
+
         doc["_id"] = str(doc["_id"])
         return doc
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(status_code=400, detail="ID inválido.")
 
 @router.delete("/scan/{scan_id}")
-async def delete_scan(scan_id: str):
+async def delete_scan(scan_id: str, current_user_id: str = Depends(get_current_user_id)):
     try:
+        doc = await ocr_collection.find_one({"_id": ObjectId(scan_id)})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Escaneo no encontrado.")
+        
+        if doc.get("user_id") != current_user_id:
+             raise HTTPException(status_code=403, detail="No tienes permiso para eliminar este escaneo")
+
         result = await ocr_collection.delete_one({"_id": ObjectId(scan_id)})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Escaneo no encontrado.")
         return {"success": True, "deleted_id": scan_id}
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(status_code=400, detail="ID inválido.")

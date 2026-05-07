@@ -9,6 +9,8 @@ import { BlurView } from 'expo-blur';
 import { ocrRepository } from '../src/infrastructure/api/repositories/OcrRepository';
 import { useEasyPay } from '../context/EasyPayContext';
 
+import { OcrService } from '../src/infrastructure/services/OcrService';
+
 const { width } = Dimensions.get('window');
 
 export default function OCRScannerScreen() {
@@ -25,23 +27,38 @@ export default function OCRScannerScreen() {
     const processScan = async (base64: string) => {
         setIsScanning(true);
         setHasError(false);
+        
         try {
-            const result = await ocrRepository.scanTicket(
-                base64, 
-                groupId as string, 
-                user?.id
-            );
+            // Usamos OcrService que es más robusto y tiene lógica de limpieza de items
+            const result = await OcrService.extractTicketData(base64);
             
-            if (result.success) {
-                setScanData(result.data);
+            if (result && result.items && result.items.length > 0) {
+                setScanData(result);
                 setIsScanning(false);
             } else {
-                throw new Error("No se pudo procesar el ticket");
+                // Fallback al repositorio si el servicio falla o no encuentra items
+                const repoResult: any = await ocrRepository.scanTicket(
+                    base64, 
+                    groupId as string, 
+                    user?.id
+                );
+                
+                if (repoResult.success) {
+                    setScanData(repoResult.data);
+                    setIsScanning(false);
+                } else {
+                    throw new Error("No se detectaron items en el ticket");
+                }
             }
-        } catch (e) {
-            console.error(e);
+        } catch (e: any) {
+            console.error("OCR Scan Error:", e);
             setIsScanning(false);
             setHasError(true);
+            Alert.alert(
+                "Error en escaneo", 
+                "No pudimos procesar el ticket con claridad. Intenta capturar la imagen más de cerca y con mejor luz, asegurándote de que los precios sean visibles.",
+                [{ text: "OK" }]
+            );
         }
     };
 
@@ -63,7 +80,7 @@ export default function OCRScannerScreen() {
                 >
                     <Text className="text-white font-black text-center">CONCEDER PERMISO</Text>
                 </Pressable>
-                <Pressable onPress={() => router.back()} className="mt-6 py-2">
+                <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} className="mt-6 py-2">
                     <Text className="text-slate-500 font-bold">Ahora no</Text>
                 </Pressable>
             </View>
@@ -102,7 +119,7 @@ export default function OCRScannerScreen() {
                 >
                     <SafeAreaView className="flex-1 justify-between p-6" edges={['top', 'bottom']}>
                         <View className="flex-row justify-between items-center mt-4">
-                            <Pressable onPress={() => router.back()} className="w-12 h-12 bg-black/50 rounded-full items-center justify-center border border-white/10">
+                            <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} className="w-12 h-12 bg-black/50 rounded-full items-center justify-center border border-white/10">
                                 <MaterialIcons name="close" size={28} color="white" />
                             </Pressable>
                             <View className="bg-black/50 px-5 py-2.5 rounded-full border border-white/20">

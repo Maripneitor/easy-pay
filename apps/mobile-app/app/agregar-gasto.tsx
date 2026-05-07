@@ -25,7 +25,7 @@ const { width } = Dimensions.get('window');
 
 export default function NewExpenseScreen() {
     const { theme, fontScale } = useTheme();
-    const { user } = useEasyPay();
+    const { user, addItem } = useEasyPay();
     const insets = useSafeAreaInsets();
     const params = useLocalSearchParams();
     
@@ -104,15 +104,18 @@ export default function NewExpenseScreen() {
 
         setIsSaving(true);
         try {
-            await groupRepository.addItem(groupId, {
-                nombre: nombre,
-                precio: parseFloat(precio),
-                quantity: cantidad,
-                category: categoria,
-                addedBy: user?.id || '',
-                assignedTo: selectedMembers
-            });
-            router.replace({ pathname: '/(tabs)/group/[id]', params: { id: groupId } } as any);
+                await addItem({
+                    nombre: nombre,
+                    precio: parseFloat(precio),
+                    cantidad: cantidad,
+                    autorId: user?.id || '',
+                    asignadoA: selectedMembers
+                });
+                
+                // Deferir la navegación para evitar el choque con el teclado
+                setTimeout(() => {
+                    router.replace({ pathname: '/detalle-grupo', params: { id: groupId } });
+                }, 150);
         } catch (err) {
             console.error('Error saving expense:', err);
             Alert.alert('Error', 'No se pudo guardar el gasto. Intenta de nuevo.');
@@ -134,7 +137,7 @@ export default function NewExpenseScreen() {
                     {/* Header Premium */}
                     <View className="flex-row items-center justify-between px-6 py-4 w-full">
                         <TouchableOpacity 
-                            onPress={() => router.back()} 
+                            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} 
                             style={{ backgroundColor: theme.cardSecondary }}
                             className="w-10 h-10 rounded-full items-center justify-center border border-white/5"
                         >

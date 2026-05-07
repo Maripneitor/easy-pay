@@ -65,13 +65,26 @@ class OcrService {
         formData.append('isTable', 'true');
         formData.append('OCREngine', '2');
 
-        const response = await fetch('https://api.ocr.space/parse/image', {
-            method: 'POST',
-            headers: { apikey: OCR_API_KEY },
-            body: formData,
-        });
-        const data = await response.json();
-        return data?.ParsedResults?.[0]?.ParsedText ?? '';
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+        try {
+            const response = await fetch('https://api.ocr.space/parse/image', {
+                method: 'POST',
+                headers: { apikey: OCR_API_KEY },
+                body: formData,
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            const data = await response.json();
+            return data?.ParsedResults?.[0]?.ParsedText ?? '';
+        } catch (error: any) {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                throw new Error('La conexión con el servicio de OCR expiró. Revisa tu internet e intenta de nuevo.');
+            }
+            throw error;
+        }
     }
 
     static parseTicketText(rawText: string): TicketData {

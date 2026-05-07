@@ -16,33 +16,20 @@ export default function GroupListScreen() {
     const { user  } = useEasyPay();
     const insets = useSafeAreaInsets();
 
-    const [activeTab, setActiveTab] = useState<'grupos' | 'amigos'>('grupos');
+    const [activeTab, setActiveTab] = useState<'active' | 'closed'>('active');
     const [groups, setGroups] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
-    // Derived Friends from real groups
-    const friends = React.useMemo(() => {
-        const friendsMap = new Map();
-        groups.forEach(group => {
-            const members = group.participantes || group.members || [];
-            if (Array.isArray(members)) {
-                members.forEach((p: any) => {
-                    const pId = p.id || p.user_id;
-                    if (pId && pId !== user?.id && !friendsMap.has(pId)) {
-                        friendsMap.set(pId, {
-                            id: pId,
-                            name: p.nombre || p.name,
-                            username: p.username || `@${(p.nombre || p.name).toLowerCase().replace(/\s/g, '').substring(0, 10)}`,
-                            avatar: p.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.nombre || p.name)}&background=random`,
-                            balance: 0
-                        });
-                    }
-                });
-            }
-        });
-        return Array.from(friendsMap.values());
-    }, [groups, user?.id]);
+    // Derived Friends logic removed to simplify UI
+
+    const activeGroups = React.useMemo(() => 
+        groups.filter(g => g.status === 'active' || g.status === 'settling'), 
+    [groups]);
+    
+    const closedGroups = React.useMemo(() => 
+        groups.filter(g => g.status === 'closed' || g.status === 'liquidated' || g.is_settled), 
+    [groups]);
 
     const fetchGroups = useCallback(async () => {
         if (!user?.id) return;
@@ -97,24 +84,24 @@ export default function GroupListScreen() {
                     {/* Tab Switcher */}
                     <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="flex-row p-1.5 rounded-[24px] border mt-4">
                         <TouchableOpacity 
-                            onPress={() => setActiveTab('grupos')}
-                            style={{ backgroundColor: activeTab === 'grupos' ? theme.primary : 'transparent' }}
+                            onPress={() => setActiveTab('active')}
+                            style={{ backgroundColor: activeTab === 'active' ? theme.primary : 'transparent' }}
                             className="flex-1 py-3 rounded-[18px] items-center justify-center flex-row gap-2"
                         >
-                            <MaterialIcons name="group-work" size={18} color={activeTab === 'grupos' ? 'black' : theme.textSecondary} />
-                            <Text style={{ color: activeTab === 'grupos' ? 'black' : theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-widest">Grupos</Text>
+                            <MaterialIcons name="bolt" size={18} color={activeTab === 'active' ? 'black' : theme.textSecondary} />
+                            <Text style={{ color: activeTab === 'active' ? 'black' : theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-widest">Activos</Text>
                         </TouchableOpacity>
                         <TouchableOpacity 
-                            onPress={() => setActiveTab('amigos')}
-                            style={{ backgroundColor: activeTab === 'amigos' ? theme.primary : 'transparent' }}
+                            onPress={() => setActiveTab('closed')}
+                            style={{ backgroundColor: activeTab === 'closed' ? theme.primary : 'transparent' }}
                             className="flex-1 py-3 rounded-[18px] items-center justify-center flex-row gap-2"
                         >
-                            <MaterialIcons name="people" size={18} color={activeTab === 'amigos' ? 'black' : theme.textSecondary} />
-                            <Text style={{ color: activeTab === 'amigos' ? 'black' : theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-widest">Amigos</Text>
+                            <MaterialIcons name="history" size={18} color={activeTab === 'closed' ? 'black' : theme.textSecondary} />
+                            <Text style={{ color: activeTab === 'closed' ? 'black' : theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-widest">Historial</Text>
                         </TouchableOpacity>
                     </View>
 
-                    {activeTab === 'grupos' && (
+                    {activeTab === 'active' && (
                         <View className="flex-row gap-3">
                             <TouchableOpacity 
                                 onPress={() => router.push('/create-group')}
@@ -125,7 +112,7 @@ export default function GroupListScreen() {
                                 <Text style={{ fontSize: 12 * fontScale }} className="font-black uppercase tracking-widest text-black">Nuevo Grupo</Text>
                             </TouchableOpacity>
                             <TouchableOpacity 
-                                onPress={() => router.push('/join-group')}
+                                onPress={() => router.push('/join-code')}
                                 style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
                                 className="flex-1 h-14 rounded-2xl items-center justify-center border flex-row gap-2"
                             >
@@ -142,12 +129,12 @@ export default function GroupListScreen() {
                         <View className="py-20 items-center">
                             <ActivityIndicator size="large" color={theme.primary} />
                         </View>
-                    ) : activeTab === 'grupos' ? (
-                        groups.length > 0 ? (
-                            groups.map((group) => (
+                    ) : activeTab === 'active' ? (
+                        activeGroups.length > 0 ? (
+                            activeGroups.map((group) => (
                                 <TouchableOpacity 
                                     key={group.id}
-                                    onPress={() => router.push({ pathname: '/(tabs)/group/[id]', params: { id: group.id } } as any)}
+                                    onPress={() => router.push({ pathname: '/detalle-grupo', params: { id: group.id } })}
                                     activeOpacity={0.85}
                                     style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
                                     className="border rounded-[36px] p-6 flex-row items-center"
@@ -169,9 +156,18 @@ export default function GroupListScreen() {
                                         }} className="font-black">
                                             ${(group.total_gastado || 0).toFixed(2)}
                                         </Text>
-                                        <View style={{ backgroundColor: group.is_settled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
-                                            <Text style={{ fontSize: 8 * fontScale, color: group.is_settled ? '#10b981' : '#f59e0b' }} className="font-black uppercase">{group.is_settled ? 'Saldado' : 'Activo'}</Text>
-                                        </View>
+                                        
+                                        {/* Badge de Deuda/Cobro (Simulado con total_gastado para demo si no hay balance real) */}
+                                        {group.status === 'active' && (
+                                            <View style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
+                                                <Text style={{ fontSize: 8 * fontScale, color: theme.primary }} className="font-black uppercase">Activo</Text>
+                                            </View>
+                                        )}
+                                        {group.status === 'settling' && (
+                                            <View style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
+                                                <Text style={{ fontSize: 8 * fontScale, color: '#f59e0b' }} className="font-black uppercase">Liquidando</Text>
+                                            </View>
+                                        )}
                                     </View>
                                 </TouchableOpacity>
                             ))
@@ -187,62 +183,46 @@ export default function GroupListScreen() {
                             </View>
                         )
                     ) : (
-                        // Friends List
-                        friends.length > 0 ? (
-                            friends.map((friend) => (
+                        closedGroups.length > 0 ? (
+                            closedGroups.map((group) => (
                                 <TouchableOpacity 
-                                    key={friend.id}
-                                    style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
-                                    className="border rounded-[36px] p-6 flex-row items-center mb-2"
+                                    key={group.id}
+                                    onPress={() => router.push({ pathname: '/detalle-grupo', params: { id: group.id } })}
+                                    activeOpacity={0.85}
+                                    style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border, opacity: 0.8 }}
+                                    className="border rounded-[36px] p-6 flex-row items-center"
                                 >
-                                    <Image 
-                                        source={{ uri: friend.avatar }} 
-                                        className="w-14 h-14 rounded-[20px] mr-4 bg-slate-800"
-                                    />
+                                    <View style={{ backgroundColor: theme.glassBg }} className="w-16 h-16 rounded-[24px] items-center justify-center mr-5 border border-white/5">
+                                        <MaterialIcons name="history" size={32} color={theme.textSecondary} />
+                                    </View>
                                     <View className="flex-1">
-                                        <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-black tracking-tight">{friend.name}</Text>
-                                        <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-black uppercase tracking-widest mt-0.5">{friend.username}</Text>
+                                        <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black tracking-tight">{group.nombre || 'Grupo sin nombre'}</Text>
+                                        <View className="flex-row items-center gap-2 mt-1">
+                                            <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-medium">Finalizado: {new Date(group.fecha_cierre || group.updatedAt || group.fecha_creacion).toLocaleDateString()}</Text>
+                                        </View>
                                     </View>
                                     <View className="items-end">
                                         <Text style={{ 
-                                            color: friend.balance > 0 ? '#10b981' : friend.balance < 0 ? '#f43f5e' : theme.textSecondary,
-                                            fontSize: 13 * fontScale
+                                            color: theme.textSecondary,
+                                            fontSize: 16 * fontScale
                                         }} className="font-black">
-                                            {friend.balance === 0 ? 'AL DÍA' : `$${Math.abs(friend.balance).toFixed(2)}`}
+                                            ${(group.total_gastado || 0).toFixed(2)}
                                         </Text>
-                                        <Text style={{ color: theme.textSecondary, fontSize: 8 * fontScale }} className="font-black uppercase mt-1">
-                                            {friend.balance > 0 ? 'A FAVOR' : friend.balance < 0 ? 'EN CONTRA' : 'SALDADO'}
-                                        </Text>
+                                        <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
+                                            <Text style={{ fontSize: 8 * fontScale, color: '#10b981' }} className="font-black uppercase">Cerrado</Text>
+                                        </View>
                                     </View>
                                 </TouchableOpacity>
                             ))
                         ) : (
-                            <View className="items-center justify-center py-10 w-full">
+                            <View className="items-center justify-center py-20">
                                 <View style={{ backgroundColor: theme.glassBg }} className="w-24 h-24 rounded-[40px] items-center justify-center mb-6 border border-white/5">
-                                    <MaterialIcons name="person-add-alt" size={48} color={theme.textSecondary} />
+                                    <MaterialIcons name="history" size={48} color={theme.textSecondary} />
                                 </View>
-                                <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black text-center mb-2">Sin amigos aún</Text>
-                                <Text style={{ color: theme.textSecondary, fontSize: 12 * fontScale }} className="text-center px-10 font-bold leading-5 mb-8">
-                                    Los amigos aparecerán aquí cuando compartas grupos con ellos.
+                                <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black text-center mb-2">Historial vacío</Text>
+                                <Text style={{ color: theme.textSecondary, fontSize: 12 * fontScale }} className="text-center px-10 font-bold leading-5">
+                                    Aquí aparecerán los grupos que hayas finalizado y saldado completamente.
                                 </Text>
-                                <View className="w-full px-6 gap-4">
-                                    <TouchableOpacity 
-                                        onPress={() => router.push('/create-group')}
-                                        style={{ backgroundColor: theme.primary }}
-                                        className="h-14 rounded-2xl items-center justify-center flex-row gap-2 shadow-lg shadow-blue-500/20"
-                                    >
-                                        <MaterialIcons name="add" size={20} color="black" />
-                                        <Text style={{ fontSize: 12 * fontScale }} className="font-black uppercase tracking-widest text-black">Crear grupo</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity 
-                                        onPress={() => router.push('/join-group')}
-                                        style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
-                                        className="h-14 rounded-2xl items-center justify-center border flex-row gap-2"
-                                    >
-                                        <MaterialIcons name="group-add" size={20} color={theme.primary} />
-                                        <Text style={{ color: theme.primary, fontSize: 12 * fontScale }} className="font-black uppercase tracking-widest">Unirse a grupo</Text>
-                                    </TouchableOpacity>
-                                </View>
                             </View>
                         )
                     )}

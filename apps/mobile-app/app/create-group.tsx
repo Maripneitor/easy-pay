@@ -6,7 +6,7 @@ import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { useEasyPay } from '../context/EasyPayContext';
-import { MotiView } from 'moti';
+
 import OcrTicketScanner from '../components/OcrTicketScanner';
 import { TicketData } from '../src/infrastructure/services/OcrService';
 
@@ -29,7 +29,7 @@ export default function CreateGroupScreen() {
             return;
         }
 
-        if (user.isGuest) {
+        if (user?.isGuest) {
             Alert.alert('Acceso Denegado', 'Los invitados no pueden crear grupos. Por favor regístrate.');
             return;
         }
@@ -37,7 +37,10 @@ export default function CreateGroupScreen() {
         setIsLoading(true);
         try {
             const groupId = await createGrupo(groupName, user.id);
-            router.replace(`/(tabs)/group/${groupId}`);
+            // Solución: Deferir la navegación para evitar race conditions y asegurar persistencia en backend
+            setTimeout(() => {
+                router.replace({ pathname: '/detalle-grupo', params: { id: groupId } });
+            }, 150);
         } catch (error) {
             Alert.alert('Error', 'No se pudo crear el grupo. Revisa tu conexión.');
         } finally {
@@ -60,7 +63,7 @@ export default function CreateGroupScreen() {
             <Stack.Screen options={{ headerShown: false }} />
 
             <View className="px-6 py-4 flex-row items-center justify-between border-b border-white/5 z-50">
-                <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-xl items-center justify-center bg-slate-800/40">
+                <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} className="w-10 h-10 rounded-xl items-center justify-center bg-slate-800/40">
                     <Ionicons name="chevron-back" size={24} color={theme.text} />
                 </TouchableOpacity>
                 <Text style={{ color: theme.text }} className="text-lg font-black tracking-tight">Easy-Pay</Text>
@@ -68,11 +71,7 @@ export default function CreateGroupScreen() {
             </View>
 
             <ScrollView className="flex-1 px-6 pt-8" contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
-                <MotiView
-                    from={{ opacity: 0, translateY: 20 }}
-                    animate={{ opacity: 1, translateY: 0 }}
-                    className="gap-8"
-                >
+                <View className="gap-8">
                     <View className="items-center gap-2">
                         <View style={{ backgroundColor: theme.primary + '15' }} className="w-20 h-20 rounded-[30px] items-center justify-center mb-2">
                             <MaterialIcons name="add-business" size={40} color={theme.primary} />
@@ -109,9 +108,7 @@ export default function CreateGroupScreen() {
 
                     {/* Preview del ticket escaneado */}
                     {scannedTicket && (
-                        <MotiView
-                            from={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
+                        <View
                             style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
                             className="rounded-[24px] border overflow-hidden"
                         >
@@ -136,7 +133,7 @@ export default function CreateGroupScreen() {
                                 <Text style={{ color: theme.text }} className="font-black">Total</Text>
                                 <Text style={{ color: theme.primary }} className="font-black text-lg">${scannedTicket.total.toFixed(2)}</Text>
                             </View>
-                        </MotiView>
+                        </View>
                     )}
 
                     <View className="gap-6">
@@ -181,26 +178,24 @@ export default function CreateGroupScreen() {
                             Al crear el grupo serás el Líder. Podrás escanear tickets, asignar platillos y cerrar la cuenta final.
                         </Text>
                     </View>
-                </MotiView>
-            </ScrollView>
 
-            <View className="px-6 pb-10">
-                <TouchableOpacity
-                    onPress={handleCreateGroup}
-                    disabled={isLoading}
-                    style={{ backgroundColor: theme.primary }}
-                    className="w-full py-5 rounded-2xl shadow-xl shadow-blue-500/20 flex-row items-center justify-center gap-3"
-                >
-                    {isLoading ? (
-                        <>
-                            <ActivityIndicator color="white" />
-                            <Text className="text-white font-black text-base">Procesando...</Text>
-                        </>
-                    ) : (
-                        <Text className="text-white font-black text-base">Crear Grupo</Text>
-                    )}
-                </TouchableOpacity>
-            </View>
+                    <TouchableOpacity
+                        onPress={handleCreateGroup}
+                        disabled={isLoading}
+                        style={{ backgroundColor: theme.primary }}
+                        className="w-full py-5 rounded-2xl shadow-xl shadow-blue-500/20 flex-row items-center justify-center gap-3 mt-4"
+                    >
+                        {isLoading ? (
+                            <>
+                                <ActivityIndicator color="white" />
+                                <Text className="text-white font-black text-base">Procesando...</Text>
+                            </>
+                        ) : (
+                            <Text className="text-white font-black text-base">Crear Grupo</Text>
+                        )}
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
 
             <OcrTicketScanner
                 visible={showOcr}

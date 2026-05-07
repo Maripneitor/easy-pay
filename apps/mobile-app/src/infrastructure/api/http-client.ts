@@ -24,9 +24,14 @@ export const httpClient: AxiosInstance = axios.create({
 
 httpClient.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
-        const token = await getAuthToken();
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+        // No enviar token en peticiones de login o registro
+        const isAuthPath = config.url?.includes('/auth/login') || config.url?.includes('/auth/register');
+        
+        if (!isAuthPath) {
+            const token = await getAuthToken();
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
         }
         return config;
     },
@@ -38,6 +43,7 @@ httpClient.interceptors.response.use(
     async (error: any) => {
         if (error.response?.status === 401) {
             await TokenStorage.clear();
+            await AsyncStorage.removeItem('user_data');
         }
 
         return Promise.reject(error);

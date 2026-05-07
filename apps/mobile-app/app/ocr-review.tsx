@@ -19,7 +19,7 @@ interface ScannedItem {
 
 export default function OCRReviewScreen() {
     const { theme, fontScale } = useTheme();
-    const { addItem, activeGrupo, user } = useEasyPay();
+    const { addItems, activeGrupo, user } = useEasyPay();
     const { scanData: scanDataRaw, groupId } = useLocalSearchParams();
     const router = useRouter();
     
@@ -53,22 +53,21 @@ export default function OCRReviewScreen() {
         try {
             const memberIds = splitAll ? activeGrupo?.participantes?.map(p => p.id) || [] : [];
             
-            // Agregar todos los items al grupo
-            for (const item of items) {
-                await addItem({
-                    nombre: item.name,
-                    precio: item.price,
-                    cantidad: item.quantity,
-                    autorId: user?.id || activeGrupo?.liderId || '1',
-                    asignadoA: memberIds
-                });
-            }
+            const itemsToAdd = items.map(item => ({
+                nombre: item.name,
+                precio: item.price,
+                cantidad: item.quantity,
+                autorId: user?.id || activeGrupo?.liderId || '1',
+                asignadoA: memberIds
+            }));
+
+            await addItems(itemsToAdd);
             
             Alert.alert(
                 "¡Éxito!", 
                 `${items.length} ítems agregados al grupo${splitAll ? ' y repartidos entre todos' : ''}.`,
                 [
-                    { text: "Cerrar", onPress: () => router.replace(`/(tabs)/group/${groupId || 'current'}`) }
+                    { text: "Cerrar", onPress: () => router.replace({ pathname: '/detalle-grupo', params: { id: groupId || 'current' } }) }
                 ]
             );
         } catch (e) {

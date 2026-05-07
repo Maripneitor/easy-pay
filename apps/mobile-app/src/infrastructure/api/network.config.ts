@@ -7,14 +7,19 @@ export function getApiBaseUrl() {
         return url.endsWith('/api') ? url : `${url}/api`;
     }
     
-    // 2. Detección automática en LAN (Dispositivos físicos vía Expo)
+    // 2. Detección automática en Browser/PWA si no es localhost
+    if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost') {
+        return `http://${window.location.hostname}:8001/api`;
+    }
+
+    // 3. Detección automática en LAN (Dispositivos físicos vía Expo)
     const hostUri = Constants.expoConfig?.hostUri;
     if (hostUri) {
         const ip = hostUri.split(':')[0];
         return `http://${ip}:8001/api`;
     }
     
-    // 3. Fallback para Simulador iOS o localhost
+    // 4. Fallback para Simulador iOS o localhost
     return 'http://localhost:8001/api';
 }
 

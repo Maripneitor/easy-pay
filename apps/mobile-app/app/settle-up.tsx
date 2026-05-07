@@ -30,9 +30,23 @@ const { width } = Dimensions.get('window');
 
 export default function SettleUpScreen() {
     const { theme, fontScale } = useTheme();
-    const { amount, method, groupId: paramGroupId, creditorId: paramCreditorId } = useLocalSearchParams<{ amount: string, method: string, groupId: string, creditorId: string }>();
-    const { cards, loading: loadingCards  } = useEasyPay();
-    const { user  } = useEasyPay();
+    const { 
+        amount, 
+        method, 
+        groupId: paramGroupId, 
+        creditorId: paramCreditorId,
+        groupName: paramGroupName,
+        creditorName: paramCreditorName
+    } = useLocalSearchParams<{ 
+        amount: string, 
+        method: string, 
+        groupId: string, 
+        creditorId: string,
+        groupName: string,
+        creditorName: string
+    }>();
+    const { cards, isLoading: loadingCards } = useEasyPay();
+    const { user } = useEasyPay();
 
     const [isConfirming, setIsConfirming] = useState(false);
     const [selectedAccounts, setSelectedAccounts] = useState<any[]>([]);
@@ -57,14 +71,29 @@ export default function SettleUpScreen() {
             let gid = paramGroupId;
             let cid = paramCreditorId;
 
-            // 1. Si no hay params, buscar en el balance del usuario
+            // 1. Priorizar datos pasados por params
+            if (gid && paramGroupName && paramCreditorName) {
+                setGroup({ id: gid, nombre: paramGroupName });
+                setCreditor({ id: cid, nombre: paramCreditorName });
+                
+                // Cargar datos extra en segundo plano (como cuentas bancarias)
+                groupRepository.getGroup(gid).then(g => {
+                    setGroup(g);
+                    if (g.selected_bank_accounts) {
+                        setSelectedAccounts(g.selected_bank_accounts);
+                    }
+                });
+                setLoadingData(false);
+                return;
+            }
+
+            // 2. Si no hay params, buscar en el balance del usuario
             if (!gid || !cid) {
                 try {
                     const response = await httpClient.get(`/stats/user/${user.id}/balances`);
                     const balances = response.data;
 
                     if (balances && balances.length > 0) {
-                        // Tomamos el primer balance pendiente que tenga deuda
                         const firstDebt = balances.find((b: any) => b.balance < 0);
                         if (firstDebt) {
                             gid = firstDebt.group_id;
@@ -76,12 +105,12 @@ export default function SettleUpScreen() {
                 }
             }
 
-            // 2. Obtener datos del grupo y validar estado
+            // 3. Obtener datos del grupo y validar estado
             if (gid) {
                 const groupData = await groupRepository.getGroup(gid);
                 setGroup(groupData);
 
-                const status = groupData.status?.toLowerCase();
+                const status = (groupData.status || groupData.estado || '').toLowerCase();
                 if (status !== 'settling') {
                     Toast.show({ type: 'error', text1: 'Error', text2: 'Este grupo no está en fase de liquidación' });
                     router.back();
@@ -92,13 +121,13 @@ export default function SettleUpScreen() {
                     setSelectedAccounts(groupData.selected_bank_accounts);
                 }
 
-                // 3. Buscar información del acreedor
                 if (cid) {
-                    const foundCreditor = groupData.participantes?.find((p: any) => p.id === cid);
-                    setCreditor(foundCreditor);
+                    const foundCreditor = groupData.participantes?.find((p: any) => p.id === cid) || 
+                                          groupData.integrantes?.find((p: any) => p.id === cid);
+                    setCreditor(foundCreditor || { id: cid, nombre: paramCreditorName || 'Miembro del Grupo' });
                 } else {
-                    // Si no hay creditorId pero hay admin_id, el líder es el acreedor por defecto
-                    const admin = groupData.participantes?.find((p: any) => p.id === groupData.admin_id);
+                    const admin = groupData.participantes?.find((p: any) => p.id === groupData.admin_id) ||
+                                  groupData.integrantes?.find((p: any) => p.id === groupData.admin_id);
                     setCreditor(admin);
                 }
             } else {
@@ -142,9 +171,11 @@ export default function SettleUpScreen() {
             Toast.show({
                 type: 'success',
                 text1: '¡Éxito!',
-                text2: 'Tu solicitud de pago ha sido enviada. El líder deberá aprobarla.',
-                onHide: () => router.replace({ pathname: '/(tabs)/group/[id]', params: { id: group.id } } as any)
+                text2: 'Tu solicitud de pago ha sido enviada. El líder deberá aprobarla.'
             });
+            
+            // Navegar directamente sin depender del Toast
+            router.replace({ pathname: '/detalle-grupo', params: { id: group.id } });
         } catch (error: any) {
             const msg = error.response?.data?.detail || 'No se pudo registrar el pago';
             Toast.show({
@@ -167,7 +198,7 @@ export default function SettleUpScreen() {
             {/* TopAppBar */}
             <View className="flex-row items-center justify-between px-6 py-4 w-full">
                 <TouchableOpacity 
-                    onPress={() => router.back()}
+                    onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')}
                     style={{ backgroundColor: theme.cardSecondary }}
                     className="w-10 h-10 rounded-full items-center justify-center"
                 >
@@ -209,7 +240,7 @@ export default function SettleUpScreen() {
                         </View>
                         <Text className="text-rose-400 font-black text-center text-sm px-4">{error}</Text>
                         <TouchableOpacity 
-                            onPress={() => router.back()}
+                            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')}
                             className="mt-2 bg-rose-500/20 px-6 py-2 rounded-xl"
                         >
                             <Text className="text-rose-400 font-black text-xs uppercase">Regresar</Text>

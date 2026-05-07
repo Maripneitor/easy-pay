@@ -244,7 +244,7 @@ export default function ItemAssignModal({ visible, onClose, item, members, theme
                                                     className="items-center justify-center"
                                                 >
                                                     <Text className="text-white font-black text-base">
-                                                        {member.nombre.substring(0, 1).toUpperCase()}
+                                                        {member.nombre?.substring(0, 1)?.toUpperCase() || '?'}
                                                     </Text>
                                                 </View>
 

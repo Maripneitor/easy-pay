@@ -1,6 +1,6 @@
 import { useEasyPay } from '../../context/EasyPayContext';
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter, Redirect } from 'expo-router';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { View, StyleSheet, TouchableOpacity, Platform, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -45,17 +45,16 @@ const CustomTabBarButton = ({ children, onPress, theme, isOnline }: any) => {
   );
 };
 
-import { Redirect } from 'expo-router';
-
 import { usePathname } from 'expo-router';
 import { useEffect } from 'react';
 
 export default function TabLayout() {
   const { theme } = useTheme();
   const { hasAlerts } = useNotifications();
-  const { user, isLoading, isOnline, saveLastRoute } = useEasyPay();
+  const { user, isLoading, isOnline, saveLastRoute, pendingSettlementsCount } = useEasyPay();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     if (pathname && pathname !== '/') {
@@ -63,10 +62,13 @@ export default function TabLayout() {
     }
   }, [pathname]);
 
-  if (isLoading) return null;
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace('/');
+    }
+  }, [user, isLoading]);
 
-  console.log(`🛡️ TabLayout Protection - User: ${user ? '✅ Presente' : '❌ Ausente'}`);
-  if (!user) return <Redirect href="/" />;
+  if (isLoading || !user) return null;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
@@ -149,17 +151,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="stats"
-        options={{
-          title: 'Estadísticas',
-          tabBarIcon: ({ color, focused }) => (
-            <View>
-              <MaterialIcons name="bar-chart" size={26} color={color} />
-            </View>
-          ),
-        }}
-      />
+      <Tabs.Screen name="stats" options={{ href: null }} />
       <Tabs.Screen
         name="notifications"
         options={{
@@ -176,7 +168,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen name="group/[id]" options={{ href: null }} />
       <Tabs.Screen name="payments" options={{ href: null }} />
     </Tabs>
     </View>

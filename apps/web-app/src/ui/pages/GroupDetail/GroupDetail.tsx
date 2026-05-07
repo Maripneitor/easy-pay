@@ -395,7 +395,8 @@ export const GroupDetail = () => {
                                                 )}
                                             </>
                                          )}
-                                </div>
+                                 </div>
+                                 </div>
                                 <div className="overflow-x-auto overflow-y-visible">
                                      <table className="w-full text-left border-separate border-spacing-y-4">
                                          <thead>

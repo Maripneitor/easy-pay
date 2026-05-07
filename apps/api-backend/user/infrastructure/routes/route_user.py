@@ -9,6 +9,7 @@ from user.application.verify_2fa import Verify2FAUseCase
 from user.application.change_password import ChangePasswordUseCase
 from user.infrastructure.services.email_service import EmailService
 from user.infrastructure.security.auth_handler import decode_token
+from utils.security import get_current_user_id
 
 # Ruta especifica para AUTH
 user_router = APIRouter(prefix="/api/auth", tags=["Auth"])
@@ -21,7 +22,10 @@ async def ping():
     return {"status": "ok", "message": "Pong from Auth Service"}
 
 @user_router.get("/profile/{user_id}")
-async def get_user_profile(user_id: str):
+async def get_user_profile(user_id: str, current_user_id: str = Depends(get_current_user_id)):
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="No tienes permiso para ver este perfil")
+        
     user = await repo.get_user_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
@@ -110,8 +114,6 @@ async def login(login_data: UserLogin):
         )
 
 
-from utils.security import get_current_user_id
-
 @user_router.put("/update")
 async def update_user(data: UserUpdate, user_id: str = Depends(get_current_user_id)):
     update_dict = data.dict(exclude_unset=True)
@@ -159,7 +161,10 @@ async def update_user_compat(user_id: str, data: UserUpdate, auth_user_id: str =
 
 # --- SETUP 2FA ---
 @user_router.post("/2fa/setup/{user_id}")
-async def setup_2fa(user_id: str):
+async def setup_2fa(user_id: str, current_user_id: str = Depends(get_current_user_id)):
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="No autorizado")
+
     user = await repo.get_user_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
@@ -171,6 +176,9 @@ async def setup_2fa(user_id: str):
 
 @user_router.post("/2fa/verify/{user_id}")
 async def verify_2fa(user_id: str, data: dict):
+    # Nota: Este endpoint se usa tanto en login como en habilitación de 2FA.
+    # Si se usa en login, el usuario no tiene token todavía.
+    # Por seguridad, el Verify2FAUseCase ya valida el código contra el user_id.
     code = data.get("code")
     if not code:
         raise HTTPException(status_code=400, detail="Código requerido")
@@ -202,7 +210,10 @@ async def request_password_reset(data: PasswordResetRequest):
     return result
 
 @user_router.post("/change-password/{user_id}")
-async def change_password_route(user_id: str, data: PasswordChange): # Usamos el modelo aquí
+async def change_password_route(user_id: str, data: PasswordChange, current_user_id: str = Depends(get_current_user_id)): # Usamos el modelo aquí
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="No autorizado")
+
     # Validación extra de coincidencia
     if data.new_password != data.confirm_password:
         raise HTTPException(status_code=400, detail="Las nuevas contraseñas no coinciden")
@@ -216,26 +227,38 @@ async def change_password_route(user_id: str, data: PasswordChange): # Usamos el
         
 # --- GESTIÓN DE TARJETAS ---
 @user_router.get("/cards/{user_id}")
-async def get_user_cards(user_id: str):
+async def get_user_cards(user_id: str, current_user_id: str = Depends(get_current_user_id)):
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="No autorizado")
+        
     cards = await repo.get_cards(user_id)
     return cards
 
 @user_router.post("/cards/{user_id}")
-async def add_user_card(user_id: str, card: dict):
+async def add_user_card(user_id: str, card: dict, current_user_id: str = Depends(get_current_user_id)):
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="No autorizado")
+        
     success = await repo.add_card(user_id, card)
     if success:
         return {"message": "Tarjeta agregada"}
     raise HTTPException(status_code=400, detail="No se pudo agregar la tarjeta")
 
 @user_router.delete("/cards/{user_id}/{card_id}")
-async def remove_user_card(user_id: str, card_id: str):
+async def remove_user_card(user_id: str, card_id: str, current_user_id: str = Depends(get_current_user_id)):
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="No autorizado")
+        
     success = await repo.remove_card(user_id, card_id)
     if success:
         return {"message": "Tarjeta eliminada"}
     raise HTTPException(status_code=400, detail="No se pudo eliminar la tarjeta")
 
 @user_router.patch("/cards/{user_id}/{card_id}/default")
-async def set_default_card(user_id: str, card_id: str):
+async def set_default_card(user_id: str, card_id: str, current_user_id: str = Depends(get_current_user_id)):
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="No autorizado")
+        
     success = await repo.set_default_card(user_id, card_id)
     if success:
         return {"message": "Tarjeta predeterminada actualizada"}

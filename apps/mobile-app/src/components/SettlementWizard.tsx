@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../infrastructure/context/ThemeContext';
+import { ItemAssignModal } from '../../components/ItemAssignModal';
 
 
 import { Item, Participant } from '../domain/types';
@@ -37,7 +38,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
 }) => {
     const { theme, fontScale } = useTheme();
     const { user  } = useEasyPay();
-    const { activeGrupo, startSettlement, closeGrupo: contextCloseGrupo } = useEasyPay();
+    const { activeGrupo, startSettlement, closeGrupo: contextCloseGrupo, assignItem } = useEasyPay();
 
     // Fallback to context if props not provided
     const effectiveGroupId = groupId || activeGrupo?.id;
@@ -49,6 +50,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
     const [customTip, setCustomTip] = useState('');
     const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [assigningItem, setAssigningItem] = useState<Item | null>(null);
 
     // Initial selected accounts (default)
     React.useEffect(() => {
@@ -56,7 +58,14 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
             const defaults = user.bank_accounts.filter((a: any) => a.is_default).map((a: any) => a.id);
             setSelectedAccounts(defaults);
         }
-    }, [user]);
+        
+        // GRP-WIZ-07 / GRP-WIZ-08: Sugerencia automática de propina
+        if (subtotal < 3000) {
+            setTipPercentage(10);
+        } else {
+            setTipPercentage(5);
+        }
+    }, [user, subtotal]);
 
     if (!effectiveGroupId) return null;
 
@@ -194,12 +203,17 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                                         item.asignadoA.map((id, j) => (
                                                             <View key={j} className="bg-white/5 px-2 py-0.5 rounded-md">
                                                                 <Text style={{ color: theme.textSecondary }} className="text-[8px] font-black uppercase">
-                                                                    {effectiveMembers.find(p => p.id === id)?.nombre.split(' ')[0]}
+                                                                    {effectiveMembers.find(p => p.id === id)?.nombre?.split(' ')[0] || '?'}
                                                                 </Text>
                                                             </View>
                                                         ))
                                                     ) : (
-                                                        <Text className="text-rose-500 text-[8px] font-black uppercase">Sin asignar</Text>
+                                                        <TouchableOpacity 
+                                                            onPress={() => setAssigningItem(item)}
+                                                            className="bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20"
+                                                        >
+                                                            <Text className="text-rose-500 text-[8px] font-black uppercase">⚠️ Asignar ahora</Text>
+                                                        </TouchableOpacity>
                                                     )}
                                                 </View>
                                             </View>
@@ -387,6 +401,16 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                     </View>
                 </View>
             </View>
+            <ItemAssignModal 
+                isVisible={!!assigningItem}
+                item={assigningItem as any}
+                members={effectiveMembers}
+                onClose={() => setAssigningItem(null)}
+                onAssign={async (itemId, participantIds) => {
+                    await assignItem(itemId, participantIds);
+                    setAssigningItem(null);
+                }}
+            />
         </Modal>
     );
 };

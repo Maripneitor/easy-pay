@@ -1,8 +1,9 @@
 import { useEasyPay, Payment, PaymentMethod, timeAgoPayment } from '../../context/EasyPayContext';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
     ScrollView, View, Text, TouchableOpacity, Animated,
-    Dimensions, Modal, TextInput, ActivityIndicator, Alert
+    Dimensions, Modal, TextInput, ActivityIndicator, Alert, RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
@@ -11,7 +12,8 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView, AnimatePresence } from 'moti';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-
+import Toast from 'react-native-toast-message';
+import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
 import { useNotifications } from '../../src/infrastructure/context/NotificationContext';
 import MercadoPagoModal from '../../components/MercadoPagoModal';
 import { MPPaymentResult } from '../../src/infrastructure/services/MercadoPagoService';
@@ -315,13 +317,13 @@ function ConfirmationModal({
 // ── Pantalla principal ────────────────────────────────────────────────────────
 export default function PaymentsScreen() {
     const { theme, fontScale } = useTheme();
-    const { user  } = useEasyPay();
+    const { user } = useEasyPay();
     const { debts, payments, cards,
         addDebt, removeDebt,
         getDebtsByUser, getTotalOwed, getTotalToReceive,
         pendingConfirmations,
         confirmPaymentAsReceiver, confirmPaymentAsWitness, rejectPayment,
-        initiatePayment, fetchFinancialData,
+        initiatePayment, fetchFinancialData, fetchPendingSettlements,
      } = useEasyPay();
     const scrollX = useRef(new Animated.Value(0)).current;
     const [refreshing, setRefreshing] = useState(false);
@@ -345,11 +347,35 @@ export default function PaymentsScreen() {
     const refreshData = async () => {
         setRefreshing(true);
         try {
-            await fetchFinancialData();
+            await Promise.all([
+                fetchFinancialData(),
+                fetchPendingSettlements()
+            ]);
         } finally {
             setRefreshing(false);
         }
     };
+
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    useFocusEffect(
+        useCallback(() => {
+            refreshData();
+            
+            intervalRef.current = setInterval(() => {
+                console.log('[Polling] Actualizando pagos y pendientes...');
+                fetchFinancialData();
+                fetchPendingSettlements();
+            }, 15000);
+
+            return () => {
+                if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                    intervalRef.current = null;
+                }
+            };
+        }, [])
+    );
 
     // Tarjetas ya no se muestran en esta vista
 
@@ -358,7 +384,18 @@ export default function PaymentsScreen() {
             <StatusBar style="light" />
             <Stack.Screen options={{ headerShown: false }} />
 
-            <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }}>
+            <ScrollView 
+                className="flex-1" 
+                showsVerticalScrollIndicator={false} 
+                contentContainerStyle={{ paddingBottom: 150 }}
+                refreshControl={
+                    <RefreshControl 
+                        refreshing={refreshing} 
+                        onRefresh={refreshData} 
+                        tintColor={theme.primary} 
+                    />
+                }
+            >
 
                 {/* Header */}
                 <View className="px-6 py-8 flex-row justify-between items-center">

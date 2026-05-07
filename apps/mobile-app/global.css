@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Forzar aspecto móvil en navegadores de escritorio */
+@media (min-width: 768px) {
+  #root, body {
+    max-width: 480px !important;
+    margin: 0 auto !important;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    background-color: #050a15; /* Color de fondo del "escritorio" fuera de la app */
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+}

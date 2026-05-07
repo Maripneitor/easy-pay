@@ -56,12 +56,12 @@ export class ApiMobileGroupRepository implements GroupRepository {
     async addItem(groupId: string, item: any): Promise<void> {
         await httpClient.post('/groups/add-item', {
             group_id: groupId,
-            nombre: item.description || item.nombre,
-            precio: item.amount || item.precio,
-            cantidad: item.quantity || 1,
-            categoria: item.category,
-            comprador_id: item.addedBy || item.comprador_id,
-            participantes_ids: item.assignedTo || item.participantes_ids
+            nombre: item.nombre || item.description,
+            precio: item.precio || item.amount,
+            cantidad: item.cantidad || item.quantity || 1,
+            categoria: item.categoria || item.category || 'Otros',
+            comprador_id: item.autorId || item.comprador_id || item.addedBy,
+            participantes_ids: item.asignadoA || item.participantes_ids || item.assignedTo || []
         });
     }
 
@@ -104,6 +104,11 @@ export class ApiMobileGroupRepository implements GroupRepository {
 
     async getBalances(groupId: string): Promise<any> {
         const response = await httpClient.get(`/groups/${groupId}/balances`);
+        return response.data;
+    }
+
+    async getPendingSettlements(groupId: string): Promise<any[]> {
+        const response = await httpClient.get(`/groups/${groupId}/settlements/pending`);
         return response.data;
     }
 

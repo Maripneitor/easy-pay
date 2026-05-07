@@ -1,18 +1,21 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack, useFocusEffect } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
-import { useTheme } from '../../../src/infrastructure/context/ThemeContext';
-import { useEasyPay } from '../../../context/EasyPayContext';
-import { SyncStatus } from '../../../src/components/SyncStatus';
-import { SettlementWizard } from '../../../src/components/SettlementWizard';
+import { RefreshControl } from 'react-native';
+import { useTheme } from '../src/infrastructure/context/ThemeContext';
+import { useEasyPay } from '../context/EasyPayContext';
+import { SyncStatus } from '../src/components/SyncStatus';
+import { SettlementWizard } from '../src/components/SettlementWizard';
 import { StatusBar } from 'expo-status-bar';
-import { Alert } from 'react-native';
-import { groupRepository } from '../../../src/infrastructure/api/repositories/GroupRepository';
-import { PaymentMethodModal } from '../../../components/group/PaymentMethodModal';
-import { VirtualTicketCard } from '../../../components/group/VirtualTicketCard';
-import { TotalsSummary } from '../../../components/group/TotalsSummary';
+import { Alert, Clipboard } from 'react-native';
+import { groupRepository } from '../src/infrastructure/api/repositories/GroupRepository';
+import { PaymentMethodModal } from '../components/group/PaymentMethodModal';
+import { VirtualTicketCard } from '../components/group/VirtualTicketCard';
+import { TotalsSummary } from '../components/group/TotalsSummary';
+import { ClosedGroupSummary } from '../components/group/ClosedGroupSummary';
 
 const { width } = Dimensions.get('window');
 
@@ -41,6 +44,52 @@ export default function GroupDetailScreen() {
     const [activeTab, setActiveTab] = useState<'members' | 'items' | 'totals'>('items');
     const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
     const [isWizardOpen, setIsWizardOpen] = useState(false);
+    const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
+
+    const isSettling = activeGrupo?.status === 'settling';
+
+    // Polling cuando el grupo está en liquidación
+    useEffect(() => {
+        if (isSettling && id) {
+            console.log('[Polling] Iniciando polling para grupo en liquidación');
+            intervalRef.current = setInterval(() => {
+                console.log('[Polling] Refrescando grupo...');
+                loadGroupDetails(id as string);
+            }, 20000);
+        } else if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        };
+    }, [isSettling, id]);
+
+    const onRefresh = useCallback(async () => {
+        if (id) {
+            setIsRefreshing(true);
+            await loadGroupDetails(id as string);
+            setIsRefreshing(false);
+        }
+    }, [id, loadGroupDetails]);
+
+    // Ejecuta la navegación cuando la variable cambie (fuera del ciclo de render del Modal)
+    useEffect(() => {
+        if (pendingNavigation) {
+            setIsPaymentModalVisible(false);
+            const timer = setTimeout(() => {
+                router.push(pendingNavigation as any);
+                setPendingNavigation(null);
+            }, 150);
+            return () => clearTimeout(timer);
+        }
+    }, [pendingNavigation]);
 
     const handleRemoveMember = async (memberId: string, memberName: string) => {
         Alert.alert(
@@ -79,7 +128,7 @@ export default function GroupDetailScreen() {
                 <View className="flex-1 items-center justify-center px-6">
                     <MaterialIcons name="error-outline" size={60} color={theme.textSecondary} />
                     <Text style={{ color: theme.text, fontSize: 18 }} className="font-black mt-4">Grupo no encontrado</Text>
-                    <TouchableOpacity onPress={() => router.back()} className="mt-6 bg-slate-800 px-6 py-3 rounded-xl">
+                    <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} className="mt-6 bg-slate-800 px-6 py-3 rounded-xl">
                         <Text className="text-white font-bold">Volver</Text>
                     </TouchableOpacity>
                 </View>
@@ -88,6 +137,11 @@ export default function GroupDetailScreen() {
     }
 
     const isLeader = activeGrupo.liderId === user?.id || activeGrupo.admin_id === user?.id;
+    const isClosed = activeGrupo.status === 'closed' || activeGrupo.status === 'liquidated';
+
+    if (isClosed) {
+        return <ClosedGroupSummary group={activeGrupo} onBack={() => router.back()} />;
+    }
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
@@ -98,7 +152,7 @@ export default function GroupDetailScreen() {
             {/* Cabecera unificada */}
             <View className="px-6 py-4 flex-row items-center justify-between">
                 <TouchableOpacity 
-                    onPress={() => router.back()} 
+                    onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} 
                     className="w-10 h-10 rounded-xl items-center justify-center bg-slate-800/40"
                 >
                     <MaterialIcons name="arrow-back-ios" size={20} color={theme.text} style={{ marginLeft: 6 }} />
@@ -108,11 +162,42 @@ export default function GroupDetailScreen() {
                         {activeGrupo.nombre}
                     </Text>
                 </View>
-                <View className="bg-blue-500/10 px-3 py-2 rounded-xl">
+                <TouchableOpacity 
+                    onPress={() => {
+                        const code = activeGrupo.codigo || activeGrupo.codigo_invitacion;
+                        Clipboard.setString(code);
+                        Alert.alert("Copiado", "Código de invitación copiado al portapapeles");
+                    }}
+                    className="bg-blue-500/10 px-3 py-2 rounded-xl"
+                >
                     <Text style={{ color: theme.primary }} className="text-[10px] font-black tracking-widest">
                         #{activeGrupo.codigo || activeGrupo.codigo_invitacion}
                     </Text>
-                </View>
+                </TouchableOpacity>
+            </View>
+
+            {/* Tarjetas de Resumen */}
+            <View className="px-6 mb-2">
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                    <View style={{ backgroundColor: theme.cardSecondary, width: 140 }} className="p-5 rounded-[28px] border border-white/5 mr-3">
+                        <Text style={{ color: theme.textSecondary }} className="text-[8px] font-black uppercase tracking-widest mb-1">Total Gastado</Text>
+                        <Text style={{ color: theme.text }} className="text-lg font-black font-mono">${activeGrupo.total?.toFixed(2) || '0.00'}</Text>
+                    </View>
+                    
+                    <View style={{ backgroundColor: theme.cardSecondary, width: 140 }} className="p-5 rounded-[28px] border border-white/5 mr-3">
+                        <Text style={{ color: theme.textSecondary }} className="text-[8px] font-black uppercase tracking-widest mb-1">Tu Parte</Text>
+                        <Text style={{ color: theme.primary }} className="text-lg font-black font-mono">${(calculateUserDebt(user?.id || '') || 0).toFixed(2)}</Text>
+                    </View>
+
+                    <View style={{ backgroundColor: theme.cardSecondary, width: 140 }} className="p-5 rounded-[28px] border border-white/5 mr-3">
+                        <Text style={{ color: theme.textSecondary }} className="text-[8px] font-black uppercase tracking-widest mb-1">
+                            {calculateUserDebt(user?.id || '') > 0 ? 'Debes' : 'Te deben'}
+                        </Text>
+                        <Text style={{ color: calculateUserDebt(user?.id || '') > 0 ? '#ef4444' : '#10b981' }} className="text-lg font-black font-mono">
+                            ${Math.abs(calculateUserDebt(user?.id || '') || 0).toFixed(2)}
+                        </Text>
+                    </View>
+                </ScrollView>
             </View>
 
             {/* Selector de Pestañas */}
@@ -136,13 +221,23 @@ export default function GroupDetailScreen() {
             </View>
 
             {/* Cuerpo Principal */}
-            <ScrollView className="px-6" showsVerticalScrollIndicator={false}>
+            <ScrollView 
+                className="px-6" 
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl 
+                        refreshing={isRefreshing} 
+                        onRefresh={onRefresh} 
+                        tintColor={theme.primary} 
+                    />
+                }
+            >
                 {activeTab === 'items' && (
                     <View className="pb-40">
                         {activeGrupo.items?.length > 0 ? (
                             <VirtualTicketCard 
                                 items={activeGrupo.items}
-                                serviceFee={activeGrupo.propina}
+                                serviceFee={activeGrupo.service || 0}
                                 groupId={activeGrupo.id}
                                 members={activeGrupo.participantes}
                                 canEdit={isLeader && activeGrupo.status === 'active'}
@@ -175,16 +270,22 @@ export default function GroupDetailScreen() {
                                     className="w-12 h-12 rounded-2xl items-center justify-center"
                                 >
                                     <Text className="text-white font-black text-lg">
-                                        {member.nombre?.charAt(0).toUpperCase() || '?'}
+                                        {member.nombre?.charAt(0)?.toUpperCase() || '?'}
                                     </Text>
                                 </View>
                                 <View className="flex-1">
                                     <Text style={{ color: theme.text }} className="text-base font-black">
                                         {member.nombre || 'Usuario'}
                                     </Text>
-                                    <Text style={{ color: theme.textSecondary }} className="text-xs font-bold opacity-60 uppercase">
-                                        {member.role === 'leader' ? 'Líder del grupo' : 'Participante'}
-                                    </Text>
+                                    <View className="flex-row items-center gap-2">
+                                        <Text style={{ color: theme.textSecondary }} className="text-[10px] font-bold opacity-60 uppercase">
+                                            {member.role === 'leader' ? 'Líder' : 'Miembro'}
+                                        </Text>
+                                        <View className="w-1 h-1 rounded-full bg-slate-700" />
+                                        <Text style={{ color: theme.primary }} className="text-[10px] font-black font-mono">
+                                            Debe ${member.debt?.toFixed(2) || '0.00'}
+                                        </Text>
+                                    </View>
                                 </View>
                                 {member.status === 'online' && (
                                     <View className="w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-900" />
@@ -206,15 +307,14 @@ export default function GroupDetailScreen() {
                     <View className="pb-40">
                         <TotalsSummary 
                             subtotal={activeGrupo.subtotal || 0}
-                            tax={(activeGrupo.subtotal || 0) * 0.16}
-                            service={(activeGrupo.subtotal || 0) * 0.05}
+                            tax={activeGrupo.tax || 0}
+                            service={activeGrupo.service || 0}
                             tip={activeGrupo.propina || 0}
                             total={activeGrupo.total || 0}
                             paidAmount={(activeGrupo.participantes || []).reduce((acc, p) => {
-                                const participantCount = activeGrupo.participantes?.length || 1;
-                                const perPersonTotal = (activeGrupo.total || 0) / participantCount;
-                                // Simple logic: if debt is 0, they paid. In a real system, we'd check payment status.
-                                return acc + (p.debt <= 0 ? perPersonTotal : 0);
+                                // En esta versión, consideramos "pagado" si el backend nos dice que pagó.
+                                // Como no tenemos ese flag aún, mostramos 0 pagado vs total pendiente.
+                                return acc + (p.paid ? p.debt : 0);
                             }, 0)}
                             pendingAmount={(activeGrupo.participantes || []).reduce((acc, p) => acc + (p.debt || 0), 0)}
                         />
@@ -272,15 +372,7 @@ export default function GroupDetailScreen() {
                 onSelect={(method) => {
                     setIsPaymentModalVisible(false);
                     const debt = calculateUserDebt(user?.id || '');
-                    router.push({
-                        pathname: '/settle-up',
-                        params: { 
-                            groupId: activeGrupo.id, 
-                            amount: debt.toString(),
-                            creditorId: activeGrupo.admin_id || activeGrupo.liderId,
-                            method
-                        }
-                    } as any);
+                    setPendingNavigation(`/settle-up?groupId=${activeGrupo.id}&amount=${debt}&creditorId=${activeGrupo.admin_id || activeGrupo.liderId}&method=${method}`);
                 }}
             />
 

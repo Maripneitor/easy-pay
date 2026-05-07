@@ -18,6 +18,8 @@ config.resolver.nodeModulesPaths = [
 
 // 3. Soporte para symlinks (vital para npm workspaces)
 config.resolver.unstable_enableSymlinks = true;
+config.resolver.unstable_enablePackageExports = true;
+config.resolver.unstable_conditionNames = ['browser', 'require', 'import'];
 
 // 4. Mapeo de paquetes locales y FORZADO de instancia única de React
 const extraNodeModules = {
@@ -28,6 +30,8 @@ const extraNodeModules = {
   "react-native": path.resolve(workspaceRoot, "node_modules/react-native"),
   "@types/react": path.resolve(workspaceRoot, "node_modules/@types/react"),
   "react-native-reanimated": path.resolve(workspaceRoot, "node_modules/react-native-reanimated"),
+  "tslib": path.resolve(workspaceRoot, "node_modules/tslib"),
+  "framer-motion": path.resolve(workspaceRoot, "node_modules/framer-motion"),
 };
 
 config.resolver.extraNodeModules = extraNodeModules;
@@ -35,6 +39,7 @@ config.resolver.blockList = [
   /apps\/mobile-app\/node_modules\/react\/.*/,
   /apps\/mobile-app\/node_modules\/react-dom\/.*/,
   /apps\/mobile-app\/node_modules\/react-native\/.*/,
+  /.*\/moti\/node_modules\/framer-motion\/.*/,
 ];
 
 // 5. Verificación de versiones (Debug en consola de Metro)

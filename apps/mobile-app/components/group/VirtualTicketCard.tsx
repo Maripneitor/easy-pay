@@ -48,7 +48,7 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({
 
     const getMemberName = (memberId: string) => {
         const member = members.find(m => m.id === memberId);
-        return member?.nombre?.substring(0, 2).toUpperCase() ?? '??';
+        return member?.nombre?.substring(0, 2)?.toUpperCase() ?? '??';
     };
 
     return (
@@ -70,7 +70,7 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({
                 </View>
                 <View className="flex-row gap-2">
                     <TouchableOpacity
-                        onPress={() => router.push({ pathname: '/ocr-scanner', params: { groupId } } as any)}
+                        onPress={() => router.push(`/ocr-scanner?groupId=${groupId}`)}
                         style={{ backgroundColor: '#10b98120', borderColor: '#10b98130' }}
                         className="flex-row items-center gap-2 px-4 py-2 rounded-xl border"
                     >
@@ -79,7 +79,7 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        onPress={() => router.push({ pathname: '/new-expense', params: { groupId } } as any)}
+                        onPress={() => router.push({ pathname: '/agregar-gasto', params: { groupId } })}
                         style={{ backgroundColor: theme.primary + '15' }}
                         className="flex-row items-center gap-2 px-4 py-2 rounded-xl"
                     >
@@ -101,7 +101,7 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({
                             <View className="flex-row justify-between items-start mb-4">
                                 <TouchableOpacity 
                                     className="flex-1 pr-4"
-                                    onPress={() => router.push({ pathname: '/expense/receipt/[id]', params: { id: item.id, groupId } } as any)}
+                                    onPress={() => router.push(`/expense/receipt/${item.id}?groupId=${groupId}`)}
                                 >
                                     <Text style={{ color: theme.text, fontSize: 16 * fontScale }} className="font-black uppercase tracking-tight">
                                         {item.nombre}

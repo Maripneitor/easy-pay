@@ -21,7 +21,7 @@ import { useRouter, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { MotiView, MotiText, AnimatePresence } from 'moti';
+
 
 import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
 import { NETWORK_CONFIG } from '../../src/infrastructure/api/network.config';
@@ -29,7 +29,8 @@ import { toTitleCase } from '../../src/infrastructure/utils/format';
 import { getApiBaseUrl } from '../../src/infrastructure/api/network.config';
 import Toast from 'react-native-toast-message';
 
-const { width } = Dimensions.get('window');
+const { width: windowWidth } = Dimensions.get('window');
+const width = Platform.OS === 'web' ? Math.min(windowWidth, 480) : windowWidth;
 const CARD_WIDTH = width * 0.82;
 const CARD_SPACING = (width - CARD_WIDTH) / 2;
 
@@ -104,6 +105,10 @@ export default function DashboardScreen() {
         
         const debts = [];
         for (const group of userGroups) {
+            // Solo grupos en fase de liquidación
+            const status = (group.status || group.estado || '').toLowerCase();
+            if (status !== 'settling') continue;
+
             const myBalance = group.balances?.find((b: any) => b.usuario_id === user.id)?.balance || 0;
             
             if (myBalance < -0.01) { // Deuda real
@@ -122,6 +127,10 @@ export default function DashboardScreen() {
 
     const [showDebtSelector, setShowDebtSelector] = useState(false);
 
+    const handleCreateGrupo = () => {
+        router.push('/create-group' as any);
+    };
+
     const handleSettlePress = () => {
         if (activeDebts.length === 0) {
             Toast.show({
@@ -138,7 +147,9 @@ export default function DashboardScreen() {
                 params: {
                     groupId: activeDebts[0].groupId,
                     creditorId: activeDebts[0].creditorId,
-                    amount: activeDebts[0].amount.toString()
+                    amount: activeDebts[0].amount.toString(),
+                    groupName: activeDebts[0].groupName,
+                    creditorName: activeDebts[0].creditorName
                 }
             });
         } else {
@@ -148,7 +159,7 @@ export default function DashboardScreen() {
 
     const QUICK_ACTIONS = [
         { id: 'group', label: 'Nuevo Grupo', icon: 'group-add', action: handleCreateGrupo, color: theme.primary },
-        { id: 'join', label: 'Unirse a Grupo', icon: 'qr-code-scanner', route: '/(tabs)/qr', color: '#10b981' },
+        { id: 'join', label: 'Unirse a Grupo', icon: 'group-add', route: '/join-code', color: '#10b981' },
         { id: 'settle', label: 'Liquidar Deuda', icon: 'handshake', action: handleSettlePress, color: '#a855f7' },
     ];
 
@@ -265,13 +276,12 @@ export default function DashboardScreen() {
                                             </View>
                                         </View>
                                         <View>
-                                            <MotiText 
-                                                animate={{ opacity: 1 }} 
+                                            <Text 
                                                 style={{ fontSize: 40 * fontScale }} 
                                                 className="text-white font-black"
                                             >
-                                                {isBalanceVisible ? `$${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `$ ***.**`}
-                                            </MotiText>
+                                                {isBalanceVisible ? `$${(userStats?.totalBalance || 0).toFixed(2)}` : `$ ***.**`}
+                                            </Text>
                                             <View style={{ backgroundColor: theme.glassBg }} className="px-2 py-0.5 rounded-full self-start mt-2">
                                                 <Text style={{ fontSize: 10 * fontScale }} className="text-white font-bold">{item.trend}</Text>
                                             </View>
@@ -317,17 +327,9 @@ export default function DashboardScreen() {
                         <Pressable 
                             onPress={() => router.push('/(tabs)/payments')}
                         >
-                            {({ pressed }) => (
-                                <MotiView 
-                                    animate={{ 
-                                        scale: pressed ? 0.95 : 1,
-                                        opacity: pressed ? 0.6 : 1
-                                    }}
-                                    transition={{ type: 'spring', damping: 10 }}
-                                >
-                                    <Text style={{ fontSize: 11 * fontScale, color: theme.primary }} className="font-black">VER TODO</Text>
-                                </MotiView>
-                            )}
+                            <View>
+                                <Text style={{ fontSize: 11 * fontScale, color: theme.primary }} className="font-black">VER TODO</Text>
+                            </View>
                         </Pressable>
                     </View>
 
@@ -338,56 +340,52 @@ export default function DashboardScreen() {
                             userGroups.map(item => (
                                 <Pressable 
                                     key={item.id}
-                                    onPress={() => router.push({ pathname: '/(tabs)/group/[id]', params: { id: item.id } } as any)}
+                                    onPress={() => router.push({ pathname: '/detalle-grupo', params: { id: item.id } })}
                                 >
-                                    {({ pressed }: { pressed: boolean }) => (
-                                        <MotiView 
-                                            animate={{ 
-                                                scale: pressed ? 0.98 : 1,
-                                                backgroundColor: pressed ? `${theme.cardSecondary}ef` : theme.cardSecondary 
-                                            }}
-                                            transition={{ type: 'timing', duration: 100 }}
-                                            style={{ borderColor: theme.border }}
-                                            className="border rounded-[32px] p-5 flex-row items-center gap-4"
-                                        >
-                                            <View style={{ backgroundColor: theme.glassBg }} className="w-14 h-14 rounded-[20px] items-center justify-center">
-                                                <MaterialIcons name="restaurant" size={26} color={theme.primary} />
+                                    <View 
+                                        style={{ 
+                                            backgroundColor: theme.cardSecondary, 
+                                            borderColor: theme.border,
+                                            borderWidth: 1,
+                                            borderRadius: 24,
+                                            padding: 20,
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            marginBottom: 12
+                                        }}
+                                    >
+                                        <View style={{ backgroundColor: theme.glassBg }} className="w-14 h-14 rounded-[20px] items-center justify-center">
+                                            <MaterialIcons name="restaurant" size={26} color={theme.primary} />
+                                        </View>
+                                        <View className="flex-1">
+                                            <Text style={{ fontSize: 15 * fontScale, color: theme.text }} className="font-black tracking-tight">{item.nombre || 'Sin nombre'}</Text>
+                                            <View className="flex-row items-center gap-2 mt-1">
+                                                <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-widest">{item.codigo_invitacion}</Text>
+                                                <Text style={{ fontSize: 10 * fontScale }} className="text-slate-500 font-medium">• {new Date(item.fecha_creacion).toLocaleDateString()}</Text>
                                             </View>
-                                            <View className="flex-1">
-                                                <Text style={{ fontSize: 15 * fontScale, color: theme.text }} className="font-black tracking-tight">{item.nombre || 'Sin nombre'}</Text>
-                                                <View className="flex-row items-center gap-2 mt-1">
-                                                    <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-widest">{item.codigo_invitacion}</Text>
-                                                    <Text style={{ fontSize: 10 * fontScale }} className="text-slate-500 font-medium">• {new Date(item.fecha_creacion).toLocaleDateString()}</Text>
-                                                </View>
+                                        </View>
+                                        <View className="items-end">
+                                            <Text style={{ 
+                                                fontSize: 15 * fontScale, 
+                                                color: theme.text 
+                                            }} className="font-black">
+                                                {isBalanceVisible ? `$${(item.total_gastado || 0).toFixed(2)}` : `$ ***.**`}
+                                            </Text>
+                                            <View style={{ backgroundColor: item.is_settled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
+                                                <Text style={{ fontSize: 8 * fontScale, color: item.is_settled ? '#10b981' : '#f59e0b' }} className="font-black uppercase">{item.is_settled ? 'Saldado' : 'Activo'}</Text>
                                             </View>
-                                            <View className="items-end">
-                                                <Text style={{ 
-                                                    fontSize: 15 * fontScale, 
-                                                    color: theme.text 
-                                                }} className="font-black">
-                                                    {isBalanceVisible ? `$${(item.total_gastado || 0).toFixed(2)}` : `$ ***.**`}
-                                                </Text>
-                                                <View style={{ backgroundColor: item.is_settled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
-                                                    <Text style={{ fontSize: 8 * fontScale, color: item.is_settled ? '#10b981' : '#f59e0b' }} className="font-black uppercase">{item.is_settled ? 'Saldado' : 'Activo'}</Text>
-                                                </View>
-                                            </View>
-                                        </MotiView>
-                                    )}
+                                        </View>
+                                    </View>
                                 </Pressable>
                             ))
                         ) : (
-
-                            <MotiView 
-                                from={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="items-center justify-center py-10 opacity-60"
-                            >
+                            <View className="items-center py-12 px-6">
                                 <View style={{ backgroundColor: theme.glassBg }} className="w-20 h-20 rounded-full items-center justify-center mb-4 border border-white/5">
                                     <MaterialCommunityIcons name="ghost" size={40} color={theme.textSecondary} />
                                 </View>
                                 <Text style={{ color: theme.text, fontSize: 14 * fontScale }} className="font-black text-center mb-1">¡Aún no hay actividad!</Text>
                                 <Text style={{ color: theme.textSecondary, fontSize: 11 * fontScale }} className="text-center px-10 font-bold">Crea tu primer grupo para empezar a dividir gastos.</Text>
-                            </MotiView>
+                            </View>
                         )}
                     </View>
                 </View>
@@ -423,7 +421,9 @@ export default function DashboardScreen() {
                                                 params: {
                                                     groupId: debt.groupId,
                                                     creditorId: debt.creditorId,
-                                                    amount: debt.amount.toString()
+                                                    amount: debt.amount.toString(),
+                                                    groupName: debt.groupName,
+                                                    creditorName: debt.creditorName
                                                 }
                                             });
                                         }}
