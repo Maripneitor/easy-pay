@@ -18,7 +18,7 @@ import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { useNotifications, timeAgo } from '../../src/infrastructure/context/NotificationContext';
 import { AppNotification } from '../../src/infrastructure/services/NotificationService';
 import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
-import { useAuthContext } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { Alert } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -285,7 +285,7 @@ export default function NotificationsScreen() {
     const [acceptingIds, setAcceptingIds] = React.useState<string[]>([]);
     const [rejectingIds, setRejectingIds] = React.useState<string[]>([]);
     const [acceptedIds, setAcceptedIds] = React.useState<string[]>([]);
-    const { user } = useAuthContext();
+    const { user } = useAuth();
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -362,7 +362,6 @@ export default function NotificationsScreen() {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
             <StatusBar style={theme.isDark ? 'light' : 'dark'} />
-            <Stack.Screen options={{ headerShown: false }} />
 
             {/* Header */}
             <View className="px-6 py-6 flex-row justify-between items-center">

@@ -65,7 +65,7 @@ export default function QRScreen() {
     if (showScanner) {
         return (
             <View className="flex-1 bg-black">
-                <Stack.Screen options={{ headerShown: false }} />
+                <StatusBar style={theme.isDark ? "light" : "dark"} />
                 <CameraView
                     style={StyleSheet.absoluteFill}
                     facing="back"

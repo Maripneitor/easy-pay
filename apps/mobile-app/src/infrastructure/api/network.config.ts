@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 
-export const getApiBaseUrl = () => {
+export function getApiBaseUrl() {
     // 1. Producción o variable explícita (.env)
     if (process.env.EXPO_PUBLIC_API_URL) {
         const url = process.env.EXPO_PUBLIC_API_URL;
@@ -11,12 +11,12 @@ export const getApiBaseUrl = () => {
     const hostUri = Constants.expoConfig?.hostUri;
     if (hostUri) {
         const ip = hostUri.split(':')[0];
-        return `http://${ip}:8000/api`;
+        return `http://${ip}:8001/api`;
     }
     
     // 3. Fallback para Simulador iOS o localhost
-    return 'http://localhost:8000/api';
-};
+    return 'http://localhost:8001/api';
+}
 
 export const NETWORK_CONFIG = {
   get BASE_URL() {

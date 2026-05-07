@@ -64,7 +64,7 @@ export default function GroupDetailScreen() {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
             <StatusBar style={theme.isDark ? "light" : "dark"} />
-            <Stack.Screen options={{ headerShown: false }} />
+            {/* Eliminado Stack.Screen que causaba error de contexto en Tabs */}
             
             <SyncStatus 
                 status={syncStatus === 'SYNCED' ? 'online' : 'offline'} 
@@ -194,16 +194,16 @@ export default function GroupDetailScreen() {
                         <View style={{ backgroundColor: theme.cardSecondary }} className="p-8 rounded-[50px] border border-white/10">
                             <View className="flex-row justify-between mb-4">
                                 <Text style={{ color: theme.textSecondary }} className="font-bold">Subtotal</Text>
-                                <Text style={{ color: theme.text }} className="font-black">${activeGrupo.subtotal.toFixed(2)}</Text>
+                                <Text style={{ color: theme.text }} className="font-black">${(activeGrupo.subtotal || 0).toFixed(2)}</Text>
                             </View>
                             <View className="flex-row justify-between mb-6">
                                 <Text style={{ color: theme.textSecondary }} className="font-bold">Propina sugerida</Text>
-                                <Text style={{ color: theme.text }} className="font-black">${activeGrupo.propina.toFixed(2)}</Text>
+                                <Text style={{ color: theme.text }} className="font-black">${(activeGrupo.propina || 0).toFixed(2)}</Text>
                             </View>
                             <View className="h-[1px] bg-white/5 w-full mb-6" />
                             <View className="flex-row justify-between items-center">
                                 <Text style={{ color: theme.text }} className="text-xl font-black">Total</Text>
-                                <Text style={{ color: theme.primary }} className="text-3xl font-black">${activeGrupo.total.toFixed(2)}</Text>
+                                <Text style={{ color: theme.primary }} className="text-3xl font-black">${(activeGrupo.total || 0).toFixed(2)}</Text>
                             </View>
                         </View>
                         

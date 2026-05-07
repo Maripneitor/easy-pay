@@ -327,11 +327,28 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     const loadGroupDetails = async (id: string) => {
-        // Al ser una app móvil, intentamos cargar desde el repo real
         try {
             console.log(`📡 [GrupoContext] Cargando detalles reales para el grupo: ${id}`);
-            const data = await groupRepository.getGroup(id);
-            setActiveGrupo(data);
+            try {
+                const [groupData, itemsData] = await Promise.all([
+                    groupRepository.getGroup(id),
+                    groupRepository.getItems(id)
+                ]);
+                
+                // Calculamos totales si no vienen del backend
+                const items = Array.isArray(itemsData) ? itemsData : [];
+                const { subtotal, propina, total } = recalculateTotals(items);
+                
+                setActiveGrupo({
+                    ...groupData,
+                    items,
+                    subtotal: groupData.subtotal ?? subtotal,
+                    propina: groupData.propina ?? propina,
+                    total: groupData.total ?? total
+                });
+            } catch (innerError) {
+                console.error("❌ [GrupoContext] Error en fetch inicial:", innerError);
+            }
         } catch (error) {
             console.error("❌ [GrupoContext] Error cargando grupo:", error);
         }
