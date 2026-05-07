@@ -4,10 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { userRepository } from '../../src/infrastructure/api/repositories/UserRepository';
+import { useEasyPay } from '../../context/EasyPayContext';
 
 export default function ChangePasswordScreen() {
     const { theme, fontScale } = useTheme();
+    const { user, changePassword } = useEasyPay();
     const router = useRouter();
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -15,7 +16,7 @@ export default function ChangePasswordScreen() {
     const [isLoading, setIsLoading] = useState(false);
 
     const handleSave = async () => {
-        if (!oldPassword || !newPassword || !confirmPassword) {
+        if (!newPassword || !confirmPassword) {
             Alert.alert('Error', 'Todos los campos son obligatorios');
             return;
         }
@@ -23,20 +24,28 @@ export default function ChangePasswordScreen() {
             Alert.alert('Error', 'Las contraseñas no coinciden');
             return;
         }
-        if (newPassword.length < 6) {
-            Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+        if (newPassword.length < 8) {
+            Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
+            return;
+        }
+
+        if (!user?.id) {
+            Alert.alert('Error', 'No se pudo identificar al usuario');
             return;
         }
 
         setIsLoading(true);
         try {
-            await userRepository.changePassword(oldPassword, newPassword);
+            await changePassword(user.id, { 
+                new_password: newPassword, 
+                confirm_password: confirmPassword 
+            });
             Alert.alert('Éxito', 'Contraseña actualizada correctamente', [
                 { text: 'OK', onPress: () => router.back() }
             ]);
         } catch (error) {
             console.error(error);
-            Alert.alert('Error', 'No se pudo cambiar la contraseña. Verifica tu contraseña actual.');
+            Alert.alert('Error', 'No se pudo cambiar la contraseña. Inténtalo de nuevo.');
         } finally {
             setIsLoading(false);
         }
@@ -60,19 +69,6 @@ export default function ChangePasswordScreen() {
                     <Text style={{ fontSize: 10 * fontScale, color: theme.textSecondary }} className="font-black uppercase tracking-[3px] mb-8">Actualizar Contraseña</Text>
 
                     <View className="gap-8">
-                        <View>
-                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase mb-3 ml-2">Contraseña Actual</Text>
-                            <TextInput
-                                secureTextEntry
-                                value={oldPassword}
-                                onChangeText={setOldPassword}
-                                style={{ backgroundColor: theme.bg + '80', color: theme.text, borderColor: theme.border + '30' }}
-                                className="p-6 rounded-[24px] border font-bold"
-                                placeholder="••••••••"
-                                placeholderTextColor={theme.textSecondary + '40'}
-                            />
-                        </View>
-
                         <View>
                             <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase mb-3 ml-2">Nueva Contraseña</Text>
                             <TextInput

@@ -91,9 +91,9 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         <header className={styles.header}>
             <div className={styles.headerContainer}>
                 <div className={styles.leftSlot}>
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-1">
                         {onMenuClick && (
-                            <button onClick={onMenuClick} className="md:hidden p-2 text-[var(--text-primary)] mr-2 -mt-1" aria-label="Abrir menú de navegación">
+                            <button onClick={onMenuClick} className="md:hidden flex items-center justify-center min-w-[44px] min-h-[44px] text-[var(--text-primary)] -ml-2" aria-label="Abrir menú de navegación">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                     <line x1="3" y1="12" x2="21" y2="12"></line>
                                     <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -102,6 +102,13 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                             </button>
                         )}
                         
+                        {onBack && (
+                            <button onClick={onBack} className={styles.backBtn} aria-label="Volver a la página anterior">
+                                <ArrowLeft size={18} className={styles.backIcon} aria-hidden="true" />
+                                <span className={styles.backText}>Volver</span>
+                            </button>
+                        )}
+
                         {/* Notification Bell */}
                         <div className="relative">
                             <button 
@@ -161,16 +168,10 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                         </div>
                     </div>
 
-                    {onBack && (
-                        <button onClick={onBack} className={styles.backBtn} aria-label="Volver a la página anterior">
-                            <ArrowLeft size={18} className={styles.backIcon} aria-hidden="true" />
-                            <span className={styles.backText}>Volver</span>
-                        </button>
-                    )}
                 </div>
 
                 <div className={styles.titleContainer}>
-                    {subtitle && <span className={styles.subtitle}>{subtitle}</span>}
+                    {subtitle && <span className={cn(styles.subtitle, "hidden md:block")}>{subtitle}</span>}
                     <h1 className={styles.title}>{title}</h1>
                 </div>
 

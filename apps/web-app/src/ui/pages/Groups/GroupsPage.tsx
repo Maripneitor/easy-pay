@@ -167,12 +167,6 @@ export const GroupsPage: React.FC = () => {
                             >
                                 <Plus size={16} /> Nuevo
                             </button>
-                            <button
-                                onClick={() => navigate(ROUTES.JOIN_GROUP)}
-                                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 border border-[var(--primary)] text-[var(--primary)] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[var(--primary)]/5 transition-all"
-                            >
-                                <Users size={16} /> Entrar
-                            </button>
                         </div>
                     </div>
 

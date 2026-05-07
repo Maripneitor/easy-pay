@@ -32,10 +32,10 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
-        if (group) {
+        if (visible && group) {
             setName(group.nombre || '');
         }
-    }, [group]);
+    }, [visible, group?.id]);
 
     const handleSave = async () => {
         if (!name.trim()) {

@@ -18,14 +18,14 @@ import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
-import { useAuth } from '../context/AuthContext';
+import { useEasyPay } from '../context/EasyPayContext';
 import { groupRepository } from '../src/infrastructure/api/repositories/GroupRepository';
 
 const { width } = Dimensions.get('window');
 
 export default function NewExpenseScreen() {
     const { theme, fontScale } = useTheme();
-    const { user } = useAuth();
+    const { user } = useEasyPay();
     const insets = useSafeAreaInsets();
     const params = useLocalSearchParams();
     

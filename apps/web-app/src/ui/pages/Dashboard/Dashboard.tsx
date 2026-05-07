@@ -17,10 +17,9 @@ import {
 import { cn, toTitleCase } from '@infrastructure/utils';
 import { PageHeader } from '@ui/components/PageHeader/PageHeader';
 import { GroupCard } from './components/GroupCard';
-import { CardAlert } from '@ui/components/Dashboard/CardAlert';
-import { DashboardSkeleton } from './components/DashboardSkeleton';
 import { TwoFactorModal } from '@ui/components/Security/TwoFactorModal';
 import { generateFinancialReport } from '@infrastructure/services/PdfService';
+import { DashboardSkeleton } from './components/DashboardSkeleton';
 
 const I18N_TEXTS = {
     WELCOME_PREFIX: 'Hola,',
@@ -199,7 +198,6 @@ export const Dashboard: React.FC = () => {
                             </div>
                         </section>
                         
-                        {!isLoading && !hasCards && <CardAlert />}
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             {/* --- GRUPOS LIST (Main Area) --- */}

@@ -1,3 +1,4 @@
+import { useEasyPay } from '../context/EasyPayContext';
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,7 +7,6 @@ import { useRouter, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { MotiView, AnimatePresence } from 'moti';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
-import { useGrupo } from '../context/GrupoContext';
 
 const { width } = Dimensions.get('window');
 
@@ -19,7 +19,7 @@ const MOCK_COMPARISON = [
 
 export default function OCRReviewScreen() {
     const { theme, fontScale } = useTheme();
-    const { addItem, activeGrupo } = useGrupo();
+    const { addItem, activeGrupo  } = useEasyPay();
     const router = useRouter();
     const [items, setItems] = useState(MOCK_COMPARISON);
     const [isLoading, setIsLoading] = useState(false);
@@ -124,7 +124,7 @@ export default function OCRReviewScreen() {
                                         <Text className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Manual</Text>
                                         <Text style={{ color: theme.text }} className="text-lg font-black">${item.precioManual || '--'}</Text>
                                     </View>
-                                    
+
                                     <View style={{ backgroundColor: theme.border }} className="w-10 h-10 rounded-full items-center justify-center">
                                         <MaterialIcons name="arrow-forward" size={16} color={theme.text} />
                                     </View>
@@ -134,7 +134,7 @@ export default function OCRReviewScreen() {
                                         <Text style={{ color: theme.primary }} className="text-lg font-black">${item.precioOCR || '--'}</Text>
                                     </View>
                                 </View>
-                                
+
                                 {!item.matched && (
                                     <TouchableOpacity 
                                         onPress={() => useOCRValue(item.id)}

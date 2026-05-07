@@ -7,10 +7,17 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-load_dotenv()
+# Intentar cargar .env desde el directorio actual y desde la raíz del proyecto
+load_dotenv() # Carga .env local si existe
+load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env")) # Carga .env de la raíz
 
 # Check multiple possible env var names for robustness (Atlas vs Local)
 MONGO_URL = os.getenv("MONGO_URL") or os.getenv("MONGO_URI") or "mongodb://localhost:27017"
+
+if "mongodb+srv" not in MONGO_URL:
+    logger.warning("⚠️ ALERTA: No se detectó una conexión a MongoDB Atlas (Nube). Usando conexión local o fallback.")
+else:
+    logger.info("✅ Conexión a MongoDB Atlas detectada.")
 
 class DatabaseConnector:
     def __init__(self):

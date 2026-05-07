@@ -9,9 +9,9 @@ import {
     Calculator, 
     Table,
     AlertCircle,
-    Download,
     Landmark,
-    Check
+    Check,
+    CreditCard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../../../infrastructure/utils';
@@ -29,7 +29,7 @@ interface SettlementWizardProps {
     activities: any[];
     members: any[];
     totalSpent: number;
-    membersData: any[]; // Changed from integrantesData for consistency
+    membersData: any[];
 }
 
 export const SettlementWizard: React.FC<SettlementWizardProps> = ({ 
@@ -49,7 +49,6 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
         ));
     };
 
-    const safeActivities = activities || [];
     const safeMembers = membersData || [];
 
     const unassignedItems = localActivities.filter(item => 
@@ -69,11 +68,10 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
         return acc + (base * (item.propina_porcentaje || 0) / 100);
     }, 0);
 
-    const globalTipAmount = tipPercentage === -1 ? Number(customTip) || 0 : (subtotalLocal * tipPercentage) / 100;
-    const finalTotal = subtotalLocal + perItemTaxes + perItemTips + globalTipAmount;
+    const tipAmount = tipPercentage === -1 ? Number(customTip) || 0 : (subtotalLocal * tipPercentage) / 100;
+    const finalTotal = subtotalLocal + perItemTaxes + perItemTips + tipAmount;
 
     // --- CÁLCULO DE RESUMEN POR INTEGRANTE ---
-    // Calcula la porción de cada miembro basándose en los gastos reales asignados
     const summary = safeMembers.map(member => {
         const spent = localActivities
             .filter(item => {
@@ -88,7 +86,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                 return acc + (totalItem / participantsCount);
             }, 0);
         
-        const shareOfGlobalTip = globalTipAmount / (safeMembers.length || 1);
+        const shareOfGlobalTip = tipAmount / (safeMembers.length || 1);
         return {
             name: member.nombre || 'Usuario',
             subtotal: spent,
@@ -112,15 +110,12 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
         }
         setIsClosing(true);
         try {
-            // Buscamos los objetos de cuenta completos
             const accountsToShow = (user?.bank_accounts || []).filter((a: any) => selectedAccounts.includes(a.id));
             
-            await httpClient.post(`/groups/${groupId}/start-settlement`, {
-                selected_bank_accounts: accountsToShow
-            });
+            // Paso 1: Notificar inicio de liquidación con cuentas bancarias
+            await groupRepository.startSettlement(groupId, accountsToShow);
             
-            // También enviamos el cierre (propina y totales)
-            // Update items on backend before starting settlement
+            // Paso 2: Actualizar items si cambiaron impuestos/propinas individuales (opcional pero mantenido)
             await Promise.all(localActivities.map(item => 
                 httpClient.put(`/groups/${groupId}/items/${item.id}`, {
                     impuesto_porcentaje: item.impuesto_porcentaje,
@@ -128,7 +123,8 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                 })
             ));
 
-            await groupRepository.closeGroup(groupId, globalTipAmount, finalTotal);
+            // Paso 3: Cerrar el grupo con montos finales
+            await groupRepository.closeGroup(groupId, tipAmount, finalTotal);
             
             toast.success("Liquidación iniciada y grupo actualizado");
             queryClient.invalidateQueries({ queryKey: ['group', groupId] });
@@ -167,7 +163,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                 <Zap size={20} />
                             </div>
                             <div>
-                                <h2 className="text-xl font-black uppercase tracking-tighter text-[var(--text-primary)]">Asistente de Liquidación</h2>
+                                <h2 className="text-xl font-black uppercase tracking-tighter text-[var(--text-primary)]">Liquidación Paso a Paso</h2>
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Paso {step} de 4</p>
                             </div>
                         </div>
@@ -192,70 +188,45 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                     <div className="w-20 h-20 rounded-[2.5rem] bg-blue-500/10 flex items-center justify-center text-blue-500 mb-4">
                                         <CheckCircle2 size={40} />
                                     </div>
-                                    <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tight">Validación de Gastos</h3>
-                                    <p className="text-sm text-[var(--text-secondary)] mt-2">Verificando que todos los consumos tengan un responsable.</p>
+                                    <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tight">Paso 1: Validación</h3>
+                                    <p className="text-sm text-[var(--text-secondary)] mt-2">Todos los items deben tener un responsable asignado.</p>
                                 </div>
 
                                 {unassignedItems.length > 0 ? (
-                                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6 flex items-start gap-4">
-                                        <AlertCircle className="text-amber-500 mt-0.5" size={24} />
+                                    <div className="bg-rose-500/10 border border-rose-500/20 rounded-3xl p-6 flex items-start gap-4">
+                                        <AlertCircle className="text-rose-500 mt-0.5" size={24} />
                                         <div>
-                                            <p className="text-amber-200 font-bold text-sm">Gastos sin asignar detectados</p>
-                                            <p className="text-amber-200/60 text-xs mt-1">Hay {unassignedItems.length} items que no tienen dueños. Asígnelos antes de continuar para un cálculo preciso.</p>
+                                            <p className="text-rose-500 font-black text-sm uppercase">Items sin asignar detectados</p>
+                                            <p className="text-rose-500/60 text-xs mt-1 font-bold">Hay {unassignedItems.length} items pendientes. Asígnalos antes de continuar.</p>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-8 flex flex-col items-center text-center">
+                                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-8 flex flex-col items-center text-center">
                                         <CheckCircle2 className="text-emerald-500 mb-4" size={48} />
-                                        <p className="text-emerald-500 font-black uppercase tracking-widest text-sm">¡Todo en Orden!</p>
-                                        <p className="text-emerald-200/60 text-xs mt-2">Todos los {activities.length} gastos han sido asignados correctamente.</p>
+                                        <p className="text-emerald-500 font-black uppercase tracking-widest text-sm">¡Validación Correcta!</p>
+                                        <p className="text-emerald-200/60 text-xs mt-2 font-bold">Todos los consumos tienen un responsable.</p>
                                     </div>
                                 )}
 
                                 <div className="space-y-3 mt-8">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Detalle del Comprobante</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Lista de Items</p>
                                     <div className="grid gap-3">
                                         {localActivities.map((item, i) => (
-                                            <div key={i} className="bg-black/5 border border-[var(--border-color)] p-4 rounded-3xl flex flex-col gap-4 group hover:border-[var(--primary)]/30 transition-all">
-                                                <div className="flex justify-between items-center">
-                                                    <div>
-                                                        <p className="text-sm font-black uppercase tracking-tight text-[var(--text-primary)]">{item.nombre || item.description}</p>
-                                                        <div className="flex flex-wrap gap-1 mt-1">
-                                                            {(item.nombres_participantes || item.participants || []).map((p: string, j: number) => (
-                                                                <span key={j} className="text-[8px] font-black uppercase px-1.5 py-0.5 bg-black/10 rounded-md text-slate-400">
-                                                                    {p.split(' ')[0]}
-                                                                </span>
-                                                            ))}
-                                                            {!(item.nombres_participantes || item.participants || []).length && (
-                                                                <span className="text-[8px] font-black uppercase px-1.5 py-0.5 bg-rose-500/10 rounded-md text-rose-500">Sin asignar</span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <span className="text-sm font-black font-mono text-[var(--primary)]">${Number(item.monto || item.precio).toFixed(2)}</span>
-                                                </div>
-                                                
-                                                <div className="flex gap-4">
-                                                    <div className="flex-1 flex items-center gap-2 bg-white/5 p-2 px-3 rounded-xl border border-white/5">
-                                                        <span className="text-[9px] font-black uppercase text-slate-500">IVA %</span>
-                                                        <input 
-                                                            type="number"
-                                                            value={item.impuesto_porcentaje || 0}
-                                                            onChange={(e) => handleUpdateItem(item.id, { impuesto_porcentaje: Number(e.target.value) })}
-                                                            className="bg-transparent border-none outline-none text-[10px] font-black text-[var(--text-primary)] w-full text-right"
-                                                            placeholder="0"
-                                                        />
-                                                    </div>
-                                                    <div className="flex-1 flex items-center gap-2 bg-white/5 p-2 px-3 rounded-xl border border-white/5">
-                                                        <span className="text-[9px] font-black uppercase text-slate-500">TIP %</span>
-                                                        <input 
-                                                            type="number"
-                                                            value={item.propina_porcentaje || 0}
-                                                            onChange={(e) => handleUpdateItem(item.id, { propina_porcentaje: Number(e.target.value) })}
-                                                            className="bg-transparent border-none outline-none text-[10px] font-black text-[var(--text-primary)] w-full text-right"
-                                                            placeholder="0"
-                                                        />
+                                            <div key={i} className="bg-black/5 border border-[var(--border-color)] p-4 rounded-3xl flex justify-between items-center group hover:border-[var(--primary)]/30 transition-all">
+                                                <div>
+                                                    <p className="text-sm font-black uppercase tracking-tight text-[var(--text-primary)]">{item.nombre || item.description}</p>
+                                                    <div className="flex flex-wrap gap-1 mt-1">
+                                                        {(item.nombres_participantes || item.participants || []).map((p: string, j: number) => (
+                                                            <span key={j} className="text-[8px] font-black uppercase px-1.5 py-0.5 bg-black/10 rounded-md text-slate-400">
+                                                                {p.split(' ')[0]}
+                                                            </span>
+                                                        ))}
+                                                        {!(item.nombres_participantes || item.participants || []).length && (
+                                                            <span className="text-[8px] font-black uppercase px-1.5 py-0.5 bg-rose-500/10 rounded-md text-rose-500">Sin asignar</span>
+                                                        )}
                                                     </div>
                                                 </div>
+                                                <span className="text-sm font-black font-mono text-[var(--primary)]">${Number(item.monto || item.precio).toFixed(2)}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -269,8 +240,8 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                     <div className="w-20 h-20 rounded-[2.5rem] bg-amber-500/10 flex items-center justify-center text-amber-500 mb-4">
                                         <Percent size={40} />
                                     </div>
-                                    <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tight">Gratificación / Propina</h3>
-                                    <p className="text-sm text-[var(--text-secondary)] mt-2">Selecciona el porcentaje de propina para el servicio.</p>
+                                    <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tight">Paso 2: Propina</h3>
+                                    <p className="text-sm text-[var(--text-secondary)] mt-2">Selecciona el porcentaje para el servicio.</p>
                                 </div>
 
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -279,7 +250,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                             key={val}
                                             onClick={() => setTipPercentage(val)}
                                             className={cn(
-                                                "py-6 rounded-2xl border-2 transition-all font-black text-xl",
+                                                "py-6 rounded-3xl border-2 transition-all font-black text-xl",
                                                 tipPercentage === val 
                                                     ? "bg-[var(--primary)] border-[var(--primary)] text-white shadow-lg shadow-[var(--primary)]/20" 
                                                     : "bg-[var(--bg-body)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--primary)]/50"
@@ -291,7 +262,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                 </div>
 
                                 {tipPercentage === -1 && (
-                                    <div className="bg-[var(--bg-body)] border border-[var(--border-color)] rounded-2xl p-6">
+                                    <div className="bg-[var(--bg-body)] border border-[var(--border-color)] rounded-3xl p-6">
                                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Monto Personalizado ($)</label>
                                         <input 
                                             type="number" 
@@ -303,17 +274,17 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                     </div>
                                 )}
 
-                                <div className="bg-black/5 rounded-3xl p-8 space-y-4">
+                                <div className="bg-black/5 rounded-[2.5rem] p-8 space-y-4">
                                     <div className="flex justify-between text-sm">
                                         <span className="text-slate-400 font-bold uppercase tracking-widest">Subtotal Consumo</span>
-                                        <span className="text-[var(--text-primary)] font-black font-mono">${totalSpent.toLocaleString()}</span>
+                                        <span className="text-[var(--text-primary)] font-black font-mono">${subtotalLocal.toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-slate-400 font-bold uppercase tracking-widest">Propina Calculada</span>
+                                        <span className="text-slate-400 font-bold uppercase tracking-widest">Propina</span>
                                         <span className="text-emerald-500 font-black font-mono">+${tipAmount.toLocaleString()}</span>
                                     </div>
                                     <div className="pt-4 border-t border-dashed border-[var(--border-color)] flex justify-between items-center">
-                                        <span className="text-sm font-black uppercase tracking-[0.2em] text-[var(--text-primary)]">Total Final</span>
+                                        <span className="text-sm font-black uppercase tracking-[0.2em] text-[var(--text-primary)]">Total Actualizado</span>
                                         <span className="text-3xl font-black text-[var(--text-primary)] font-mono tracking-tighter">${finalTotal.toLocaleString()}</span>
                                     </div>
                                 </div>
@@ -326,15 +297,15 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                     <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/10 flex items-center justify-center text-indigo-500 mb-4">
                                         <CreditCard size={40} />
                                     </div>
-                                    <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tight">Cuentas para Cobro</h3>
-                                    <p className="text-sm text-[var(--text-secondary)] mt-2">Selecciona las cuentas donde quieres recibir los pagos.</p>
+                                    <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tight">Paso 3: Cuentas Bancarias</h3>
+                                    <p className="text-sm text-[var(--text-secondary)] mt-2">Selecciona las cuentas para recibir transferencias.</p>
                                 </div>
 
                                 <div className="space-y-4">
                                     {(!user?.bank_accounts || user.bank_accounts.length === 0) ? (
-                                        <div className="p-8 border-2 border-dashed border-rose-500/20 rounded-3xl text-center">
+                                        <div className="p-8 border-2 border-dashed border-rose-500/20 rounded-[2rem] text-center">
                                             <p className="text-rose-500 font-black uppercase tracking-widest text-xs">Sin cuentas registradas</p>
-                                            <p className="text-slate-400 text-[10px] mt-2">Debes agregar al menos una cuenta en tu perfil para liquidar el grupo.</p>
+                                            <p className="text-slate-400 text-[10px] mt-2 font-bold">Debes agregar al menos una cuenta en tu perfil.</p>
                                             <button 
                                                 onClick={() => navigate('/profile/personal-data')}
                                                 className="mt-4 px-6 py-2 bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
@@ -354,7 +325,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                                     }
                                                 }}
                                                 className={cn(
-                                                    "w-full p-6 rounded-3xl border-2 transition-all flex items-center justify-between",
+                                                    "w-full p-6 rounded-[2rem] border-2 transition-all flex items-center justify-between",
                                                     selectedAccounts.includes(acc.id)
                                                         ? "bg-indigo-500/5 border-indigo-500"
                                                         : "bg-[var(--bg-body)] border-[var(--border-color)] opacity-60"
@@ -391,10 +362,10 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                     <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                                         <Table size={24} />
                                     </div>
-                                    <h3 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight">Resumen por Integrante</h3>
+                                    <h3 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight">Paso 4: Resumen Final</h3>
                                 </div>
 
-                                <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-3xl overflow-hidden">
+                                <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-3xl overflow-hidden shadow-sm">
                                     <table className="w-full text-left">
                                         <thead className="bg-black/5">
                                             <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -419,8 +390,8 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                 
                                 <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-6 flex items-start gap-4">
                                     <Calculator size={20} className="text-blue-500 mt-1" />
-                                    <p className="text-[10px] text-blue-400 font-medium leading-relaxed">
-                                        Se mostrarán {selectedAccounts.length} cuentas bancarias a los miembros para que realicen sus transferencias. El grupo entrará en estado de liquidación.
+                                    <p className="text-[10px] text-blue-500 font-black uppercase leading-relaxed tracking-wider">
+                                        Al confirmar, el grupo se cerrará y se enviará la cuenta a cada miembro con {selectedAccounts.length} cuentas bancarias disponibles.
                                     </p>
                                 </div>
                             </motion.div>
@@ -446,7 +417,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                     : "bg-[var(--primary)] text-white shadow-[var(--primary)]/20 hover:brightness-110 disabled:opacity-50 disabled:grayscale"
                             )}
                         >
-                            {isClosing ? 'Procesando...' : step === 4 ? 'Iniciar Liquidación' : 'Siguiente'}
+                            {isClosing ? 'Procesando...' : step === 4 ? 'Confirmar y Cerrar' : 'Siguiente'}
                             {!isClosing && <ArrowRight size={16} />}
                         </button>
                     </div>

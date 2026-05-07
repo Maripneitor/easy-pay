@@ -1,3 +1,4 @@
+import { useEasyPay, Payment, PaymentMethod, timeAgoPayment } from '../../context/EasyPayContext';
 import React, { useState, useRef } from 'react';
 import {
     ScrollView, View, Text, TouchableOpacity, Animated,
@@ -10,8 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView, AnimatePresence } from 'moti';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
-import { usePayments, Payment, PaymentMethod, timeAgoPayment } from '../../src/infrastructure/context/PaymentContext';
+
 import { useNotifications } from '../../src/infrastructure/context/NotificationContext';
 import MercadoPagoModal from '../../components/MercadoPagoModal';
 import { MPPaymentResult } from '../../src/infrastructure/services/MercadoPagoService';
@@ -41,7 +41,7 @@ function CashPaymentModal({
     visible: boolean; onClose: () => void; debt: any;
     theme: any; userId: string; userName: string;
 }) {
-    const { initiatePayment } = usePayments();
+    const { initiatePayment  } = useEasyPay();
     const [note, setNote] = useState('');
     const [witnessName, setWitnessName] = useState('');
     const [loading, setLoading] = useState(false);
@@ -315,15 +315,14 @@ function ConfirmationModal({
 // ── Pantalla principal ────────────────────────────────────────────────────────
 export default function PaymentsScreen() {
     const { theme, fontScale } = useTheme();
-    const { user } = useAuth();
-    const {
-        debts, payments, cards,
+    const { user  } = useEasyPay();
+    const { debts, payments, cards,
         addDebt, removeDebt,
         getDebtsByUser, getTotalOwed, getTotalToReceive,
         pendingConfirmations,
         confirmPaymentAsReceiver, confirmPaymentAsWitness, rejectPayment,
         initiatePayment, fetchFinancialData,
-    } = usePayments();
+     } = useEasyPay();
     const scrollX = useRef(new Animated.Value(0)).current;
     const [refreshing, setRefreshing] = useState(false);
 

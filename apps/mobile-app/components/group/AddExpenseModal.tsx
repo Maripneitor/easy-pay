@@ -1,3 +1,4 @@
+import { useEasyPay } from '../../context/EasyPayContext';
 import React, { useState } from 'react';
 import { 
     View, 
@@ -12,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
+
 import { MotiView, AnimatePresence } from 'moti';
 import { getApiBaseUrl } from '../../src/infrastructure/api/network.config';
 
@@ -32,7 +33,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     onSuccess
 }) => {
     const { theme, fontScale } = useTheme();
-    const { user } = useAuth();
+    const { user  } = useEasyPay();
     const [nombre, setNombre] = useState('');
     const [precio, setPrecio] = useState('');
     const [categoria, setCategoria] = useState('Comida');
@@ -56,11 +57,11 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
     const handleSubmit = async () => {
         if (!nombre || !precio || selectedMembers.length === 0) return;
-        
+
         setLoading(true);
         try {
             const API_URL = getApiBaseUrl();
-            
+
             const payload = {
                 group_id: groupId,
                 nombre: nombre.trim(),
@@ -102,7 +103,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                     className="absolute inset-0" 
                     onPress={onClose} 
                 />
-                
+
                 <KeyboardAvoidingView 
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     className="w-full"
@@ -116,7 +117,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                     >
                         {/* Handle */}
                         <View className="w-12 h-1.5 bg-white/10 rounded-full self-center mb-8" />
-                        
+
                         <Text style={{ color: theme.text, fontSize: 24 * fontScale }} className="font-black mb-2 tracking-tight">Nuevo Gasto</Text>
                         <Text style={{ color: theme.textSecondary, fontSize: 12 * fontScale }} className="font-bold uppercase tracking-widest mb-8 opacity-60">Registro Manual</Text>
 

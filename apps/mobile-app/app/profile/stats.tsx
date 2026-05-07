@@ -1,3 +1,4 @@
+import { useEasyPay } from '../../context/EasyPayContext';
 import React from 'react';
 import { View, Text, ScrollView, Dimensions, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -5,14 +6,14 @@ import { Stack, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { PieChart, BarChart } from 'react-native-chart-kit';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
+
 import { useProfileStats } from '../../src/infrastructure/hooks/useProfileStats';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function StatsScreen() {
     const { theme, fontScale } = useTheme();
-    const { user } = useAuth();
+    const { user  } = useEasyPay();
     const { stats, isLoading } = useProfileStats(user?.id);
     const router = useRouter();
 
@@ -54,7 +55,7 @@ export default function StatsScreen() {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
             <Stack.Screen options={{ title: 'Historial', headerShown: false }} />
-            
+
             <View style={{ height: 80, borderBottomColor: theme.border }} className="px-6 flex-row items-center justify-between border-b">
                 <TouchableOpacity onPress={() => router.back()} className="flex-row items-center gap-2">
                     <MaterialIcons name="arrow-back" size={20} color={theme.textSecondary} />
@@ -76,7 +77,7 @@ export default function StatsScreen() {
                             <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-[2px]">Total Gastado</Text>
                         </View>
                         <Text style={{ color: theme.text, fontSize: 36 * fontScale }} className="font-black tracking-tighter">
-                            ${stats?.total_spent.toFixed(2)}
+                            ${Number(stats?.total_spent || 0).toFixed(2)}
                         </Text>
                         <Text style={{ color: theme.primary }} className="text-[10px] font-bold mt-1">Sincronizado hoy</Text>
                     </View>

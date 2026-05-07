@@ -73,6 +73,17 @@ export class ApiGroupRepository implements GroupRepository {
         }
     }
 
+    // ── startSettlement ──────────────────────────────────────────────────────────
+    async startSettlement(groupId: string, selectedBankAccounts: any[]): Promise<void> {
+        try {
+            await httpClient.post(`/groups/${groupId}/start-settlement`, {
+                selected_bank_accounts: selectedBankAccounts
+            });
+        } catch (e) {
+            return handleApiError(e);
+        }
+    }
+
     // ── addItem ───────────────────────────────────────────────────────────────
     async addItem(groupId: string, item: Item): Promise<void> {
         try {
@@ -98,6 +109,14 @@ export class ApiGroupRepository implements GroupRepository {
     async assignItem(groupId: string, itemId: string, memberIds: string[]): Promise<void> {
         try {
             await httpClient.put(`/groups/${groupId}/items/${itemId}`, { participantes_ids: memberIds });
+        } catch (e) {
+            return handleApiError(e);
+        }
+    }
+
+    async editItem(groupId: string, itemId: string, itemData: any): Promise<void> {
+        try {
+            await httpClient.put(`/groups/${groupId}/items/${itemId}`, itemData);
         } catch (e) {
             return handleApiError(e);
         }

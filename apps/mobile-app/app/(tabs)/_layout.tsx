@@ -1,12 +1,13 @@
+import { useEasyPay } from '../../context/EasyPayContext';
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { useNotifications } from '../../src/infrastructure/context/NotificationContext';
 
-const CustomTabBarButton = ({ children, onPress, theme }: any) => {
+const CustomTabBarButton = ({ children, onPress, theme, isOnline }: any) => {
   return (
     <View style={{ alignItems: 'center' }}>
       <TouchableOpacity
@@ -33,6 +34,11 @@ const CustomTabBarButton = ({ children, onPress, theme }: any) => {
           }}
         >
           {children}
+          {isOnline === false && (
+            <View style={{ position: 'absolute', top: -4, right: -4, backgroundColor: '#f43f5e', borderRadius: 12, padding: 3, borderWidth: 2, borderColor: theme.bg }}>
+              <MaterialIcons name="cloud-off" size={14} color="white" />
+            </View>
+          )}
         </View>
       </TouchableOpacity>
     </View>
@@ -40,21 +46,42 @@ const CustomTabBarButton = ({ children, onPress, theme }: any) => {
 };
 
 import { Redirect } from 'expo-router';
-import { useAuth } from '../../context/AuthContext';
 
 export default function TabLayout() {
   const { theme } = useTheme();
   const { hasAlerts } = useNotifications();
-  const { token, isLoading } = useAuth();
+  const { token, isLoading, isOnline } = useEasyPay();
   const insets = useSafeAreaInsets();
 
   if (isLoading) return null;
-  
+
   console.log(`🛡️ TabLayout Protection - Token: ${token ? '✅ Presente' : '❌ Ausente'}`);
   if (!token) return <Redirect href="/" />;
 
   return (
-    <Tabs
+    <View style={{ flex: 1, backgroundColor: theme.bg }}>
+      {!isOnline && (
+        <View style={{
+          paddingTop: insets.top,
+          backgroundColor: '#f59e0b',
+          zIndex: 50
+        }}>
+          <View style={{
+            paddingVertical: 6,
+            paddingHorizontal: 16,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+          }}>
+            <MaterialIcons name="cloud-off" size={16} color="white" />
+            <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>
+              📡 Sin conexión. Los cambios se guardarán localmente.
+            </Text>
+          </View>
+        </View>
+      )}
+      <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: theme.primary,
@@ -96,7 +123,7 @@ export default function TabLayout() {
           title: 'Grupos',
           tabBarIcon: ({ color, focused }) => (
             <View>
-              <MaterialIcons name="group-work" size={26} color={color} />
+              <MaterialIcons name="diversity-3" size={26} color={color} />
             </View>
           ),
         }}
@@ -106,7 +133,7 @@ export default function TabLayout() {
         options={{
           tabBarLabel: '',
           tabBarButton: (props) => (
-            <CustomTabBarButton theme={theme} {...props}>
+            <CustomTabBarButton theme={theme} isOnline={isOnline} {...props}>
               <MaterialIcons name="qr-code-scanner" size={32} color="white" />
             </CustomTabBarButton>
           ),
@@ -139,12 +166,10 @@ export default function TabLayout() {
           ),
         }}
       />
-      
-      {/* Hide internal/deprecated/moved routes from tab bar */}
-      <Tabs.Screen name="friends_list" options={{ href: null }} />
       <Tabs.Screen name="group/[id]" options={{ href: null }} />
       <Tabs.Screen name="payments" options={{ href: null }} />
     </Tabs>
+    </View>
   );
 }
 

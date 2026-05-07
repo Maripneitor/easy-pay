@@ -88,6 +88,10 @@ export class ApiMobileGroupRepository implements GroupRepository {
         await httpClient.patch(`/groups/${groupId}/members/${memberId}/paid`);
     }
 
+    async createSettlement(groupId: string, data: { amount: number, method: string, creditor_id: string }): Promise<void> {
+        await httpClient.post(`/groups/${groupId}/settlements`, data);
+    }
+
     async findByUser(userId: string): Promise<any[]> {
         const response = await httpClient.get(`/groups/user/${userId}`);
         return response.data;

@@ -6,13 +6,13 @@ import { useRouter, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { MotiView, AnimatePresence } from 'moti';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
-import { useGrupo } from '../context/GrupoContext';
+import { useEasyPay } from '../context/EasyPayContext';
 
 const { width, height } = Dimensions.get('window');
 
 export default function ScanQRScreen() {
     const { theme, fontScale } = useTheme();
-    const { joinGrupo } = useGrupo();
+    const { joinGrupo, activeGrupo } = useEasyPay();
     const router = useRouter();
     const [scanned, setScanned] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -68,7 +68,7 @@ export default function ScanQRScreen() {
 
                 <View className="mt-12 px-12">
                     <Text style={{ color: 'white' }} className="text-center font-bold text-lg">Apunta al código QR</Text>
-                    <Text style={{ color: 'white' }} className="text-center opacity-60 mt-2">El código se encuentra en la pantalla del líder de la Grupo.</Text>
+                    <Text style={{ color: 'white' }} className="text-center opacity-60 mt-2">El código se encuentra en la pantalla del líder del Grupo.</Text>
                 </View>
 
                 <TouchableOpacity 

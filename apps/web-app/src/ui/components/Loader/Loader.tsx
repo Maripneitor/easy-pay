@@ -2,7 +2,13 @@ import { motion } from 'framer-motion';
 
 export const Loader = () => {
     return (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--bg-body)]">
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--bg-body)]"
+        >
             <div className="relative">
                 {/* Outer Glow */}
                 <motion.div 
@@ -62,6 +68,6 @@ export const Loader = () => {
                 </motion.div>
                 <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-slate-500 opacity-60">Sincronizando finanzas...</p>
             </div>
-        </div>
+        </motion.div>
     );
 };

@@ -27,6 +27,17 @@ export const RecoverPasswordPage = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [resending, setResending] = useState(false);
+    const [countdown, setCountdown] = useState(0);
+
+    React.useEffect(() => {
+        let timer: any;
+        if (countdown > 0) {
+            timer = setInterval(() => {
+                setCountdown(prev => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [countdown]);
 
     const [tempToken, setTempToken] = useState<string | null>(null);
     const [tempUser, setTempUser] = useState<any | null>(null);
@@ -42,6 +53,7 @@ export const RecoverPasswordPage = () => {
                 if (data.user_id) {
                     setUserId(data.user_id);
                     setStep(2);
+                    setCountdown(5); // Iniciar espera al entrar en paso 2
                 } else {
                     toast.info(data.message);
                 }
@@ -54,10 +66,12 @@ export const RecoverPasswordPage = () => {
     };
 
     const handleResendCode = async () => {
+        if (countdown > 0) return;
         setResending(true);
         try {
             await userRepository.requestPasswordReset(email);
             toast.success('Código reenviado');
+            setCountdown(5); // 5 segundos de espera
         } catch (error: any) {
             toast.error(error.message || 'Error al reenviar código');
         } finally {
@@ -190,10 +204,15 @@ export const RecoverPasswordPage = () => {
                                             id="code"
                                             placeholder="Ej. 123456"
                                             value={code}
-                                            onChange={(e) => setCode(e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/\D/g, '');
+                                                if (val.length <= 6) setCode(val);
+                                            }}
                                             required
                                             disabled={loading}
-                                            style={{ letterSpacing: '0.2em', textAlign: 'center' }}
+                                            inputMode="numeric"
+                                            autoComplete="one-time-code"
+                                            style={{ letterSpacing: '0.2em', textAlign: 'center', fontSize: '1.5rem', fontWeight: 'bold' }}
                                         />
                                     </div>
                                 </div>
@@ -206,11 +225,14 @@ export const RecoverPasswordPage = () => {
                                     <button 
                                         type="button"
                                         onClick={handleResendCode}
-                                        disabled={loading || resending}
-                                        className="text-xs font-bold text-[var(--primary)] hover:underline flex items-center justify-center gap-2 mx-auto"
+                                        disabled={loading || resending || countdown > 0}
+                                        className="text-xs font-bold text-[var(--primary)] hover:underline disabled:opacity-50 disabled:no-underline flex items-center justify-center gap-2 mx-auto"
                                     >
                                         {resending && <Loader2 className="animate-spin" size={12} />}
-                                        ¿No recibiste el código? Reenviar
+                                        {countdown > 0 
+                                            ? `Reenviar en ${countdown}s` 
+                                            : '¿No recibiste el código? Reenviar'
+                                        }
                                     </button>
                                 </div>
                             </form>

@@ -159,3 +159,8 @@ class MongoUserRepository:
             {"$set": {"cards.$.is_default": True}}
         )
         return result.modified_count > 0
+
+    async def delete_user_by_email(self, email: str):
+        """Elimina un usuario por su email. Útil para re-intentar registros no verificados."""
+        result = await self.collection.delete_one({"email": email})
+        return result.deleted_count > 0

@@ -37,6 +37,11 @@ export const ProfilePage = () => {
     const { logout, user } = useAuthContext();
     const { stats, loading: statsLoading } = useProfileStats();
     const { allActiveGroups, settledGroups } = useDashboard();
+    const [isMounted, setIsMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     // --- Dynamic Calculations ---
     const totalGroups = (allActiveGroups?.length || 0) + (settledGroups?.length || 0);
@@ -190,35 +195,37 @@ export const ProfilePage = () => {
                                                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sin datos de gastos</p>
                                                 </div>
                                             )}
-                                            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-                                                <RePieChart>
-                                                    <Pie
-                                                        data={(!stats?.by_category || stats.by_category.length === 0) ? [{ category: 'Vacío', amount: 1 }] : stats.by_category}
-                                                        cx="50%"
-                                                        cy="50%"
-                                                        innerRadius={60}
-                                                        outerRadius={100}
-                                                        paddingAngle={(!stats?.by_category || stats.by_category.length === 0) ? 0 : 5}
-                                                        dataKey="amount"
-                                                        nameKey="category"
-                                                        stroke="none"
-                                                    >
-                                                        {(!stats?.by_category || stats.by_category.length === 0) ? (
-                                                            <Cell fill="#e2e8f0" />
-                                                        ) : (
-                                                            stats.by_category.map((entry: any, index: number) => (
-                                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                                            ))
+                                            {isMounted && (
+                                                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                                                    <RePieChart>
+                                                        <Pie
+                                                            data={(!stats?.by_category || stats.by_category.length === 0) ? [{ category: 'Vacío', amount: 1 }] : stats.by_category}
+                                                            cx="50%"
+                                                            cy="50%"
+                                                            innerRadius={60}
+                                                            outerRadius={100}
+                                                            paddingAngle={(!stats?.by_category || stats.by_category.length === 0) ? 0 : 5}
+                                                            dataKey="amount"
+                                                            nameKey="category"
+                                                            stroke="none"
+                                                        >
+                                                            {(!stats?.by_category || stats.by_category.length === 0) ? (
+                                                                <Cell fill="#e2e8f0" />
+                                                            ) : (
+                                                                stats.by_category.map((entry: any, index: number) => (
+                                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                                ))
+                                                            )}
+                                                        </Pie>
+                                                        {stats?.by_category?.length > 0 && (
+                                                            <Tooltip 
+                                                                formatter={(value: any) => `$${Number(value || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`}
+                                                                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', background: 'var(--bg-card)' }}
+                                                            />
                                                         )}
-                                                    </Pie>
-                                                    {stats?.by_category?.length > 0 && (
-                                                        <Tooltip 
-                                                            formatter={(value: any) => `$${Number(value || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`}
-                                                            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', background: 'var(--bg-card)' }}
-                                                        />
-                                                    )}
-                                                </RePieChart>
-                                            </ResponsiveContainer>
+                                                    </RePieChart>
+                                                </ResponsiveContainer>
+                                            )}
                                         </div>
                                         
                                         <div className="w-full lg:w-1/2 space-y-4">

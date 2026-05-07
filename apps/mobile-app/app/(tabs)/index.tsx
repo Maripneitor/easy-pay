@@ -1,3 +1,4 @@
+import { useEasyPay } from '../../context/EasyPayContext';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { 
     ScrollView, 
@@ -20,9 +21,10 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { MotiView, MotiText, AnimatePresence } from 'moti';
-import { useAuth } from '../../context/AuthContext';
+
 import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
 import { toTitleCase } from '../../src/infrastructure/utils/format';
+import { getApiBaseUrl } from '../../src/infrastructure/api/network.config';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.82;
@@ -31,7 +33,7 @@ const CARD_SPACING = (width - CARD_WIDTH) / 2;
 // --- Dashboard Component ---
 export default function DashboardScreen() {
     const { theme, fontScale, cycleTheme } = useTheme();
-    const { user } = useAuth();
+    const { user  } = useEasyPay();
     const insets = useSafeAreaInsets();
     const router = useRouter();
 
@@ -88,7 +90,6 @@ export default function DashboardScreen() {
         { id: 'settle', label: 'Liquidar Grupo', icon: 'handshake', route: '/settle-up', color: '#a855f7' },
     ];
 
-
     const renderHeader = () => (
         <View style={{ backgroundColor: theme.bg }} className="px-6 py-8 flex-row justify-between items-center w-full">
             <View className="flex-1 flex-row items-center gap-3 pr-2">
@@ -123,7 +124,7 @@ export default function DashboardScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity 
-                    onPress={() => router.push('/settings')}
+                    onPress={() => router.push('/profile' as any)}
                     style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
                     className="w-11 h-11 rounded-full items-center justify-center border overflow-hidden"
                 >
@@ -221,8 +222,6 @@ export default function DashboardScreen() {
                     </Animated.ScrollView>
 
                 </View>
-
-
 
                 {/* 3. Acciones Rápidas */}
                 <View className="px-6 mt-10">

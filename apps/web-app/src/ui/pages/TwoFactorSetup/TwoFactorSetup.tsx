@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { PageHeader } from '@ui/components/PageHeader';
 import {
     ShieldCheck,
@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 
 export const TwoFactorSetup = () => {
     const navigate = useNavigate();
+    const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
     const { user } = useAuthContext();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -66,19 +67,12 @@ export const TwoFactorSetup = () => {
 
     return (
         <div className="bg-[#0f172a] text-slate-200 min-h-screen flex flex-col antialiased selection:bg-primary selection:text-white">
-            {/* Minimal Navbar for 2FA */}
-            <header className="flex items-center justify-between border-b border-white/5 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 lg:px-10">
-                <div className="flex items-center gap-3">
-                    <img src="/assets/images/logo-ep.png" alt="Logo Easy-Pay" className="h-8 w-8 object-contain" />
-                    <h2 className="text-white text-xl font-bold tracking-tight">Easy-Pay</h2>
-                </div>
-                <div className="flex items-center gap-6">
-                    <button onClick={goBack} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-                        <span className="text-sm font-medium">Volver</span>
-                    </button>
-                </div>
-            </header>
+            <PageHeader
+                title="SEGURIDAD"
+                subtitle="Configurar 2FA"
+                onBack={goBack}
+                onMenuClick={toggleSidebar}
+            />
 
             <main className="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
                 {/* Background glow effects - refined to be subtler */}

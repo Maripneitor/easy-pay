@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { MotiView, AnimatePresence } from 'moti';
+import * as Haptics from 'expo-haptics';
 
 interface Member {
     id: string;
@@ -39,6 +40,7 @@ export default function ItemAssignModal({ visible, onClose, item, members, theme
     if (!item) return null;
 
     const toggle = (memberId: string) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         setSelected(prev =>
             prev.includes(memberId)
                 ? prev.filter(id => id !== memberId)
@@ -46,8 +48,14 @@ export default function ItemAssignModal({ visible, onClose, item, members, theme
         );
     };
 
-    const selectAll = () => setSelected(members.map(m => m.id));
-    const clearAll = () => setSelected([]);
+    const selectAll = () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        setSelected(members.map(m => m.id));
+    };
+    const clearAll = () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        setSelected([]);
+    };
 
     const perPersonAmount = selected.length > 0
         ? item.amount / selected.length
@@ -61,12 +69,14 @@ export default function ItemAssignModal({ visible, onClose, item, members, theme
         setLoading(true);
         try {
             await onConfirm(item.id, selected);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             setSuccess(true);
             setTimeout(() => {
                 setSuccess(false);
                 onClose();
             }, 1200);
         } catch {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             Alert.alert('Error', 'No se pudo asignar el item.');
         } finally {
             setLoading(false);

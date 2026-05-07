@@ -11,7 +11,8 @@ import {
     Copy,
     Check
 } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
+import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { cn } from '../../../infrastructure/utils';
 import { useGroupDetail } from '../GroupDetail/useGroupDetail';
 import { toast } from 'sonner';
@@ -24,6 +25,7 @@ import { useAuthContext } from '../../context/AuthContext';
 export const SettleUp = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
     const { userShare, balances, membersData, selectedBankAccounts, status, isFetchingGroup: loading } = useGroupDetail(id || "");
     const { copyToClipboard, copiedId } = useClipboard();
     
@@ -93,15 +95,11 @@ export const SettleUp = () => {
 
     return (
         <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10 px-4 md:px-0">
-            <div className="flex items-center justify-between py-6 border-b border-[var(--border-color)]">
-                <button 
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors"
-                >
-                    <ArrowLeft size={18} /> Volver
-                </button>
-                <h2 className="text-sm font-black uppercase tracking-widest text-[var(--text-secondary)]">Liquidar Deuda</h2>
-            </div>
+            <PageHeader 
+                title="Liquidar Deuda"
+                onBack={() => navigate(-1)}
+                onMenuClick={toggleSidebar}
+            />
             
             {/* Amount Card */}
             <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[3rem] p-10 flex flex-col items-center text-center relative overflow-hidden group shadow-xl shadow-black/5">

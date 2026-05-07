@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { 
     User as UserIcon, Mail, Camera, Save, AlertCircle, Phone, 
     Calendar, MapPin, ShieldCheck, X, Building2, CreditCard, Landmark
@@ -15,6 +15,7 @@ import { TwoFactorModal } from '../../components/Security/TwoFactorModal';
 
 export const PersonalData = () => {
     const navigate = useNavigate();
+    const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
     const { user, updateUserSession } = useAuthContext();
 
     const [name, setName] = useState(user?.nombre || '');
@@ -119,6 +120,7 @@ export const PersonalData = () => {
                 title="DATOS PERSONALES"
                 subtitle="Editar Perfil"
                 onBack={() => navigate(-1)}
+                onMenuClick={toggleSidebar}
                 showAvatar={false}
             />
 

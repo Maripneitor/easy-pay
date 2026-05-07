@@ -4,17 +4,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
-import { useGrupo } from '../context/GrupoContext';
+import { useEasyPay } from '../context/EasyPayContext';
 import { MotiView } from 'moti';
 import OcrTicketScanner from '../components/OcrTicketScanner';
 import { TicketData } from '../src/infrastructure/services/OcrService';
 
 export default function CreateGroupScreen() {
-    const { user } = useAuth();
+    const { user, createGrupo } = useEasyPay();
     const { theme, fontScale } = useTheme();
-    const { createGrupo } = useGrupo();
     const [groupName, setGroupName] = useState('');
     const [groupDesc, setGroupDesc] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -191,12 +189,16 @@ export default function CreateGroupScreen() {
                     onPress={handleCreateGroup}
                     disabled={isLoading}
                     style={{ backgroundColor: theme.primary }}
-                    className="w-full py-5 rounded-2xl shadow-xl shadow-blue-500/20 items-center justify-center"
+                    className="w-full py-5 rounded-2xl shadow-xl shadow-blue-500/20 flex-row items-center justify-center gap-3"
                 >
-                    {isLoading
-                        ? <ActivityIndicator color="white" />
-                        : <Text className="text-white font-black text-base">Crear Grupo</Text>
-                    }
+                    {isLoading ? (
+                        <>
+                            <ActivityIndicator color="white" />
+                            <Text className="text-white font-black text-base">Procesando...</Text>
+                        </>
+                    ) : (
+                        <Text className="text-white font-black text-base">Crear Grupo</Text>
+                    )}
                 </TouchableOpacity>
             </View>
 

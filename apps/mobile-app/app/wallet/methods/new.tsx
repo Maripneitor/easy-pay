@@ -1,3 +1,4 @@
+import { useEasyPay } from '../../../context/EasyPayContext';
 import React, { useState } from 'react';
 import {
     View, Text, TouchableOpacity, ScrollView,
@@ -10,16 +11,15 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 import { useTheme } from '../../../src/infrastructure/context/ThemeContext';
-import { usePayments } from '../../../src/infrastructure/context/PaymentContext';
-import { useAuth } from '../../../context/AuthContext';
+
 import { TwoFactorModal } from '../../../components/Security/TwoFactorModal';
 
 const { width } = Dimensions.get('window');
 
 export default function RegisterCardScreen() {
     const { theme, fontScale } = useTheme();
-    const { user } = useAuth();
-    const { addCard } = usePayments();
+    const { user  } = useEasyPay();
+    const { addCard  } = useEasyPay();
 
     const [cardNumber, setCardNumber] = useState('');
     const [cardName, setCardName] = useState('');

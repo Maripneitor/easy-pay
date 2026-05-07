@@ -4,12 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { userRepository } from '../../src/infrastructure/api/repositories/UserRepository';
+import { useEasyPay } from '../../context/EasyPayContext';
 
 export default function TwoFactorSetupScreen() {
     const { theme, fontScale } = useTheme();
+    const { user, setupTwoFactor, verifyTwoFactor } = useEasyPay();
     const router = useRouter();
-    const [isEnabled, setIsEnabled] = useState(false);
+    const [isEnabled, setIsEnabled] = useState(user?.two_factor?.enabled || false);
     const [qrCode, setQrCode] = useState<string | null>(null);
     const [secret, setSecret] = useState<string | null>(null);
     const [verificationCode, setVerificationCode] = useState('');
@@ -17,20 +18,25 @@ export default function TwoFactorSetupScreen() {
     const [isVerifying, setIsVerifying] = useState(false);
 
     const handleToggle = async (value: boolean) => {
+        if (!user?.id) return;
         setIsLoading(true);
         try {
-            const result = await userRepository.toggleTwoFactor(value);
-            setIsEnabled(value);
-            if (value && result.qr_code) {
-                setQrCode(result.qr_code);
-                setSecret(result.secret || null);
+            if (value) {
+                const result = await setupTwoFactor(user.id);
+                if (result.qr_code) {
+                    setQrCode(result.qr_code);
+                    setSecret(result.secret || null);
+                }
             } else {
+                // If disabling, we might need a different endpoint or just update user
+                // For now, let's assume toggle is for setup
                 setQrCode(null);
                 setSecret(null);
             }
+            setIsEnabled(value);
         } catch (error) {
             console.error(error);
-            Alert.alert('Error', 'No se pudo cambiar la configuración de 2FA');
+            Alert.alert('Error', 'No se pudo iniciar la configuración de 2FA');
             setIsEnabled(!value);
         } finally {
             setIsLoading(false);
@@ -38,16 +44,18 @@ export default function TwoFactorSetupScreen() {
     };
 
     const handleVerify = async () => {
+        if (!user?.id) return;
         if (verificationCode.length !== 6) {
             Alert.alert('Error', 'Ingresa un código de 6 dígitos');
             return;
         }
         setIsVerifying(true);
         try {
-            await userRepository.verifyTwoFactor(verificationCode);
+            await verifyTwoFactor(user.id, verificationCode);
             Alert.alert('Éxito', '2FA verificado y activado correctamente');
             setQrCode(null);
             setSecret(null);
+            setIsEnabled(true);
         } catch (error) {
             console.error(error);
             Alert.alert('Error', 'Código de verificación incorrecto');

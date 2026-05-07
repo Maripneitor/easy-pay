@@ -9,7 +9,9 @@ import {
     User,
     DollarSign,
     Copy,
-    Zap
+    Zap,
+    AlertTriangle,
+    Save
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,6 +37,7 @@ import { groupRepository } from '../../../infrastructure/api/repositories';
 
 import { TwoFactorModal } from '../../components/Security/TwoFactorModal';
 import { EditGroupModal } from '../Groups/components/EditGroupModal';
+import { EditItemModal } from './components/EditItemModal';
 
 const I18N_TEXTS = {
     TABS: {
@@ -69,7 +72,16 @@ export const GroupDetail = () => {
     const [selectedExpense, setSelectedExpense] = useState<any>(null);
     const [isEditingGroupOpen, setIsEditingGroupOpen] = useState(false);
 
-    useKeyboardShortcuts(() => setIsWizardOpen(false));
+    // Quick Assignment Mode States
+    const [isQuickAssignMode, setIsQuickAssignMode] = useState(false);
+    const [pendingAssignments, setPendingAssignments] = useState<Record<string, string[]>>({});
+    const [isEditItemModalOpen, setIsEditItemModalOpen] = useState(false);
+    const [itemToEdit, setItemToEdit] = useState<any>(null);
+
+    useKeyboardShortcuts(() => {
+        setIsWizardOpen(false);
+        setIsQuickAssignMode(false);
+    });
 
     const {
         activeTab, setActiveTab, groupName, groupDescription, groupCode, totalSpent,
@@ -138,6 +150,57 @@ export const GroupDetail = () => {
 
         doc.save(`EasyPay_${groupName}_${date}.pdf`);
         toast.success("PDF generado correctamente");
+    };
+
+    const handleToggleQuickAssign = () => {
+        if (!isQuickAssignMode) {
+            // Enter mode: initialize pendingAssignments with current values
+            const initial: Record<string, string[]> = {};
+            activities.forEach((act: any) => {
+                initial[act.id] = [...(act.participantes_ids || [])];
+            });
+            setPendingAssignments(initial);
+        }
+        setIsQuickAssignMode(!isQuickAssignMode);
+    };
+
+    const toggleMemberInItem = (itemId: string, memberId: string) => {
+        setPendingAssignments(prev => {
+            const current = prev[itemId] || [];
+            if (current.includes(memberId)) {
+                return { ...prev, [itemId]: current.filter(id => id !== memberId) };
+            } else {
+                return { ...prev, [itemId]: [...current, memberId] };
+            }
+        });
+    };
+
+    const handleSaveQuickAssignments = async () => {
+        const loadingToast = toast.loading("Guardando asignaciones...");
+        try {
+            await Promise.all(
+                Object.entries(pendingAssignments).map(([itemId, memberIds]) => 
+                    groupRepository.assignItem(finalId, itemId, memberIds)
+                )
+            );
+            toast.dismiss(loadingToast);
+            toast.success("Asignaciones guardadas correctamente");
+            setIsQuickAssignMode(false);
+            refresh();
+        } catch (error) {
+            toast.dismiss(loadingToast);
+            toast.error("Error al guardar algunas asignaciones");
+        }
+    };
+
+    const handleEditItem = async (itemId: string, data: any) => {
+        try {
+            await groupRepository.editItem(finalId, itemId, data);
+            toast.success("Gasto actualizado");
+            refresh();
+        } catch (error) {
+            toast.error("Error al actualizar el gasto");
+        }
     };
 
     if (isFetchingGroup) {
@@ -289,21 +352,47 @@ export const GroupDetail = () => {
                                          {isAdmin && (
                                             <>
                                                 <button 
-                                                    onClick={() => navigate(ROUTES.REGISTER_EXPENSE(finalId))}
-                                                    className="group flex items-center gap-3 px-8 py-4 bg-[var(--primary)] text-white rounded-[1.5rem] text-sm font-black uppercase tracking-widest shadow-2xl shadow-[var(--primary)]/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                                    onClick={handleToggleQuickAssign}
+                                                    className={cn(
+                                                        "flex items-center gap-2 px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all",
+                                                        isQuickAssignMode 
+                                                            ? "bg-rose-500 text-white shadow-lg shadow-rose-500/20" 
+                                                            : "bg-white border border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--primary)] hover:text-[var(--primary)] shadow-sm"
+                                                    )}
+                                                    title="Asignación Rápida"
                                                 >
-                                                    <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center group-hover:rotate-90 transition-transform">
-                                                        <Plus size={18} />
-                                                    </div>
-                                                    Nuevo Gasto
+                                                    {isQuickAssignMode ? <X size={18} /> : <Users size={18} />}
+                                                    {isQuickAssignMode ? "Cancelar" : "Asignar Items"}
                                                 </button>
-                                                <button 
-                                                    onClick={() => navigate(ROUTES.OCR_SCANNER)}
-                                                    className="p-4 bg-white border border-[var(--border-color)] text-[var(--text-secondary)] rounded-2xl hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all shadow-sm"
-                                                    title="Escanear Ticket"
-                                                >
-                                                    <Receipt size={22} />
-                                                </button>
+
+                                                {isQuickAssignMode ? (
+                                                    <button 
+                                                        onClick={handleSaveQuickAssignments}
+                                                        className="flex items-center gap-3 px-8 py-4 bg-emerald-500 text-white rounded-[1.5rem] text-sm font-black uppercase tracking-widest shadow-2xl shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                                    >
+                                                        <Save size={18} /> Guardar Todo
+                                                    </button>
+                                                ) : (
+                                                    <button 
+                                                        onClick={() => navigate(ROUTES.REGISTER_EXPENSE(finalId))}
+                                                        className="group flex items-center gap-3 px-8 py-4 bg-[var(--primary)] text-white rounded-[1.5rem] text-sm font-black uppercase tracking-widest shadow-2xl shadow-[var(--primary)]/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                                    >
+                                                        <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center group-hover:rotate-90 transition-transform">
+                                                            <Plus size={18} />
+                                                        </div>
+                                                        Nuevo Gasto
+                                                    </button>
+                                                )}
+                                                
+                                                {!isQuickAssignMode && (
+                                                    <button 
+                                                        onClick={() => navigate(ROUTES.OCR_SCANNER)}
+                                                        className="p-4 bg-white border border-[var(--border-color)] text-[var(--text-secondary)] rounded-2xl hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all shadow-sm"
+                                                        title="Escanear Ticket"
+                                                    >
+                                                        <Receipt size={22} />
+                                                    </button>
+                                                )}
                                             </>
                                          )}
                                      </div>
@@ -315,9 +404,15 @@ export const GroupDetail = () => {
                                              <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-4">
                                                  <th className="pb-4 pl-6">Concepto</th>
                                                  <th className="pb-4">Pagado por</th>
-                                                 <th className="pb-4">Monto</th>
-                                                 <th className="pb-4">Fecha</th>
-                                                 <th className="pb-4 pr-6 text-right">Acciones</th>
+                                                 {isQuickAssignMode ? (
+                                                     <th className="pb-4">Participantes (Clic para asignar)</th>
+                                                 ) : (
+                                                     <>
+                                                        <th className="pb-4">Monto</th>
+                                                        <th className="pb-4">Fecha</th>
+                                                     </>
+                                                 )}
+                                                 <th className="pb-4 pr-6 text-right">Estado</th>
                                              </tr>
                                          </thead>
                                          <tbody>
@@ -332,93 +427,156 @@ export const GroupDetail = () => {
                                                  };
                                                  
                                                  return (
-                                                     <tr 
-                                                         key={act.id} 
-                                                         onClick={() => setSelectedExpense(act)}
-                                                         className="group bg-white/40 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/5 hover:bg-white/60 dark:hover:bg-black/40 transition-all cursor-pointer shadow-sm hover:shadow-md font-display"
-                                                     >
-                                                         <td className="py-6 pl-6 rounded-l-[2rem] border-y border-l border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30">
-                                                             <div className="flex items-center gap-4">
-                                                                 <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center border shadow-inner transition-transform group-hover:scale-110", categoryStyles[category] || categoryStyles["Otros"])}>
-                                                                     {category === "Comida" && <Utensils size={20} />}
-                                                                     {category === "Transporte" && <Car size={20} />}
-                                                                     {category === "Entretenimiento" && <Gamepad2 size={20} />}
-                                                                     {category === "Otros" && <ShoppingBag size={20} />}
-                                                                 </div>
-                                                                 <div>
-                                                                     <p className="font-black text-[var(--text-primary)] uppercase tracking-tight group-hover:text-[var(--primary)] transition-colors">{act.nombre}</p>
-                                                                     <div className="flex flex-wrap gap-1 mt-1 mb-2">
-                                                                         {Array.isArray(act.nombres_participantes) && act.nombres_participantes.length > 0 ? act.nombres_participantes.map((p: string, j: number) => (
-                                                                             <span key={j} className="text-[7px] font-black uppercase px-1.5 py-0.5 bg-black/5 dark:bg-white/5 rounded-md text-slate-500 dark:text-slate-300 group-hover:bg-[var(--primary)]/10 group-hover:text-[var(--primary)] transition-colors">
-                                                                                 {p.split(' ')[0]}
-                                                                             </span>
-                                                                         )) : (
-                                                                             <span className="text-[7px] font-black uppercase px-1.5 py-0.5 bg-black/5 dark:bg-white/5 rounded-md text-slate-400">Sin participantes</span>
-                                                                         )}
-                                                                     </div>
-                                                                     <span className={cn("text-[9px] font-black uppercase px-2 py-0.5 rounded-md border tracking-widest", categoryStyles[category] || categoryStyles["Otros"])}>
-                                                                         {category}
-                                                                     </span>
-                                                                 </div>
-                                                             </div>
-                                                         </td>
-                                                         <td className="py-6 border-y border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30">
-                                                             <div className="flex items-center gap-2">
-                                                                 <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-black text-slate-700 dark:text-slate-200">
-                                                                     {comprador?.nombre?.charAt(0) || "U"}
-                                                                 </div>
-                                                                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">{comprador?.nombre || "Usuario"}</span>
-                                                             </div>
-                                                         </td>
-                                                          <td className="py-6 border-y border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30">
-                                                              {(() => {
-                                                                  const rawVal = act.monto ?? act.precio ?? 0;
-                                                                  const numVal = Number(rawVal);
-                                                                  const finalMonto = isNaN(numVal) ? 0 : numVal;
-                                                                  return (
-                                                                    <span className="font-black text-lg font-mono tracking-tighter text-[var(--text-primary)]">${finalMonto.toFixed(2)}</span>
-                                                                  );
-                                                              })()}
+                                                      <tr 
+                                                          key={act.id} 
+                                                          onClick={() => !isQuickAssignMode && setSelectedExpense(act)}
+                                                          className={cn(
+                                                              "group bg-white/40 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/5 hover:bg-white/60 dark:hover:bg-black/40 transition-all cursor-pointer shadow-sm hover:shadow-md font-display",
+                                                              isQuickAssignMode && "cursor-default"
+                                                          )}
+                                                      >
+                                                          <td className="py-6 pl-6 rounded-l-[2rem] border-y border-l border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30">
+                                                              <div className="flex items-center gap-4">
+                                                                  <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center border shadow-inner transition-transform group-hover:scale-110", categoryStyles[category] || categoryStyles["Otros"])}>
+                                                                      {category === "Comida" && <Utensils size={20} />}
+                                                                      {category === "Transporte" && <Car size={20} />}
+                                                                      {category === "Entretenimiento" && <Gamepad2 size={20} />}
+                                                                      {category === "Otros" && <ShoppingBag size={20} />}
+                                                                  </div>
+                                                                  <div>
+                                                                      <p className="font-black text-[var(--text-primary)] uppercase tracking-tight group-hover:text-[var(--primary)] transition-colors">{act.nombre}</p>
+                                                                      {!isQuickAssignMode && (
+                                                                          <div className="flex flex-wrap gap-1 mt-1 mb-2">
+                                                                              {Array.isArray(act.nombres_participantes) && act.nombres_participantes.length > 0 ? act.nombres_participantes.map((p: string, j: number) => (
+                                                                                  <span key={j} className="text-[7px] font-black uppercase px-1.5 py-0.5 bg-black/5 dark:bg-white/5 rounded-md text-slate-500 dark:text-slate-300 group-hover:bg-[var(--primary)]/10 group-hover:text-[var(--primary)] transition-colors">
+                                                                                      {p.split(' ')[0]}
+                                                                                  </span>
+                                                                              )) : (
+                                                                                  <span className="text-[7px] font-black uppercase px-1.5 py-0.5 bg-black/5 dark:bg-white/5 rounded-md text-slate-400">Sin participantes</span>
+                                                                              )}
+                                                                          </div>
+                                                                      )}
+                                                                      <span className={cn("text-[9px] font-black uppercase px-2 py-0.5 rounded-md border tracking-widest", categoryStyles[category] || categoryStyles["Otros"])}>
+                                                                          {category}
+                                                                      </span>
+                                                                  </div>
+                                                              </div>
                                                           </td>
-                                                         <td className="py-6 border-y border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30">
-                                                             <span className="text-xs font-bold text-slate-400 uppercase">{act.fecha}</span>
-                                                         </td>
-                                                         <td className="py-6 pr-6 rounded-r-[2rem] border-y border-r border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30 text-right">
-                                                                 <div className="flex justify-end gap-2">
-                                                                    {isAdmin && (
-                                                                        <>
-                                                                            <button 
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    e.preventDefault();
-                                                                                    navigate(ROUTES.EDIT_EXPENSE(finalId, act.id));
-                                                                                }}
-                                                                                className="p-2 hover:bg-blue-500/10 rounded-xl text-blue-400 hover:text-blue-500 transition-all"
-                                                                                title="Editar"
-                                                                            >
-                                                                                <Pencil size={18} />
-                                                                            </button>
-                                                                            <button 
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    e.preventDefault();
-                                                                                    if (window.confirm("¿Eliminar este gasto?")) {
-                                                                                        deleteItem(act.id);
-                                                                                    }
-                                                                                }}
-                                                                                className="p-2 hover:bg-rose-500/10 rounded-xl text-rose-400 hover:text-rose-500 transition-all"
-                                                                                title="Eliminar"
-                                                                            >
-                                                                                <Trash2 size={18} />
-                                                                            </button>
-                                                                        </>
-                                                                    )}
-                                                                    <button className="p-2 hover:bg-[var(--primary)]/10 rounded-xl text-slate-400 hover:text-[var(--primary)] transition-all">
-                                                                        <Info size={18} />
-                                                                    </button>
-                                                                 </div>
-                                                         </td>
-                                                     </tr>
+                                                          <td className="py-6 border-y border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30">
+                                                              <div className="flex items-center gap-2">
+                                                                  <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-black text-slate-700 dark:text-slate-200">
+                                                                      {comprador?.nombre?.charAt(0) || "U"}
+                                                                  </div>
+                                                                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">{comprador?.nombre || "Usuario"}</span>
+                                                              </div>
+                                                          </td>
+                                                          
+                                                          {isQuickAssignMode ? (
+                                                              <td className="py-6 border-y border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30">
+                                                                  <div className="flex flex-wrap gap-2">
+                                                                      {membersData.map(member => {
+                                                                          const isAssigned = (pendingAssignments[act.id] || []).includes(member.id);
+                                                                          return (
+                                                                              <button
+                                                                                  key={member.id}
+                                                                                  onClick={(e) => {
+                                                                                      e.stopPropagation();
+                                                                                      toggleMemberInItem(act.id, member.id);
+                                                                                  }}
+                                                                                  className={cn(
+                                                                                      "relative flex flex-col items-center group/avatar transition-all",
+                                                                                      isAssigned ? "scale-110" : "opacity-40 grayscale hover:opacity-100 hover:grayscale-0"
+                                                                                  )}
+                                                                                  title={member.nombre}
+                                                                              >
+                                                                                  <div className={cn(
+                                                                                      "w-10 h-10 rounded-full border-2 flex items-center justify-center text-[10px] font-black transition-all",
+                                                                                      isAssigned ? "border-emerald-500 bg-emerald-50 text-emerald-600" : "border-slate-300 bg-white text-slate-400"
+                                                                                  )}>
+                                                                                      {member.nombre.charAt(0)}
+                                                                                  </div>
+                                                                                  {isAssigned && (
+                                                                                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                                                                                          <Check size={8} className="text-white stroke-[4]" />
+                                                                                      </div>
+                                                                                  )}
+                                                                                  <span className="text-[6px] font-black uppercase mt-1 text-slate-500">{member.nombre.split(' ')[0]}</span>
+                                                                              </button>
+                                                                          );
+                                                                      })}
+                                                                  </div>
+                                                              </td>
+                                                          ) : (
+                                                              <>
+                                                                  <td className="py-6 border-y border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30">
+                                                                      {(() => {
+                                                                          const rawVal = act.monto ?? act.precio ?? 0;
+                                                                          const numVal = Number(rawVal);
+                                                                          const finalMonto = isNaN(numVal) ? 0 : numVal;
+                                                                          return (
+                                                                            <span className="font-black text-lg font-mono tracking-tighter text-[var(--text-primary)]">${finalMonto.toFixed(2)}</span>
+                                                                          );
+                                                                      })()}
+                                                                  </td>
+                                                                  <td className="py-6 border-y border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30">
+                                                                      <span className="text-xs font-bold text-slate-400 uppercase">{act.fecha}</span>
+                                                                  </td>
+                                                              </>
+                                                          )}
+
+                                                          <td className="py-6 pr-6 rounded-r-[2rem] border-y border-r border-white/20 dark:border-white/5 group-hover:border-[var(--primary)]/30 text-right">
+                                                                  <div className="flex justify-end items-center gap-4">
+                                                                     {(() => {
+                                                                         const currentParticipants = isQuickAssignMode ? (pendingAssignments[act.id] || []) : (act.participantes_ids || []);
+                                                                         const isFullyAssigned = currentParticipants.length > 0;
+                                                                         return (
+                                                                             <div className={cn(
+                                                                                 "flex items-center gap-1 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest",
+                                                                                 isFullyAssigned ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
+                                                                             )}>
+                                                                                 {isFullyAssigned ? <CheckCircle size={14} /> : <AlertTriangle size={14} />}
+                                                                                 <span className="hidden sm:inline">{isFullyAssigned ? "Asignado" : "Pendiente"}</span>
+                                                                             </div>
+                                                                         );
+                                                                     })()}
+
+                                                                     {isAdmin && !isQuickAssignMode && (
+                                                                         <div className="flex items-center gap-2">
+                                                                             <button 
+                                                                                 onClick={(e) => {
+                                                                                     e.stopPropagation();
+                                                                                     e.preventDefault();
+                                                                                     setItemToEdit(act);
+                                                                                     setIsEditItemModalOpen(true);
+                                                                                 }}
+                                                                                 className="p-2 hover:bg-blue-500/10 rounded-xl text-blue-400 hover:text-blue-500 transition-all"
+                                                                                 title="Editar"
+                                                                             >
+                                                                                 <Pencil size={18} />
+                                                                             </button>
+                                                                             <button 
+                                                                                 onClick={(e) => {
+                                                                                     e.stopPropagation();
+                                                                                     e.preventDefault();
+                                                                                     if (window.confirm("¿Eliminar este gasto?")) {
+                                                                                         deleteItem(act.id);
+                                                                                     }
+                                                                                 }}
+                                                                                 className="p-2 hover:bg-rose-500/10 rounded-xl text-rose-400 hover:text-rose-500 transition-all"
+                                                                                 title="Eliminar"
+                                                                             >
+                                                                                 <Trash2 size={18} />
+                                                                             </button>
+                                                                         </div>
+                                                                     )}
+                                                                     {!isQuickAssignMode && (
+                                                                         <button className="p-2 hover:bg-[var(--primary)]/10 rounded-xl text-slate-400 hover:text-[var(--primary)] transition-all">
+                                                                             <Info size={18} />
+                                                                         </button>
+                                                                     )}
+                                                                  </div>
+                                                          </td>
+                                                      </tr>
                                                  );
                                              })}
                                          </tbody>
@@ -749,6 +907,16 @@ export const GroupDetail = () => {
                     onClose={() => setIsEditingGroupOpen(false)}
                     group={{ id: finalId, nombre: groupName, descripcion: groupDescription }}
                     onSuccess={refresh}
+                />
+
+                <EditItemModal
+                    isOpen={isEditItemModalOpen}
+                    onClose={() => {
+                        setIsEditItemModalOpen(false);
+                        setItemToEdit(null);
+                    }}
+                    item={itemToEdit}
+                    onSave={handleEditItem}
                 />
 
 

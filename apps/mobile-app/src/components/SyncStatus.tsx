@@ -1,54 +1,62 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { MotiView, AnimatePresence } from 'moti';
 import { useTheme } from '../infrastructure/context/ThemeContext';
+import { useEasyPay } from '../../context/EasyPayContext';
 
-interface SyncStatusProps {
-    status: 'online' | 'offline' | 'syncing';
-    pendingChanges?: number;
-}
-
-export const SyncStatus = ({ status, pendingChanges = 0 }: SyncStatusProps) => {
+export const SyncStatus = () => {
     const { theme, fontScale } = useTheme();
+    const { isOnline } = useEasyPay();
 
     return (
         <AnimatePresence>
-            {status !== 'online' && (
+            {!isOnline && (
                 <MotiView 
                     from={{ opacity: 0, translateY: -20 }}
                     animate={{ opacity: 1, translateY: 0 }}
                     exit={{ opacity: 0, translateY: -20 }}
                     style={{ 
-                        backgroundColor: status === 'offline' ? '#f43f5e' : theme.primary,
+                        backgroundColor: '#f43f5e',
                         zIndex: 100 
                     }}
-                    className="absolute top-12 left-6 right-6 px-4 py-2 rounded-full flex-row items-center justify-between shadow-lg"
+                    className="absolute top-12 left-6 right-6 px-4 py-2 rounded-full flex-row items-center justify-center shadow-lg"
                 >
                     <View className="flex-row items-center gap-2">
                         <MaterialIcons 
-                            name={status === 'offline' ? "cloud-off" : "sync"} 
+                            name="cloud-off" 
                             size={16} 
-                            color={status === 'offline' ? "white" : "black"} 
+                            color="white" 
                         />
                         <Text 
                             style={{ 
-                                color: status === 'offline' ? "white" : "black",
+                                color: "white",
                                 fontSize: 11 * fontScale 
                             }} 
-                            className="font-black uppercase tracking-widest"
+                            className="font-bold text-center"
                         >
-                            {status === 'offline' ? 'Modo Offline' : 'Sincronizando...'}
+                            🔴 Offline. Los cambios se guardarán localmente.
                         </Text>
                     </View>
-                    
-                    {pendingChanges > 0 && (
-                        <View className="bg-black/20 px-2 py-0.5 rounded-full">
-                            <Text style={{ color: status === 'offline' ? "white" : "black", fontSize: 9 * fontScale }} className="font-bold">
-                                {pendingChanges} pendientes
-                            </Text>
-                        </View>
-                    )}
+                </MotiView>
+            )}
+            {isOnline && (
+                <MotiView 
+                    from={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{ zIndex: 100 }}
+                    className="absolute top-12 right-6"
+                >
+                    <View className="bg-emerald-500/20 px-3 py-1 rounded-full flex-row items-center gap-1.5 border border-emerald-500/30">
+                        <View className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <Text 
+                            style={{ color: '#10b981', fontSize: 10 * fontScale }} 
+                            className="font-bold uppercase tracking-wider"
+                        >
+                            Online
+                        </Text>
+                    </View>
                 </MotiView>
             )}
         </AnimatePresence>

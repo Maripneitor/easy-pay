@@ -1,3 +1,4 @@
+import { useEasyPay } from '../../context/EasyPayContext';
 import React, { useState } from 'react';
 import { 
     View, 
@@ -15,7 +16,7 @@ import { MaterialIcons, Ionicons, Feather } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
+
 import { userRepository } from '../../src/infrastructure/api/repositories/UserRepository';
 import { TwoFactorModal } from '../../components/Security/TwoFactorModal';
 
@@ -23,15 +24,15 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function EditProfileScreen() {
     const { theme, fontScale } = useTheme();
-    const { user, saveSession } = useAuth();
+    const { user, saveSession  } = useEasyPay();
     const insets = useSafeAreaInsets();
-    
+
     // Perfil State
     const [nombre, setNombre] = useState(user?.nombre || '');
     const [email, setEmail] = useState(user?.email || '');
     // Financial State
     const [bankAccounts, setBankAccounts] = useState<any[]>(user?.bank_accounts || []);
-    
+
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [is2FAModalOpen, setIs2FAModalOpen] = useState(false);
 
@@ -124,7 +125,7 @@ export default function EditProfileScreen() {
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
             <StatusBar style={theme.isDark ? "light" : "dark"} />
             <Stack.Screen options={{ headerShown: false }} />
-            
+
             <View style={{ height: 70 }} className="flex-row items-center justify-between px-6 w-full border-b border-white/5">
                 <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-full items-center justify-center">
                     <MaterialIcons name="arrow-back" size={24} color={theme.text} />

@@ -15,6 +15,8 @@
     "gama:unach": "node setup-gama.js --unach",
     "gama:usb": "node setup-gama.js --usb",
     "dev:backend": "docker compose up --build user-service group-service stats-service ocr-service notification-service",
+    "dev:backend:unified": "uvicorn main:app --app-dir apps/api-backend --host 0.0.0.0 --port 8001 --reload",
+    "dev:backend:manual": "concurrently -n \"AUTH,GRP,STAT,OCR,NOT\" -c \"magenta,blue,cyan,green,yellow\" \"uvicorn main:app --app-dir apps/api-backend --host 0.0.0.0 --port 8001 --reload\" \"uvicorn main_groups:app --app-dir apps/api-backend --host 0.0.0.0 --port 8002 --reload\" \"uvicorn main_stats:app --app-dir apps/api-backend --host 0.0.0.0 --port 8003 --reload\" \"uvicorn main_ocr:app --app-dir apps/api-backend --host 0.0.0.0 --port 8004 --reload\" \"uvicorn main_notification:app --app-dir apps/api-backend --host 0.0.0.0 --port 8005 --reload\"",
     "dev:api": "npm run dev:backend",
     "dev:frontend": "npm run dev:web",
     "dev:mobile": "cd apps/mobile-app && npx expo start -c --lan",

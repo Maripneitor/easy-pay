@@ -85,7 +85,10 @@ export const JoinGroup = () => {
                                 >
                                     <div className="relative z-10 flex items-center justify-center gap-3">
                                         {loading ? (
-                                            <Loader2 size={20} className="text-white animate-spin" />
+                                            <>
+                                                <Loader2 size={20} className="text-white animate-spin" />
+                                                <span className="text-white font-black uppercase tracking-widest">Entrando...</span>
+                                            </>
                                         ) : (
                                             <>
                                                 <span className="text-white font-black uppercase tracking-widest">Entrar al grupo</span>

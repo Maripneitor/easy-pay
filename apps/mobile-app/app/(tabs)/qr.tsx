@@ -1,3 +1,4 @@
+import { useEasyPay } from '../../context/EasyPayContext';
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Dimensions, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,14 +7,14 @@ import { useRouter, Stack } from 'expo-router';
 import { MotiView } from 'moti';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
+
 import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
 
 const { width, height } = Dimensions.get('window');
 
 export default function QRScreen() {
     const { theme, fontScale } = useTheme();
-    const { user } = useAuth();
+    const { user  } = useEasyPay();
     const router = useRouter();
     const [code, setCode] = useState('');
     const [isJoining, setIsJoining] = useState(false);
@@ -76,7 +77,7 @@ export default function QRScreen() {
                         handleJoinGroup(data);
                     }}
                 />
-                
+
                 {/* Overlay del Scanner */}
                 <SafeAreaView className="flex-1 justify-between p-6">
                     <View className="flex-row items-center justify-between">
@@ -105,7 +106,7 @@ export default function QRScreen() {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
             <Stack.Screen options={{ headerShown: false }} />
-            
+
             {/* Header */}
             <View className="px-6 py-6 flex-row items-center justify-between">
                 <TouchableOpacity onPress={() => router.back()}>
@@ -136,13 +137,13 @@ export default function QRScreen() {
                     >
                         <MaterialIcons name="qr-code-scanner" size={80} color={theme.primary} />
                     </MotiView>
-                    
+
                     {/* Corners */}
                     <View style={[styles.cornerTL, { borderColor: theme.primary }]} className="border-t-4 border-l-4 rounded-tl-3xl absolute -top-2 -left-2 w-12 h-12" />
                     <View style={[styles.cornerTR, { borderColor: theme.primary }]} className="border-t-4 border-r-4 rounded-tr-3xl absolute -top-2 -right-2 w-12 h-12" />
                     <View style={[styles.cornerBL, { borderColor: theme.primary }]} className="border-b-4 border-l-4 rounded-bl-3xl absolute -bottom-2 -left-2 w-12 h-12" />
                     <View style={[styles.cornerBR, { borderColor: theme.primary }]} className="border-b-4 border-r-4 rounded-br-3xl absolute -bottom-2 -right-2 w-12 h-12" />
-                    
+
                     <View style={{ backgroundColor: theme.primary }} className="absolute -bottom-4 px-6 py-2 rounded-full">
                         <Text className="text-black font-black text-[10px] uppercase tracking-widest">Abrir Cámara</Text>
                     </View>

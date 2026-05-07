@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Pressable, ActivityIndicator, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, Image, Dimensions, Alert } from 'react-native';
 import { Camera, CameraView, useCameraPermissions } from 'expo-camera';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { BlurView } from 'expo-blur';
 
 const { width, height } = Dimensions.get('window');
 
@@ -12,17 +13,40 @@ export default function OCRScannerScreen() {
     const [permission, requestPermission] = useCameraPermissions();
     const [isScanning, setIsScanning] = useState(false);
     const [scannedImage, setScannedImage] = useState<string | null>(null);
+    const [hasError, setHasError] = useState(false);
     const cameraRef = useRef<any>(null);
 
     useEffect(() => {
         let timer: any;
         if (isScanning) {
+            // Simulated 15 second timeout for the API call
             timer = setTimeout(() => {
-                setIsScanning(false);
-            }, 3000);
+                if (isScanning) {
+                    setIsScanning(false);
+                    setHasError(true);
+                    Alert.alert(
+                        "Error de Conexión", 
+                        "La IA tardó demasiado en responder. ¿Quieres reintentar?",
+                        [
+                            { text: "Cancelar", onPress: () => setScannedImage(null), style: "cancel" },
+                            { text: "Reintentar", onPress: () => retryScan() }
+                        ]
+                    );
+                }
+            }, 15000);
         }
         return () => clearTimeout(timer);
     }, [isScanning]);
+
+    const retryScan = () => {
+        setHasError(false);
+        setIsScanning(true);
+        // Simulate a successful scan after retry
+        setTimeout(() => {
+            setIsScanning(false);
+            setHasError(false);
+        }, 3000);
+    };
 
     if (!permission) {
         return <View className="flex-1 bg-[#0f172a]" />;
@@ -57,10 +81,14 @@ export default function OCRScannerScreen() {
                     base64: true,
                     exif: false
                 });
+                if (!photo || !photo.uri) throw new Error("No se pudo capturar la imagen");
+                
                 setScannedImage(photo.uri);
+                setHasError(false);
                 setIsScanning(true);
             } catch (e) {
                 console.error(e);
+                Alert.alert("Error de Cámara", "No se pudo capturar la foto. Intenta de nuevo.");
             }
         }
     };
@@ -122,10 +150,11 @@ export default function OCRScannerScreen() {
                     <Image source={{ uri: scannedImage }} className="flex-1 opacity-60" resizeMode="cover" />
                     
                     {isScanning ? (
-                        <View className="absolute inset-0 items-center justify-center bg-black/40 backdrop-blur-xl">
-                            <View className="bg-slate-900/80 p-10 rounded-[50px] items-center border border-white/10 shadow-2xl">
+                        <View className="absolute inset-0 items-center justify-center">
+                            <BlurView intensity={80} tint="dark" className="absolute inset-0" />
+                            <View className="bg-slate-900/40 p-10 rounded-[50px] items-center border border-white/10 shadow-2xl">
                                 <ActivityIndicator size="large" color="#3b82f6" />
-                                <Text className="text-white text-xl font-black mt-8 text-center uppercase tracking-[3px]">Analizando</Text>
+                                <Text className="text-white text-xl font-black mt-8 text-center uppercase tracking-[3px]">Analizando ticket...</Text>
                                 <Text className="text-slate-400 text-sm mt-3 text-center leading-5 px-4 font-medium italic">Nuestra IA está extrayendo productos, precios e impuestos...</Text>
                                 
                                 <View className="flex-row gap-1 mt-6">
@@ -133,6 +162,33 @@ export default function OCRScannerScreen() {
                                         <View key={i} className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                                     ))}
                                 </View>
+                            </View>
+                        </View>
+                    ) : hasError ? (
+                        <View className="absolute inset-0 items-center justify-center px-6">
+                            <BlurView intensity={80} tint="dark" className="absolute inset-0" />
+                            <View className="bg-slate-900/90 p-10 rounded-[50px] items-center border border-red-500/20 shadow-2xl w-full">
+                                <View className="w-20 h-20 bg-red-500/10 rounded-full items-center justify-center mb-6">
+                                    <MaterialIcons name="error-outline" size={40} color="#f43f5e" />
+                                </View>
+                                <Text className="text-white text-xl font-black text-center uppercase tracking-[2px]">Error de Lectura</Text>
+                                <Text className="text-slate-400 text-sm mt-4 text-center leading-6 mb-8">
+                                    No pudimos procesar el ticket. Asegúrate de tener buena iluminación y que el texto sea legible.
+                                </Text>
+                                
+                                <Pressable 
+                                    onPress={retryScan}
+                                    className="bg-blue-600 w-full py-5 rounded-2xl items-center mb-4"
+                                >
+                                    <Text className="text-white font-black">REINTENTAR ANÁLISIS</Text>
+                                </Pressable>
+                                
+                                <Pressable 
+                                    onPress={() => setScannedImage(null)}
+                                    className="bg-white/5 w-full py-4 rounded-2xl items-center border border-white/10"
+                                >
+                                    <Text className="text-white font-black text-xs tracking-widest uppercase">Tomar otra foto</Text>
+                                </Pressable>
                             </View>
                         </View>
                     ) : (

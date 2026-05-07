@@ -53,6 +53,11 @@ export const RegisterExpense = () => {
 
     const currentBuyer = members.find(i => i.id === formData.comprador_id);
 
+    const parsedPrice = parseFloat(formData.precio);
+    const isPriceValid = formData.precio !== '' && !isNaN(parsedPrice) && parsedPrice > 0;
+    const isNameValid = formData.nombre.trim() !== '';
+    const isFormValid = !loading && formData.participantes_ids.length > 0 && isPriceValid && isNameValid;
+
     return (
         <div className="min-h-screen flex flex-col bg-[var(--bg-body)] font-display text-[var(--text-primary)] antialiased overflow-x-hidden">
             <input 
@@ -100,14 +105,27 @@ export const RegisterExpense = () => {
                                         $
                                     </div>
                                     <input
-                                        type="number"
+                                        type="text"
+                                        inputMode="decimal"
                                         value={formData.precio}
-                                        onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/,/g, '.');
+                                            setFormData({ ...formData, precio: val });
+                                        }}
                                         placeholder="0.00"
                                         className="bg-transparent text-7xl md:text-8xl font-black text-slate-800 dark:text-white text-left w-full focus:outline-none placeholder:opacity-10 tracking-tighter pl-12"
                                         autoFocus={!isEditing}
                                     />
                                 </div>
+                                {formData.precio !== '' && (!isPriceValid) && (
+                                    <motion.p 
+                                        initial={{ opacity: 0, height: 0 }} 
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        className="text-red-500 text-[11px] font-black mt-2 uppercase tracking-widest px-4"
+                                    >
+                                        Monto inválido (debe ser mayor a 0)
+                                    </motion.p>
+                                )}
                             </motion.div>
 
                     <motion.div
@@ -221,12 +239,12 @@ export const RegisterExpense = () => {
                                 <button
                                     className={cn(
                                         "w-full h-20 text-white rounded-[2rem] shadow-2xl flex items-center justify-center gap-4 active:scale-[0.97] transition-all overflow-hidden relative group",
-                                        (loading || formData.participantes_ids.length === 0 || !formData.precio || !formData.nombre)
+                                        (!isFormValid)
                                             ? "bg-slate-300 dark:bg-slate-800 cursor-not-allowed shadow-none"
                                             : "bg-[var(--primary)] shadow-[var(--primary)]/30 hover:scale-[1.02]"
                                     )}
                                     onClick={handleSubmit}
-                                    disabled={loading || formData.participantes_ids.length === 0 || !formData.precio || !formData.nombre}
+                                    disabled={!isFormValid}
                                 >
                                     {loading ? (
                                         <div className="animate-spin rounded-full h-6 w-6 border-2 border-white/30 border-t-white" />
@@ -358,12 +376,12 @@ export const RegisterExpense = () => {
                             <button
                                 className={cn(
                                     "w-full h-20 text-white rounded-[2rem] shadow-2xl flex items-center justify-center gap-4 active:scale-[0.97] transition-all overflow-hidden relative group",
-                                    (loading || formData.participantes_ids.length === 0 || !formData.precio || !formData.nombre)
+                                    (!isFormValid)
                                         ? "bg-slate-300 dark:bg-slate-800 cursor-not-allowed shadow-none"
                                         : "bg-[var(--primary)] shadow-[var(--primary)]/30"
                                 )}
                                 onClick={handleSubmit}
-                                disabled={loading || formData.participantes_ids.length === 0 || !formData.precio || !formData.nombre}
+                                disabled={!isFormValid}
                             >
                                 {loading ? (
                                     <div className="animate-spin rounded-full h-6 w-6 border-2 border-white/30 border-t-white" />

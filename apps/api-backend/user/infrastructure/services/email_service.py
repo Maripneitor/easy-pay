@@ -1,33 +1,35 @@
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
+from dotenv import load_dotenv
 import os
 import logging
 
+# Cargar variables de entorno desde la raíz
+# apps/api-backend/user/infrastructure/services/email_service.py -> ../../../../../.env
+load_dotenv(os.path.join(os.path.dirname(__file__), "../../../../../.env"))
+
 logger = logging.getLogger("email_service")
 
-# Pre-validación de configuración SMTP
-_mail_user = os.getenv("MAIL_USERNAME")
-_mail_pass = os.getenv("MAIL_PASSWORD")
-_mail_from = os.getenv("MAIL_FROM", _mail_user)
-
-if not _mail_user or not _mail_pass:
-    logger.warning("⚠️ MAIL_USERNAME o MAIL_PASSWORD no están configurados. Los correos NO se enviarán.")
-
-conf = ConnectionConfig(
-    MAIL_USERNAME = _mail_user or "",
-    MAIL_PASSWORD = _mail_pass or "",
-    MAIL_FROM = _mail_from or "noreply@easypay.com",
-    MAIL_PORT = int(os.getenv("MAIL_PORT", 587)),
-    MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com"),
-    MAIL_STARTTLS = os.getenv("MAIL_STARTTLS", "True") == "True",
-    MAIL_SSL_TLS = os.getenv("MAIL_SSL_TLS", "False") == "True",
-    USE_CREDENTIALS = True,
-    VALIDATE_CERTS = True
-)
+def get_email_config():
+    user = os.getenv("MAIL_USERNAME")
+    password = os.getenv("MAIL_PASSWORD")
+    mail_from = os.getenv("MAIL_FROM", user)
+    
+    return ConnectionConfig(
+        MAIL_USERNAME = user or "",
+        MAIL_PASSWORD = password or "",
+        MAIL_FROM = mail_from or "noreply@easypay.com",
+        MAIL_PORT = int(os.getenv("MAIL_PORT", 587)),
+        MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com"),
+        MAIL_STARTTLS = os.getenv("MAIL_STARTTLS", "True") == "True",
+        MAIL_SSL_TLS = os.getenv("MAIL_SSL_TLS", "False") == "True",
+        USE_CREDENTIALS = True,
+        VALIDATE_CERTS = True
+    )
 
 class EmailService:
     async def send_otp(self, email_to: str, code: str, is_recovery: bool = False):
-        # Verificar que las credenciales SMTP están configuradas
-        if not _mail_user or not _mail_pass:
+        # Verificar que las credenciales SMTP están configuradas dinámicamente
+        if not os.getenv("MAIL_USERNAME") or not os.getenv("MAIL_PASSWORD"):
             logger.error(f"❌ No se puede enviar correo a {email_to}: credenciales SMTP no configuradas")
             raise ValueError("Credenciales SMTP no configuradas en las variables de entorno")
         
@@ -52,11 +54,10 @@ class EmailService:
                 """,
                 subtype="html"
             )
-            fm = FastMail(conf)
+            fm = FastMail(get_email_config())
             await fm.send_message(message)
             logger.info(f"✅ Correo de verificación enviado a {email_to}")
             return True
         except Exception as e:
-            # Log detallado del error para diagnóstico en Docker
             logger.error(f"❌ Error al enviar correo a {email_to}: {type(e).__name__}: {e}")
-            raise e
+            raise e

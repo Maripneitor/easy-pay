@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { httpClient } from '../../../infrastructure/api/http-client';
 import { toast } from 'sonner';
 
 export const useRegisterExpense = () => {
     const { groupId, itemId } = useParams<{ groupId: string, itemId: string }>();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const [loading, setLoading] = useState(false);
     const [members, setMembers] = useState<{ id: string, nombre: string }[]>([]);
 
@@ -114,6 +116,11 @@ export const useRegisterExpense = () => {
 
             if (response.status === 200 || response.status === 201) {
                 toast.success(itemId ? "Gasto actualizado" : "Gasto registrado");
+                
+                // Invalidar caché para que se refleje de inmediato
+                const cleanGroupId = groupId?.replace(/[#?:]/g, '');
+                queryClient.invalidateQueries({ queryKey: ['group', cleanGroupId] });
+                
                 navigate(-1);
             }
         } catch (error: any) {

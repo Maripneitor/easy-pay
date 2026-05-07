@@ -12,28 +12,19 @@ import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'react-native';
-import { getApiBaseUrl } from '../src/infrastructure/api/network.config';
+import { useEasyPay } from '../context/EasyPayContext';
 
 export default function SecuritySetupScreen() {
     const router = useRouter();
     const { userId, email, name } = useLocalSearchParams<{ userId: string, email: string, name: string }>();
     const [loading, setLoading] = useState(false);
+    const { setupTwoFactor } = useEasyPay();
     const insets = useSafeAreaInsets();
     
-    const API_URL = getApiBaseUrl();
-
     const handleSendCode = async () => {
         setLoading(true);
-        console.log(`📡 Enviando código para usuario: ${userId || 'demo-user'}`);
-        console.log(`🔗 URL: ${API_URL}/auth/2fa/setup/${userId || 'demo-user'}`);
-
         try {
-            const response = await fetch(`${API_URL}/auth/2fa/setup/${userId || 'demo-user'}`, {
-                method: 'POST',
-                headers: { 'Accept': 'application/json' }
-            });
-            
-            const data = await response.json();
+            const data = await setupTwoFactor(userId || 'pending');
 
             if (data.status === 'success') {
                 router.push({
@@ -43,20 +34,9 @@ export default function SecuritySetupScreen() {
             } else {
                 throw new Error(data.message || 'Error en el servidor');
             }
-        } catch (err) {
-            console.warn('⚠️ Error en API, usando modo demo:', err);
-            if (__DEV__) {
-                router.push({
-                    pathname: '/security-2fa',
-                    params: { 
-                        userId: userId || 'demo-id', 
-                        email: email || 'demo@easy-pay.com', 
-                        name: name || 'Usuario Demo' 
-                    }
-                } as any);
-            } else {
-                Alert.alert('Error', 'No se pudo enviar el código. Revisa tu conexión.');
-            }
+        } catch (err: any) {
+            console.warn('⚠️ Error en 2FA Setup:', err);
+            Alert.alert('Error', err.message || 'No se pudo enviar el código. Revisa tu conexión.');
         } finally {
             setLoading(false);
         }

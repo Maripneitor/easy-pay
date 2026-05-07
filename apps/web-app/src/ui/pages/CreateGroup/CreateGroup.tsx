@@ -1,5 +1,6 @@
 import React from 'react';
-import { QrCode, Hash, Plus, Info } from 'lucide-react';
+import { QrCode, Hash, Plus, Info, Loader2 } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
 import { PageHeader } from '@ui/components/PageHeader';
 import { cn } from '@infrastructure/utils';
 import { useCreateGroup } from './useCreateGroup';
@@ -20,12 +21,14 @@ export const CreateGroup = () => {
         loading,
         goBack
     } = useCreateGroup();
+    const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
 
     return (
         <div className="min-h-screen bg-[var(--bg-body)] text-[var(--text-primary)] font-display antialiased">
             <PageHeader
                 title={activeTab === 'crear' ? "Nuevo Grupo" : "Unirse a Grupo"}
                 onBack={goBack}
+                onMenuClick={toggleSidebar}
             />
 
             <main className="max-w-xl mx-auto px-6 py-8 space-y-8">
@@ -98,9 +101,14 @@ export const CreateGroup = () => {
                         <button
                             onClick={handleCreateGroup}
                             disabled={!groupName || loading}
-                            className="w-full bg-[var(--primary)] text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all disabled:opacity-40"
+                            className="w-full bg-[var(--primary)] text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
                         >
-                            {loading ? 'Procesando...' : 'Confirmar y Crear'}
+                            {loading ? (
+                                <>
+                                    <Loader2 size={20} className="animate-spin" />
+                                    Procesando...
+                                </>
+                            ) : 'Confirmar y Crear'}
                         </button>
                     </div>
                 ) : (
@@ -140,9 +148,14 @@ export const CreateGroup = () => {
                         <button
                             onClick={handleJoinGroup}
                             disabled={joinCode.length < 4 || loading}
-                            className="w-full bg-[var(--text-primary)] text-[var(--bg-body)] py-5 rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-all disabled:opacity-20"
+                            className="w-full bg-[var(--text-primary)] text-[var(--bg-body)] py-5 rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-all disabled:opacity-20 flex items-center justify-center gap-2"
                         >
-                            {loading ? 'Verificando...' : 'Unirse ahora'}
+                            {loading ? (
+                                <>
+                                    <Loader2 size={20} className="animate-spin" />
+                                    Verificando...
+                                </>
+                            ) : 'Unirse ahora'}
                         </button>
                     </div>
                 )}

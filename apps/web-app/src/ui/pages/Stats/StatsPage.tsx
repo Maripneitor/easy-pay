@@ -1,3 +1,4 @@
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
     BarChart3, 
     TrendingUp, 
@@ -42,7 +43,7 @@ import {
     AreaChart,
     Area
 } from 'recharts';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useProfileStats } from '../Profile/useProfileStats';
 import { Loader } from '../../components/Loader/Loader';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -72,9 +73,9 @@ const CategoryDonutChart = ({ data }: { data: any[] }) => {
     const chartData = isEmpty ? [{ category: 'Sin datos', amount: 1 }] : data;
 
     return (
-        <div className="h-[300px] w-full relative">
+        <div className="min-h-[300px] h-[300px] w-full relative">
             {isEmpty && <EmptyStateOverlay />}
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+            <ResponsiveContainer width="100%" height="100%" debounce={50}>
                 <RePieChart>
                     <Pie
                         data={chartData}
@@ -117,9 +118,9 @@ const IncomeExpenseChart = ({ data }: { data: any[] }) => {
     const chartData = isEmpty ? fallbackData : data;
 
     return (
-        <div className="h-[300px] w-full pt-4 relative">
+        <div className="min-h-[300px] h-[300px] w-full pt-4 relative">
             {isEmpty && <EmptyStateOverlay />}
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+            <ResponsiveContainer width="100%" height="100%" debounce={50}>
                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                     <XAxis 
@@ -155,9 +156,9 @@ const ExpenseLineChart = ({ data }: { data: any[] }) => {
     const chartData = isEmpty ? fallbackData : data;
 
     return (
-        <div className="h-[300px] w-full pt-4 relative">
+        <div className="min-h-[300px] h-[300px] w-full pt-4 relative">
             {isEmpty && <EmptyStateOverlay />}
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+            <ResponsiveContainer width="100%" height="100%" debounce={50}>
                 <AreaChart data={chartData}>
                     <defs>
                         <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
@@ -194,9 +195,15 @@ const ExpenseLineChart = ({ data }: { data: any[] }) => {
 };
 
 export const StatsPage = () => {
+    const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
     const navigate = useNavigate();
     const { user } = useAuthContext();
     const { stats, loading, refresh } = useProfileStats();
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
     
     // Transactions from hook
     const transactions = stats?.transactions || [];
@@ -229,6 +236,7 @@ export const StatsPage = () => {
             <PageHeader
                 title="ESTADÍSTICAS"
                 subtitle="Análisis detallado de tus finanzas"
+                onMenuClick={toggleSidebar}
                 onBack={() => navigate(-1)}
                 rightSlot={
                     <button 
@@ -305,7 +313,7 @@ export const StatsPage = () => {
                                 <span className="text-[9px] font-black bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full uppercase tracking-widest hidden sm:inline-block">Ingresos vs Gastos</span>
                             </div>
                             
-                            <IncomeExpenseChart data={incomeVsExpenses} />
+                            {isMounted && <IncomeExpenseChart data={incomeVsExpenses} />}
                         </motion.section>
 
                         {/* --- Category Breakdown --- */}
@@ -321,7 +329,7 @@ export const StatsPage = () => {
                             </div>
                             
                             <div className="flex flex-col items-center flex-1">
-                                <CategoryDonutChart data={categories} />
+                                {isMounted && <CategoryDonutChart data={categories} />}
                                 
                                 {categories.length > 0 ? (
                                     <div className="grid grid-cols-2 w-full gap-3 mt-6">
@@ -356,7 +364,7 @@ export const StatsPage = () => {
                             </div>
                         </div>
                         
-                        <ExpenseLineChart data={monthlyTrend} />
+                        {isMounted && <ExpenseLineChart data={monthlyTrend} />}
                         
                         <div className="mt-8 pt-8 border-t border-white/5 flex justify-between items-center">
                             <div className="flex items-center gap-2">

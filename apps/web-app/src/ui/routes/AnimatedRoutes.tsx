@@ -113,59 +113,59 @@ export const AnimatedRoutes = () => {
     const location = useLocation();
     const { isLoading } = useAuthContext();
 
-    if (isLoading) {
-        return <Loader />;
-    }
-
     return (
         <RouteErrorBoundary>
             <AnimatePresence mode="wait">
-                <Suspense fallback={<Loader />}>
-                    <Routes location={location}>
-                        {/* Rutas públicas con guard: si estás logueado, van al dashboard */}
-                        <Route path={ROUTES.LANDING} element={
-                            <PublicOnlyRoute>
-                                <PageTransition><LandingPage /></PageTransition>
-                            </PublicOnlyRoute>
-                        } />
-                        <Route path={ROUTES.AUTH} element={
-                            <PublicOnlyRoute>
-                                <PageTransition><Auth /></PageTransition>
-                            </PublicOnlyRoute>
-                        } />
+                {isLoading ? (
+                    <Loader key="app-loader" />
+                ) : (
+                    <Suspense fallback={<Loader />} key="app-suspense">
+                        <Routes location={location}>
+                            {/* Rutas públicas con guard: si estás logueado, van al dashboard */}
+                            <Route path={ROUTES.LANDING} element={
+                                <PublicOnlyRoute>
+                                    <PageTransition><LandingPage /></PageTransition>
+                                </PublicOnlyRoute>
+                            } />
+                            <Route path={ROUTES.AUTH} element={
+                                <PublicOnlyRoute>
+                                    <PageTransition><Auth /></PageTransition>
+                                </PublicOnlyRoute>
+                            } />
 
-                        {/* Rutas públicas sin guard */}
-                        <Route path={ROUTES.RECOVER_PASSWORD} element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
-                        <Route path={ROUTES.RESET_PASSWORD} element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
-                        <Route path={ROUTES.QR_SCANNER} element={<PageTransition><JoinGroup /></PageTransition>} />
-                        <Route path={ROUTES.TWO_FACTOR_SETUP} element={<PageTransition><TwoFactorSetup /></PageTransition>} />
-                        <Route path={ROUTES.TWO_FACTOR_VERIFY} element={<PageTransition><TwoFactorVerify /></PageTransition>} />
+                            {/* Rutas públicas sin guard */}
+                            <Route path={ROUTES.RECOVER_PASSWORD} element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
+                            <Route path={ROUTES.RESET_PASSWORD} element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
+                            <Route path={ROUTES.QR_SCANNER} element={<PageTransition><JoinGroup /></PageTransition>} />
 
-                        {/* Rutas protegidas */}
-                        <Route element={<ProtectedRoute />}>
-                            <Route element={<DashboardLayout />}>
-                                <Route path={ROUTES.DASHBOARD} element={<PageTransition><Dashboard /></PageTransition>} />
-                                <Route path={ROUTES.GROUPS} element={<PageTransition><GroupsPage /></PageTransition>} />
-                                <Route path={ROUTES.CREATE_GROUP} element={<PageTransition><CreateGroup /></PageTransition>} />
-                                <Route path="/grupo/:id" element={<PageTransition><GroupDetail /></PageTransition>} />
-                                <Route path="/grupo/:groupId/registrar-gasto" element={<PageTransition><RegisterExpense /></PageTransition>} />
-                                <Route path="/grupo/:groupId/editar-item/:itemId" element={<PageTransition><RegisterExpense /></PageTransition>} />
-                                <Route path="/grupo/:id/liquidar" element={<PageTransition><SettleUp /></PageTransition>} />
+                            {/* Rutas protegidas */}
+                            <Route element={<ProtectedRoute />}>
+                                <Route element={<DashboardLayout />}>
+                                    <Route path={ROUTES.DASHBOARD} element={<PageTransition><Dashboard /></PageTransition>} />
+                                    <Route path={ROUTES.GROUPS} element={<PageTransition><GroupsPage /></PageTransition>} />
+                                    <Route path={ROUTES.CREATE_GROUP} element={<PageTransition><CreateGroup /></PageTransition>} />
+                                    <Route path="/grupo/:id" element={<PageTransition><GroupDetail /></PageTransition>} />
+                                    <Route path="/grupo/:groupId/registrar-gasto" element={<PageTransition><RegisterExpense /></PageTransition>} />
+                                    <Route path="/grupo/:groupId/editar-item/:itemId" element={<PageTransition><RegisterExpense /></PageTransition>} />
+                                    <Route path="/grupo/:id/liquidar" element={<PageTransition><SettleUp /></PageTransition>} />
 
-                                <Route path={ROUTES.STATS} element={<PageTransition><StatsPage /></PageTransition>} />
-                                <Route path={ROUTES.PROFILE} element={<PageTransition><ProfilePage /></PageTransition>} />
-                                <Route path={ROUTES.CHANGE_PASSWORD} element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
-                                <Route path={ROUTES.PERSONAL_DATA} element={<PageTransition><PersonalData /></PageTransition>} />
-                                <Route path={ROUTES.OCR_SCANNER} element={<PageTransition><OCRScanner /></PageTransition>} />
+                                    <Route path={ROUTES.STATS} element={<PageTransition><StatsPage /></PageTransition>} />
+                                    <Route path={ROUTES.PROFILE} element={<PageTransition><ProfilePage /></PageTransition>} />
+                                    <Route path={ROUTES.CHANGE_PASSWORD} element={<PageTransition><RecoverPasswordPage /></PageTransition>} />
+                                    <Route path={ROUTES.PERSONAL_DATA} element={<PageTransition><PersonalData /></PageTransition>} />
+                                    <Route path={ROUTES.OCR_SCANNER} element={<PageTransition><OCRScanner /></PageTransition>} />
+                                    <Route path={ROUTES.TWO_FACTOR_SETUP} element={<PageTransition><TwoFactorSetup /></PageTransition>} />
+                                </Route>
+                                {/* Verificación fuera del Layout para que no muestre el panel principal tras registro */}
+                                <Route path={ROUTES.TWO_FACTOR_VERIFY} element={<PageTransition><TwoFactorVerify /></PageTransition>} />
                             </Route>
-                        </Route>
 
-                        {/* Fallback */}
-                        <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
-                    </Routes>
-                </Suspense>
+                            {/* Fallback */}
+                            <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+                        </Routes>
+                    </Suspense>
+                )}
             </AnimatePresence>
         </RouteErrorBoundary>
     );
 };
-

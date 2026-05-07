@@ -1,3 +1,4 @@
+import { useEasyPay, PaymentMethod } from '../../context/EasyPayContext';
 import React, { useEffect, useState } from 'react';
 import { PieChart } from 'react-native-chart-kit';
 import { 
@@ -12,8 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
-import { usePayments, PaymentMethod } from '../../src/infrastructure/context/PaymentContext';
+
 import { getApiBaseUrl } from '../../src/infrastructure/api/network.config';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -34,8 +34,8 @@ const STATUS_META = {
 
 export default function StatsScreen() {
     const { theme, fontScale } = useTheme();
-    const { user } = useAuth();
-    const { payments } = usePayments();
+    const { user  } = useEasyPay();
+    const { payments  } = useEasyPay();
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 

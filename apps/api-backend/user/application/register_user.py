@@ -9,7 +9,11 @@ class RegisterUser:
         #Verificar si el usuario ya existe  
         user_exists = await self.repository.find_by_identifier(user_data.email)
         if user_exists:
-            return{"status": "error", "message": "El usuario ya existe"}
+            # Si el usuario ya existe pero NO está verificado, permitimos re-registro (borramos el anterior)
+            if not user_exists.get("is_verified", False):
+                await self.repository.delete_user_by_email(user_exists["email"])
+            else:
+                return {"status": "error", "message": "El usuario ya existe"}
 
         #Logica que Encripta la contraseña  
         salt = bcrypt.gensalt()

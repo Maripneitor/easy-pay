@@ -18,11 +18,11 @@ export const EditGroupModal: React.FC<ModalProps> = ({ isOpen, onClose, group, o
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (group) {
+        if (isOpen && group) {
             setName(group.nombre || '');
             setDesc(group.descripcion || '');
         }
-    }, [group]);
+    }, [isOpen, group?.id]); // Solo sincronizar cuando se abre el modal
 
     const handleUpdate = async () => {
         if (!name) return;

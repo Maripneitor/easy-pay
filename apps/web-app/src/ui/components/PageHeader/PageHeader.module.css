@@ -15,9 +15,9 @@
     margin: 0 auto;
     padding: 0 1rem;
     height: 3.5rem;
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
     position: relative;
 }
 
@@ -25,12 +25,22 @@
     .headerContainer {
         height: 6rem;
         padding: 0 2rem;
+        display: flex;
+        justify-content: space-between;
     }
+}
+
+.leftSlot {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
 }
 
 .backBtn {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
     background: none;
     border: none;
@@ -40,6 +50,8 @@
     font-size: 0.875rem;
     font-weight: 500;
     padding: 0;
+    min-width: 44px;
+    min-height: 44px;
 }
 
 .backBtn:hover {
@@ -65,13 +77,28 @@
 }
 
 .titleContainer {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
-    pointer-events: none;
-    width: 60%;
+    min-width: 0;
+    padding: 0 0.5rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.titleContainer::-webkit-scrollbar {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .titleContainer {
+        align-items: flex-start;
+        text-align: left;
+        padding: 0;
+    }
 }
 
 .subtitle {
@@ -86,17 +113,23 @@
 }
 
 .title {
-    font-size: 1.125rem;
+    font-size: 0.875rem;
     font-weight: 900;
     color: var(--text-primary);
-    text-transform: uppercase;
     letter-spacing: -0.02em;
     line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 @media (min-width: 768px) {
     .title {
         font-size: 1.75rem;
+        white-space: normal;
+        overflow: visible;
+        max-width: none;
     }
 }
 
@@ -109,7 +142,9 @@
 .rightActions {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 0.75rem;
+    min-width: 0;
 }
 
 .notifBtn {
@@ -129,17 +164,6 @@
 .notifBtn:hover {
     color: white;
     background-color: rgba(255, 255, 255, 0.05);
-}
-
-.notifBadge {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    width: 0.5rem;
-    height: 0.5rem;
-    background-color: #ef4444;
-    border-radius: 9999px;
-    border: 2px solid #0f172a;
 }
 
 .avatarWrapper {
@@ -164,7 +188,7 @@
 }
 
 .userNameLabel {
-    display: block;
+    display: none;
     font-size: 0.75rem;
     font-weight: 600;
     color: #cbd5e1;
@@ -173,6 +197,7 @@
 
 @media (min-width: 640px) {
     .userNameLabel {
+        display: block;
         font-size: 0.875rem;
     }
 }

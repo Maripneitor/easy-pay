@@ -33,6 +33,10 @@ app.add_middleware(
 
 # Registramos los routers unificados
 app.include_router(user_router)
+app.include_router(group_router)
+app.include_router(stats_router)
+app.include_router(ocr_router)
+app.include_router(notification_router)
 
 
 @app.on_event("startup")

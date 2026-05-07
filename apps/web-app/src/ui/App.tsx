@@ -34,16 +34,17 @@ export const App = () => {
                         position="top-right" 
                         richColors 
                         closeButton 
+                        duration={7000}
                         expand={false}
                         toastOptions={{
                             style: {
                                 background: 'rgba(255, 255, 255, 0.9)',
                                 backdropFilter: 'blur(16px)',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                border: '1px solid rgba(0, 0, 0, 0.1)',
                                 borderRadius: '24px',
                                 boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
                                 padding: '16px 24px',
-                                fontSize: '13px',
+                                fontSize: '12px',
                                 fontWeight: '700',
                                 color: '#1e293b',
                                 textTransform: 'uppercase',

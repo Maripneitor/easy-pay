@@ -16,10 +16,10 @@ export const CardAlert = () => {
                     <AlertCircle size={16} className="text-rose-500" />
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-500">Configuración Pendiente</span>
                 </div>
-                <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tighter mb-2">¡Ups! Aún no tienes tarjetas</h3>
+                <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tighter mb-2">Terminar de configurar perfil financiero</h3>
                 <p className="text-sm text-[var(--text-secondary)] font-medium max-w-xl">
-                    Para poder liquidar tus cuentas y recibir pagos, necesitas registrar al menos un método de pago. 
-                    Tus datos se manejan de forma segura con encriptación de nivel bancario.
+                    Sin un perfil financiero completo, no podrás registrar gastos, participar en la liquidación de grupos ni recibir reembolsos de tus amigos. 
+                    Configura tu cuenta para desbloquear todas las funciones de gestión de pagos de forma segura.
                 </p>
             </div>
 

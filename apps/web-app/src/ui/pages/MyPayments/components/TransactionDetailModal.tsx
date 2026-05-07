@@ -69,8 +69,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({ 
                             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)] mb-1">Operación Exitosa</p>
                             <h2 className="text-5xl font-black text-[var(--text-primary)] tracking-tighter mb-1 font-mono">
                                 {(() => {
-                                    const amount = Number(transaction.amount || transaction.monto);
-                                    if (isNaN(amount)) return "$0.00";
+                                    const amount = Number(transaction.amount || transaction.monto || transaction.precio || 0);
                                     return amount.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
                                 })()}
                             </h2>
@@ -177,7 +176,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({ 
                                     <div className="bg-black/5 rounded-[2rem] p-6 space-y-3">
                                         {(() => {
                                             const participantsIds = transaction.participantes_ids || transaction.assignedTo || [];
-                                            const totalAmount = Number(transaction.amount || transaction.monto || 0);
+                                            const totalAmount = Number(transaction.amount || transaction.monto || transaction.precio || 0);
                                             const perPerson = totalAmount / Math.max(participantsIds.length, 1);
                                             
                                             return participantsIds.map((pid: string, idx: number) => {
@@ -206,7 +205,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({ 
                                     <div className="flex justify-between items-center px-4 py-3 bg-[var(--primary)]/5 rounded-2xl border border-[var(--primary)]/10">
                                         <p className="text-[9px] font-black uppercase text-[var(--primary)] tracking-widest">Total a repartir</p>
                                         <p className="text-sm font-black text-[var(--primary)] font-mono">
-                                            ${Number(transaction.amount || transaction.monto || 0).toFixed(2)}
+                                            ${Number(transaction.amount || transaction.monto || transaction.precio || 0).toFixed(2)}
                                         </p>
                                     </div>
                                 </div>

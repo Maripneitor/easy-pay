@@ -1,3 +1,4 @@
+import { useEasyPay } from '../../context/EasyPayContext';
 import React, { useState } from 'react';
 import { 
     View, 
@@ -10,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
+
 import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
 
 interface SettlementWizardProps {
@@ -34,7 +35,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
     const [step, setStep] = useState(1);
     const [tipPercent, setTipPercent] = useState(10);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { user } = useAuth();
+    const { user  } = useEasyPay();
     const [selectedAccounts, setSelectedAccounts] = useState<string[]>(
         (user?.bank_accounts || []).filter((a: any) => a.is_default).map((a: any) => a.id)
     );
@@ -64,13 +65,13 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
         setIsSubmitting(true);
         try {
             const accountsToShow = (user?.bank_accounts || []).filter((a: any) => selectedAccounts.includes(a.id));
-            
+
             // Start settlement with selected accounts
             await groupRepository.startSettlement(groupData.id || groupData._id, accountsToShow);
-            
+
             // Close group with totals
             await onComplete({ tipPercent, total });
-            
+
             setIsSubmitting(false);
             onClose();
             setStep(1);
@@ -268,7 +269,7 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                         <Text className="text-white/60 font-black uppercase tracking-[0.3em] text-[10px] mb-2">Grupo</Text>
                                         <Text className="text-white font-black text-2xl text-center uppercase tracking-tighter">{groupData?.nombre || "Grupo"}</Text>
                                     </View>
-                                    
+
                                     <View className="flex-row justify-between mb-4">
                                         <View>
                                             <Text className="text-white/40 font-black uppercase tracking-widest text-[9px]">Integrantes</Text>

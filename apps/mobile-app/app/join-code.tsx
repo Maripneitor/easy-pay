@@ -6,11 +6,11 @@ import { useRouter, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { MotiView, AnimatePresence } from 'moti';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
-import { useGrupo } from '../context/GrupoContext';
+import { useEasyPay } from '../context/EasyPayContext';
 
 export default function JoinCodeScreen() {
     const { theme, fontScale } = useTheme();
-    const { joinGrupo } = useGrupo();
+    const { joinGrupo, activeGrupo } = useEasyPay();
     const router = useRouter();
     const [code, setCode] = useState('');
     const [error, setError] = useState('');
@@ -113,7 +113,10 @@ export default function JoinCodeScreen() {
                     className={`w-full py-4 rounded-xl shadow-md flex-row justify-center items-center active:scale-[0.95] ${code.length === CODE_LENGTH ? 'bg-[#0061a4]' : 'bg-[#bfc7d4]/30'}`}
                 >
                     {loading ? (
-                        <ActivityIndicator color="white" />
+                        <View className="flex-row items-center gap-3">
+                            <ActivityIndicator color="white" />
+                            <Text className="text-white font-bold text-lg">Verificando...</Text>
+                        </View>
                     ) : (
                         <Text className={`font-bold text-lg ${code.length === 8 ? 'text-white' : 'text-[#707883]'}`}>
                             Validar y Unirse
