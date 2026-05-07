@@ -5,6 +5,7 @@ import { useAuth } from './useAuth';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { useTheme } from '../../context/ThemeContext';
 import { toast } from 'sonner';
+import { ROUTES } from '../../../infrastructure/routes';
 
 export const Auth = () => {
     const {
@@ -115,7 +116,7 @@ export const Auth = () => {
                                     <button 
                                         type="button" 
                                         className={styles.forgotPass}
-                                        onClick={() => navigate('/recover-password')}
+                                        onClick={() => navigate(ROUTES.RECOVER_PASSWORD)}
                                         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                                     >
                                         ¿Olvidé mi contraseña?

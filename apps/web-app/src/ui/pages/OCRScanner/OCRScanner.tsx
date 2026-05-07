@@ -17,6 +17,7 @@ import { cn } from '@infrastructure/utils';
 import { StatusBadge } from '../../components/StatusBadge';
 import { PageHeader } from '@ui/components/PageHeader';
 import { useOCRScanner } from './useOCRScanner';
+import { useGroupContext } from '../../context/GroupContext';
 import styles from './OCRScanner.module.css';
 
 interface OCRItem {
@@ -141,16 +142,21 @@ const UploadZone: React.FC<{
 export const OCRScanner: React.FC = () => {
     const navigate = useNavigate();
     const { toggleSidebar } = useOutletContext<{ toggleSidebar: () => void }>();
+    const { activeGroups } = useGroupContext();
     const {
         scanResult,
         isProcessing,
         selectedFile,
+        selectedGroupId,
+        setSelectedGroupId,
         handleFileUpload,
         handleSplitAll,
         handleAssignToMe,
         handleConfirmSync,
         formatCurrency,
     } = useOCRScanner();
+
+    const selectedGroup = activeGroups.find(g => g.id === selectedGroupId);
 
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg-body)] text-[var(--text-primary)] antialiased selection:bg-[var(--primary)] selection:text-white transition-colors duration-300">
@@ -168,6 +174,32 @@ export const OCRScanner: React.FC = () => {
                     <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
                         <div className="absolute top-[-10%] left-[20%] w-[30%] h-[30%] bg-[var(--primary)]/5 rounded-full blur-[100px]" />
                         <div className="absolute bottom-[10%] right-[10%] w-[40%] h-[40%] bg-[var(--primary)]/5 rounded-full blur-[120px]" />
+                    </div>
+
+                    {/* Group Selection Section */}
+                    <div className={cn(styles.glassPanel, 'w-full p-6 rounded-3xl border border-white/10 bg-white/5 flex flex-col md:flex-row items-center justify-between gap-6')}>
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)] border border-[var(--primary)]/20">
+                                <Users size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-1">Destino de Sincronización</h3>
+                                <p className="text-xs text-[var(--text-secondary)] font-medium">Selecciona el grupo donde registrarás estos gastos</p>
+                            </div>
+                        </div>
+
+                        <select 
+                            value={selectedGroupId}
+                            onChange={(e) => setSelectedGroupId(e.target.value)}
+                            className="w-full md:w-64 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:ring-2 focus:ring-[var(--primary)] outline-none transition-all cursor-pointer"
+                        >
+                            <option value="">Seleccionar Grupo...</option>
+                            {activeGroups.map(group => (
+                                <option key={group.id} value={group.id}>
+                                    {group.nombre}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className="w-full flex flex-col gap-6">
@@ -229,7 +261,12 @@ export const OCRScanner: React.FC = () => {
                                 <div className="space-y-3 mb-6 opacity-60">
                                     {scanResult.appItems.map((item: OCRItem, idx: number) => (
                                         <div key={idx} className="flex justify-between items-center text-sm border-b border-dashed border-[var(--border-color)] pb-2">
-                                            <span className="text-[var(--text-secondary)]">{item.description}</span>
+                                            <div className="flex flex-col">
+                                                <span className="text-[var(--text-secondary)]">{item.description}</span>
+                                                <span className="text-[10px] text-[var(--primary)] font-black uppercase tracking-widest">
+                                                    Asignado a: {item.assignedToIds?.length === 1 ? 'Yo' : `${item.assignedToIds?.length} integrantes`}
+                                                </span>
+                                            </div>
                                             <span className="text-[var(--text-primary)] font-bold">{formatCurrency(item.amount)}</span>
                                         </div>
                                     ))}
@@ -249,10 +286,16 @@ export const OCRScanner: React.FC = () => {
                                                 </p>
                                                 <div className="flex gap-2">
                                                     <button
-                                                        onClick={() => handleSplitAll(item)}
+                                                        onClick={() => {
+                                                            if (!selectedGroupId) {
+                                                                toast.error("Selecciona un grupo primero");
+                                                                return;
+                                                            }
+                                                            handleSplitAll(item, selectedGroup?.integrantes.map((m: any) => m.id) || []);
+                                                        }}
                                                         className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-[var(--text-primary)] text-xs px-4 py-2 rounded-lg transition border border-[var(--border-color)] font-bold uppercase tracking-wider"
                                                     >
-                                                        <Users size={14} /> Dividir
+                                                        <Users size={14} /> Dividir Todos
                                                     </button>
                                                     <button
                                                         onClick={() => handleAssignToMe(item)}
@@ -281,7 +324,7 @@ export const OCRScanner: React.FC = () => {
                                 </div>
                             </div>
                             <button
-                                onClick={handleConfirmSync}
+                                onClick={() => handleConfirmSync(selectedGroupId)}
                                 className="w-full sm:w-auto px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest rounded-xl shadow-xl shadow-emerald-500/20 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3"
                             >
                                 <CheckCircle size={22} /> Sincronizar Cuentas
@@ -291,7 +334,7 @@ export const OCRScanner: React.FC = () => {
                 </main>
 
                 <footer className="py-8 text-center text-[var(--text-secondary)] text-xs font-medium uppercase tracking-[0.2em] opacity-40">
-                    Easy-Pay Pro Desktop Edition • 2026
+                    Easy-Pay Desktop Edition • 2026
                 </footer>
             </div>
         </div>

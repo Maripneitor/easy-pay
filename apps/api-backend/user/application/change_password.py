@@ -11,12 +11,15 @@ class ChangePasswordUseCase:
         if not user:
             return {"status": "error", "message": "Usuario no encontrado"}
 
-
-        #2. Hashear la nueva contraseña
+        # 1. Hashear la nueva contraseña
         new_hash = get_password_hash(data.new_password)
 
-        # 3. Actualizar en el repositorio
-        success = await self.repository.update_user(user_id, {"password_hash": new_hash}) # Simulado
+        # 2. Actualizar en el repositorio y LIMPIAR datos de recuperación para seguridad
+        success = await self.repository.update_user(user_id, {
+            "password_hash": new_hash,
+            "two_factor.otp_code": None,
+            "two_factor.otp_expires": None
+        })
         
         if success:
             return {"status": "success", "message": "Contraseña actualizada correctamente"}

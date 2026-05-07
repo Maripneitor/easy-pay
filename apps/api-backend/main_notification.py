@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from notification.infrastructure.routes.route_notification import router as notification_router
+
 app = FastAPI(title="Easy-Pay Notification Service", version="1.0.0")
 origins = ["*"]
 
@@ -11,6 +13,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(notification_router)
 
 @app.get("/")
 def read_root():

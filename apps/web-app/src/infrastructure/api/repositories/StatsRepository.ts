@@ -20,6 +20,11 @@ class StatsRepository {
         const response = await httpClient.get(`/stats/group/${groupId}`);
         return response.data;
     }
+
+    async getUserTransactions(userId: string): Promise<any> {
+        const response = await httpClient.get(`/stats/user/${userId}/transactions`);
+        return response.data;
+    }
 }
 
 export const statsRepository = new StatsRepository();

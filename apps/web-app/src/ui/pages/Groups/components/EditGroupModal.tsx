@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGroups } from '../useGroups';
+import { toast } from 'sonner';
 
 interface ModalProps {
     isOpen: boolean;
@@ -25,12 +26,18 @@ export const EditGroupModal: React.FC<ModalProps> = ({ isOpen, onClose, group, o
 
     const handleUpdate = async () => {
         if (!name) return;
+        const toastId = toast.loading("Guardando cambios...");
         setLoading(true);
         try {
             await updateGroup(group.id, name, desc);
+            toast.success("Grupo actualizado con éxito", { id: toastId });
             if (onSuccess) onSuccess();
             onClose();
-        } catch (e) { } finally { setLoading(false); }
+        } catch (e: any) {
+            toast.error(e.message || "No se pudieron guardar los cambios", { id: toastId });
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (!isOpen || !group) return null;

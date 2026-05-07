@@ -1,4 +1,6 @@
 services:
+
+
   # --- MICROSERVICIO DE USUARIOS (Puerto 8001) ---
   user-service:
     build:
@@ -14,6 +16,7 @@ services:
       - ./apps/api-backend/.env
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
+
   # --- MICROSERVICIO DE GRUPOS (Puerto 8002) ---
   group-service:
     build:
@@ -27,6 +30,7 @@ services:
     env_file:
       - ./apps/api-backend/.env
     command: uvicorn main_groups:app --host 0.0.0.0 --port 8000 --reload
+
 
   # --- MICROSERVICIO DE ESTADISTICAS (Puerto 8003) ---
   stats-service:
@@ -42,6 +46,7 @@ services:
       - ./apps/api-backend/.env
     command: uvicorn main_stats:app --host 0.0.0.0 --port 8000 --reload
 
+
   # --- MICROSERVICIO DE OCR (Puerto 8004) ---
   ocr-service:
     build:
@@ -56,6 +61,7 @@ services:
       - ./apps/api-backend/.env
     command: uvicorn main_ocr:app --host 0.0.0.0 --port 8000 --reload
 
+
   # --- MICROSERVICIO DE NOTIFICACIONES (Puerto 8005) ---
   notification-service:
     build:
@@ -69,6 +75,7 @@ services:
     env_file:
       - ./apps/api-backend/.env
     command: uvicorn main_notification:app --host 0.0.0.0 --port 8000 --reload
+
 
   # --- FRONTEND (React / Vite) ---
   dev-env:
@@ -106,3 +113,6 @@ services:
       - ocr-service
       - stats-service
       - notification-service
+
+volumes:
+  mongodb_data:

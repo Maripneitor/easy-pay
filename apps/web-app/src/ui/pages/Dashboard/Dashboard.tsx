@@ -20,10 +20,11 @@ import { GroupCard } from './components/GroupCard';
 import { CardAlert } from '@ui/components/Dashboard/CardAlert';
 import { DashboardSkeleton } from './components/DashboardSkeleton';
 import { TwoFactorModal } from '@ui/components/Security/TwoFactorModal';
+import { generateFinancialReport } from '@infrastructure/services/PdfService';
 
 const I18N_TEXTS = {
     WELCOME_PREFIX: 'Hola,',
-    SUBTITLE: 'Easy-Pay Pro Desktop',
+    SUBTITLE: 'Easy-Pay Desktop',
     STATS: {
         TOTAL_SPENT: 'Total Gastado',
         OWED_TO_USER: 'Te deben',
@@ -80,6 +81,7 @@ export const Dashboard: React.FC = () => {
         navigate,
         allActiveGroups = [],
         stats,
+        transactions,
         isLoading,
         hasCards,
         deleteGroup,
@@ -294,7 +296,11 @@ export const Dashboard: React.FC = () => {
                                     </div>
 
                                     <div className="mt-10 pt-8 border-t border-[var(--border-color)]">
-                                        <button className="w-full py-4 bg-black/5 hover:bg-black/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
+                                        <button 
+                                            onClick={() => generateFinancialReport({ user, stats, transactions })}
+                                            disabled={!stats}
+                                            className="w-full py-4 bg-black/5 hover:bg-black/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
+                                        >
                                             {I18N_TEXTS.ACTIONS.EXPORT_PDF} <ArrowUpRight size={14} />
                                         </button>
                                     </div>

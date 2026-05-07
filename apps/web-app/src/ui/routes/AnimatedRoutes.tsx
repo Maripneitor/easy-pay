@@ -121,7 +121,7 @@ export const AnimatedRoutes = () => {
         <RouteErrorBoundary>
             <AnimatePresence mode="wait">
                 <Suspense fallback={<Loader />}>
-                    <Routes location={location} key={location.pathname}>
+                    <Routes location={location}>
                         {/* Rutas públicas con guard: si estás logueado, van al dashboard */}
                         <Route path={ROUTES.LANDING} element={
                             <PublicOnlyRoute>

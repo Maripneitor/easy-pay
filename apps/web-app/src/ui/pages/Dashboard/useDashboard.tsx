@@ -44,7 +44,16 @@ export const useDashboard = () => {
         }
     }, []);
 
+    const [transactions, setTransactions] = useState<any[]>([]);
 
+    const fetchUserTransactions = useCallback(async (id: string) => {
+        try {
+            const txs = await statsRepository.getUserTransactions(id);
+            setTransactions(txs || []);
+        } catch (e) {
+            console.error("Error fetching transactions:", e);
+        }
+    }, []);
 
     const fetchDashboardData = useCallback(async () => {
         if (authLoading) return;
@@ -57,14 +66,15 @@ export const useDashboard = () => {
         try {
             await Promise.allSettled([
                 fetchUserCards(userId),
-                fetchUserStats(userId)
+                fetchUserStats(userId),
+                fetchUserTransactions(userId)
             ]);
         } catch (error) {
             console.error("Error fetching dashboard data:", error);
         } finally {
             setIsLoading(false);
         }
-    }, [userId, navigate, authLoading, fetchUserCards, fetchUserStats]);
+    }, [userId, navigate, authLoading, fetchUserCards, fetchUserStats, fetchUserTransactions]);
 
     useEffect(() => {
         fetchDashboardData();
@@ -105,15 +115,9 @@ export const useDashboard = () => {
             }
 
             setIs2FAModalOpen(false);
-            setAllActiveGroups(prev => prev.filter(g => g.id !== groupToDelete));
-            setSettledGroups(prev => prev.filter(g => g.id !== groupToDelete));
-            
-            if (stats) {
-                setStats((prev: any) => ({ 
-                    ...prev, 
-                    groups_count: Math.max(0, (prev?.groups_count || 1) - 1) 
-                }));
-            }
+            // We need to refresh instead of local filtering to keep stats in sync
+            refreshGroups();
+            fetchDashboardData();
             
             setGroupToDelete(null);
             toast.success('Grupo eliminado correctamente');
@@ -126,6 +130,7 @@ export const useDashboard = () => {
         allActiveGroups,
         settledGroups,
         stats,
+        transactions,
         isLoading,
         hasCards,
         navigate,
@@ -136,4 +141,4 @@ export const useDashboard = () => {
         setIs2FAModalOpen,
         userId
     };
-};
+};

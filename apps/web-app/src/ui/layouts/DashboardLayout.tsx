@@ -35,6 +35,16 @@ export const DashboardLayout = () => {
             />
 
             <div className="flex-1 flex flex-col h-full overflow-hidden relative min-w-0">
+                {/* Mobile Menu Button - Solo visible cuando el sidebar está cerrado y es móvil */}
+                {!isSidebarOpen && (
+                    <button
+                        onClick={toggleSidebar}
+                        className="fixed top-1 left-4 p-3 bg-gradient-to-br from-[var(--primary)] to-blue-600 text-white rounded-2xl shadow-xl shadow-[var(--primary)]/40 z-[40] md:hidden hover:scale-105 active:scale-95 transition-all border border-white/20 backdrop-blur-md"
+                    >
+                        <Menu size={20} />
+                    </button>
+                )}
+
                 <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-700 transition-all duration-300">
                     <div className="max-w-7xl mx-auto w-full space-y-8">
                         <Outlet context={{ toggleSidebar, isSidebarOpen }} />

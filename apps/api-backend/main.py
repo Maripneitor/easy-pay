@@ -17,7 +17,7 @@ app = FastAPI(
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://192.168.1.11:5173",
+    "http://192.168.1.13:5173",
     "http://10.25.64.36:5173",
     "http://localhost",
 ]
@@ -54,3 +54,17 @@ def read_root():
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "system": "Easy Pay Backend", "version": "1.0.0"}
+
+import logging
+logger = logging.getLogger(__name__)
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    import traceback
+    logger.error(f"Global exception in User Service: {str(exc)}")
+    logger.error(traceback.format_exc())
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error", "error": str(exc)}
+    )

@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from ocr.infrastructure.routes.route_ocr import router as ocr_router
+
 app = FastAPI(title="Easy-Pay OCR Service", version="1.0.0")
 origins = ["*"]
 
@@ -11,6 +13,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(ocr_router)
 
 @app.get("/")
 def read_root():

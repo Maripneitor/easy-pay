@@ -14,7 +14,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 export const RecoverPasswordPage = () => {
     const navigate = useNavigate();
     const { isDark, toggleTheme } = useTheme();
-    const { user } = useAuthContext();
+    const { user, updateUserSession } = useAuthContext();
     const isAuthenticated = !!user;
 
     useDocumentTitle('Recuperar Contraseña | Easy-Pay');
@@ -27,6 +27,9 @@ export const RecoverPasswordPage = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [resending, setResending] = useState(false);
+
+    const [tempToken, setTempToken] = useState<string | null>(null);
+    const [tempUser, setTempUser] = useState<any | null>(null);
 
     const handleRequestReset = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -70,6 +73,11 @@ export const RecoverPasswordPage = () => {
             
             if (data.status === 'success') {
                 toast.success('Código verificado correctamente');
+                // Guardamos el token y usuario temporalmente para el auto-login final
+                if (data.access_token) {
+                    setTempToken(data.access_token);
+                    setTempUser(data.user);
+                }
                 setStep(3);
             } else {
                 toast.error(data.message || 'Código inválido');
@@ -96,7 +104,16 @@ export const RecoverPasswordPage = () => {
             });
             
             toast.success('Contraseña actualizada correctamente');
-            navigate(ROUTES.AUTH);
+
+            // MEJORA: Auto-login si tenemos el token de la verificación
+            if (tempToken && tempUser) {
+                updateUserSession(tempUser, tempToken);
+                toast.success('Sesión iniciada automáticamente');
+                navigate(ROUTES.DASHBOARD);
+            } else {
+                // Si no hay token (poco probable), mandamos al login manual
+                navigate(ROUTES.AUTH);
+            }
         } catch (error: any) {
             toast.error(error.message || 'Error al cambiar contraseña');
         } finally {

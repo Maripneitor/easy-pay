@@ -322,7 +322,7 @@ export const ProfilePage = () => {
                                         <Download className="text-[var(--primary)]" size={20} />
                                         <span className="text-sm font-bold text-[var(--text-primary)]">Exportar Reporte (PDF)</span>
                                     </div>
-                                    <div className="bg-[var(--primary)]/10 px-2 py-0.5 rounded text-[10px] font-bold text-[var(--primary)]">PRO</div>
+                                    <div className="bg-emerald-500/10 px-2 py-0.5 rounded text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Verificado</div>
                                 </button>
 
 

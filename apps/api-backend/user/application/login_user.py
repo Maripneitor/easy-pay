@@ -10,27 +10,35 @@ class LoginUserUseCase:
         self.user_repository = user_repository
 
     async def execute(self, identifier: str, password: str):
+        print(f"🔍 Intento de login para: {identifier}")
         # 1. Buscamos el usuario por el email o identifier
         user_data = await self.user_repository.find_by_identifier(identifier)
         
         # 2. Validación de existencia y Contraseña
-        # checkpw requiere bytes, por eso usamos .encode('utf-8')
+        if not user_data:
+            print(f"❌ Usuario no encontrado: {identifier}")
+            return {"status": "error", "message": "Credenciales incorrectas"}
+
         password_hash = user_data.get("password_hash")
-        
-        if not user_data or not password_hash or not isinstance(password_hash, str):
+        if not password_hash or not isinstance(password_hash, str):
+            print(f"❌ El usuario {identifier} no tiene un hash de contraseña válido")
             return {"status": "error", "message": "Credenciales incorrectas"}
 
         try:
+            # checkpw requiere bytes
             is_valid = bcrypt.checkpw(
                 password.encode('utf-8'),
                 password_hash.encode('utf-8')
             )
         except Exception as e:
-            print(f"⚠️ Error verificando password hash: {e}")
+            print(f"⚠️ Error técnico verificando password: {e}")
             return {"status": "error", "message": "Error al verificar credenciales"}
 
         if not is_valid:
+            print(f"❌ Contraseña incorrecta para: {identifier}")
             return {"status": "error", "message": "Credenciales incorrectas"}
+        
+        print(f"✅ Login exitoso para: {identifier}")
         
         # 3. Validación de cuenta verificada (Email)
         if not user_data.get("is_verified", False):

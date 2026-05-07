@@ -8,7 +8,7 @@ export const generateFinancialReport = (data: any) => {
     // Header
     doc.setFontSize(22);
     doc.setTextColor(59, 130, 246); // Primary color
-    doc.text('EASY-PAY PRO', 14, 22);
+    doc.text('EASY-PAY', 14, 22);
     
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -64,7 +64,7 @@ export const generateFinancialReport = (data: any) => {
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(150);
-        doc.text('Generado automáticamente por Easy-Pay Pro. Todos los derechos reservados.', 14, 285);
+        doc.text('Generado automáticamente por Easy-Pay. Todos los derechos reservados.', 14, 285);
         doc.text(`Página ${i} de ${pageCount}`, 180, 285);
     }
 

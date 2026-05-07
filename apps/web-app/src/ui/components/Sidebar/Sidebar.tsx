@@ -75,21 +75,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onLogout, use
                 isOpen ? "w-64" : "w-0 md:w-20",
                 "fixed md:relative"
             )}>
+                {/* Toggle Button - Separated for better layout control */}
+                <button 
+                    onClick={onClose}
+                    aria-label={isOpen ? I18N_TEXTS.COLLAPSE_MENU : I18N_TEXTS.EXPAND_MENU}
+                    className={cn(
+                        "absolute p-2.5 hover:bg-[var(--hover-bg)] hover:text-[var(--primary)] rounded-xl transition-all text-slate-400 md:flex hidden z-[60]",
+                        isOpen ? "right-4 top-6" : "left-1/2 -translate-x-1/2 top-6"
+                    )}
+                >
+                    {isOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
+                </button>
+
                 <div className={cn(
                     "p-8 flex-shrink-0 relative flex flex-col items-center transition-all duration-300",
-                    !isOpen ? "p-0 mt-0 opacity-0" : "opacity-100",
+                    !isOpen ? "p-0 mt-20 opacity-0" : "opacity-100",
                     "md:opacity-100",
-                    !isOpen && "md:p-6 md:mt-4"
+                    isOpen ? "mt-4" : "mt-24 md:p-6"
                 )}>
-                    {isOpen && (
-                        <button 
-                            onClick={onClose}
-                            aria-label={I18N_TEXTS.COLLAPSE_MENU}
-                            className="absolute p-2.5 hover:bg-[var(--hover-bg)] hover:text-[var(--primary)] rounded-xl transition-all text-slate-400 md:flex hidden z-[60] right-4 top-1/2 -translate-y-1/2"
-                        >
-                            <ChevronLeft size={20} />
-                        </button>
-                    )}
                     <div className="flex flex-col items-center gap-3 group cursor-pointer w-full" onClick={() => navigate(ROUTES.DASHBOARD)}>
                         <div className={cn(
                             "transition-all duration-300 group-hover:scale-110 flex items-center justify-center",

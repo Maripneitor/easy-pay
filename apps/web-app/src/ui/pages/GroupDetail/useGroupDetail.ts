@@ -40,7 +40,7 @@ export const useGroupDetail = (groupId: string) => {
             }
 
             // Fetch leader profile if not loaded
-            const lId = normalizeId(gData.administrador_id);
+            const lId = normalizeId(gData.admin_id || gData.administrador_id);
             if (lId && !leaderProfile) {
                 httpClient.get(`/auth/profile/${lId}`).then(res => setLeaderProfile(res.data)).catch(console.error);
             }
@@ -83,7 +83,7 @@ export const useGroupDetail = (groupId: string) => {
                 groupName: gData.nombre || "Grupo",
                 groupDescription: gData.descripcion || "",
                 groupCode: gData.codigo_invitacion || "---",
-                adminId: normalizeId(gData.administrador_id),
+                adminId: normalizeId(gData.admin_id || gData.administrador_id),
                 status: gData.status || "active",
                 selectedBankAccounts: gData.selected_bank_accounts || [],
                 members,
