@@ -81,8 +81,11 @@ export default function SettleUpScreen() {
                 const groupData = await groupRepository.getGroup(gid);
                 setGroup(groupData);
 
-                if (groupData.status !== 'settling') {
-                    setError("Este grupo no está en fase de liquidación. Espera a que el líder lo cierre.");
+                const status = groupData.status?.toLowerCase();
+                if (status !== 'settling') {
+                    Toast.show({ type: 'error', text1: 'Error', text2: 'Este grupo no está en fase de liquidación' });
+                    router.back();
+                    return;
                 }
 
                 if (groupData.selected_bank_accounts) {

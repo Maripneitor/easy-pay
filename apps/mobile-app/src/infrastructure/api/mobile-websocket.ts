@@ -3,10 +3,13 @@ import { getApiBaseUrl } from './network.config';
 class MobileWebSocketClient {
     private ws: WebSocket | null = null;
     private baseURL: string;
+    private listeners: Map<string, ((data: any) => void)[]> = new Map();
+    private reconnectTimer: any = null;
+    private currentGroupId: string | null = null;
+    private currentToken: string | null = null;
 
     constructor() {
         let apiBase = getApiBaseUrl();
-        // Limpieza profunda para evitar duplicados /api/api
         if (apiBase.endsWith('/api')) {
             apiBase = apiBase.slice(0, -4);
         }
@@ -15,49 +18,83 @@ class MobileWebSocketClient {
 
     connect(groupId: string, token: string) {
         if (this.ws) this.disconnect();
+        this.currentGroupId = groupId;
+        this.currentToken = token;
 
-        // Aseguramos que la ruta final sea exactamente /api/ws/groups
-        const wsUrl = `${this.baseURL}/api/ws/groups/${groupId}?token=${token}`;
+        const wsUrl = `${this.baseURL}/api/groups/ws/${groupId}?token=${token}`;
         console.info(`[WS-Mobile] Conectando a: ${wsUrl}`);
         
         try {
             this.ws = new WebSocket(wsUrl);
 
             this.ws.onopen = () => {
-                console.log(`[WS] Conectado al grupo: ${groupId}`);
+                console.log(`[WS] ✅ Conectado al grupo: ${groupId}`);
+                if (this.reconnectTimer) {
+                    clearTimeout(this.reconnectTimer);
+                    this.reconnectTimer = null;
+                }
+            };
+
+            this.ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    // Match the backend format: { "type": "...", "data": {...} }
+                    const eventType = data.type;
+                    const payload = data.data;
+
+                    const eventListeners = this.listeners.get(eventType);
+                    if (eventListeners) {
+                        eventListeners.forEach(cb => cb(payload));
+                    }
+                    
+                    // Fallback for general updates
+                    const allListeners = this.listeners.get('*');
+                    if (allListeners) {
+                        allListeners.forEach(cb => cb(data));
+                    }
+                } catch (err) {
+                    console.error("[WS] Error parseando mensaje", err);
+                }
             };
 
             this.ws.onerror = (e) => {
-                console.error(`[WS] Error en conexión:`, e);
+                console.error(`[WS] ❌ Error en conexión:`, e);
             };
 
-            this.ws.onclose = () => {
-                console.log(`[WS] Desconectado del grupo: ${groupId}`);
+            this.ws.onclose = (e) => {
+                console.log(`[WS] 🔌 Conexión cerrada para grupo: ${groupId}. Reintentando en 5s...`);
+                this.scheduleReconnect();
             };
         } catch (e) {
             console.error("[WS] Error al crear WebSocket:", e);
+            this.scheduleReconnect();
         }
     }
 
-    on(event: string, callback: (data: any) => void) {
-        if (!this.ws) return;
-        this.ws.addEventListener('message', (messageEvent) => {
-            try {
-                const data = JSON.parse(messageEvent.data as string);
-                // El backend envía un objeto con { event: string, payload: any }
-                if (data.event === event) {
-                    callback(data.payload);
-                } else if (!data.event) {
-                    // Fallback para mensajes que son directamente el objeto Grupo
-                    callback(data);
-                }
-            } catch (err) {
-                console.error("[WS] Error parseando mensaje", err);
+    private scheduleReconnect() {
+        if (this.reconnectTimer) return;
+        this.reconnectTimer = setTimeout(() => {
+            this.reconnectTimer = null;
+            if (this.currentGroupId && this.currentToken) {
+                this.connect(this.currentGroupId, this.currentToken);
             }
-        });
+        }, 5000);
+    }
+
+    on(event: string, callback: (data: any) => void) {
+        if (!this.listeners.has(event)) {
+            this.listeners.set(event, []);
+        }
+        this.listeners.get(event)?.push(callback);
     }
 
     disconnect() {
+        this.currentGroupId = null;
+        this.currentToken = null;
+        if (this.reconnectTimer) {
+            clearTimeout(this.reconnectTimer);
+            this.reconnectTimer = null;
+        }
         if (this.ws) {
             this.ws.close();
             this.ws = null;

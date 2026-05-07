@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { MotiView, AnimatePresence } from 'moti';
 import { useTheme } from '../infrastructure/context/ThemeContext';
 import { useEasyPay } from '../../context/EasyPayContext';
 
 export const SyncStatus = () => {
     const { theme, fontScale } = useTheme();
-    const { isOnline } = useEasyPay();
+    const { isOnline, activeGrupo } = useEasyPay();
 
     return (
         <AnimatePresence>
@@ -42,20 +42,32 @@ export const SyncStatus = () => {
             )}
             {isOnline && (
                 <MotiView 
-                    from={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    from={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
                     style={{ zIndex: 100 }}
-                    className="absolute top-12 right-6"
+                    className="absolute top-14 right-6"
                 >
-                    <View className="bg-emerald-500/20 px-3 py-1 rounded-full flex-row items-center gap-1.5 border border-emerald-500/30">
-                        <View className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <View 
+                        style={{ 
+                            backgroundColor: theme.bg + 'CC',
+                            borderColor: '#10b98140'
+                        }}
+                        className="px-3 py-1.5 rounded-full flex-row items-center gap-2 border shadow-sm"
+                    >
+                        <MotiView
+                            from={{ opacity: 0.4 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ loop: true, duration: 1000 }}
+                            className="w-2 h-2 rounded-full bg-emerald-500"
+                        />
                         <Text 
-                            style={{ color: '#10b981', fontSize: 10 * fontScale }} 
-                            className="font-bold uppercase tracking-wider"
+                            style={{ color: '#10b981', fontSize: 9 * fontScale }} 
+                            className="font-black uppercase tracking-[0.1em]"
                         >
-                            Online
+                            {activeGrupo ? 'Sincronizado' : 'Online'}
                         </Text>
+                        <Ionicons name="flash" size={10} color="#10b981" />
                     </View>
                 </MotiView>
             )}

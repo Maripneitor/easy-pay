@@ -1,5 +1,5 @@
 import { useEasyPay } from '../../context/EasyPayContext';
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { 
     ScrollView, 
     View, 
@@ -12,7 +12,8 @@ import {
     StyleSheet,
     RefreshControl,
     ActivityIndicator,
-    Platform
+    Platform,
+    Modal
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -26,6 +27,7 @@ import { groupRepository } from '../../src/infrastructure/api/repositories/Group
 import { NETWORK_CONFIG } from '../../src/infrastructure/api/network.config';
 import { toTitleCase } from '../../src/infrastructure/utils/format';
 import { getApiBaseUrl } from '../../src/infrastructure/api/network.config';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.82;
@@ -51,11 +53,26 @@ export default function DashboardScreen() {
         if (!user?.id) return;
         setIsLoading(true);
         try {
-            const [groups, statsRes] = await Promise.all([
+            const [rawGroups, statsRes] = await Promise.all([
                 groupRepository.findByUser(user.id),
                 fetch(`${NETWORK_CONFIG.BASE_URL}/stats/user/${user.id}`).then(r => r.json())
             ]);
-            setUserGroups(Array.isArray(groups) ? groups : []);
+            
+            const groups = Array.isArray(rawGroups) ? rawGroups : [];
+            
+            // Enriquecer grupos con balances para identificar deudas
+            const groupsWithBalances = await Promise.all(groups.map(async (g) => {
+                // Solo buscamos balances si el grupo no está ya saldado
+                if (g.is_settled) return g;
+                try {
+                    const bRes = await groupRepository.getBalances(g.id);
+                    return { ...g, balances: bRes.balance_detallado || [] };
+                } catch (e) {
+                    return g;
+                }
+            }));
+
+            setUserGroups(groupsWithBalances);
             setUserStats(statsRes);
         } catch (err) {
             console.error('❌ Dashboard: Error fetching data:', err);
@@ -81,14 +98,58 @@ export default function DashboardScreen() {
         fetchGroupsAndStats();
     }, [fetchGroupsAndStats]);
 
-    const handleCreateGrupo = async () => {
-        router.push('/create-group');
+    // Calcular deudas activas (donde el usuario debe dinero)
+    const activeDebts = useMemo(() => {
+        if (!userGroups || !user) return [];
+        
+        const debts = [];
+        for (const group of userGroups) {
+            const myBalance = group.balances?.find((b: any) => b.usuario_id === user.id)?.balance || 0;
+            
+            if (myBalance < -0.01) { // Deuda real
+                const creditor = group.balances?.find((b: any) => b.balance > 0);
+                debts.push({
+                    groupId: group.id,
+                    groupName: group.nombre,
+                    amount: Math.abs(myBalance),
+                    creditorId: creditor?.usuario_id,
+                    creditorName: creditor?.persona || 'Líder del Grupo'
+                });
+            }
+        }
+        return debts;
+    }, [userGroups, user]);
+
+    const [showDebtSelector, setShowDebtSelector] = useState(false);
+
+    const handleSettlePress = () => {
+        if (activeDebts.length === 0) {
+            Toast.show({
+                type: 'info',
+                text1: 'Sin deudas pendientes',
+                text2: '¡No le debes nada a nadie! 🎉'
+            });
+            return;
+        }
+        
+        if (activeDebts.length === 1) {
+            router.push({
+                pathname: '/settle-up',
+                params: {
+                    groupId: activeDebts[0].groupId,
+                    creditorId: activeDebts[0].creditorId,
+                    amount: activeDebts[0].amount.toString()
+                }
+            });
+        } else {
+            setShowDebtSelector(true);
+        }
     };
 
     const QUICK_ACTIONS = [
         { id: 'group', label: 'Nuevo Grupo', icon: 'group-add', action: handleCreateGrupo, color: theme.primary },
         { id: 'join', label: 'Unirse a Grupo', icon: 'qr-code-scanner', route: '/(tabs)/qr', color: '#10b981' },
-        { id: 'settle', label: 'Liquidar Grupo', icon: 'handshake', route: '/settle-up', color: '#a855f7' },
+        { id: 'settle', label: 'Liquidar Deuda', icon: 'handshake', action: handleSettlePress, color: '#a855f7' },
     ];
 
     const renderHeader = () => (
@@ -331,6 +392,67 @@ export default function DashboardScreen() {
                     </View>
                 </View>
             </ScrollView>
+
+            {/* Debt Selector Modal */}
+            <Modal
+                visible={showDebtSelector}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowDebtSelector(false)}
+            >
+                <TouchableOpacity 
+                    activeOpacity={1} 
+                    onPress={() => setShowDebtSelector(false)}
+                    className="flex-1 bg-black/60 justify-end"
+                >
+                    <View style={{ backgroundColor: theme.bg }} className="w-full rounded-t-[40px] p-8 pb-12 shadow-2xl">
+                        <View className="w-12 h-1.5 bg-slate-500/20 rounded-full self-center mb-8" />
+                        
+                        <Text style={{ color: theme.text }} className="text-2xl font-black mb-2">Liquidar Deuda</Text>
+                        <Text style={{ color: theme.textSecondary }} className="text-sm font-medium mb-8">Selecciona qué cuenta deseas saldar ahora:</Text>
+
+                        <ScrollView className="max-h-96" showsVerticalScrollIndicator={false}>
+                            <View className="gap-4">
+                                {activeDebts.map((debt) => (
+                                    <TouchableOpacity 
+                                        key={debt.groupId}
+                                        onPress={() => {
+                                            setShowDebtSelector(false);
+                                            router.push({
+                                                pathname: '/settle-up',
+                                                params: {
+                                                    groupId: debt.groupId,
+                                                    creditorId: debt.creditorId,
+                                                    amount: debt.amount.toString()
+                                                }
+                                            });
+                                        }}
+                                        style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
+                                        className="p-6 rounded-[32px] border flex-row items-center gap-4"
+                                    >
+                                        <View style={{ backgroundColor: theme.primary + '20' }} className="w-12 h-12 rounded-2xl items-center justify-center">
+                                            <MaterialIcons name="account-balance-wallet" size={24} color={theme.primary} />
+                                        </View>
+                                        <View className="flex-1">
+                                            <Text style={{ color: theme.text }} className="font-black text-base">{debt.groupName}</Text>
+                                            <Text style={{ color: theme.textSecondary }} className="text-xs font-bold uppercase tracking-widest opacity-60">Pagas a {debt.creditorName}</Text>
+                                        </View>
+                                        <Text style={{ color: theme.primary }} className="font-black text-lg">${debt.amount.toFixed(2)}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </ScrollView>
+
+                        <TouchableOpacity 
+                            onPress={() => setShowDebtSelector(false)}
+                            style={{ backgroundColor: theme.cardSecondary }}
+                            className="mt-8 py-5 rounded-[24px] items-center"
+                        >
+                            <Text style={{ color: theme.textSecondary }} className="font-black uppercase tracking-[3px] text-xs">Cancelar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </SafeAreaView>
     );
 }

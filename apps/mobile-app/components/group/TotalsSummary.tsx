@@ -16,11 +16,14 @@ interface TotalsSummaryProps {
 }
 
 export const TotalsSummary: React.FC<TotalsSummaryProps> = ({ 
-    subtotal, tax, service, tip, total, paidAmount, pendingAmount 
+    subtotal = 0, tax = 0, service = 0, tip = 0, total = 0, paidAmount = 0, pendingAmount = 0 
 }) => {
     const { theme, fontScale } = useTheme();
-    const paidProgress = (paidAmount / total) * 100;
-    const pendingProgress = (pendingAmount / total) * 100;
+    
+    // Safety guards for division by zero
+    const safeTotal = total > 0 ? total : 1;
+    const paidProgress = Math.min(100, Math.max(0, (paidAmount / safeTotal) * 100));
+    const pendingProgress = Math.min(100, Math.max(0, (pendingAmount / safeTotal) * 100));
 
     return (
         <MotiView 

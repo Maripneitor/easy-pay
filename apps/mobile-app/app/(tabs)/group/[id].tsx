@@ -12,6 +12,7 @@ import { Alert } from 'react-native';
 import { groupRepository } from '../../../src/infrastructure/api/repositories/GroupRepository';
 import { PaymentMethodModal } from '../../../components/group/PaymentMethodModal';
 import { VirtualTicketCard } from '../../../components/group/VirtualTicketCard';
+import { TotalsSummary } from '../../../components/group/TotalsSummary';
 
 const { width } = Dimensions.get('window');
 
@@ -64,11 +65,25 @@ export default function GroupDetailScreen() {
         );
     };
 
-    if (isLoading || !activeGrupo) {
+    if (isLoading) {
         return (
             <View style={{ flex: 1, backgroundColor: theme.bg, justifyContent: 'center', alignItems: 'center' }}>
                 <ActivityIndicator size="large" color={theme.primary} />
             </View>
+        );
+    }
+
+    if (!activeGrupo) {
+        return (
+            <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
+                <View className="flex-1 items-center justify-center px-6">
+                    <MaterialIcons name="error-outline" size={60} color={theme.textSecondary} />
+                    <Text style={{ color: theme.text, fontSize: 18 }} className="font-black mt-4">Grupo no encontrado</Text>
+                    <TouchableOpacity onPress={() => router.back()} className="mt-6 bg-slate-800 px-6 py-3 rounded-xl">
+                        <Text className="text-white font-bold">Volver</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
         );
     }
 
@@ -130,7 +145,7 @@ export default function GroupDetailScreen() {
                                 serviceFee={activeGrupo.propina}
                                 groupId={activeGrupo.id}
                                 members={activeGrupo.participantes}
-                                canEdit={isLeader}
+                                canEdit={isLeader && activeGrupo.status === 'active'}
                                 onAssign={async (itemId, participantIds) => {
                                     await assignItem(itemId, participantIds);
                                 }}
@@ -187,33 +202,34 @@ export default function GroupDetailScreen() {
                     </View>
                 )}
 
-                {activeTab === 'totals' && (
-                    <View className="gap-6 pb-40">
-                        <View style={{ backgroundColor: theme.cardSecondary }} className="p-8 rounded-[50px] border border-white/10">
-                            <View className="flex-row justify-between mb-4">
-                                <Text style={{ color: theme.textSecondary }} className="font-bold">Subtotal</Text>
-                                <Text style={{ color: theme.text }} className="font-black">${Number(activeGrupo.subtotal || 0).toFixed(2)}</Text>
-                            </View>
-                            <View className="flex-row justify-between mb-6">
-                                <Text style={{ color: theme.textSecondary }} className="font-bold">Propina sugerida</Text>
-                                <Text style={{ color: theme.text }} className="font-black">${Number(activeGrupo.propina || 0).toFixed(2)}</Text>
-                            </View>
-                            <View className="h-[1px] bg-white/5 w-full mb-6" />
-                            <View className="flex-row justify-between items-center">
-                                <Text style={{ color: theme.text }} className="text-xl font-black">Total</Text>
-                                <Text style={{ color: theme.primary }} className="text-3xl font-black">${Number(activeGrupo.total || 0).toFixed(2)}</Text>
-                            </View>
-                        </View>
+                {activeTab === 'totals' && activeGrupo && (
+                    <View className="pb-40">
+                        <TotalsSummary 
+                            subtotal={activeGrupo.subtotal || 0}
+                            tax={(activeGrupo.subtotal || 0) * 0.16}
+                            service={(activeGrupo.subtotal || 0) * 0.05}
+                            tip={activeGrupo.propina || 0}
+                            total={activeGrupo.total || 0}
+                            paidAmount={(activeGrupo.participantes || []).reduce((acc, p) => {
+                                const participantCount = activeGrupo.participantes?.length || 1;
+                                const perPersonTotal = (activeGrupo.total || 0) / participantCount;
+                                // Simple logic: if debt is 0, they paid. In a real system, we'd check payment status.
+                                return acc + (p.debt <= 0 ? perPersonTotal : 0);
+                            }, 0)}
+                            pendingAmount={(activeGrupo.participantes || []).reduce((acc, p) => acc + (p.debt || 0), 0)}
+                        />
                         
                         {isLeader && (
-                            <View className="bg-blue-500/10 p-6 rounded-[32px] border border-blue-500/20">
-                                <View className="flex-row items-center gap-3 mb-2">
-                                    <MaterialIcons name="info" size={20} color={theme.primary} />
-                                    <Text style={{ color: theme.primary }} className="font-black text-xs uppercase tracking-widest">Zona del Administrador</Text>
+                            <View className="px-6">
+                                <View className="bg-blue-500/10 p-6 rounded-[32px] border border-blue-500/20">
+                                    <View className="flex-row items-center gap-3 mb-2">
+                                        <MaterialIcons name="info" size={20} color={theme.primary} />
+                                        <Text style={{ color: theme.primary }} className="font-black text-xs uppercase tracking-widest">Zona del Administrador</Text>
+                                    </View>
+                                    <Text style={{ color: theme.textSecondary }} className="text-xs font-medium leading-4">
+                                        Como líder, puedes cerrar el grupo para que todos reciban su cuenta final y métodos de pago.
+                                    </Text>
                                 </View>
-                                <Text style={{ color: theme.textSecondary }} className="text-xs font-medium leading-4">
-                                    Como líder, puedes cerrar el grupo para que todos reciban su cuenta final y métodos de pago.
-                                </Text>
                             </View>
                         )}
                     </View>
@@ -221,7 +237,7 @@ export default function GroupDetailScreen() {
             </ScrollView>
 
             {/* Botón de acción final (Solo para líderes) */}
-            {isLeader && !['CERRADA', 'closed', 'liquidated'].includes(activeGrupo.status?.toUpperCase()) && (
+            {isLeader && activeGrupo.status === 'active' && (
                 <View className="absolute bottom-10 left-6 right-6">
                     <TouchableOpacity 
                         onPress={() => setIsWizardOpen(true)} 
@@ -236,7 +252,7 @@ export default function GroupDetailScreen() {
             )}
 
             {/* Botón de Liquidación (Para Miembros) */}
-            {!isLeader && (['SETTLING', 'settling'].includes(activeGrupo.status)) && (
+            {!isLeader && activeGrupo.status === 'settling' && (
                 <View className="absolute bottom-10 left-6 right-6">
                     <TouchableOpacity 
                         onPress={() => setIsPaymentModalVisible(true)} 

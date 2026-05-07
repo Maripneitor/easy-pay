@@ -26,18 +26,18 @@ const COLORS = {
 
 export default function LandingScreen() {
   const router = useRouter();
-  const { user, isLoading } = useEasyPay();
+  const { user, isLoading, lastRoute } = useEasyPay();
   const insets = useSafeAreaInsets();
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   // La navegación se manejará desde el layout raíz o manualmente para evitar bucles
-  /* 
   useEffect(() => {
     if (!isLoading && user) {
-      router.replace('/(tabs)/');
+      // Use replace to avoid going back to landing
+      const target = lastRoute || '/(tabs)';
+      router.replace(target as any);
     }
-  }, [user, isLoading]);
-  */
+  }, [user, isLoading, lastRoute]);
 
   const toggleFaq = (index: number) => {
     setExpandedFaq(expandedFaq === index ? null : index);

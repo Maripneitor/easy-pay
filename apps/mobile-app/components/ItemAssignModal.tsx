@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-    View, Text, TouchableOpacity, Modal, ScrollView, Alert
+    View, Text, TouchableOpacity, Modal, ScrollView, Alert, Dimensions, Platform
 } from 'react-native';
-import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { MotiView, AnimatePresence } from 'moti';
 import * as Haptics from 'expo-haptics';
+import { BlurView } from 'expo-blur';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface Member {
     id: string;
@@ -35,7 +38,7 @@ export default function ItemAssignModal({ visible, onClose, item, members, theme
 
     useEffect(() => {
         if (item) setSelected(item.assignedTo ?? []);
-    }, [item]);
+    }, [item, visible]);
 
     if (!item) return null;
 
@@ -52,6 +55,7 @@ export default function ItemAssignModal({ visible, onClose, item, members, theme
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         setSelected(members.map(m => m.id));
     };
+    
     const clearAll = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         setSelected([]);
@@ -63,7 +67,7 @@ export default function ItemAssignModal({ visible, onClose, item, members, theme
 
     const handleConfirm = async () => {
         if (selected.length === 0) {
-            Alert.alert('Sin asignar', 'Selecciona al menos una persona.');
+            Alert.alert('Sin asignar', 'Selecciona al menos una persona para repartir este gasto.');
             return;
         }
         setLoading(true);
@@ -77,167 +81,247 @@ export default function ItemAssignModal({ visible, onClose, item, members, theme
             }, 1200);
         } catch {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            Alert.alert('Error', 'No se pudo asignar el item.');
+            Alert.alert('Error', 'No se pudo guardar la asignación.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-            <View style={{ flex: 1, backgroundColor: theme.bg }}>
-                {/* Header */}
-                <View style={{ borderBottomColor: theme.border }} className="flex-row items-center justify-between px-6 py-5 border-b">
-                    <TouchableOpacity onPress={onClose} className="w-10 h-10 rounded-full bg-white/5 items-center justify-center">
-                        <Ionicons name="close" size={22} color={theme.text} />
-                    </TouchableOpacity>
-                    <Text style={{ color: theme.text }} className="font-black text-lg">Asignar Item</Text>
-                    <View className="w-10" />
-                </View>
+        <Modal 
+            visible={visible} 
+            animationType="fade" 
+            transparent={true}
+            onRequestClose={onClose}
+        >
+            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                <TouchableOpacity 
+                    activeOpacity={1} 
+                    onPress={onClose} 
+                    style={{ flex: 1 }} 
+                />
+                
+                <MotiView
+                    from={{ translateY: 300, opacity: 0 }}
+                    animate={{ translateY: 0, opacity: 1 }}
+                    exit={{ translateY: 300, opacity: 0 }}
+                    transition={{ type: 'spring', damping: 20 }}
+                    style={{ 
+                        backgroundColor: theme.bg, 
+                        borderTopLeftRadius: 32, 
+                        borderTopRightRadius: 32,
+                        maxHeight: '90%',
+                        paddingBottom: Platform.OS === 'ios' ? 40 : 20
+                    }}
+                >
+                    {/* Handle */}
+                    <View style={{ width: 40, height: 4, backgroundColor: theme.border, borderRadius: 2, alignSelf: 'center', marginTop: 12 }} />
 
-                <ScrollView className="flex-1 px-6 pt-6" contentContainerStyle={{ paddingBottom: 120 }}>
-                    {success ? (
-                        <MotiView
-                            from={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="items-center py-20"
+                    {/* Header */}
+                    <View className="px-6 pt-4 pb-6 flex-row items-center justify-between">
+                        <View>
+                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-[0.2em] mb-1">Repartir Item</Text>
+                            <Text style={{ color: theme.text }} className="text-xl font-black">{item.name}</Text>
+                        </View>
+                        <TouchableOpacity 
+                            onPress={onClose} 
+                            style={{ backgroundColor: theme.cardSecondary }}
+                            className="w-10 h-10 rounded-full items-center justify-center"
                         >
-                            <View className="w-24 h-24 bg-green-500/20 rounded-full items-center justify-center mb-4">
-                                <MaterialIcons name="check-circle" size={56} color="#4ade80" />
-                            </View>
-                            <Text style={{ color: theme.text }} className="text-2xl font-black text-center">¡Asignado!</Text>
-                        </MotiView>
-                    ) : (
-                        <>
-                            {/* Info del item */}
-                            <View style={{ backgroundColor: theme.primary + '15', borderColor: theme.primary + '30' }} className="p-5 rounded-[24px] border mb-6">
-                                <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-widest mb-1">Producto</Text>
-                                <Text style={{ color: theme.text }} className="text-xl font-black">{item.name}</Text>
-                                <View className="flex-row justify-between items-center mt-3">
-                                    <Text style={{ color: theme.textSecondary }} className="text-sm">Total</Text>
-                                    <Text style={{ color: theme.primary }} className="font-black text-2xl">${item.amount.toFixed(2)}</Text>
+                            <Ionicons name="close" size={20} color={theme.text} />
+                        </TouchableOpacity>
+                    </View>
+
+                    <ScrollView className="px-6" showsVerticalScrollIndicator={false}>
+                        {success ? (
+                            <MotiView
+                                from={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="items-center py-20"
+                            >
+                                <View className="w-24 h-24 bg-emerald-500/20 rounded-full items-center justify-center mb-6">
+                                    <MaterialIcons name="check-circle" size={60} color="#10b981" />
                                 </View>
-                                {selected.length > 0 && (
-                                    <View style={{ backgroundColor: theme.primary + '10' }} className="mt-3 p-3 rounded-xl flex-row justify-between">
-                                        <Text style={{ color: theme.textSecondary }} className="text-xs">Por persona ({selected.length})</Text>
-                                        <Text style={{ color: theme.primary }} className="font-black text-sm">${perPersonAmount.toFixed(2)}</Text>
+                                <Text style={{ color: theme.text }} className="text-2xl font-black text-center uppercase tracking-tight">¡Asignado!</Text>
+                                <Text style={{ color: theme.textSecondary }} className="text-center mt-2 font-bold opacity-60">Los saldos se han actualizado</Text>
+                            </MotiView>
+                        ) : (
+                            <>
+                                {/* Info Card */}
+                                <View 
+                                    style={{ 
+                                        backgroundColor: theme.primary + '08', 
+                                        borderColor: theme.primary + '20',
+                                        borderWidth: 1,
+                                        borderRadius: 24,
+                                        padding: 20,
+                                        marginBottom: 24
+                                    }}
+                                >
+                                    <View className="flex-row justify-between items-center">
+                                        <View>
+                                            <Text style={{ color: theme.textSecondary }} className="text-[9px] font-black uppercase tracking-widest mb-1">Monto Total</Text>
+                                            <Text style={{ color: theme.primary }} className="text-3xl font-black font-mono">${item.amount.toFixed(2)}</Text>
+                                        </View>
+                                        {selected.length > 0 && (
+                                            <MotiView 
+                                                from={{ scale: 0.8, opacity: 0 }} 
+                                                animate={{ scale: 1, opacity: 1 }}
+                                                style={{ backgroundColor: theme.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 }}
+                                            >
+                                                <Text className="text-white text-[10px] font-black uppercase tracking-widest">
+                                                    ${perPersonAmount.toFixed(2)} c/u
+                                                </Text>
+                                            </MotiView>
+                                        )}
                                     </View>
-                                )}
-                            </View>
-
-                            {/* Acciones rápidas */}
-                            <View className="flex-row gap-3 mb-5">
-                                <TouchableOpacity
-                                    onPress={selectAll}
-                                    style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
-                                    className="flex-1 py-3 rounded-2xl border items-center"
-                                >
-                                    <Text style={{ color: theme.text }} className="font-bold text-xs">Todos</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={clearAll}
-                                    style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
-                                    className="flex-1 py-3 rounded-2xl border items-center"
-                                >
-                                    <Text style={{ color: theme.textSecondary }} className="font-bold text-xs">Ninguno</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                            {/* Lista de miembros */}
-                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-widest mb-3">
-                                ¿Quién consumió este item?
-                            </Text>
-
-                            {members.length === 0 ? (
-                                <View style={{ backgroundColor: theme.cardSecondary }} className="p-6 rounded-[24px] items-center">
-                                    <MaterialIcons name="group-add" size={32} color={theme.textSecondary} />
-                                    <Text style={{ color: theme.textSecondary }} className="text-sm font-bold mt-3 text-center">
-                                        No hay miembros en el grupo aún
-                                    </Text>
                                 </View>
-                            ) : (
-                                <View className="gap-3">
-                                    {members.map(member => {
+
+                                {/* Quick Actions */}
+                                <View className="flex-row gap-3 mb-6">
+                                    <TouchableOpacity
+                                        onPress={selectAll}
+                                        style={{ 
+                                            backgroundColor: selected.length === members.length ? theme.primary : theme.cardSecondary,
+                                            flex: 1,
+                                            paddingVertical: 14,
+                                            borderRadius: 16,
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: 8
+                                        }}
+                                    >
+                                        <MaterialIcons name="groups" size={18} color={selected.length === members.length ? 'white' : theme.text} />
+                                        <Text style={{ color: selected.length === members.length ? 'white' : theme.text }} className="font-black text-xs uppercase tracking-widest">Todos</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={clearAll}
+                                        style={{ 
+                                            backgroundColor: theme.cardSecondary,
+                                            flex: 1,
+                                            paddingVertical: 14,
+                                            borderRadius: 16,
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: 8
+                                        }}
+                                    >
+                                        <MaterialIcons name="person-remove" size={18} color={theme.textSecondary} />
+                                        <Text style={{ color: theme.textSecondary }} className="font-black text-xs uppercase tracking-widest">Ninguno</Text>
+                                    </TouchableOpacity>
+                                </View>
+
+                                {/* Members List */}
+                                <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-[0.15em] mb-4">
+                                    Participantes ({selected.length})
+                                </Text>
+
+                                <View className="gap-3 pb-10">
+                                    {members.map((member) => {
                                         const isSelected = selected.includes(member.id);
-                                        const color = member.color ?? '#2196F3';
+                                        const color = member.color || theme.primary;
+                                        
                                         return (
                                             <TouchableOpacity
                                                 key={member.id}
                                                 onPress={() => toggle(member.id)}
+                                                activeOpacity={0.7}
                                                 style={{
-                                                    backgroundColor: isSelected ? color + '15' : theme.cardSecondary,
+                                                    backgroundColor: isSelected ? color + '10' : theme.cardSecondary,
                                                     borderColor: isSelected ? color : theme.border,
+                                                    borderWidth: 1.5,
+                                                    borderRadius: 20,
+                                                    padding: 16,
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center'
                                                 }}
-                                                className="flex-row items-center p-4 rounded-[20px] border"
                                             >
                                                 {/* Avatar */}
-                                                <View
-                                                    style={{ backgroundColor: color + '25' }}
-                                                    className="w-12 h-12 rounded-full items-center justify-center mr-4"
+                                                <View 
+                                                    style={{ backgroundColor: color, width: 44, height: 44, borderRadius: 22, marginRight: 16, alignItems: 'center', justifyCenter: 'center', shadowColor: color, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 }}
+                                                    className="items-center justify-center"
                                                 >
-                                                    <Text style={{ color }} className="font-black text-base">
-                                                        {member.nombre.substring(0, 2).toUpperCase()}
+                                                    <Text className="text-white font-black text-base">
+                                                        {member.nombre.substring(0, 1).toUpperCase()}
                                                     </Text>
                                                 </View>
 
-                                                {/* Nombre */}
+                                                {/* Info */}
                                                 <View className="flex-1">
-                                                    <Text style={{ color: theme.text }} className="font-black text-base">
-                                                        {member.nombre}
-                                                    </Text>
+                                                    <Text style={{ color: theme.text }} className="font-black text-base">{member.nombre}</Text>
                                                     {isSelected && (
-                                                        <Text style={{ color }} className="text-xs font-bold mt-0.5">
-                                                            Paga ${perPersonAmount.toFixed(2)}
-                                                        </Text>
+                                                        <MotiView from={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }}>
+                                                            <Text style={{ color }} className="text-xs font-bold uppercase tracking-widest mt-0.5">
+                                                                Paga ${perPersonAmount.toFixed(2)}
+                                                            </Text>
+                                                        </MotiView>
                                                     )}
                                                 </View>
 
                                                 {/* Checkbox */}
-                                                <View
-                                                    style={{
+                                                <View 
+                                                    style={{ 
+                                                        width: 28, 
+                                                        height: 28, 
+                                                        borderRadius: 14, 
                                                         backgroundColor: isSelected ? color : 'transparent',
                                                         borderColor: isSelected ? color : theme.border,
+                                                        borderWidth: 2,
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
                                                     }}
-                                                    className="w-7 h-7 rounded-full border-2 items-center justify-center"
                                                 >
-                                                    {isSelected && (
-                                                        <MaterialIcons name="check" size={16} color="white" />
-                                                    )}
+                                                    {isSelected && <Ionicons name="checkmark" size={16} color="white" />}
                                                 </View>
                                             </TouchableOpacity>
                                         );
                                     })}
                                 </View>
-                            )}
-                        </>
-                    )}
-                </ScrollView>
+                            </>
+                        )}
+                    </ScrollView>
 
-                {/* Botón confirmar */}
-                {!success && (
-                    <View style={{ backgroundColor: theme.bg, borderTopColor: theme.border }} className="px-6 pb-10 pt-4 border-t">
-                        <TouchableOpacity
-                            onPress={handleConfirm}
-                            disabled={loading || selected.length === 0}
-                            style={{
-                                backgroundColor: selected.length > 0 ? theme.primary : theme.cardSecondary,
-                                opacity: loading ? 0.7 : 1,
-                            }}
-                            className="py-5 rounded-2xl items-center"
-                        >
-                            {loading ? (
-                                <Text style={{ color: 'white' }} className="font-black text-base">Guardando...</Text>
-                            ) : (
-                                <Text style={{ color: selected.length > 0 ? 'white' : theme.textSecondary }} className="font-black text-base">
-                                    {selected.length > 0
-                                        ? `Asignar a ${selected.length} persona${selected.length > 1 ? 's' : ''}`
-                                        : 'Selecciona personas'}
-                                </Text>
-                            )}
-                        </TouchableOpacity>
-                    </View>
-                )}
+                    {/* Bottom Button */}
+                    {!success && (
+                        <View className="px-6 pt-4">
+                            <TouchableOpacity
+                                onPress={handleConfirm}
+                                disabled={loading || selected.length === 0}
+                                style={{ 
+                                    backgroundColor: selected.length > 0 ? theme.primary : theme.cardSecondary,
+                                    borderRadius: 20,
+                                    paddingVertical: 20,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    shadowColor: theme.primary,
+                                    shadowOffset: { width: 0, height: 10 },
+                                    shadowOpacity: selected.length > 0 ? 0.3 : 0,
+                                    shadowRadius: 20,
+                                    elevation: 5
+                                }}
+                            >
+                                {loading ? (
+                                    <View className="flex-row items-center gap-3">
+                                        <Text className="text-white font-black uppercase tracking-widest">Guardando...</Text>
+                                    </View>
+                                ) : (
+                                    <Text 
+                                        style={{ color: selected.length > 0 ? 'white' : theme.textSecondary }} 
+                                        className="font-black text-base uppercase tracking-widest"
+                                    >
+                                        {selected.length > 0 
+                                            ? `Confirmar (${selected.length})` 
+                                            : 'Selecciona personas'}
+                                    </Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </MotiView>
             </View>
         </Modal>
     );
 }
+

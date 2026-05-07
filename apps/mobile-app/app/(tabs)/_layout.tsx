@@ -47,16 +47,26 @@ const CustomTabBarButton = ({ children, onPress, theme, isOnline }: any) => {
 
 import { Redirect } from 'expo-router';
 
+import { usePathname } from 'expo-router';
+import { useEffect } from 'react';
+
 export default function TabLayout() {
   const { theme } = useTheme();
   const { hasAlerts } = useNotifications();
-  const { token, isLoading, isOnline } = useEasyPay();
+  const { user, isLoading, isOnline, saveLastRoute } = useEasyPay();
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (pathname && pathname !== '/') {
+      saveLastRoute(pathname);
+    }
+  }, [pathname]);
 
   if (isLoading) return null;
 
-  console.log(`🛡️ TabLayout Protection - Token: ${token ? '✅ Presente' : '❌ Ausente'}`);
-  if (!token) return <Redirect href="/" />;
+  console.log(`🛡️ TabLayout Protection - User: ${user ? '✅ Presente' : '❌ Ausente'}`);
+  if (!user) return <Redirect href="/" />;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>

@@ -31,8 +31,18 @@ class OcrRequest(BaseModel):
     user_id: Optional[str] = None
 
 # ── Helpers de parseo ─────────────────────────────────────────────────────────
-def title_case(text: str) -> str:
-    return text.lower().title()
+def clean_price(text: str) -> float:
+    # Remove currency symbols and common OCR noise
+    text = re.sub(r"[^\d.,]", "", text)
+    # Handle European/Latin American comma as decimal separator
+    if "," in text and "." in text:
+        text = text.replace(",", "")
+    elif "," in text:
+        text = text.replace(",", ".")
+    try:
+        return float(text)
+    except:
+        return 0.0
 
 def parse_ticket_text(raw_text: str) -> dict:
     lines = [l.strip() for l in raw_text.split("\n") if l.strip()]
@@ -42,8 +52,8 @@ def parse_ticket_text(raw_text: str) -> dict:
         re.IGNORECASE
     )
     restaurant_name = "Restaurante"
-    for line in lines[:8]:
-        if not meta_pattern.search(line) and len(line) >= 3 and not line.isdigit():
+    for line in lines[:10]:
+        if not meta_pattern.search(line) and len(line) >= 4 and not any(c.isdigit() for c in line):
             restaurant_name = title_case(line)
             break
 
@@ -57,56 +67,75 @@ def parse_ticket_text(raw_text: str) -> dict:
     )
 
     items = []
-    p1 = re.compile(r"^(\d{1,2})\s+(.{2,40}?)\s+\$?([\d,]+\.?\d{0,2})$")
-    p2 = re.compile(r"^(.{2,45}?)\s{2,}\$?([\d,]+\.?\d{0,2})$")
-    p3 = re.compile(r"^(.{2,40}?)\s+\$([\d,]+\.?\d{0,2})$")
+    # Patterns for different receipt layouts
+    # 1. Quantity - Description - Price (common)
+    p1 = re.compile(r"^(\d{1,2})\s+([a-zA-Z\s]{2,40}?)\s+[\$]?([\d,]+\.?\d{0,2})$")
+    # 2. Description - Price (no quantity)
+    p2 = re.compile(r"^([a-zA-Z\s]{2,45}?)\s{2,}[\$]?([\d,]+\.?\d{0,2})$")
+    # 3. Description - $ - Price
+    p3 = re.compile(r"^([a-zA-Z\s]{2,40}?)\s+[\$]([\d,]+\.?\d{0,2})$")
 
     for line in lines:
         if skip_pattern.search(line):
             continue
 
+        # Try Pattern 1
         m = p1.match(line)
         if m:
             qty = int(m.group(1))
-            name = m.group(2).strip()
-            price = float(m.group(3).replace(",", ""))
-            if qty <= 20 and 0 < price < 99999 and len(name) > 1:
+            name = title_case(m.group(2).strip())
+            price = clean_price(m.group(3))
+            if 0 < qty <= 50 and 0 < price < 50000:
                 items.append({"name": name, "price": price, "quantity": qty})
                 continue
 
+        # Try Pattern 2
         m = p2.match(line)
         if m:
-            name = m.group(1).strip()
-            price = float(m.group(2).replace(",", ""))
-            if 0 < price < 99999 and len(name) > 1 and not name.isdigit():
+            name = title_case(m.group(1).strip())
+            price = clean_price(m.group(2))
+            if 0 < price < 50000 and not any(kw in name.lower() for kw in ["total", "iva", "pago"]):
                 items.append({"name": name, "price": price, "quantity": 1})
                 continue
 
+        # Try Pattern 3
         m = p3.match(line)
         if m:
-            name = m.group(1).strip()
-            price = float(m.group(2).replace(",", ""))
-            if 0 < price < 99999 and len(name) > 1:
+            name = title_case(m.group(1).strip())
+            price = clean_price(m.group(2))
+            if 0 < price < 50000:
                 items.append({"name": name, "price": price, "quantity": 1})
 
+    # Totals extraction
     total = subtotal = tax = tip = 0.0
     for line in lines:
-        nums = re.findall(r"\$?([\d,]+\.\d{2})", line)
-        last_num = float(nums[-1].replace(",", "")) if nums else 0
+        # Search for lines containing "Total"
+        if re.search(r"total", line, re.IGNORECASE):
+            nums = re.findall(r"[\d,]+\.\d{2}", line)
+            if nums:
+                val = clean_price(nums[-1])
+                if val > total: total = val
+        
+        # Search for subtotal
+        if re.search(r"subtotal|sub\s*total", line, re.IGNORECASE):
+            nums = re.findall(r"[\d,]+\.\d{2}", line)
+            if nums:
+                val = clean_price(nums[-1])
+                if val > subtotal: subtotal = val
 
-        sub_match = re.search(r"subtotal[:\s]*\$?([\d,]+\.?\d{0,2})", line, re.IGNORECASE)
-        iva_match = re.search(r"iva[:\s]*\$?([\d,]+\.?\d{0,2})", line, re.IGNORECASE)
+        # Search for tax
+        if re.search(r"iva|impuesto", line, re.IGNORECASE):
+            nums = re.findall(r"[\d,]+\.\d{2}", line)
+            if nums:
+                val = clean_price(nums[-1])
+                if val > tax: tax = val
 
-        if re.match(r"^total", line, re.IGNORECASE) and last_num > 0:
-            total = last_num
-        elif sub_match:
-            subtotal = float(sub_match.group(1).replace(",", ""))
-            if iva_match:
-                tax = float(iva_match.group(1).replace(",", ""))
-        elif re.match(r"^iva|^impuesto", line, re.IGNORECASE) and last_num > 0:
-            tax = last_num
-        elif re.match(r"^propina|^tip", line, re.IGNORECASE) and last_num > 0:
-            tip = last_num
+        # Search for tip
+        if re.search(r"propina|tip", line, re.IGNORECASE):
+            nums = re.findall(r"[\d,]+\.\d{2}", line)
+            if nums:
+                val = clean_price(nums[-1])
+                if val > tip: tip = val
 
     if total == 0 and items:
         total = round(sum(i["price"] * i["quantity"] for i in items), 2)

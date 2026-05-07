@@ -1,51 +1,48 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, Image, Dimensions, Alert } from 'react-native';
-import { Camera, CameraView, useCameraPermissions } from 'expo-camera';
-import { MaterialIcons } from '@expo/vector-icons';
-import { router, Stack } from 'expo-router';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { BlurView } from 'expo-blur';
+import { ocrRepository } from '../src/infrastructure/api/repositories/OcrRepository';
+import { useEasyPay } from '../context/EasyPayContext';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 export default function OCRScannerScreen() {
+    const { groupId } = useLocalSearchParams();
+    const { user } = useEasyPay();
     const [permission, requestPermission] = useCameraPermissions();
     const [isScanning, setIsScanning] = useState(false);
     const [scannedImage, setScannedImage] = useState<string | null>(null);
+    const [scanData, setScanData] = useState<any>(null);
     const [hasError, setHasError] = useState(false);
     const cameraRef = useRef<any>(null);
+    const router = useRouter();
 
-    useEffect(() => {
-        let timer: any;
-        if (isScanning) {
-            // Simulated 15 second timeout for the API call
-            timer = setTimeout(() => {
-                if (isScanning) {
-                    setIsScanning(false);
-                    setHasError(true);
-                    Alert.alert(
-                        "Error de Conexión", 
-                        "La IA tardó demasiado en responder. ¿Quieres reintentar?",
-                        [
-                            { text: "Cancelar", onPress: () => setScannedImage(null), style: "cancel" },
-                            { text: "Reintentar", onPress: () => retryScan() }
-                        ]
-                    );
-                }
-            }, 15000);
-        }
-        return () => clearTimeout(timer);
-    }, [isScanning]);
-
-    const retryScan = () => {
-        setHasError(false);
+    const processScan = async (base64: string) => {
         setIsScanning(true);
-        // Simulate a successful scan after retry
-        setTimeout(() => {
+        setHasError(false);
+        try {
+            const result = await ocrRepository.scanTicket(
+                base64, 
+                groupId as string, 
+                user?.id
+            );
+            
+            if (result.success) {
+                setScanData(result.data);
+                setIsScanning(false);
+            } else {
+                throw new Error("No se pudo procesar el ticket");
+            }
+        } catch (e) {
+            console.error(e);
             setIsScanning(false);
-            setHasError(false);
-        }, 3000);
+            setHasError(true);
+        }
     };
 
     if (!permission) {
@@ -84,8 +81,7 @@ export default function OCRScannerScreen() {
                 if (!photo || !photo.uri) throw new Error("No se pudo capturar la imagen");
                 
                 setScannedImage(photo.uri);
-                setHasError(false);
-                setIsScanning(true);
+                processScan(photo.base64);
             } catch (e) {
                 console.error(e);
                 Alert.alert("Error de Cámara", "No se pudo capturar la foto. Intenta de nuevo.");
@@ -118,7 +114,6 @@ export default function OCRScannerScreen() {
                         </View>
 
                         <View className="items-center w-full px-10">
-                            {/* Viewfinder Frame Corregido */}
                             <View className="w-full aspect-[3/4] max-w-sm border-2 border-white/20 rounded-[40px] items-center justify-center relative bg-white/5">
                                 <View className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-blue-500 rounded-tl-[30px]" />
                                 <View className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-blue-500 rounded-tr-[30px]" />
@@ -177,17 +172,10 @@ export default function OCRScannerScreen() {
                                 </Text>
                                 
                                 <Pressable 
-                                    onPress={retryScan}
+                                    onPress={() => setScannedImage(null)}
                                     className="bg-blue-600 w-full py-5 rounded-2xl items-center mb-4"
                                 >
-                                    <Text className="text-white font-black">REINTENTAR ANÁLISIS</Text>
-                                </Pressable>
-                                
-                                <Pressable 
-                                    onPress={() => setScannedImage(null)}
-                                    className="bg-white/5 w-full py-4 rounded-2xl items-center border border-white/10"
-                                >
-                                    <Text className="text-white font-black text-xs tracking-widest uppercase">Tomar otra foto</Text>
+                                    <Text className="text-white font-black">REINTENTAR CAPTURA</Text>
                                 </Pressable>
                             </View>
                         </View>
@@ -200,34 +188,37 @@ export default function OCRScannerScreen() {
                                     </View>
                                     <View className="flex-1">
                                         <Text className="text-white font-black text-2xl tracking-tighter">Lectura Éxitosa</Text>
-                                        <Text className="text-slate-400 text-sm font-bold opacity-70">12 ITEMS IDENTIFICADOS</Text>
+                                        <Text className="text-slate-400 text-sm font-bold opacity-70">{scanData?.items?.length || 0} ITEMS IDENTIFICADOS</Text>
                                     </View>
                                 </View>
                                 
                                 <View className="bg-white/5 rounded-3xl p-6 mb-10 border border-white/5">
                                     <View className="flex-row justify-between mb-4">
-                                        <Text className="text-slate-400 font-bold">Subtotal</Text>
-                                        <Text className="text-white font-black">$1,250.00</Text>
+                                        <Text className="text-slate-400 font-bold">Lugar</Text>
+                                        <Text className="text-white font-black">{scanData?.restaurant_name || "Desconocido"}</Text>
                                     </View>
                                     <View className="flex-row justify-between pt-4 border-t border-white/5">
                                         <Text className="text-slate-400 font-bold text-lg">Total Ticket</Text>
-                                        <Text className="text-emerald-400 font-black text-2xl">$1,450.00</Text>
+                                        <Text className="text-emerald-400 font-black text-2xl">${(scanData?.total || 0).toFixed(2)}</Text>
                                     </View>
                                 </View>
 
                                 <View className="gap-4">
                                     <Pressable 
-                                        onPress={() => router.replace('/ocr-review')}
+                                        onPress={() => router.replace({
+                                            pathname: '/ocr-review',
+                                            params: { scanData: JSON.stringify(scanData), groupId: groupId as string }
+                                        })}
                                         className="bg-blue-600 py-6 rounded-[25px] items-center shadow-2xl shadow-blue-500/40 active:scale-95"
                                     >
-                                        <Text className="text-white font-black text-lg">REVISAR RESULTADOS</Text>
+                                        <Text className="text-white font-black text-lg uppercase tracking-widest">Revisar Resultados</Text>
                                     </Pressable>
                                     
                                     <Pressable 
                                         onPress={() => setScannedImage(null)}
                                         className="py-4 items-center bg-white/5 rounded-2xl border border-white/10"
                                     >
-                                        <Text className="text-white font-black text-xs tracking-widest">DESCARTAR Y REPETIR</Text>
+                                        <Text className="text-white font-black text-xs tracking-widest uppercase">Descartar y Repetir</Text>
                                     </Pressable>
                                 </View>
                             </View>

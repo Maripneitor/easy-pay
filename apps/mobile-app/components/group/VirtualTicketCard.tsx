@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import ItemAssignModal from '../ItemAssignModal';
 import { EditItemModal } from './EditItemModal';
 import * as Haptics from 'expo-haptics';
@@ -23,6 +23,7 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({
     items, serviceFee, groupId, members = [], onAssign, onEdit, canEdit
 }) => {
     const { theme, fontScale } = useTheme();
+    const router = useRouter();
     const [assignModal, setAssignModal] = useState<{ visible: boolean; item: Item | null }>({
         visible: false, item: null,
     });
@@ -67,19 +68,30 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({
                         Asigna o edita ítems de la cuenta
                     </Text>
                 </View>
-                <TouchableOpacity
-                    onPress={() => router.push({ pathname: '/new-expense', params: { groupId } } as any)}
-                    style={{ backgroundColor: theme.primary + '15' }}
-                    className="flex-row items-center gap-2 px-4 py-2 rounded-xl"
-                >
-                    <Ionicons name="add" size={18} color={theme.primary} />
-                    <Text style={{ color: theme.primary, fontSize: 12 * fontScale }} className="font-black uppercase tracking-widest">Añadir</Text>
-                </TouchableOpacity>
+                <View className="flex-row gap-2">
+                    <TouchableOpacity
+                        onPress={() => router.push({ pathname: '/ocr-scanner', params: { groupId } } as any)}
+                        style={{ backgroundColor: '#10b98120', borderColor: '#10b98130' }}
+                        className="flex-row items-center gap-2 px-4 py-2 rounded-xl border"
+                    >
+                        <MaterialIcons name="document-scanner" size={18} color="#10b981" />
+                        <Text style={{ color: '#10b981', fontSize: 12 * fontScale }} className="font-black uppercase tracking-widest">Escanear</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        onPress={() => router.push({ pathname: '/new-expense', params: { groupId } } as any)}
+                        style={{ backgroundColor: theme.primary + '15' }}
+                        className="flex-row items-center gap-2 px-4 py-2 rounded-xl"
+                    >
+                        <Ionicons name="add" size={18} color={theme.primary} />
+                        <Text style={{ color: theme.primary, fontSize: 12 * fontScale }} className="font-black uppercase tracking-widest">Añadir</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
 
             <View className="gap-y-4">
                 {items.map((item) => {
-                    const totalAmount = item.precio * item.cantidad;
+                    const totalAmount = (item.precio || 0) * (item.cantidad || 1);
                     return (
                         <View
                             key={item.id}
@@ -95,7 +107,7 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({
                                         {item.nombre}
                                     </Text>
                                     <Text style={{ color: theme.textSecondary, fontSize: 12 * fontScale }} className="font-bold opacity-60 mt-0.5">
-                                        {item.cantidad} x ${item.precio.toFixed(2)}
+                                        {item.cantidad} x ${item.precio?.toFixed(2) || '0.00'}
                                     </Text>
                                 </TouchableOpacity>
                                 <Text style={{ color: theme.primary, fontSize: 18 * fontScale }} className="font-black font-mono">
@@ -182,7 +194,7 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({
                 <View className="items-end">
                     <Text style={{ color: theme.primary }} className="text-[10px] font-black uppercase tracking-widest mb-1">Subtotal Neto</Text>
                     <Text style={{ color: theme.primary }} className="text-2xl font-black font-mono">
-                        ${(items.reduce((acc, item) => acc + (item.precio * item.cantidad), 0)).toFixed(2)}
+                        ${(items.reduce((acc, item) => acc + ((item.precio || 0) * (item.cantidad || 1)), 0)).toFixed(2)}
                     </Text>
                 </View>
             </View>
@@ -190,16 +202,17 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({
             {/* Modals */}
             {assignModal.item && (
                 <ItemAssignModal
-                    isVisible={assignModal.visible}
+                    visible={assignModal.visible}
                     onClose={() => setAssignModal({ visible: false, item: null })}
                     item={{
                         id: assignModal.item.id,
                         name: assignModal.item.nombre,
-                        amount: assignModal.item.precio * assignModal.item.cantidad,
+                        amount: (assignModal.item.precio || 0) * (assignModal.item.cantidad || 1),
                         assignedTo: assignModal.item.asignadoA || []
                     }}
-                    members={members}
-                    onConfirm={(assignedIds) => handleAssign(assignModal.item!.id, assignedIds)}
+                    members={members as any}
+                    theme={theme}
+                    onConfirm={(itemId, assignedIds) => handleAssign(itemId, assignedIds)}
                 />
             )}
 
@@ -214,3 +227,4 @@ export const VirtualTicketCard: React.FC<VirtualTicketCardProps> = ({
         </MotiView>
     );
 };
+

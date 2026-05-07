@@ -33,7 +33,7 @@ export interface Item {
     asignadoA: string[]; // Array of participant IDs
 }
 
-export type GrupoStatus = 'ACTIVA' | 'CERRANDO' | 'CERRADA' | 'SETTLING';
+export type GrupoStatus = 'active' | 'settling' | 'closed';
 
 export interface Grupo {
     id: string;

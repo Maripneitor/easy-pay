@@ -18,7 +18,7 @@ import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { useNotifications, timeAgo } from '../../src/infrastructure/context/NotificationContext';
 import { AppNotification } from '../../src/infrastructure/services/NotificationService';
 import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
-import { useAuth } from '../../context/AuthContext';
+import { useEasyPay } from '../../context/EasyPayContext';
 import { Alert } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -285,7 +285,7 @@ export default function NotificationsScreen() {
     const [acceptingIds, setAcceptingIds] = React.useState<string[]>([]);
     const [rejectingIds, setRejectingIds] = React.useState<string[]>([]);
     const [acceptedIds, setAcceptedIds] = React.useState<string[]>([]);
-    const { user } = useAuth();
+    const { user } = useEasyPay();
 
     const unreadCount = notifications.filter(n => !n.read).length;
 

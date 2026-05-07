@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useMemo, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { groupRepository, userRepository } from '@infrastructure/api/repositories';
 import { useAuthContext } from '@ui/context/AuthContext';
 import { ROUTES } from '@infrastructure/routes';
@@ -8,7 +8,8 @@ import { httpClient } from '@infrastructure/api/http-client';
 
 export const useGroupDetail = (groupId: string) => {
     const [activeTab, setActiveTab] = useState<'actividades' | 'saldos' | 'miembros' | 'ajustes' | 'pagos'>('actividades');
-    const { user } = useAuthContext();
+    const { user, token } = useAuthContext();
+    const queryClient = useQueryClient();
     const myId = user?.id;
 
     const normalizeId = (id: any) => {
@@ -24,22 +25,20 @@ export const useGroupDetail = (groupId: string) => {
                 return null;
             }
 
-            // Fetch everything in parallel
             const [resGroup, resItems, resBalances] = await Promise.all([
                 httpClient.get(`/groups/${groupId}`),
                 httpClient.get(`/groups/${groupId}/items`),
                 httpClient.get(`/groups/${groupId}/balances`)
             ]);
 
-            const gData = resGroup.data;
-            const itemsData = resItems.data;
-            const bData = resBalances.data;
+            const gData = resGroup.data || {};
+            const itemsData = resItems.data || [];
+            const bData = resBalances.data || {};
 
             if (gData.status === 'error' || bData.status === 'error') {
                 throw new Error(gData.message || bData.message || "Error al cargar datos");
             }
 
-            // Fetch leader profile if not loaded
             const lId = normalizeId(gData.admin_id || gData.administrador_id);
             if (lId && !leaderProfile) {
                 httpClient.get(`/auth/profile/${lId}`).then(res => setLeaderProfile(res.data)).catch(console.error);
@@ -53,7 +52,7 @@ export const useGroupDetail = (groupId: string) => {
                     monto: Number(item.monto || item.precio || 0)
                 }));
 
-            const rawMembers = gData.integrantes || [];
+            const rawMembers = gData.integrantes || gData.participantes || [];
             let membersData: any[] = [];
             let members: any[] = [];
 
@@ -75,15 +74,15 @@ export const useGroupDetail = (groupId: string) => {
                     return {
                         ...b,
                         usuario_id: uId,
-                        persona: foundUser ? foundUser.nombre : "Usuario"
+                        persona: foundUser ? (foundUser.nombre || foundUser.name) : (b.nombre || "Usuario")
                     };
                 })
                 : [];
 
             return {
-                groupName: gData.nombre || "Grupo",
+                groupName: gData.nombre || gData.name || "Grupo",
                 groupDescription: gData.descripcion || "",
-                groupCode: gData.codigo_invitacion || "---",
+                groupCode: gData.codigo_invitacion || gData.codigo || "---",
                 adminId: normalizeId(gData.admin_id || gData.administrador_id),
                 status: gData.status || "active",
                 selectedBankAccounts: gData.selected_bank_accounts || [],
@@ -91,12 +90,68 @@ export const useGroupDetail = (groupId: string) => {
                 membersData,
                 activities: itemsList,
                 balances: detailedBalances,
-                totalSpent: bData.total_gastado_en_grupo || 0
+                totalSpent: bData.total_gastado_en_grupo || bData.total_gastado || 0
             };
         },
-        refetchInterval: 5000, 
-        enabled: !!groupId && groupId !== ':groupId'
+        enabled: !!groupId && groupId !== ':groupId',
+        staleTime: 30000 // Aumentar staleTime ya que usaremos WS para invalidar
     });
+
+    // --- WebSocket Logic ---
+    useEffect(() => {
+        if (!groupId || !token || groupId === ':groupId') return;
+
+        let socket: WebSocket | null = null;
+        let reconnectTimer: any = null;
+
+        const connect = () => {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.hostname === 'localhost' ? 'localhost:8001' : window.location.host;
+            const wsUrl = `${protocol}//${host}/api/groups/ws/groups/${groupId}?token=${token}`;
+            
+            console.log(`[WS] Conectando a ${wsUrl}`);
+            socket = new WebSocket(wsUrl);
+
+            socket.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    console.log("[WS] Mensaje recibido:", msg);
+                    
+                    // Invalidar queries para refrescar datos
+                    queryClient.invalidateQueries({ queryKey: ['group', groupId] });
+                    queryClient.invalidateQueries({ queryKey: ['pending-settlements', groupId] });
+                    
+                    if (msg.type === 'payment_reported') {
+                        toast.info("Un miembro ha reportado un pago");
+                    } else if (msg.type === 'settlement_updated') {
+                        toast.success("El estado de una liquidación ha cambiado");
+                    }
+                } catch (e) {
+                    console.error("[WS] Error parseando mensaje:", e);
+                }
+            };
+
+            socket.onclose = () => {
+                console.log("[WS] Conexión cerrada. Reintentando en 5s...");
+                reconnectTimer = setTimeout(connect, 5000);
+            };
+
+            socket.onerror = (err) => {
+                console.error("[WS] Error:", err);
+                socket?.close();
+            };
+        };
+
+        connect();
+
+        return () => {
+            if (socket) {
+                socket.onclose = null;
+                socket.close();
+            }
+            if (reconnectTimer) clearTimeout(reconnectTimer);
+        };
+    }, [groupId, token, queryClient]);
 
     const [is2FAModalOpen, setIs2FAModalOpen] = useState(false);
     const [leaderProfile, setLeaderProfile] = useState<any>(null);
@@ -114,7 +169,6 @@ export const useGroupDetail = (groupId: string) => {
     const deleteGroup = async () => {
         if (!myId) return;
         
-        // Verificar que todos los saldos estén en cero (saldados)
         const hasUnsettledBalances = data?.balances.some((b: any) => Math.abs(b.balance) > 0.01);
         
         if (hasUnsettledBalances) {
@@ -161,11 +215,9 @@ export const useGroupDetail = (groupId: string) => {
             }
         });
 
-        // Usar el balance real calculado por el backend que incluye liquidaciones
         const myBalanceObj = data.balances.find((b: any) => b.usuario_id === myId);
         const realBalance = myBalanceObj ? parseFloat(myBalanceObj.monto || myBalanceObj.balance || 0) : 0;
         
-        // Usar la cuota de consumo real calculada por el backend (incluye propinas e impuestos)
         const realConsumption = myBalanceObj && myBalanceObj.cuota_correspondiente !== undefined 
             ? parseFloat(myBalanceObj.cuota_correspondiente) 
             : myTotalConsumption;
@@ -193,7 +245,7 @@ export const useGroupDetail = (groupId: string) => {
             });
             toast.success("Liquidación aprobada correctamente");
             refetchSettlements();
-            refetch(); // Update balances
+            refetch(); 
         } catch (error: any) {
             toast.error(error.message || "Error al aprobar liquidación");
         }

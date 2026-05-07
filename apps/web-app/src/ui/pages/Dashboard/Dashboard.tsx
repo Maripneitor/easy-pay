@@ -19,7 +19,17 @@ import { PageHeader } from '@ui/components/PageHeader/PageHeader';
 import { GroupCard } from './components/GroupCard';
 import { TwoFactorModal } from '@ui/components/Security/TwoFactorModal';
 import { generateFinancialReport } from '@infrastructure/services/PdfService';
-import { DashboardSkeleton } from './components/DashboardSkeleton';
+
+// ─── Componentes de UI Internos ──────────────────────────────────────────────
+const DashboardSkeleton: React.FC = () => {
+    return (
+        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+            <div className="animate-pulse rounded-2xl bg-slate-200/50 dark:bg-slate-800/50 p-6 h-32" />
+            <div className="animate-pulse rounded-2xl bg-slate-200/50 dark:bg-slate-800/50 p-6 h-32" />
+            <div className="animate-pulse rounded-2xl bg-slate-200/50 dark:bg-slate-800/50 p-6 h-32" />
+        </div>
+    );
+};
 
 const I18N_TEXTS = {
     WELCOME_PREFIX: 'Hola,',

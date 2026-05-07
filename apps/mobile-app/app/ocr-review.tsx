@@ -1,57 +1,86 @@
 import { useEasyPay } from '../context/EasyPayContext';
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { MotiView, AnimatePresence } from 'moti';
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
-// Mock Data for OCR vs Manual
-const MOCK_COMPARISON = [
-    { id: 'ocr-1', nombre: 'Hamburguesa Sonora', precioManual: 280, precioOCR: 285, matched: false, type: 'discrepancy' },
-    { id: 'ocr-2', nombre: 'Papas Trufadas', precioManual: 120, precioOCR: 120, matched: true, type: 'match' },
-    { id: 'ocr-3', nombre: 'Nachos Supreme', precioManual: 0, precioOCR: 180, matched: false, type: 'ocr-only' },
-];
+interface ScannedItem {
+    name: string;
+    price: number;
+    quantity: number;
+    id: string;
+}
 
 export default function OCRReviewScreen() {
     const { theme, fontScale } = useTheme();
-    const { addItem, activeGrupo  } = useEasyPay();
+    const { addItem, activeGrupo, user } = useEasyPay();
+    const { scanData: scanDataRaw, groupId } = useLocalSearchParams();
     const router = useRouter();
-    const [items, setItems] = useState(MOCK_COMPARISON);
+    
+    const [items, setItems] = useState<ScannedItem[]>([]);
+    const [restaurant, setRestaurant] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleConfirm = async () => {
+    useEffect(() => {
+        if (scanDataRaw) {
+            try {
+                const parsed = JSON.parse(scanDataRaw as string);
+                setRestaurant(parsed.restaurant_name || "Restaurante");
+                const mappedItems = (parsed.items || []).map((item: any, index: number) => ({
+                    id: `scan-${index}`,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity || 1
+                }));
+                setItems(mappedItems);
+            } catch (e) {
+                console.error("Error parsing scanData", e);
+                Alert.alert("Error", "No se pudieron cargar los datos del escaneo.");
+            }
+        }
+    }, [scanDataRaw]);
+
+    const handleConfirm = async (splitAll: boolean = false) => {
+        if (items.length === 0) return;
+        
         setIsLoading(true);
         try {
-            // In a real app, we'd iterate over findings and add them
+            const memberIds = splitAll ? activeGrupo?.participantes?.map(p => p.id) || [] : [];
+            
+            // Agregar todos los items al grupo
             for (const item of items) {
-                const finalPrice = item.type === 'discrepancy' || item.type === 'ocr-only' ? item.precioOCR : item.precioManual;
-                if (finalPrice > 0) {
-                    await addItem({
-                        nombre: item.nombre,
-                        precio: finalPrice,
-                        cantidad: 1,
-                        autorId: activeGrupo?.liderId || '1',
-                        asignadoA: []
-                    });
-                }
+                await addItem({
+                    nombre: item.name,
+                    precio: item.price,
+                    cantidad: item.quantity,
+                    autorId: user?.id || activeGrupo?.liderId || '1',
+                    asignadoA: memberIds
+                });
             }
-            router.replace(`/(tabs)/group/${activeGrupo?.id || 'current'}`);
+            
+            Alert.alert(
+                "¡Éxito!", 
+                `${items.length} ítems agregados al grupo${splitAll ? ' y repartidos entre todos' : ''}.`,
+                [
+                    { text: "Cerrar", onPress: () => router.replace(`/(tabs)/group/${groupId || 'current'}`) }
+                ]
+            );
         } catch (e) {
             console.error(e);
+            Alert.alert("Error", "Ocurrió un error al agregar los ítems al grupo.");
         } finally {
             setIsLoading(false);
         }
     };
 
-    const useOCRValue = (id: string) => {
-        setItems(prev => prev.map(item => 
-            item.id === id ? { ...item, precioManual: item.precioOCR, matched: true, type: 'match' } : item
-        ));
+    const removeItem = (id: string) => {
+        setItems(prev => prev.filter(item => item.id !== id));
     };
 
     return (
@@ -60,41 +89,41 @@ export default function OCRReviewScreen() {
             <Stack.Screen options={{ headerShown: false }} />
 
             <View className="px-6 py-4 flex-row items-center border-b border-white/5">
-                <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
-                    <Ionicons name="arrow-back" size={24} color={theme.text} />
+                <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-xl bg-slate-800/40 items-center justify-center">
+                    <Ionicons name="arrow-back" size={20} color={theme.text} />
                 </TouchableOpacity>
                 <View className="ml-4 flex-1">
                     <Text style={{ color: theme.text }} className="text-xl font-black">Revisión OCR</Text>
-                    <Text style={{ color: theme.textSecondary }} className="text-xs font-bold uppercase tracking-widest">Comparativa vs. Ticket</Text>
+                    <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-widest">{restaurant}</Text>
                 </View>
             </View>
 
-            <ScrollView className="flex-1 px-6 pt-6">
+            <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
                 <MotiView 
                     from={{ opacity: 0, translateY: 20 }}
                     animate={{ opacity: 1, translateY: 0 }}
                     className="gap-6"
                 >
                     {/* Resumen de Hallazgos */}
-                    <View className="flex-row gap-4">
-                        <View style={{ backgroundColor: theme.cardSecondary }} className="flex-1 p-4 rounded-3xl border border-white/5 items-center">
-                            <Text style={{ color: theme.text, fontSize: 24 * fontScale }} className="font-black text-blue-400">
-                                {items.filter(i => i.type === 'discrepancy').length}
-                            </Text>
-                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase text-center mt-1">Diferencia</Text>
+                    <View style={{ backgroundColor: theme.cardSecondary + '40' }} className="p-6 rounded-[32px] border border-white/5 flex-row items-center justify-between">
+                        <View>
+                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-widest mb-1">Items Detectados</Text>
+                            <Text style={{ color: theme.text }} className="text-3xl font-black">{items.length}</Text>
                         </View>
-                        <View style={{ backgroundColor: theme.cardSecondary }} className="flex-1 p-4 rounded-3xl border border-white/5 items-center">
-                            <Text style={{ color: theme.text, fontSize: 24 * fontScale }} className="font-black text-rose-500">
-                                {items.filter(i => i.type === 'ocr-only').length}
+                        <View className="items-end">
+                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase tracking-widest mb-1">Total Estimado</Text>
+                            <Text style={{ color: theme.primary }} className="text-3xl font-black">
+                                ${items.reduce((acc, item) => acc + (item.price * item.quantity), 0).toFixed(2)}
                             </Text>
-                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase text-center mt-1">Faltante</Text>
                         </View>
-                        <View style={{ backgroundColor: theme.cardSecondary }} className="flex-1 p-4 rounded-3xl border border-white/5 items-center">
-                            <Text style={{ color: theme.text, fontSize: 24 * fontScale }} className="font-black text-emerald-500">
-                                {items.filter(i => i.matched).length}
-                            </Text>
-                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-black uppercase text-center mt-1">Coincidencia</Text>
-                        </View>
+                    </View>
+
+                    {/* Quick Action */}
+                    <View className="bg-blue-500/10 p-4 rounded-2xl border border-blue-500/20 flex-row items-center gap-3">
+                        <MaterialIcons name="info" size={20} color={theme.primary} />
+                        <Text style={{ color: theme.textSecondary, fontSize: 11 }} className="flex-1 font-bold">
+                            Puedes agregar los ítems y repartirlos equitativamente entre todos los miembros ahora mismo.
+                        </Text>
                     </View>
 
                     {/* Lista de Comparación */}
@@ -102,61 +131,69 @@ export default function OCRReviewScreen() {
                         {items.map((item) => (
                             <View 
                                 key={item.id}
-                                style={{ backgroundColor: theme.cardSecondary, borderColor: item.matched ? theme.border : (item.type === 'discrepancy' ? '#f59e0b' : '#3b82f6') }}
-                                className="p-5 rounded-[32px] border"
+                                style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border + '20' }}
+                                className="p-5 rounded-[32px] border flex-row items-center gap-4"
                             >
-                                <View className="flex-row justify-between items-start mb-3">
-                                    <View className="flex-1">
-                                        <Text style={{ color: theme.text }} className="text-lg font-black">{item.nombre}</Text>
-                                        <View className="flex-row items-center gap-2 mt-1">
-                                            <MaterialIcons name={item.matched ? "check-circle" : "error-outline"} size={14} color={item.matched ? "#10b981" : "#f59e0b"} />
-                                            <Text style={{ color: theme.textSecondary }} className="text-xs font-bold">
-                                                {item.type === 'match' && "Totalmente sincronizado"}
-                                                {item.type === 'discrepancy' && "Precio difiere del ticket"}
-                                                {item.type === 'ocr-only' && "Platillo detectado en ticket"}
-                                            </Text>
-                                        </View>
-                                    </View>
+                                <View className="w-12 h-12 rounded-2xl bg-slate-800 items-center justify-center">
+                                    <Text className="text-white font-black">{item.quantity}x</Text>
                                 </View>
 
-                                <View className="flex-row gap-4 items-center mt-2 pt-4 border-t border-white/5">
-                                    <View className="flex-1 items-center">
-                                        <Text className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Manual</Text>
-                                        <Text style={{ color: theme.text }} className="text-lg font-black">${item.precioManual || '--'}</Text>
-                                    </View>
-
-                                    <View style={{ backgroundColor: theme.border }} className="w-10 h-10 rounded-full items-center justify-center">
-                                        <MaterialIcons name="arrow-forward" size={16} color={theme.text} />
-                                    </View>
-
-                                    <View className="flex-1 items-center">
-                                        <Text className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Ticket OCR</Text>
-                                        <Text style={{ color: theme.primary }} className="text-lg font-black">${item.precioOCR || '--'}</Text>
-                                    </View>
+                                <View className="flex-1">
+                                    <Text style={{ color: theme.text }} className="text-base font-black" numberOfLines={1}>
+                                        {item.name}
+                                    </Text>
+                                    <Text style={{ color: theme.primary }} className="text-sm font-black mt-1">
+                                        ${item.price.toFixed(2)}
+                                    </Text>
                                 </View>
 
-                                {!item.matched && (
-                                    <TouchableOpacity 
-                                        onPress={() => useOCRValue(item.id)}
-                                        className="mt-4 bg-slate-900 px-6 py-3 rounded-2xl items-center border border-white/5"
-                                    >
-                                        <Text style={{ color: theme.primary }} className="text-xs font-black uppercase tracking-widest">Usar valor del ticket</Text>
-                                    </TouchableOpacity>
-                                )}
+                                <TouchableOpacity 
+                                    onPress={() => removeItem(item.id)}
+                                    className="w-10 h-10 rounded-full bg-red-500/10 items-center justify-center border border-red-500/20"
+                                >
+                                    <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
+                                </TouchableOpacity>
                             </View>
                         ))}
                     </View>
                 </MotiView>
             </ScrollView>
 
-            <View className="px-8 pb-10 absolute bottom-0 left-0 right-0">
+            <View className="px-8 pb-10 absolute bottom-0 left-0 right-0 gap-3">
                 <TouchableOpacity 
-                    onPress={handleConfirm}
-                    disabled={isLoading}
-                    style={{ backgroundColor: theme.primary }}
-                    className="w-full py-5 rounded-3xl items-center shadow-xl shadow-blue-500/20"
+                    onPress={() => handleConfirm(true)}
+                    disabled={isLoading || items.length === 0}
+                    style={{ 
+                        backgroundColor: theme.bg,
+                        borderColor: theme.primary,
+                        borderWidth: 2
+                    }}
+                    className="w-full py-5 rounded-[28px] items-center flex-row justify-center gap-3"
                 >
-                    {isLoading ? <ActivityIndicator color="black" /> : <Text className="text-black font-black uppercase tracking-[4px]">Confirmar Hallazgos</Text>}
+                    <Text style={{ color: theme.primary }} className="font-black uppercase tracking-[2px]">Dividir entre todos</Text>
+                    <MaterialIcons name="groups" size={20} color={theme.primary} />
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                    onPress={() => handleConfirm(false)}
+                    disabled={isLoading || items.length === 0}
+                    style={{ 
+                        backgroundColor: items.length > 0 ? theme.primary : theme.textSecondary + '20',
+                        shadowColor: theme.primary,
+                        shadowOffset: { width: 0, height: 10 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 20
+                    }}
+                    className="w-full py-6 rounded-[30px] items-center flex-row justify-center gap-3 elevation-5"
+                >
+                    {isLoading ? (
+                        <ActivityIndicator color="black" />
+                    ) : (
+                        <>
+                            <Text className="text-black font-black uppercase tracking-[2px]">Añadir sin asignar</Text>
+                            <Ionicons name="add-circle" size={20} color="black" />
+                        </>
+                    )}
                 </TouchableOpacity>
             </View>
         </SafeAreaView>
