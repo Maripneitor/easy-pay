@@ -8,6 +8,7 @@ import { useAuthContext } from '../../context/AuthContext';
 
 export const TwoFactorVerify = () => {
     const navigate = useNavigate();
+    const { updateUserSession } = useAuthContext();
     const [code, setCode] = useState(['', '', '', '', '', '']);
     const [isVerifying, setIsVerifying] = useState(false);
     const [isVerified, setIsVerified] = useState(false);
@@ -51,9 +52,11 @@ export const TwoFactorVerify = () => {
             const result = await userRepository.verifyTwoFactor(userId, fullCode);
             
             if (result.status === 'success') {
-                // Actualizar la sesión global en el Contexto
+                // Si el backend nos da un token, lo guardamos para entrar directo
                 if (result.access_token && result.user) {
                     updateUserSession(result.user, result.access_token);
+                } else if (result.access_token) {
+                    setAuthToken(result.access_token);
                 }
 
                 setIsVerified(true);

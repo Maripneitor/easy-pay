@@ -8,6 +8,8 @@ import { useEasyPay } from '../../../context/EasyPayContext';
 import { SyncStatus } from '../../../src/components/SyncStatus';
 import { SettlementWizard } from '../../../src/components/SettlementWizard';
 import { StatusBar } from 'expo-status-bar';
+import { Alert } from 'react-native';
+import { groupRepository } from '../../../src/infrastructure/api/repositories/GroupRepository';
 import { PaymentMethodModal } from '../../../components/group/PaymentMethodModal';
 import { VirtualTicketCard } from '../../../components/group/VirtualTicketCard';
 
@@ -39,6 +41,29 @@ export default function GroupDetailScreen() {
     const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
     const [isWizardOpen, setIsWizardOpen] = useState(false);
 
+    const handleRemoveMember = async (memberId: string, memberName: string) => {
+        Alert.alert(
+            "Eliminar Miembro",
+            `¿Estás seguro de que deseas eliminar a ${memberName} del grupo?`,
+            [
+                { text: "Cancelar", style: "cancel" },
+                { 
+                    text: "Eliminar", 
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            await groupRepository.removeMember(id as string, memberId);
+                            Alert.alert("Éxito", "Miembro eliminado correctamente");
+                            loadGroupDetails(id as string);
+                        } catch (err: any) {
+                            Alert.alert("Error", err.response?.data?.detail || "No se pudo eliminar al miembro. Verifica si tiene gastos asignados.");
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     if (isLoading || !activeGrupo) {
         return (
             <View style={{ flex: 1, backgroundColor: theme.bg, justifyContent: 'center', alignItems: 'center' }}>
@@ -52,7 +77,6 @@ export default function GroupDetailScreen() {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
             <StatusBar style={theme.isDark ? "light" : "dark"} />
-            <Stack.Screen options={{ headerShown: false }} />
             
             <SyncStatus />
 
@@ -150,6 +174,14 @@ export default function GroupDetailScreen() {
                                 {member.status === 'online' && (
                                     <View className="w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-900" />
                                 )}
+                                {isLeader && member.id !== user?.id && (
+                                    <TouchableOpacity 
+                                        onPress={() => handleRemoveMember(member.id, member.nombre)}
+                                        className="p-3 bg-red-500/10 rounded-2xl"
+                                    >
+                                        <MaterialIcons name="person-remove" size={18} color="#ef4444" />
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         ))}
                     </View>
@@ -189,7 +221,7 @@ export default function GroupDetailScreen() {
             </ScrollView>
 
             {/* Botón de acción final (Solo para líderes) */}
-            {isLeader && (activeGrupo.status === 'ACTIVE' || activeGrupo.status === 'active') && (
+            {isLeader && !['CERRADA', 'closed', 'liquidated'].includes(activeGrupo.status?.toUpperCase()) && (
                 <View className="absolute bottom-10 left-6 right-6">
                     <TouchableOpacity 
                         onPress={() => setIsWizardOpen(true)} 

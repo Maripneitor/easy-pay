@@ -57,7 +57,9 @@ class Verify2FAUseCase:
                 "user": {
                     "id": str(user_data["_id"]),
                     "nombre": user_data["nombre"],
-                    "email": user_data["email"]
+                    "email": user_data["email"],
+                    "2fa_enabled": True,
+                    "is_verified": True
                 }
             }
             

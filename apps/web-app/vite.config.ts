@@ -42,6 +42,10 @@ export default defineConfig({
       '/api/notifications': {
         target: isDocker ? 'http://notification-service:8000' : 'http://localhost:8005',
         changeOrigin: true,
+      },
+      '/api/wallet': {
+        target: isDocker ? 'http://wallet-service:8000' : 'http://localhost:8006',
+        changeOrigin: true,
       }
     }
   },

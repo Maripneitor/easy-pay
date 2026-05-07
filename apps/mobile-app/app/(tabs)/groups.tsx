@@ -71,7 +71,6 @@ export default function GroupListScreen() {
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
             <StatusBar style={theme.isDark ? "light" : "dark"} />
             <Stack.Screen options={{ headerShown: false }} />
-
             <ScrollView 
                 className="flex-1"
                 showsVerticalScrollIndicator={false}

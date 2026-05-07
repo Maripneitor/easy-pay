@@ -21,6 +21,10 @@ class User(BaseModel):
     password_hash: str
     two_factor: TwoFactorConfig = Field(default_factory=TwoFactorConfig)
     bank_accounts: List[BankAccount] = Field(default_factory=list)
+    # Campos de perfil extendido
+    phone: Optional[str] = None
+    birth_date: Optional[str] = None
+    address: Optional[str] = None
     # Mantener financial_profile por compatibilidad migratoria si es necesario, pero marcaremos como opcional
     financial_profile: Optional[dict] = None 
 
@@ -54,7 +58,9 @@ class PasswordChange(BaseModel):
 class UserUpdate(BaseModel):
     nombre: Optional[str] = None
     email: Optional[EmailStr] = None
-    telefono: Optional[str] = None
+    phone: Optional[str] = None
+    birth_date: Optional[str] = None
+    address: Optional[str] = None
     bank_accounts: Optional[List[BankAccount]] = None
     # Keep for backward compatibility
     financial_profile: Optional[dict] = None
@@ -63,4 +69,4 @@ class UserUpdate(BaseModel):
 
 # Clase para solicitar restablecimiento de contraseña
 class PasswordResetRequest(BaseModel):
-    email: EmailStr
+    email: EmailStr

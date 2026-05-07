@@ -81,6 +81,21 @@ services:
     command: uvicorn main_notification:app --host 0.0.0.0 --port 8000 --reload
 
 
+  # --- MICROSERVICIO DE WALLET / TARJETAS (Puerto 8006) ---
+  wallet-service:
+    build:
+      context: ./apps/api-backend
+      dockerfile: Dockerfile
+    container_name: easy-pay-wallet-service
+    volumes:
+      - ./apps/api-backend:/app
+    ports:
+      - "8006:8000"
+    env_file:
+      - ./apps/api-backend/.env
+    command: uvicorn main_wallet:app --host 0.0.0.0 --port 8000 --reload
+
+
   # --- FRONTEND (React / Vite) ---
   dev-env:
     build:
@@ -102,6 +117,7 @@ services:
       - VITE_STATS_API=http://localhost:8003
       - VITE_OCR_API=http://localhost:8004
       - VITE_NOTIFICATION_API=http://localhost:8005
+      - VITE_WALLET_API=http://localhost:8006
       - NODE_ENV=development
     stdin_open: true
     tty: true
@@ -117,6 +133,7 @@ services:
       - ocr-service
       - stats-service
       - notification-service
+      - wallet-service
 
 volumes:
   mongodb_data:

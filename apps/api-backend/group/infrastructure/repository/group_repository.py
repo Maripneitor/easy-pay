@@ -208,8 +208,8 @@ class MongoGroupRepository:
                 await self.collection.update_one(
                     {"_id": ObjectId(group_id)},
                     {"$set": {
-                        "status": "closed", 
-                        "estado": "closed",
+                        "status": "liquidated", 
+                        "estado": "liquidated",
                         "fecha_finiquito": datetime.utcnow()
                     }}
                 )

@@ -5,14 +5,18 @@ class MobileWebSocketClient {
     private baseURL: string;
 
     constructor() {
-        const apiBase = getApiBaseUrl();
+        let apiBase = getApiBaseUrl();
+        // Limpieza profunda para evitar duplicados /api/api
+        if (apiBase.endsWith('/api')) {
+            apiBase = apiBase.slice(0, -4);
+        }
         this.baseURL = apiBase.replace(/^http/, 'ws');
     }
 
     connect(groupId: string, token: string) {
         if (this.ws) this.disconnect();
 
-        // Siguiendo el estándar del backend para WebSockets con autenticación
+        // Aseguramos que la ruta final sea exactamente /api/ws/groups
         const wsUrl = `${this.baseURL}/api/ws/groups/${groupId}?token=${token}`;
         console.info(`[WS-Mobile] Conectando a: ${wsUrl}`);
         

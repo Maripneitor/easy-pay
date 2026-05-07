@@ -23,6 +23,7 @@ import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { MotiView, MotiText, AnimatePresence } from 'moti';
 
 import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
+import { NETWORK_CONFIG } from '../../src/infrastructure/api/network.config';
 import { toTitleCase } from '../../src/infrastructure/utils/format';
 import { getApiBaseUrl } from '../../src/infrastructure/api/network.config';
 
@@ -52,7 +53,7 @@ export default function DashboardScreen() {
         try {
             const [groups, statsRes] = await Promise.all([
                 groupRepository.findByUser(user.id),
-                fetch(`${getApiBaseUrl()}/stats/user/${user.id}`).then(r => r.json())
+                fetch(`${NETWORK_CONFIG.BASE_URL}/stats/user/${user.id}`).then(r => r.json())
             ]);
             setUserGroups(Array.isArray(groups) ? groups : []);
             setUserStats(statsRes);
@@ -143,7 +144,6 @@ export default function DashboardScreen() {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
             <StatusBar style={theme.isDark ? "light" : "dark"} />
-            <Stack.Screen options={{ headerShown: false }} />
 
             {renderHeader()}
 

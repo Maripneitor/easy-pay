@@ -111,6 +111,22 @@ export class ApiMobileGroupRepository implements GroupRepository {
         await httpClient.delete(`/groups/${groupId}`);
     }
 
+    async removeMember(groupId: string, userId: string): Promise<void> {
+        await httpClient.delete(`/groups/${groupId}/members/${userId}`);
+    }
+
+    async approveSettlement(groupId: string, settlementId: string, currentUserId: string): Promise<void> {
+        await httpClient.post(`/groups/${groupId}/settlements/${settlementId}/approve`, null, {
+            params: { current_user_id: currentUserId }
+        });
+    }
+
+    async rejectSettlement(groupId: string, settlementId: string, currentUserId: string, reason: string): Promise<void> {
+        await httpClient.post(`/groups/${groupId}/settlements/${settlementId}/reject`, { reason }, {
+            params: { current_user_id: currentUserId }
+        });
+    }
+
     onGroupUpdate(groupId: string, callback: (group: Group) => void): () => void {
         return () => {};
     }
