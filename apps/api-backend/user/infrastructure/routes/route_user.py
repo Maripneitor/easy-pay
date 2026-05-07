@@ -30,6 +30,12 @@ async def get_user_profile(user_id: str):
         "id": str(user["_id"]),
         "nombre": user.get("nombre"),
         "email": user.get("email"),
+        "phone": user.get("phone"),
+        "birth_date": user.get("birth_date"),
+        "address": user.get("address"),
+        "bank_accounts": user.get("bank_accounts", []),
+        "is_verified": user.get("is_verified", False),
+        "2fa_enabled": user.get("two_factor", {}).get("enabled", False) or user.get("is_verified", False),
         "financial_profile": user.get("financial_profile") or {}
     }
 
@@ -109,39 +115,44 @@ from utils.security import get_current_user_id
 @user_router.put("/update")
 async def update_user(data: UserUpdate, user_id: str = Depends(get_current_user_id)):
     update_dict = data.dict(exclude_unset=True)
-    
-    # 🛡️ BLINDAJE CRÍTICO: Si se intenta cambiar el email o datos bancarios, EXIGIR código de verificación
-    sensitive_fields = ["email", "bank_accounts", "financial_profile"]
-    if any(field in update_dict for field in sensitive_fields):
-        v_code = update_dict.get("verification_code")
-        if not v_code:
-            raise HTTPException(
-                status_code=400, 
-                detail="Se requiere un código de verificación para modificar datos sensibles (Email / Cuentas Bancarias)."
-            )
-        
-        # Verificar el código
-        verify_result = await verify_2fa_use_case.execute(user_id, v_code)
-        if verify_result["status"] == "error":
-            raise HTTPException(status_code=400, detail="Código de verificación inválido o expirado.")
-        
-        # Enforce max 3 bank accounts
-        if "bank_accounts" in update_dict:
-            if len(update_dict["bank_accounts"]) > 3:
-                raise HTTPException(status_code=400, detail="Solo se permiten hasta 3 cuentas bancarias.")
 
-        # Eliminar el código del dict para que no se guarde en el perfil del usuario
-        del update_dict["verification_code"]
+    # Nunca guardar el campo verification_code en el perfil
+    update_dict.pop("verification_code", None)
+
+    # Enforce max 3 bank accounts
+    if "bank_accounts" in update_dict and len(update_dict["bank_accounts"]) > 3:
+        raise HTTPException(status_code=400, detail="Solo se permiten hasta 3 cuentas bancarias.")
+
+    # Serializar bank_accounts a dict si vienen como objetos Pydantic
+    if "bank_accounts" in update_dict and update_dict["bank_accounts"]:
+        update_dict["bank_accounts"] = [
+            acc if isinstance(acc, dict) else acc.dict()
+            for acc in update_dict["bank_accounts"]
+        ]
 
     result = await update_user_use_case.execute(user_id, update_dict)
     if result["status"] == "success":
         return result
     raise HTTPException(status_code=400, detail=result["message"])
 
-@user_router.put("/update/{user_id}") # Mantener por compatibilidad si es necesario, pero redirigir a seguro
-async def update_user_legacy(user_id: str, data: UserUpdate):
-    # En producción esto debería estar deprecado
-    result = await update_user_use_case.execute(user_id, data.dict(exclude_unset=True))
+@user_router.put("/update/{user_id}")
+async def update_user_compat(user_id: str, data: UserUpdate, auth_user_id: str = Depends(get_current_user_id)):
+    """Endpoint de compatibilidad — usa el user_id del JWT por seguridad."""
+    update_dict = data.dict(exclude_unset=True)
+
+    # Nunca guardar el campo verification_code en el perfil
+    update_dict.pop("verification_code", None)
+
+    if "bank_accounts" in update_dict and len(update_dict.get("bank_accounts", [])) > 3:
+        raise HTTPException(status_code=400, detail="Solo se permiten hasta 3 cuentas bancarias.")
+
+    if "bank_accounts" in update_dict and update_dict["bank_accounts"]:
+        update_dict["bank_accounts"] = [
+            acc if isinstance(acc, dict) else acc.dict()
+            for acc in update_dict["bank_accounts"]
+        ]
+
+    result = await update_user_use_case.execute(auth_user_id, update_dict)
     if result["status"] == "success":
         return result
     raise HTTPException(status_code=400, detail=result["message"])

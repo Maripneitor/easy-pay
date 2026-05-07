@@ -1,3 +1,4 @@
+from datetime import datetime
 from bson import ObjectId
 from group.infrastructure.repository.group_repository import MongoGroupRepository
 from group.infrastructure.repository.item_repository import MongoItemRepository
@@ -72,13 +73,84 @@ class StatsRepository:
         }
 
     async def get_monthly_trend(self, user_id: str):
-        # Mock de tendencia para el demo, en producción se usaría el campo 'fecha'
-        return [
-            {"month": "Abr", "total": 450.0},
-            {"month": "May", "total": 890.0},
-            {"month": "Jun", "total": 1200.0},
-            {"month": "Jul", "total": 750.0}
+        pipeline = [
+            {"$match": {"participantes_ids": user_id}},
+            {"$addFields": {
+                "num_participantes": {"$max": [1, {"$size": {"$ifNull": ["$participantes_ids", []]}}]},
+                "costo_total_item": {"$multiply": [{"$ifNull": ["$precio", 0]}, {"$ifNull": ["$cantidad", 1]}]},
+                "safe_date": {"$ifNull": ["$fecha_registro", datetime.utcnow()]}
+            }},
+            {"$addFields": {
+                "user_share": {"$divide": ["$costo_total_item", "$num_participantes"]},
+                "month_num": {"$month": "$safe_date"},
+                "year_num": {"$year": "$safe_date"}
+            }},
+            {"$group": {
+                "_id": {"month": "$month_num", "year": "$year_num"},
+                "total": {"$sum": "$user_share"}
+            }},
+            {"$sort": {"_id.year": 1, "_id.month": 1}},
+            {"$limit": 6}
         ]
+        cursor = self.expenses.aggregate(pipeline)
+        results = await cursor.to_list(length=None)
+        
+        month_names = {1: "Ene", 2: "Feb", 3: "Mar", 4: "Abr", 5: "May", 6: "Jun", 7: "Jul", 8: "Ago", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dic"}
+        formatted_trend = []
+        for r in results:
+            if r["_id"].get("month"):
+                month_str = month_names.get(r["_id"]["month"], "Mes")
+                formatted_trend.append({"month": month_str, "total": round(r["total"], 2)})
+        
+        return formatted_trend
+
+    async def get_income_vs_expenses(self, user_id: str):
+        pipeline = [
+            {"$match": {
+                "$or": [
+                    {"participantes_ids": user_id},
+                    {"comprador_id": user_id}
+                ]
+            }},
+            {"$addFields": {
+                "num_participantes": {"$max": [1, {"$size": {"$ifNull": ["$participantes_ids", []]}}]},
+                "costo_total_item": {"$multiply": [{"$ifNull": ["$precio", 0]}, {"$ifNull": ["$cantidad", 1]}]},
+                "safe_date": {"$ifNull": ["$fecha_registro", datetime.utcnow()]},
+                "is_participant": {"$in": [user_id, {"$ifNull": ["$participantes_ids", []]}]},
+                "is_buyer": {"$eq": ["$comprador_id", user_id]}
+            }},
+            {"$addFields": {
+                "user_share": {"$cond": [{"$eq": ["$is_participant", True]}, {"$divide": ["$costo_total_item", "$num_participantes"]}, 0]},
+            }},
+            {"$addFields": {
+                "gastos": "$user_share",
+                "ingresos": {"$cond": [{"$eq": ["$is_buyer", True]}, {"$subtract": ["$costo_total_item", "$user_share"]}, 0]},
+                "month_num": {"$month": "$safe_date"},
+                "year_num": {"$year": "$safe_date"}
+            }},
+            {"$group": {
+                "_id": {"month": "$month_num", "year": "$year_num"},
+                "gastos": {"$sum": "$gastos"},
+                "ingresos": {"$sum": "$ingresos"}
+            }},
+            {"$sort": {"_id.year": 1, "_id.month": 1}},
+            {"$limit": 6}
+        ]
+        cursor = self.expenses.aggregate(pipeline)
+        results = await cursor.to_list(length=None)
+        
+        month_names = {1: "Ene", 2: "Feb", 3: "Mar", 4: "Abr", 5: "May", 6: "Jun", 7: "Jul", 8: "Ago", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dic"}
+        formatted = []
+        for r in results:
+            if r["_id"].get("month"):
+                month_str = month_names.get(r["_id"]["month"], "Mes")
+                formatted.append({
+                    "month": month_str, 
+                    "ingresos": round(r["ingresos"], 2),
+                    "gastos": round(r["gastos"], 2)
+                })
+        
+        return formatted
 
     async def get_user_transactions(self, user_id: str):
         """

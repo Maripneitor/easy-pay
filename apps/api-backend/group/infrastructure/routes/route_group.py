@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+import httpx
+import os
 from datetime import datetime
 from utils.security import get_current_user_id
 from group.infrastructure.repository.group_repository import MongoGroupRepository
@@ -12,6 +14,7 @@ from group.application.join_group import JoinGroupUseCase
 from group.application.delete_group import DeleteGroupUseCase
 from group.application.create_group import CreateGroupUseCase
 from group.application.add_item import AddItemUseCase
+from group.application.liquidategroup import LiquidateGroupUseCase
 from group.domain.models.settlement import SettlementCreate
 
 group_router = APIRouter(prefix="/api/groups", tags=["Groups"], redirect_slashes=False)
@@ -19,11 +22,72 @@ group_router = APIRouter(prefix="/api/groups", tags=["Groups"], redirect_slashes
 group_repo = MongoGroupRepository()
 item_repo = MongoItemRepository()
 
+NOTIFICATION_SERVICE_URL = os.getenv("NOTIFICATION_SERVICE_URL", "http://notification-service:8000")
+
+async def notify_payment(receiver_id: str, payer_id: str, group_id: str, amount: float, settlement_id: str = None):
+    """Envía una notificación asíncrona al receptor del pago"""
+    print(f"🚀 Intentando notificar pago: Receptor={receiver_id}, Pagador={payer_id}, Monto={amount}")
+    try:
+        # Intentar obtener el nombre del grupo para un mejor mensaje
+        group = await group_repo.find_by_id(group_id)
+        group_name = group.get("nombre", "un grupo") if group else "un grupo"
+        
+        url = f"{NOTIFICATION_SERVICE_URL}/api/notifications/send"
+        print(f"📡 Llamando a: {url}")
+        
+        async with httpx.AsyncClient() as client:
+            payload = {
+                "user_id": receiver_id,
+                "type": "payment_received",
+                "title": "💰 Confirmación de pago pendiente",
+                "body": f"Un miembro ha reportado un pago de ${amount:.2f} en '{group_name}'. Por favor, verifica y aprueba.",
+                "group_id": group_id,
+                "amount": amount,
+                "from_user_id": payer_id,
+                "data": {
+                    "type": "settlement_request",
+                    "settlement_id": settlement_id,
+                    "group_id": group_id
+                }
+            }
+            resp = await client.post(url, json=payload, timeout=5.0)
+            print(f"✅ Respuesta del servicio de notificaciones: {resp.status_code} - {resp.text}")
+    except Exception as e:
+        print(f"⚠️ Error crítico al enviar notificación: {str(e)}")
+
+async def notify_settlement_status(payer_id: str, group_id: str, amount: float, status: str, reason: str = None):
+    """Notifica al pagador sobre el resultado de su solicitud de liquidación"""
+    print(f"🚀 Notificando status de pago: Payer={payer_id}, Status={status}")
+    try:
+        group = await group_repo.find_by_id(group_id)
+        group_name = group.get("nombre", "un grupo") if group else "un grupo"
+        
+        title = "✅ Pago aprobado" if status == "approved" else "❌ Pago rechazado"
+        body = f"Tu pago de ${amount:.2f} en '{group_name}' fue aprobado." if status == "approved" else f"Tu pago de ${amount:.2f} en '{group_name}' fue rechazado. Razón: {reason or 'No especificada'}"
+        
+        url = f"{NOTIFICATION_SERVICE_URL}/api/notifications/send"
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(url, json={
+                "user_id": payer_id,
+                "type": "payment_received" if status == "approved" else "reminder",
+                "title": title,
+                "body": body,
+                "group_id": group_id,
+                "amount": amount,
+                "data": {"status": status, "reason": reason}
+            }, timeout=5.0)
+            print(f"✅ Respuesta status pago: {resp.status_code}")
+    except Exception as e:
+        print(f"⚠️ Error al notificar status de pago: {e}")
+
+
+
 create_group_uc = CreateGroupUseCase(group_repo)
 add_item_uc = AddItemUseCase(item_repo, group_repo)
 get_balances_uc = GetGroupBalancesUseCase(item_repo, group_repo)
 join_group_uc = JoinGroupUseCase(group_repo)
-delete_group_uc = DeleteGroupUseCase(group_repo)                    
+delete_group_uc = DeleteGroupUseCase(group_repo)
+liquidate_group_uc = LiquidateGroupUseCase(group_repo, get_balances_uc)
 
 @group_router.post("/create")
 async def create_group(data: GroupCreate):
@@ -81,7 +145,7 @@ async def get_user_groups(user_id: str):
         
         g["total_gastado"] = round(total, 2)
         # Soportamos tanto 'estado' como 'status' por compatibilidad
-        g["is_settled"] = (g.get("estado") == "closed" or g.get("status") == "closed")
+        g["is_settled"] = (g.get("estado") in ["closed", "liquidated"] or g.get("status") in ["closed", "liquidated"])
         enriched_groups.append(g)
         
     return enriched_groups
@@ -195,6 +259,11 @@ async def close_group(group_id: str, data: dict):
         raise HTTPException(status_code=400, detail="No se pudo cerrar el grupo")
     return {"status": "success", "message": "Grupo finiquitado correctamente"}
 
+@group_router.post("/{group_id}/liquidate")
+async def liquidate_group(group_id: str, current_user_id: str = Depends(get_current_user_id)):
+    """Liquida el grupo manualmente (si las deudas están en 0)"""
+    return await liquidate_group_uc.execute(group_id, current_user_id)
+
 @group_router.delete("/{group_id}/members/{user_id}")
 async def remove_member(group_id: str, user_id: str):
     # 1. Validar si el usuario tiene ítems asignados
@@ -211,7 +280,7 @@ async def remove_member(group_id: str, user_id: str):
     return {"status": "success", "message": "Miembro eliminado"}
 
 @group_router.post("/{group_id}/settlements")
-async def create_settlement(group_id: str, settlement: SettlementCreate):
+async def create_settlement(group_id: str, settlement: SettlementCreate, background_tasks: BackgroundTasks):
     """Crea una solicitud de liquidación (pago realizado)"""
     settlement_dict = settlement.dict()
     settlement_dict["status"] = "pending"
@@ -219,6 +288,17 @@ async def create_settlement(group_id: str, settlement: SettlementCreate):
     settlement_dict["updated_at"] = datetime.utcnow()
     
     settlement_id = await group_repo.create_settlement(settlement_dict)
+    
+    # Notificar al admin/acreedor en segundo plano
+    background_tasks.add_task(
+        notify_payment, 
+        settlement.receiver_id, 
+        settlement.payer_id, 
+        settlement.group_id, 
+        settlement.amount,
+        settlement_id  # <--- Nuevo parámetro
+    )
+    
     return {"id": settlement_id, "status": "pending"}
 
 @group_router.get("/{group_id}/settlements/pending")
@@ -227,7 +307,7 @@ async def get_pending_settlements(group_id: str):
     return await group_repo.get_pending_settlements(group_id)
 
 @group_router.post("/{group_id}/settlements/{settlement_id}/approve")
-async def approve_settlement(group_id: str, settlement_id: str, current_user_id: str):
+async def approve_settlement(group_id: str, settlement_id: str, current_user_id: str, background_tasks: BackgroundTasks):
     """Solo el líder puede aprobar una liquidación"""
     group = await group_repo.find_by_id(group_id)
     if not group:
@@ -236,14 +316,27 @@ async def approve_settlement(group_id: str, settlement_id: str, current_user_id:
     if group.get("admin_id") != current_user_id:
         raise HTTPException(status_code=403, detail="Solo el administrador del grupo puede aprobar liquidaciones")
         
+    # Obtener info de la liquidación antes de aprobar para notificar
+    settlements = await group_repo.get_pending_settlements(group_id)
+    settlement = next((s for s in settlements if s.get("id") == settlement_id), None)
+    
     success = await group_repo.approve_settlement(settlement_id)
     if not success:
         raise HTTPException(status_code=400, detail="No se pudo aprobar la liquidación")
+    
+    if settlement:
+        background_tasks.add_task(
+            notify_settlement_status, 
+            settlement.get("payer_id"), 
+            group_id, 
+            settlement.get("amount"), 
+            "approved"
+        )
         
     return {"message": "Liquidación aprobada correctamente"}
 
 @group_router.post("/{group_id}/settlements/{settlement_id}/reject")
-async def reject_settlement(group_id: str, settlement_id: str, current_user_id: str, data: dict):
+async def reject_settlement(group_id: str, settlement_id: str, current_user_id: str, data: dict, background_tasks: BackgroundTasks):
     """Solo el líder puede rechazar una liquidación"""
     group = await group_repo.find_by_id(group_id)
     if not group:
@@ -252,9 +345,23 @@ async def reject_settlement(group_id: str, settlement_id: str, current_user_id: 
     if group.get("admin_id") != current_user_id:
         raise HTTPException(status_code=403, detail="Solo el administrador del grupo puede rechazar liquidaciones")
     
+    # Obtener info de la liquidación antes de rechazar
+    settlements = await group_repo.get_pending_settlements(group_id)
+    settlement = next((s for s in settlements if s.get("id") == settlement_id), None)
+    
     reason = data.get("reason", "Pago no verificado")
     success = await group_repo.reject_settlement(settlement_id, reason)
     if not success:
         raise HTTPException(status_code=400, detail="No se pudo rechazar la liquidación")
+    
+    if settlement:
+        background_tasks.add_task(
+            notify_settlement_status, 
+            settlement.get("payer_id"), 
+            group_id, 
+            settlement.get("amount"), 
+            "rejected",
+            reason
+        )
         
     return {"message": "Liquidación rechazada. Se ha notificado al miembro.", "status": "rejected"}

@@ -37,7 +37,9 @@ export const useProfileStats = () => {
         ...(statsQuery.data || {}),
         ...(chartsQuery.data || {}),
         transactions: transactions,
-        by_category: chartsQuery.data?.by_category || statsQuery.data?.expenses_by_category || []
+        by_category: chartsQuery.data?.by_category || statsQuery.data?.expenses_by_category || [],
+        categories: chartsQuery.data?.by_category || statsQuery.data?.expenses_by_category || [],
+        income_vs_expenses: chartsQuery.data?.income_vs_expenses || []
     };
 
     return { 

@@ -17,6 +17,9 @@ import { MotiView, AnimatePresence } from 'moti';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { useNotifications, timeAgo } from '../../src/infrastructure/context/NotificationContext';
 import { AppNotification } from '../../src/infrastructure/services/NotificationService';
+import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
+import { useAuthContext } from '../../context/AuthContext';
+import { Alert } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -106,6 +109,8 @@ function NotificationCard({
     onAccept: () => void;
     accepting: boolean;
     accepted: boolean;
+    onReject?: () => void;
+    rejecting?: boolean;
 }) {
     const router = useRouter();
 
@@ -115,6 +120,7 @@ function NotificationCard({
     };
 
     const isInvitation = n.type === 'invitation';
+    const isPaymentRequest = n.type === 'payment_received' || n.data?.type === 'settlement_request';
 
     return (
         <AnimatePresence>
@@ -208,25 +214,40 @@ function NotificationCard({
                                     )}
                                 </View>
 
-                                {isInvitation && (
+                                {(isInvitation || isPaymentRequest) && (
                                     <View className="flex-row gap-3 mt-4">
                                         <TouchableOpacity
                                             onPress={onAccept}
                                             disabled={accepting}
-                                            style={{ backgroundColor: theme.primary }}
+                                            style={{ backgroundColor: isPaymentRequest ? '#10b981' : theme.primary }}
                                             className="px-6 py-2.5 rounded-2xl flex-row items-center justify-center gap-2 min-w-[100px]"
                                         >
                                             {accepting ? (
                                                 <ActivityIndicator size="small" color="white" />
                                             ) : (
-                                                <Text className="text-white font-black text-[10px] uppercase">Aceptar</Text>
+                                                <>
+                                                    {isPaymentRequest && <MaterialIcons name="check" size={14} color="white" />}
+                                                    <Text className="text-white font-black text-[10px] uppercase">
+                                                        {isPaymentRequest ? 'Aprobar' : 'Aceptar'}
+                                                    </Text>
+                                                </>
                                             )}
                                         </TouchableOpacity>
                                         <TouchableOpacity
-                                            onPress={onRemove}
-                                            className="bg-white/5 border border-white/10 px-6 py-2.5 rounded-2xl"
+                                            onPress={isPaymentRequest ? onReject : onRemove}
+                                            disabled={rejecting}
+                                            className="bg-white/5 border border-white/10 px-6 py-2.5 rounded-2xl flex-row items-center justify-center gap-2"
                                         >
-                                            <Text className="text-slate-400 font-bold text-[10px] uppercase">Rechazar</Text>
+                                            {rejecting ? (
+                                                <ActivityIndicator size="small" color="#ef4444" />
+                                            ) : (
+                                                <>
+                                                    {isPaymentRequest && <MaterialIcons name="close" size={14} color="#ef4444" />}
+                                                    <Text className={isPaymentRequest ? "text-red-400 font-bold text-[10px] uppercase" : "text-slate-400 font-bold text-[10px] uppercase"}>
+                                                        {isPaymentRequest ? 'Rechazar' : 'Rechazar'}
+                                                    </Text>
+                                                </>
+                                            )}
                                         </TouchableOpacity>
                                     </View>
                                 )}
@@ -262,17 +283,76 @@ export default function NotificationsScreen() {
     } = useNotifications();
 
     const [acceptingIds, setAcceptingIds] = React.useState<string[]>([]);
+    const [rejectingIds, setRejectingIds] = React.useState<string[]>([]);
     const [acceptedIds, setAcceptedIds] = React.useState<string[]>([]);
+    const { user } = useAuthContext();
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
-    const handleAccept = (id: string) => {
+    const handleAccept = async (n: AppNotification) => {
+        const id = n.id;
+        if (n.type === 'payment_received' || n.data?.type === 'settlement_request') {
+            const settlementId = n.data?.settlement_id;
+            const groupId = n.data?.group_id;
+            if (!settlementId || !groupId || !user?.id) {
+                Alert.alert("Error", "No se encontró información del pago");
+                return;
+            }
+
+            try {
+                setAcceptingIds(prev => [...prev, id]);
+                await groupRepository.approveSettlement(groupId, settlementId, user.id);
+                setAcceptedIds(prev => [...prev, id]);
+                markAsRead(id);
+            } catch (err: any) {
+                Alert.alert("Error", err.message || "No se pudo aprobar el pago");
+            } finally {
+                setAcceptingIds(prev => prev.filter(x => x !== id));
+            }
+            return;
+        }
+
+        // Invitación u otros
         setAcceptingIds(prev => [...prev, id]);
         setTimeout(() => {
             setAcceptingIds(prev => prev.filter(x => x !== id));
             setAcceptedIds(prev => [...prev, id]);
             markAsRead(id);
         }, 1500);
+    };
+
+    const handleReject = async (n: AppNotification) => {
+        const id = n.id;
+        const settlementId = n.data?.settlement_id;
+        const groupId = n.data?.group_id;
+
+        if (!settlementId || !groupId || !user?.id) {
+            removeNotification(id);
+            return;
+        }
+
+        Alert.prompt(
+            "Rechazar Pago",
+            "¿Por qué rechazas este pago?",
+            [
+                { text: "Cancelar", style: "cancel" },
+                { 
+                    text: "Rechazar", 
+                    style: "destructive",
+                    onPress: async (reason) => {
+                        try {
+                            setRejectingIds(prev => [...prev, id]);
+                            await groupRepository.rejectSettlement(groupId, settlementId, user.id, reason || "Pago no verificado");
+                            removeNotification(id);
+                        } catch (err: any) {
+                            Alert.alert("Error", err.message || "No se pudo rechazar el pago");
+                        } finally {
+                            setRejectingIds(prev => prev.filter(x => x !== id));
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     // Separa deudas del resto para mostrarlas arriba
@@ -334,8 +414,10 @@ export default function NotificationsScreen() {
                                 theme={theme}
                                 onMarkRead={() => markAsRead(n.id)}
                                 onRemove={() => removeNotification(n.id)}
-                                onAccept={() => handleAccept(n.id)}
+                                onAccept={() => handleAccept(n)}
+                                onReject={() => handleReject(n)}
                                 accepting={acceptingIds.includes(n.id)}
+                                rejecting={rejectingIds.includes(n.id)}
                                 accepted={acceptedIds.includes(n.id)}
                             />
                         ))}

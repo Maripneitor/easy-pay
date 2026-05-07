@@ -151,7 +151,6 @@ export const useGroupDetail = (groupId: string) => {
         if (!data || !myId) return { userShare: 0, userOwed: 0 };
 
         let myTotalConsumption = 0;
-        let myTotalPaid = 0;
 
         data.activities.forEach((item: any) => {
             const amount = parseFloat(item.monto || item.precio || 0);
@@ -159,14 +158,20 @@ export const useGroupDetail = (groupId: string) => {
             if (participants.includes(myId)) {
                 myTotalConsumption += amount / (participants.length || 1);
             }
-            if (item.comprador_id === myId) {
-                myTotalPaid += amount;
-            }
         });
 
+        // Usar el balance real calculado por el backend que incluye liquidaciones
+        const myBalanceObj = data.balances.find((b: any) => b.usuario_id === myId);
+        const realBalance = myBalanceObj ? parseFloat(myBalanceObj.monto || myBalanceObj.balance || 0) : 0;
+        
+        // Usar la cuota de consumo real calculada por el backend (incluye propinas e impuestos)
+        const realConsumption = myBalanceObj && myBalanceObj.cuota_correspondiente !== undefined 
+            ? parseFloat(myBalanceObj.cuota_correspondiente) 
+            : myTotalConsumption;
+
         return {
-            userShare: isNaN(myTotalConsumption) ? 0 : myTotalConsumption,
-            userOwed: isNaN(myTotalPaid - myTotalConsumption) ? 0 : (myTotalPaid - myTotalConsumption)
+            userShare: isNaN(realConsumption) ? 0 : realConsumption,
+            userOwed: isNaN(realBalance) ? 0 : realBalance
         };
     }, [data, myId]);
 

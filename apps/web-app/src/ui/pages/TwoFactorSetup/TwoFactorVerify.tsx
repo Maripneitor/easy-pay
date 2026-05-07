@@ -4,9 +4,11 @@ import { userRepository } from '../../../infrastructure/api/repositories';
 import { setAuthToken } from '../../../infrastructure/api/http-client';
 import { ROUTES } from '../../../infrastructure/routes';
 import { toast } from 'sonner';
+import { useAuthContext } from '../../context/AuthContext';
 
 export const TwoFactorVerify = () => {
     const navigate = useNavigate();
+    const { updateUserSession } = useAuthContext();
     const [code, setCode] = useState(['', '', '', '', '', '']);
     const [isVerifying, setIsVerifying] = useState(false);
     const [isVerified, setIsVerified] = useState(false);
@@ -50,12 +52,10 @@ export const TwoFactorVerify = () => {
             
             if (result.status === 'success') {
                 // Si el backend nos da un token, lo guardamos para entrar directo
-                if (result.access_token) {
+                if (result.access_token && result.user) {
+                    updateUserSession(result.user, result.access_token);
+                } else if (result.access_token) {
                     setAuthToken(result.access_token);
-                    // Mapear usuario si viene
-                    if (result.user) {
-                        localStorage.setItem('ep_auth_user', JSON.stringify(result.user));
-                    }
                 }
 
                 setIsVerified(true);

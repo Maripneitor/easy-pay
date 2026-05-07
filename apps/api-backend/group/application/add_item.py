@@ -9,8 +9,13 @@ class AddItemUseCase:
         if not group:
             return {"status": "error", "message": "El grupo no existe"}
 
-        # 2. Guardamos el gasto (En EasyPay_Expenses)
-        item_id = await self.item_repo.save_item(item_data.model_dump())
+        # 2. Preparamos el objeto con fecha para que aparezca en las gráficas
+        item_dict = item_data.model_dump()
+        from datetime import datetime
+        item_dict["fecha_registro"] = datetime.utcnow()
+
+        # 3. Guardamos el gasto (En EasyPay_Expenses)
+        item_id = await self.item_repo.save_item(item_dict)
         
         return {
             "status": "success",

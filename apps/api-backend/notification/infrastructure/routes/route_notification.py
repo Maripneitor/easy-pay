@@ -10,11 +10,21 @@ import asyncio
 
 router = APIRouter(prefix="/api/notifications", tags=["Notifications"])
 
+from dotenv import load_dotenv
+import logging
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+load_dotenv()
+
 # ── Configuración ─────────────────────────────────────────────────────────────
-MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
+MONGO_URL = os.getenv("MONGO_URL") or os.getenv("MONGO_URI") or "mongodb://localhost:27017"
 DB_NAME = os.getenv("DB_NAME", "easypay")
 REMINDER_HOURS = int(os.getenv("REMINDER_HOURS", 24))
 
+logger.info(f"Conectando Notification Service a: {MONGO_URL.split('@')[-1] if '@' in MONGO_URL else MONGO_URL}")
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
 notif_collection = db["notificaciones"]

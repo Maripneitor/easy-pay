@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     User as UserIcon, Mail, Camera, Save, AlertCircle, Phone, 
@@ -11,7 +11,6 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './PersonalData.module.css';
 
-import { TwoFactorModal } from '../../components/Security/TwoFactorModal';
 
 export const PersonalData = () => {
     const navigate = useNavigate();
@@ -20,13 +19,32 @@ export const PersonalData = () => {
     const [name, setName] = useState(user?.nombre || '');
     const [email, setEmail] = useState(user?.email || '');
     const [phone, setPhone] = useState(user?.phone || '');
-    const [birthDate, setBirthDate] = useState(user?.birthDate || '');
+    const [birthDate, setBirthDate] = useState(user?.birthDate || user?.birth_date || '');
     const [address, setAddress] = useState(user?.address || '');
     const [bankAccounts, setBankAccounts] = useState<any[]>(user?.bank_accounts || []);
+    const [profileLoading, setProfileLoading] = useState(true);
     
     const [loading, setLoading] = useState(false);
-    const [show2FAModal, setShow2FAModal] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // Cargar siempre desde la API para tener datos frescos de la BD
+    useEffect(() => {
+        if (!user?.id) return;
+        setProfileLoading(true);
+        userRepository.getProfile(user.id)
+            .then((profile: any) => {
+                if (profile) {
+                    setName(profile.nombre || user?.nombre || '');
+                    setEmail(profile.email || user?.email || '');
+                    setPhone(profile.phone || '');
+                    setBirthDate(profile.birth_date || '');
+                    setAddress(profile.address || '');
+                    setBankAccounts(profile.bank_accounts || []);
+                }
+            })
+            .catch(() => { /* usa los datos del localStorage como fallback */ })
+            .finally(() => setProfileLoading(false));
+    }, [user?.id]);
 
     const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff&bold=true`;
 
@@ -54,13 +72,10 @@ export const PersonalData = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSaveInitiate = () => {
+    const handleSave = async () => {
         if (!user?.id) return toast.error("Error: Sesión no válida");
         if (!validate()) return;
-        setShow2FAModal(true);
-    };
 
-    const handleFinalSave = async (vCode: string) => {
         setLoading(true);
         const toastId = toast.loading("Guardando cambios...");
 
@@ -69,18 +84,14 @@ export const PersonalData = () => {
                 nombre: name,
                 email: email,
                 phone: phone,
+                birth_date: birthDate,
+                address: address,
                 bank_accounts: bankAccounts,
-                verification_code: vCode
             });
 
             if (result.status === "success") {
-                updateUserSession({
-                    ...user!,
-                    nombre: name,
-                    email: email,
-                    phone: phone,
-                    bank_accounts: bankAccounts
-                }, result.new_token);
+                // Usar el objeto usuario devuelto por el backend que viene completo
+                updateUserSession(result.user, result.new_token);
 
                 toast.success("¡Perfil actualizado con éxito!", { id: toastId });
                 setTimeout(() => navigate(-1), 1000);
@@ -320,7 +331,7 @@ export const PersonalData = () => {
                     <div className="pt-12">
                         <button
                             className={styles.saveBtn}
-                            onClick={handleSaveInitiate}
+                            onClick={handleSave}
                             disabled={loading}
                         >
                             {loading ? (
@@ -338,15 +349,6 @@ export const PersonalData = () => {
                     </div>
                 </motion.div>
             </main>
-
-            <TwoFactorModal
-                isOpen={show2FAModal}
-                onClose={() => setShow2FAModal(false)}
-                onVerified={handleFinalSave}
-                userId={user?.id || ''}
-                actionTitle="Actualizar Perfil"
-                actionDescription="Estás a punto de modificar tus datos personales. Por seguridad, ingresa el código 2FA."
-            />
         </div>
     );
 };

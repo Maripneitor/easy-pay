@@ -470,13 +470,13 @@ export const GroupDetail = () => {
                                                 <div className="text-right">
                                                     <span className={cn(
                                                         "text-xl font-black font-mono tracking-tighter block",
-                                                        balance.monto >= 0 ? "text-emerald-500" : "text-rose-500"
+                                                        (balance.monto ?? balance.balance ?? 0) >= 0 ? "text-emerald-500" : "text-rose-500"
                                                     )}>
-                                                        {balance.monto >= 0 ? "+" : ""}${Math.abs(Number(balance.monto || 0)).toFixed(2)}
+                                                        {(balance.monto ?? balance.balance ?? 0) >= 0 ? "+" : ""}${Math.abs(Number(balance.monto ?? balance.balance ?? 0)).toFixed(2)}
                                                     </span>
-                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{balance.monto >= 0 ? I18N_TEXTS.STATUS.FAVOR : I18N_TEXTS.STATUS.DEBT}</p>
+                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{(balance.monto ?? balance.balance ?? 0) >= 0 ? I18N_TEXTS.STATUS.FAVOR : I18N_TEXTS.STATUS.DEBT}</p>
                                                 </div>
-                                                {balance.monto < 0 && (
+                                                {(balance.monto ?? balance.balance ?? 0) < -0.01 && (
                                                     <button 
                                                         onClick={() => navigate(ROUTES.SETTLE_UP(finalId))}
                                                         className="px-4 py-2 bg-[var(--primary)] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[var(--primary)]/20 hover:scale-105 active:scale-95 transition-all"

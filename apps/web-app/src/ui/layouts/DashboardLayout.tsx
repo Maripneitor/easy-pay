@@ -6,6 +6,7 @@ import { CommandPalette } from '@ui/components/CommandPalette/CommandPalette';
 import { useKeyboardShortcuts } from '@ui/hooks/useKeyboardShortcuts';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Menu } from 'lucide-react';
+import { NotificationBell } from '@ui/components/Notifications/NotificationBell';
 
 export const DashboardLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
@@ -47,6 +48,9 @@ export const DashboardLayout = () => {
 
                 <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-700 transition-all duration-300">
                     <div className="max-w-7xl mx-auto w-full space-y-8">
+                        <div className="flex justify-end items-center mb-4">
+                            <NotificationBell />
+                        </div>
                         <Outlet context={{ toggleSidebar, isSidebarOpen }} />
                     </div>
                 </main>

@@ -57,7 +57,7 @@ export const ProfilePage = () => {
     const userEmail = user?.email || "usuario@easypay.com";
 
     // CORRECCIÓN: Validamos si el 2FA está activo realmente en la sesión
-    const is2FAActive = !!user?.two_factor?.enabled || user?.is_verified;
+    const is2FAActive = user?.['2fa_enabled'] || user?.two_factor?.enabled || user?.is_verified;
 
     const avatarUrl = user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=3b82f6&color=fff&bold=true`;
 

@@ -12,6 +12,9 @@ class GenerateUserChartsUseCase:
         # 3. Obtener tendencia mensual
         trend = await self.repository.get_monthly_trend(user_id)
         
+        # 4. Obtener balance mensual (ingresos vs gastos)
+        income_vs_expenses = await self.repository.get_income_vs_expenses(user_id)
+        
         total_spent = sum(item['amount'] for item in categories_data)
         
         formatted_categories = []
@@ -27,5 +30,6 @@ class GenerateUserChartsUseCase:
             "owed_to_user": balances["owed_to_user"],
             "user_owes": balances["user_owes"],
             "by_category": formatted_categories,
-            "monthly_trend": trend
+            "monthly_trend": trend,
+            "income_vs_expenses": income_vs_expenses
         }

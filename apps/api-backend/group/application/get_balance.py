@@ -10,7 +10,7 @@ class GetGroupBalancesUseCase:
         if not group:
             return {"status": "error", "message": "Grupo no encontrado"}
 
-        integrantes = group.get("integrantes", [])
+        integrantes = [str(uid) for uid in group.get("integrantes", [])]
         items = await self.item_repository.find_by_group(group_id)
         
         # Diccionarios para rastrear balances y consumos
@@ -30,10 +30,10 @@ class GetGroupBalancesUseCase:
             precio_con_extra = precio_base * (1 + impuesto_val + propina_val)
             costo_total = precio_con_extra * cantidad
             
-            total_grupo += (precio_base * cantidad) # Mantenemos el subtotal limpio
+            total_grupo += costo_total # Ahora incluye impuestos y propinas para coincidir con los balances
             
-            comprador = item.get("comprador_id")
-            participantes = item.get("participantes_ids", [])
+            comprador = str(item.get("comprador_id"))
+            participantes = [str(pid) for pid in item.get("participantes_ids", [])]
 
             # A) Al comprador se le abona el total que puso de su bolsa
             if comprador in balances_netos:
@@ -53,8 +53,8 @@ class GetGroupBalancesUseCase:
         settlements_col = self.group_repository.db.get_collection("Settlements")
         approved_settlements_cursor = settlements_col.find({"group_id": group_id, "status": "approved"})
         async for s in approved_settlements_cursor:
-            p_id = s["payer_id"]
-            r_id = s["receiver_id"]
+            p_id = str(s["payer_id"])
+            r_id = str(s["receiver_id"])
             amount = s["amount"]
             
             if p_id in balances_netos:
@@ -62,8 +62,7 @@ class GetGroupBalancesUseCase:
             if r_id in balances_netos:
                 balances_netos[r_id] -= amount # El receptor ya recibió esto
 
-        # 🚩 Cálculo de Propina Dinámica (Regla Easy-Pay)
-        # < $3000 -> 10% | >= $3000 -> 5%
+        
         propina_percent = 0.10 if total_grupo < 3000 else 0.05
         total_propina = total_grupo * propina_percent
         total_con_propina = total_grupo + total_propina
@@ -74,6 +73,11 @@ class GetGroupBalancesUseCase:
             for u_id in integrantes:
                 balances_netos[u_id] -= cuota_propina
                 consumos_individuales[u_id] += cuota_propina
+            
+            
+            admin_id = str(group.get("admin_id") or group.get("administrador_id"))
+            if admin_id in balances_netos:
+                balances_netos[admin_id] += total_propina
 
         # 3. Formatear la respuesta
         detalle = []

@@ -8,6 +8,8 @@ import { useAuth } from '../../../context/AuthContext';
 import { useGrupo } from '../../../context/GrupoContext';
 import { SyncStatus } from '../../../src/components/SyncStatus';
 import { StatusBar } from 'expo-status-bar';
+import { Alert } from 'react-native';
+import { groupRepository } from '../../../src/infrastructure/api/repositories/GroupRepository';
 
 const { width } = Dimensions.get('window');
 
@@ -25,6 +27,29 @@ export default function GroupDetailScreen() {
             loadGroupDetails(id as string);
         }
     }, [id]);
+
+    const handleRemoveMember = async (memberId: string, memberName: string) => {
+        Alert.alert(
+            "Eliminar Miembro",
+            `¿Estás seguro de que deseas eliminar a ${memberName} del grupo?`,
+            [
+                { text: "Cancelar", style: "cancel" },
+                { 
+                    text: "Eliminar", 
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            await groupRepository.removeMember(id as string, memberId);
+                            Alert.alert("Éxito", "Miembro eliminado correctamente");
+                            loadGroupDetails(id as string);
+                        } catch (err: any) {
+                            Alert.alert("Error", err.response?.data?.detail || "No se pudo eliminar al miembro. Verifica si tiene gastos asignados.");
+                        }
+                    }
+                }
+            ]
+        );
+    };
 
     if (isLoading || !activeGrupo) {
         return (
@@ -151,6 +176,14 @@ export default function GroupDetailScreen() {
                                 {member.status === 'online' && (
                                     <View className="w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-900" />
                                 )}
+                                {isLeader && member.id !== user?.id && (
+                                    <TouchableOpacity 
+                                        onPress={() => handleRemoveMember(member.id, member.nombre)}
+                                        className="p-3 bg-red-500/10 rounded-2xl"
+                                    >
+                                        <MaterialIcons name="person-remove" size={18} color="#ef4444" />
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         ))}
                     </View>
@@ -190,7 +223,7 @@ export default function GroupDetailScreen() {
             </ScrollView>
 
             {/* Botón de acción final (Solo para líderes) */}
-            {isLeader && activeGrupo.status !== 'CERRADA' && activeGrupo.status !== 'closed' && (
+            {isLeader && activeGrupo.status !== 'CERRADA' && activeGrupo.status !== 'closed' && activeGrupo.status !== 'liquidated' && (
                 <View className="absolute bottom-10 left-6 right-6">
                     <TouchableOpacity 
                         onPress={closeGrupo} 

@@ -134,8 +134,8 @@ const IncomeExpenseChart = ({ data }: { data: any[] }) => {
                             contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
                         />
                     )}
-                    <Bar dataKey="ingresos" fill={isEmpty ? EMPTY_COLOR : "#10b981"} radius={[4, 4, 0, 0]} name="Ingresos" />
-                    <Bar dataKey="gastos" fill={isEmpty ? "#cbd5e1" : "#ef4444"} radius={[4, 4, 0, 0]} name="Gastos" />
+                    <Bar dataKey="ingresos" fill={isEmpty ? EMPTY_COLOR : "#10b981"} radius={[4, 4, 0, 0]} name="Ingresos" barSize={32} />
+                    <Bar dataKey="gastos" fill={isEmpty ? "#cbd5e1" : "#ef4444"} radius={[4, 4, 0, 0]} name="Gastos" barSize={32} />
                 </BarChart>
             </ResponsiveContainer>
         </div>

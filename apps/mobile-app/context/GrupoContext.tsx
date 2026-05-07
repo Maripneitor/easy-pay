@@ -175,14 +175,35 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const calculateUserDebt = useCallback((participantId: string): number => {
         if (!activeGrupo) return 0;
+        
+        // 1. Gasto base en ítems (prorrateo)
         let base = activeGrupo.items.reduce((acc, item) => {
-            if (item.asignadoA.includes(participantId)) {
-                return acc + (item.precio * item.cantidad / item.asignadoA.length);
+            const participantes = item.asignadoA || item.assignedTo || [];
+            if (participantes.includes(participantId)) {
+                const count = participantes.length || 1;
+                return acc + (item.precio * item.cantidad / count);
             }
             return acc;
         }, 0);
-        const tipFactor = activeGrupo.subtotal < 3000 ? 0.10 : 0.05;
-        return base + (base * tipFactor);
+
+        // 2. Propina grupal dinámica
+        const tipPercent = activeGrupo.subtotal < 3000 ? 0.10 : 0.05;
+        const totalPropina = activeGrupo.subtotal * tipPercent;
+        const cuotaPropina = activeGrupo.participantes.length > 0 
+            ? totalPropina / activeGrupo.participantes.length 
+            : 0;
+
+        // El usuario debe su base + su parte de la propina
+        let debt = base + cuotaPropina;
+
+        // 🚩 CRÍTICO: La propina la paga el líder/admin al restaurante, 
+        // por lo tanto, se le resta de su "deuda" (se le abona).
+        const isLeader = participantId === activeGrupo.liderId || participantId === (activeGrupo as any).admin_id;
+        if (isLeader) {
+            debt -= totalPropina;
+        }
+
+        return debt;
     }, [activeGrupo]);
 
     // ── Acciones ──────────────────────────────────────────────────────────────

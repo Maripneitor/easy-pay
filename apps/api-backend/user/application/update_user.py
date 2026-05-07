@@ -17,10 +17,10 @@ class UpdateUserUseCase:
             if existing:
                 return {"status": "error", "message": "El correo electrónico ya está en uso"}
 
-        # 3. Validar colisiones (si el teléfono cambió, asumiendo que existe el campo)
-        new_phone = new_data.get("telefono")
-        if new_phone and new_phone != current_user.get("telefono"):
-            # Aquí podrías buscar por teléfono si el repositorio lo soporta
+        # 3. Validar colisiones (si el teléfono cambió)
+        new_phone = new_data.get("phone")
+        if new_phone and new_phone != current_user.get("phone"):
+            # Opcional: validación de duplicados de teléfono
             pass
 
         # 4. Prohibir cambio de contraseña en este flujo
@@ -46,13 +46,22 @@ class UpdateUserUseCase:
                 nombre=new_data.get("nombre", current_user.get("nombre"))
             )
 
+        # 7. Obtener usuario actualizado para devolverlo completo
+        updated_user = await self.repository.get_user_by_id(user_id)
+
         return {
             "status": "success",
             "message": "Perfil actualizado",
             "new_token": new_token,
             "user": {
                 "id": user_id,
-                "nombre": new_data.get("nombre", current_user.get("nombre")),
-                "email": new_data.get("email", current_user.get("email"))
+                "nombre": updated_user.get("nombre"),
+                "email": updated_user.get("email"),
+                "phone": updated_user.get("phone"),
+                "birth_date": updated_user.get("birth_date"),
+                "address": updated_user.get("address"),
+                "bank_accounts": updated_user.get("bank_accounts", []),
+                "2fa_enabled": updated_user.get("two_factor", {}).get("enabled", False) or updated_user.get("is_verified", False),
+                "is_verified": updated_user.get("is_verified", False)
             }
         }
