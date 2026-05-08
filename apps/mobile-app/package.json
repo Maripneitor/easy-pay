@@ -7,10 +7,10 @@
   },
   "type": "commonjs",
   "scripts": {
-    "start": "cross-env EXPO_ROUTER_APP_ROOT=app expo start",
-    "start:clean": "cross-env EXPO_ROUTER_APP_ROOT=app npx expo start -c --offline",
-    "start:lan": "cross-env EXPO_ROUTER_APP_ROOT=app npx expo start --lan",
-    "start:lan:clean": "cross-env EXPO_ROUTER_APP_ROOT=app npx expo start -c --lan",
+    "start": "cross-env EXPO_ROUTER_APP_ROOT=app expo start --config metro.config.cjs",
+    "start:clean": "cross-env EXPO_ROUTER_APP_ROOT=app npx expo start -c --offline --config metro.config.cjs",
+    "start:lan": "cross-env EXPO_ROUTER_APP_ROOT=app npx expo start --lan --config metro.config.cjs",
+    "start:lan:clean": "cross-env EXPO_ROUTER_APP_ROOT=app npx expo start -c --lan --config metro.config.cjs",
     "web": "cross-env EXPO_ROUTER_APP_ROOT=app expo start --web",
     "build:web": "cross-env EXPO_ROUTER_APP_ROOT=app npx expo export -p web"
   },
