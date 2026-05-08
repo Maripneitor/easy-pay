@@ -13,7 +13,6 @@ export const TwoFactorVerify = () => {
     const [isVerifying, setIsVerifying] = useState(false);
     const [isVerified, setIsVerified] = useState(false);
     const [resendTimer, setResendTimer] = useState(0);
-    const { updateUserSession } = useAuthContext();
     const userId = localStorage.getItem('temp_userId');
 
     // Countdown logic for resend button
