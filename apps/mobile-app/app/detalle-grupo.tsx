@@ -1,16 +1,17 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, Alert, Clipboard, RefreshControl } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
-import { RefreshControl } from 'react-native';
+import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import { MotiView } from 'moti';
+import { StatusBar } from 'expo-status-bar';
+
 import { useTheme } from '../src/infrastructure/context/ThemeContext';
 import { useEasyPay } from '../context/EasyPayContext';
 import { SyncStatus } from '../src/components/SyncStatus';
 import { SettlementWizard } from '../src/components/SettlementWizard';
-import { StatusBar } from 'expo-status-bar';
-import { Alert, Clipboard } from 'react-native';
 import { groupRepository } from '../src/infrastructure/api/repositories/GroupRepository';
 import { PaymentMethodModal } from '../components/group/PaymentMethodModal';
 import { VirtualTicketCard } from '../components/group/VirtualTicketCard';
@@ -23,6 +24,8 @@ export default function GroupDetailScreen() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
     const { theme, fontScale } = useTheme();
+    
+    // Lógica unificada directamente desde EasyPayContext
     const { 
         user, 
         activeGrupo, 
@@ -33,15 +36,7 @@ export default function GroupDetailScreen() {
         updateItem
     } = useEasyPay();
 
-    useFocusEffect(
-        useCallback(() => {
-            if (id) {
-                loadGroupDetails(id as string);
-            }
-        }, [id])
-    );
-
-    const [activeTab, setActiveTab] = useState<'members' | 'items' | 'totals'>('items');
+    const [activeTab, setActiveTab] = useState<'items' | 'members' | 'totals'>('items');
     const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
     const [isWizardOpen, setIsWizardOpen] = useState(false);
     const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
@@ -50,24 +45,24 @@ export default function GroupDetailScreen() {
 
     const isSettling = activeGrupo?.status === 'settling';
 
+    useFocusEffect(
+        useCallback(() => {
+            if (id) loadGroupDetails(id as string);
+        }, [id])
+    );
+
     // Polling cuando el grupo está en liquidación
     useEffect(() => {
         if (isSettling && id) {
-            console.log('[Polling] Iniciando polling para grupo en liquidación');
             intervalRef.current = setInterval(() => {
-                console.log('[Polling] Refrescando grupo...');
                 loadGroupDetails(id as string);
             }, 20000);
         } else if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
         }
-
         return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-            }
+            if (intervalRef.current) clearInterval(intervalRef.current);
         };
     }, [isSettling, id]);
 
@@ -79,7 +74,6 @@ export default function GroupDetailScreen() {
         }
     }, [id, loadGroupDetails]);
 
-    // Ejecuta la navegación cuando la variable cambie (fuera del ciclo de render del Modal)
     useEffect(() => {
         if (pendingNavigation) {
             setIsPaymentModalVisible(false);
@@ -103,10 +97,9 @@ export default function GroupDetailScreen() {
                     onPress: async () => {
                         try {
                             await groupRepository.removeMember(id as string, memberId);
-                            Alert.alert("Éxito", "Miembro eliminado correctamente");
                             loadGroupDetails(id as string);
                         } catch (err: any) {
-                            Alert.alert("Error", err.response?.data?.detail || "No se pudo eliminar al miembro. Verifica si tiene gastos asignados.");
+                            Alert.alert("Error", err.response?.data?.detail || "No se pudo eliminar al miembro.");
                         }
                     }
                 }
@@ -116,7 +109,7 @@ export default function GroupDetailScreen() {
 
     if (isLoading) {
         return (
-            <View style={{ flex: 1, backgroundColor: theme.bg, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ flex: 1, backgroundColor: theme.bg }} className="justify-center items-center">
                 <ActivityIndicator size="large" color={theme.primary} />
             </View>
         );
@@ -125,13 +118,17 @@ export default function GroupDetailScreen() {
     if (!activeGrupo) {
         return (
             <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
-                <View className="flex-1 items-center justify-center px-6">
+                <MotiView 
+                    from={{ opacity: 0, scale: 0.9 }} 
+                    animate={{ opacity: 1, scale: 1 }} 
+                    className="flex-1 items-center justify-center px-6"
+                >
                     <MaterialIcons name="error-outline" size={60} color={theme.textSecondary} />
-                    <Text style={{ color: theme.text, fontSize: 18 }} className="font-black mt-4">Grupo no encontrado</Text>
+                    <Text style={{ color: theme.text }} className="text-lg font-black mt-4">Grupo no encontrado</Text>
                     <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} className="mt-6 bg-slate-800 px-6 py-3 rounded-xl">
                         <Text className="text-white font-bold">Volver</Text>
                     </TouchableOpacity>
-                </View>
+                </MotiView>
             </SafeAreaView>
         );
     }
@@ -144,228 +141,227 @@ export default function GroupDetailScreen() {
     }
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
+        <View style={{ flex: 1, backgroundColor: theme.bg }}>
             <StatusBar style={theme.isDark ? "light" : "dark"} />
             
-            <SyncStatus />
-
-            {/* Cabecera unificada */}
-            <View className="px-6 py-4 flex-row items-center justify-between">
-                <TouchableOpacity 
-                    onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} 
-                    className="w-10 h-10 rounded-xl items-center justify-center bg-slate-800/40"
-                >
-                    <MaterialIcons name="arrow-back-ios" size={20} color={theme.text} style={{ marginLeft: 6 }} />
-                </TouchableOpacity>
-                <View className="items-center">
-                    <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black">
-                        {activeGrupo.nombre}
-                    </Text>
-                </View>
-                <TouchableOpacity 
-                    onPress={() => {
-                        const code = activeGrupo.codigo || activeGrupo.codigo_invitacion;
-                        Clipboard.setString(code);
-                        Alert.alert("Copiado", "Código de invitación copiado al portapapeles");
-                    }}
-                    className="bg-blue-500/10 px-3 py-2 rounded-xl"
-                >
-                    <Text style={{ color: theme.primary }} className="text-[10px] font-black tracking-widest">
-                        #{activeGrupo.codigo || activeGrupo.codigo_invitacion}
-                    </Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Tarjetas de Resumen */}
-            <View className="px-6 mb-2">
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-                    <View style={{ backgroundColor: theme.cardSecondary, width: 140 }} className="p-5 rounded-[28px] border border-white/5 mr-3">
-                        <Text style={{ color: theme.textSecondary }} className="text-[8px] font-black uppercase tracking-widest mb-1">Total Gastado</Text>
-                        <Text style={{ color: theme.text }} className="text-lg font-black font-mono">${activeGrupo.total?.toFixed(2) || '0.00'}</Text>
-                    </View>
-                    
-                    <View style={{ backgroundColor: theme.cardSecondary, width: 140 }} className="p-5 rounded-[28px] border border-white/5 mr-3">
-                        <Text style={{ color: theme.textSecondary }} className="text-[8px] font-black uppercase tracking-widest mb-1">Tu Parte</Text>
-                        <Text style={{ color: theme.primary }} className="text-lg font-black font-mono">${(calculateUserDebt(user?.id || '') || 0).toFixed(2)}</Text>
-                    </View>
-
-                    <View style={{ backgroundColor: theme.cardSecondary, width: 140 }} className="p-5 rounded-[28px] border border-white/5 mr-3">
-                        <Text style={{ color: theme.textSecondary }} className="text-[8px] font-black uppercase tracking-widest mb-1">
-                            {calculateUserDebt(user?.id || '') > 0 ? 'Debes' : 'Te deben'}
-                        </Text>
-                        <Text style={{ color: calculateUserDebt(user?.id || '') > 0 ? '#ef4444' : '#10b981' }} className="text-lg font-black font-mono">
-                            ${Math.abs(calculateUserDebt(user?.id || '') || 0).toFixed(2)}
+            {/* Cabecera Flotante con Glassmorphism */}
+            <View className="absolute top-0 w-full z-50">
+                <BlurView intensity={theme.isDark ? 40 : 80} tint={theme.isDark ? "dark" : "light"} className="pt-14 pb-4 px-6 flex-row items-center justify-between border-b border-white/5">
+                    <TouchableOpacity 
+                        onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} 
+                        className="w-10 h-10 rounded-xl items-center justify-center bg-slate-800/40"
+                    >
+                        <MaterialIcons name="arrow-back-ios" size={18} color={theme.text} style={{ marginLeft: 6 }} />
+                    </TouchableOpacity>
+                    <View className="items-center flex-1 mx-4">
+                        <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black" numberOfLines={1}>
+                            {activeGrupo.nombre}
                         </Text>
                     </View>
-                </ScrollView>
+                    <TouchableOpacity 
+                        onPress={() => {
+                            Clipboard.setString(activeGrupo.codigo || activeGrupo.codigo_invitacion);
+                            Alert.alert("Copiado", "Código de invitación copiado al portapapeles");
+                        }}
+                        className="bg-blue-500/15 px-3 py-2 rounded-xl border border-blue-500/20"
+                    >
+                        <Text style={{ color: theme.primary }} className="text-xs font-black tracking-widest">
+                            #{activeGrupo.codigo || activeGrupo.codigo_invitacion}
+                        </Text>
+                    </TouchableOpacity>
+                </BlurView>
             </View>
 
-            {/* Selector de Pestañas */}
-            <View className="px-6 py-4">
-                <View className="flex-row bg-slate-900/50 p-1 rounded-2xl border border-white/5">
-                    {(['members', 'items', 'totals'] as const).map(tab => (
-                        <TouchableOpacity 
-                            key={tab}
-                            onPress={() => setActiveTab(tab)}
-                            className={`flex-1 py-3 items-center rounded-xl ${activeTab === tab ? 'bg-slate-800 shadow-sm' : ''}`}
-                        >
-                            <Text style={{ 
-                                color: activeTab === tab ? theme.text : theme.textSecondary, 
-                                fontSize: 10 * fontScale 
-                            }} className="font-black uppercase tracking-widest">
-                                {tab === 'members' ? 'Miembros' : tab === 'items' ? 'Ítems' : 'Totales'}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </View>
-
-            {/* Cuerpo Principal */}
             <ScrollView 
-                className="px-6" 
+                contentContainerStyle={{ paddingTop: 120, paddingBottom: 120 }}
                 showsVerticalScrollIndicator={false}
-                refreshControl={
-                    <RefreshControl 
-                        refreshing={isRefreshing} 
-                        onRefresh={onRefresh} 
-                        tintColor={theme.primary} 
-                    />
-                }
+                refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
             >
-                {activeTab === 'items' && (
-                    <View className="pb-40">
-                        {activeGrupo.items?.length > 0 ? (
-                            <VirtualTicketCard 
-                                items={activeGrupo.items}
-                                serviceFee={activeGrupo.service || 0}
-                                groupId={activeGrupo.id}
-                                members={activeGrupo.participantes}
-                                canEdit={isLeader && activeGrupo.status === 'active'}
-                                onAssign={async (itemId, participantIds) => {
-                                    await assignItem(itemId, participantIds);
-                                }}
-                                onEdit={async (itemId, data) => {
-                                    await updateItem(itemId, data);
-                                }}
-                            />
-                        ) : (
-                            <View className="items-center py-20 opacity-40">
-                                <FontAwesome5 name="receipt" size={60} color={theme.textSecondary} />
-                                <Text style={{ color: theme.textSecondary }} className="mt-4 font-black uppercase tracking-widest">No hay ítems aún</Text>
-                            </View>
-                        )}
-                    </View>
-                )}
+                <View className="mb-2">
+                    <SyncStatus />
+                </View>
 
-                {activeTab === 'members' && (
-                    <View className="gap-4 pb-40">
-                        {activeGrupo.participantes?.map((member: any) => (
-                            <View 
-                                key={member.id} 
-                                style={{ backgroundColor: theme.cardSecondary }} 
-                                className="p-5 rounded-[40px] border border-white/10 flex-row items-center gap-4"
+                {/* Tarjetas de Resumen Financiero */}
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-6 mb-6 flex-row" contentContainerStyle={{ paddingRight: 40 }}>
+                    <MotiView from={{ opacity: 0, translateY: 10 }} animate={{ opacity: 1, translateY: 0 }} transition={{ delay: 100 }}>
+                        <View style={{ backgroundColor: theme.cardSecondary, width: 140 }} className="p-5 rounded-[28px] border border-white/5 mr-3 shadow-sm">
+                            <Text style={{ color: theme.textSecondary }} className="text-[9px] font-black uppercase tracking-widest mb-1">Total Gastado</Text>
+                            <Text style={{ color: theme.text }} className="text-xl font-black font-mono">${activeGrupo.total?.toFixed(2) || '0.00'}</Text>
+                        </View>
+                    </MotiView>
+                    
+                    <MotiView from={{ opacity: 0, translateY: 10 }} animate={{ opacity: 1, translateY: 0 }} transition={{ delay: 200 }}>
+                        <View style={{ backgroundColor: theme.cardSecondary, width: 140 }} className="p-5 rounded-[28px] border border-white/5 mr-3 shadow-sm">
+                            <Text style={{ color: theme.textSecondary }} className="text-[9px] font-black uppercase tracking-widest mb-1">Tu Parte</Text>
+                            <Text style={{ color: theme.primary }} className="text-xl font-black font-mono">${(calculateUserDebt(user?.id || '') || 0).toFixed(2)}</Text>
+                        </View>
+                    </MotiView>
+
+                    <MotiView from={{ opacity: 0, translateY: 10 }} animate={{ opacity: 1, translateY: 0 }} transition={{ delay: 300 }}>
+                        <View style={{ backgroundColor: theme.cardSecondary, width: 140 }} className="p-5 rounded-[28px] border border-white/5 mr-3 shadow-sm">
+                            <Text style={{ color: theme.textSecondary }} className="text-[9px] font-black uppercase tracking-widest mb-1">
+                                {calculateUserDebt(user?.id || '') > 0 ? 'Debes' : 'Te deben'}
+                            </Text>
+                            <Text style={{ color: calculateUserDebt(user?.id || '') > 0 ? '#ef4444' : '#10b981' }} className="text-xl font-black font-mono">
+                                ${Math.abs(calculateUserDebt(user?.id || '') || 0).toFixed(2)}
+                            </Text>
+                        </View>
+                    </MotiView>
+                </ScrollView>
+
+                {/* Selector de Pestañas Animado */}
+                <View className="px-6 mb-6">
+                    <View className="flex-row bg-slate-900/50 p-1.5 rounded-2xl border border-white/5">
+                        {(['items', 'members', 'totals'] as const).map((tab) => (
+                            <TouchableOpacity 
+                                key={tab}
+                                onPress={() => setActiveTab(tab)}
+                                className="flex-1 py-3 items-center rounded-xl relative"
                             >
-                                <View 
-                                    style={{ backgroundColor: member.color || theme.primary }} 
-                                    className="w-12 h-12 rounded-2xl items-center justify-center"
-                                >
-                                    <Text className="text-white font-black text-lg">
-                                        {member.nombre?.charAt(0)?.toUpperCase() || '?'}
-                                    </Text>
-                                </View>
-                                <View className="flex-1">
-                                    <Text style={{ color: theme.text }} className="text-base font-black">
-                                        {member.nombre || 'Usuario'}
-                                    </Text>
-                                    <View className="flex-row items-center gap-2">
-                                        <Text style={{ color: theme.textSecondary }} className="text-[10px] font-bold opacity-60 uppercase">
-                                            {member.role === 'leader' ? 'Líder' : 'Miembro'}
-                                        </Text>
-                                        <View className="w-1 h-1 rounded-full bg-slate-700" />
-                                        <Text style={{ color: theme.primary }} className="text-[10px] font-black font-mono">
-                                            Debe ${member.debt?.toFixed(2) || '0.00'}
-                                        </Text>
-                                    </View>
-                                </View>
-                                {member.status === 'online' && (
-                                    <View className="w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-900" />
+                                {activeTab === tab && (
+                                    <MotiView
+                                        layout
+                                        transition={{ type: 'spring', bounce: 0.2 }}
+                                        className="absolute inset-0 bg-slate-800 rounded-xl shadow-sm border border-white/10"
+                                    />
                                 )}
-                                {isLeader && member.id !== user?.id && (
-                                    <TouchableOpacity 
-                                        onPress={() => handleRemoveMember(member.id, member.nombre)}
-                                        className="p-3 bg-red-500/10 rounded-2xl"
-                                    >
-                                        <MaterialIcons name="person-remove" size={18} color="#ef4444" />
-                                    </TouchableOpacity>
-                                )}
-                            </View>
+                                <Text style={{ 
+                                    color: activeTab === tab ? theme.text : theme.textSecondary, 
+                                    fontSize: 11 * fontScale 
+                                }} className="font-black uppercase tracking-widest z-10">
+                                    {tab === 'items' ? 'Ítems' : tab === 'members' ? 'Miembros' : 'Totales'}
+                                </Text>
+                            </TouchableOpacity>
                         ))}
                     </View>
-                )}
+                </View>
 
-                {activeTab === 'totals' && activeGrupo && (
-                    <View className="pb-40">
-                        <TotalsSummary 
-                            subtotal={activeGrupo.subtotal || 0}
-                            tax={activeGrupo.tax || 0}
-                            service={activeGrupo.service || 0}
-                            tip={activeGrupo.propina || 0}
-                            total={activeGrupo.total || 0}
-                            paidAmount={(activeGrupo.participantes || []).reduce((acc, p) => {
-                                // En esta versión, consideramos "pagado" si el backend nos dice que pagó.
-                                // Como no tenemos ese flag aún, mostramos 0 pagado vs total pendiente.
-                                return acc + (p.paid ? p.debt : 0);
-                            }, 0)}
-                            pendingAmount={(activeGrupo.participantes || []).reduce((acc, p) => acc + (p.debt || 0), 0)}
-                        />
-                        
-                        {isLeader && (
-                            <View className="px-6">
-                                <View className="bg-blue-500/10 p-6 rounded-[32px] border border-blue-500/20">
-                                    <View className="flex-row items-center gap-3 mb-2">
-                                        <MaterialIcons name="info" size={20} color={theme.primary} />
-                                        <Text style={{ color: theme.primary }} className="font-black text-xs uppercase tracking-widest">Zona del Administrador</Text>
+                {/* Vistas de Pestañas */}
+                <View className="px-6">
+                    {activeTab === 'items' && (
+                        <MotiView from={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+                            {activeGrupo.items?.length > 0 ? (
+                                <VirtualTicketCard 
+                                    items={activeGrupo.items}
+                                    serviceFee={activeGrupo.service || 0}
+                                    groupId={activeGrupo.id}
+                                    members={activeGrupo.participantes}
+                                    canEdit={isLeader && activeGrupo.status === 'active'}
+                                    onAssign={assignItem}
+                                    onEdit={updateItem}
+                                />
+                            ) : (
+                                <View className="items-center py-20 opacity-50">
+                                    <FontAwesome5 name="receipt" size={50} color={theme.textSecondary} />
+                                    <Text style={{ color: theme.textSecondary }} className="mt-4 font-black uppercase tracking-widest text-xs">No hay gastos registrados</Text>
+                                </View>
+                            )}
+                        </MotiView>
+                    )}
+
+                    {activeTab === 'members' && (
+                        <MotiView from={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="gap-4">
+                            {activeGrupo.participantes?.map((member: any) => (
+                                <View 
+                                    key={member.id} 
+                                    style={{ backgroundColor: theme.cardSecondary }} 
+                                    className="p-4 rounded-[32px] border border-white/5 flex-row items-center gap-4"
+                                >
+                                    <View 
+                                        style={{ backgroundColor: member.color || theme.primary }} 
+                                        className="w-12 h-12 rounded-[20px] items-center justify-center shadow-sm"
+                                    >
+                                        <Text className="text-white font-black text-lg">
+                                            {member.nombre?.charAt(0)?.toUpperCase() || '?'}
+                                        </Text>
                                     </View>
-                                    <Text style={{ color: theme.textSecondary }} className="text-xs font-medium leading-4">
-                                        Como líder, puedes cerrar el grupo para que todos reciban su cuenta final y métodos de pago.
+                                    <View className="flex-1">
+                                        <Text style={{ color: theme.text }} className="text-base font-black">
+                                            {member.nombre || 'Usuario'}
+                                        </Text>
+                                        <View className="flex-row items-center gap-2 mt-0.5">
+                                            <Text style={{ color: theme.textSecondary }} className="text-[10px] font-bold opacity-70 uppercase tracking-wider">
+                                                {member.role === 'leader' ? 'Líder' : 'Miembro'}
+                                            </Text>
+                                            <View className="w-1 h-1 rounded-full bg-slate-600" />
+                                            <Text style={{ color: theme.primary }} className="text-[11px] font-black font-mono">
+                                                Debe ${member.debt?.toFixed(2) || '0.00'}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                    {isLeader && member.id !== user?.id && (
+                                        <TouchableOpacity 
+                                            onPress={() => handleRemoveMember(member.id, member.nombre)}
+                                            className="p-3 bg-red-500/10 rounded-xl"
+                                        >
+                                            <MaterialIcons name="person-remove" size={18} color="#ef4444" />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                            ))}
+                        </MotiView>
+                    )}
+
+                    {activeTab === 'totals' && (
+                        <MotiView from={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+                            <TotalsSummary 
+                                subtotal={activeGrupo.subtotal || 0}
+                                tax={activeGrupo.tax || 0}
+                                service={activeGrupo.service || 0}
+                                tip={activeGrupo.propina || 0}
+                                total={activeGrupo.total || 0}
+                                paidAmount={0} // Actualizar cuando el backend retorne flags de pago
+                                pendingAmount={(activeGrupo.participantes || []).reduce((acc, p) => acc + (p.debt || 0), 0)}
+                            />
+                            
+                            {isLeader && (
+                                <View className="mt-6 bg-blue-500/10 p-5 rounded-[28px] border border-blue-500/20">
+                                    <View className="flex-row items-center gap-2 mb-2">
+                                        <MaterialIcons name="shield" size={18} color={theme.primary} />
+                                        <Text style={{ color: theme.primary }} className="font-black text-[10px] uppercase tracking-widest">Controles de Administrador</Text>
+                                    </View>
+                                    <Text style={{ color: theme.textSecondary }} className="text-xs font-medium leading-5">
+                                        Como creador del grupo, eres el único con permisos para cerrar la cuenta y solicitar los pagos a los miembros.
                                     </Text>
                                 </View>
-                            </View>
-                        )}
-                    </View>
-                )}
+                            )}
+                        </MotiView>
+                    )}
+                </View>
             </ScrollView>
 
-            {/* Botón de acción final (Solo para líderes) */}
-            {isLeader && activeGrupo.status === 'active' && (
-                <View className="absolute bottom-10 left-6 right-6">
+            {/* Acciones Flotantes Inferiores */}
+            <View className="absolute bottom-0 w-full pt-4 pb-8 px-6 bg-slate-950/80">
+                <BlurView intensity={20} tint="dark" className="absolute inset-0" />
+                
+                {isLeader && activeGrupo.status === 'active' && (
                     <TouchableOpacity 
                         onPress={() => setIsWizardOpen(true)} 
-                        activeOpacity={0.8}
-                        style={{ backgroundColor: theme.primary, shadowColor: theme.primary, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 10 }} 
-                        className="w-full py-6 rounded-[32px] items-center justify-center flex-row gap-3"
+                        activeOpacity={0.9}
+                        style={{ backgroundColor: theme.primary, shadowColor: theme.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 10 }} 
+                        className="w-full py-5 rounded-[28px] items-center justify-center flex-row gap-3"
                     >
-                        <MaterialIcons name="lock" size={20} color="black" />
-                        <Text className="text-black font-black uppercase tracking-widest text-base">Cerrar y Dividir</Text>
+                        <MaterialIcons name="lock" size={20} color="#0f172a" />
+                        <Text className="text-slate-900 font-black uppercase tracking-widest text-sm">Cerrar Grupo y Dividir</Text>
                     </TouchableOpacity>
-                </View>
-            )}
+                )}
 
-            {/* Botón de Liquidación (Para Miembros) */}
-            {!isLeader && activeGrupo.status === 'settling' && (
-                <View className="absolute bottom-10 left-6 right-6">
+                {!isLeader && activeGrupo.status === 'settling' && (
                     <TouchableOpacity 
                         onPress={() => setIsPaymentModalVisible(true)} 
-                        activeOpacity={0.8}
-                        style={{ backgroundColor: theme.primary, shadowColor: theme.primary, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 10 }} 
-                        className="w-full py-6 rounded-[32px] items-center justify-center flex-row gap-3"
+                        activeOpacity={0.9}
+                        style={{ backgroundColor: theme.primary, shadowColor: theme.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 10 }} 
+                        className="w-full py-5 rounded-[28px] items-center justify-center flex-row gap-3"
                     >
-                        <MaterialIcons name="payments" size={20} color="black" />
-                        <Text className="text-black font-black uppercase tracking-widest text-base">Liquidar Deuda (${(calculateUserDebt(user?.id || '') || 0).toFixed(2)})</Text>
+                        <MaterialIcons name="payments" size={20} color="#0f172a" />
+                        <Text className="text-slate-900 font-black uppercase tracking-widest text-sm">
+                            Liquidar Deuda (${(calculateUserDebt(user?.id || '') || 0).toFixed(2)})
+                        </Text>
                     </TouchableOpacity>
-                </View>
-            )}
+                )}
+            </View>
 
+            {/* Modales */}
             <PaymentMethodModal 
                 isVisible={isPaymentModalVisible}
                 onClose={() => setIsPaymentModalVisible(false)}
@@ -382,10 +378,8 @@ export default function GroupDetailScreen() {
                 groupId={activeGrupo.id}
                 items={activeGrupo.items}
                 members={activeGrupo.participantes}
-                onComplete={() => {
-                    loadGroupDetails(activeGrupo.id);
-                }}
+                onComplete={() => loadGroupDetails(activeGrupo.id)}
             />
-        </SafeAreaView>
+        </View>
     );
 }
