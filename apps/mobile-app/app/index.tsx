@@ -21,6 +21,20 @@ const COLORS = {
   emerald: '#6ee7b7',
 };
 
+// Componente para manejar el ancho máximo en web/escritorio
+const ResponsiveContainer = ({ children, maxWidth = 1200, className = "" }: { children: React.ReactNode, maxWidth?: number, className?: string }) => (
+  <View 
+    className={className}
+    style={{ 
+      maxWidth: width > maxWidth ? maxWidth : '100%', 
+      width: '100%', 
+      alignSelf: 'center' 
+    }}
+  >
+    {children}
+  </View>
+);
+
 export default function LandingScreen() {
   const router = useRouter();
   const { user, isLoading, lastRoute } = useEasyPay();

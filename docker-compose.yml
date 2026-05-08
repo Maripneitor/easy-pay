@@ -1,139 +1,84 @@
 services:
-
-
-  # --- MICROSERVICIO DE USUARIOS (Puerto 8001) ---
   user-service:
     build:
       context: ./apps/api-backend
       dockerfile: Dockerfile
     container_name: easy-pay-user-service
-    volumes:
-      - ./apps/api-backend:/app
     ports:
       - "8001:8000"
+    volumes:
+      - ./apps/api-backend:/app
     env_file:
       - .env
       - ./apps/api-backend/.env
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn main_auth:app --host 0.0.0.0 --port 8000
 
-
-  # --- MICROSERVICIO DE GRUPOS (Puerto 8002) ---
   group-service:
     build:
       context: ./apps/api-backend
       dockerfile: Dockerfile
     container_name: easy-pay-group-service
-    volumes:
-      - ./apps/api-backend:/app
     ports:
       - "8002:8000"
+    volumes:
+      - ./apps/api-backend:/app
     env_file:
       - .env
       - ./apps/api-backend/.env
-    command: uvicorn main_groups:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn main_groups:app --host 0.0.0.0 --port 8000
 
-
-  # --- MICROSERVICIO DE ESTADISTICAS (Puerto 8003) ---
   stats-service:
     build:
       context: ./apps/api-backend
       dockerfile: Dockerfile
     container_name: easy-pay-stats-service
-    volumes:
-      - ./apps/api-backend:/app
     ports:
       - "8003:8000"
+    volumes:
+      - ./apps/api-backend:/app
     env_file:
       - .env
       - ./apps/api-backend/.env
-    command: uvicorn main_stats:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn main_stats:app --host 0.0.0.0 --port 8000
 
-
-  # --- MICROSERVICIO DE OCR (Puerto 8004) ---
   ocr-service:
     build:
       context: ./apps/api-backend
       dockerfile: Dockerfile
     container_name: easy-pay-ocr-service
-    volumes:
-      - ./apps/api-backend:/app
     ports:
       - "8004:8000"
+    volumes:
+      - ./apps/api-backend:/app
     env_file:
       - .env
       - ./apps/api-backend/.env
-    command: uvicorn main_ocr:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn main_ocr:app --host 0.0.0.0 --port 8000
 
-
-  # --- MICROSERVICIO DE NOTIFICACIONES (Puerto 8005) ---
   notification-service:
     build:
       context: ./apps/api-backend
       dockerfile: Dockerfile
     container_name: easy-pay-notification-service
-    volumes:
-      - ./apps/api-backend:/app
     ports:
       - "8005:8000"
+    volumes:
+      - ./apps/api-backend:/app
     env_file:
       - .env
       - ./apps/api-backend/.env
-    command: uvicorn main_notification:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn main_notification:app --host 0.0.0.0 --port 8000
 
-
-  # --- MICROSERVICIO DE WALLET / TARJETAS (Puerto 8006) ---
   wallet-service:
     build:
       context: ./apps/api-backend
       dockerfile: Dockerfile
     container_name: easy-pay-wallet-service
-    volumes:
-      - ./apps/api-backend:/app
     ports:
       - "8006:8000"
-    env_file:
-      - ./apps/api-backend/.env
-    command: uvicorn main_wallet:app --host 0.0.0.0 --port 8000 --reload
-
-
-  # --- FRONTEND (React / Vite) ---
-  dev-env:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    container_name: easy-pay-frontend
     volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/apps/web-app/node_modules
-      - /app/apps/mobile-app/node_modules
-    ports:
-      - "5173:5173"
-    environment:
-      - IS_DOCKER=true
-      - VITE_API_URL=http://localhost:8001
-      - VITE_USER_API=http://localhost:8001
-      - VITE_GROUP_API=http://localhost:8002
-      - VITE_STATS_API=http://localhost:8003
-      - VITE_OCR_API=http://localhost:8004
-      - VITE_NOTIFICATION_API=http://localhost:8005
-      - VITE_WALLET_API=http://localhost:8006
-      - NODE_ENV=development
-    stdin_open: true
-    tty: true
-    command: >
-      sh -c "npm install --legacy-peer-deps --prefer-offline --no-audit && 
-             rm -rf apps/web-app/node_modules/react && 
-             rm -rf apps/web-app/node_modules/react-dom && 
-             rm -rf apps/web-app/node_modules/.vite && 
-             npm run dev:web"
-    depends_on:
-      - user-service
-      - group-service
-      - ocr-service
-      - stats-service
-      - notification-service
-      - wallet-service
-
-volumes:
-  mongodb_data:
+      - ./apps/api-backend:/app
+    env_file:
+      - .env
+      - ./apps/api-backend/.env
+    command: uvicorn main_wallet:app --host 0.0.0.0 --port 8000
