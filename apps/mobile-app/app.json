@@ -37,13 +37,32 @@
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png",
-      "description": "Easy-Pay: Divide gastos de forma inteligente",
-      "themeColor": "#3b82f6",
+      "description": "Easy-Pay: Divide gastos de forma inteligente con tus amigos. Escanea tickets y paga tu parte sin estrés.",
+      "themeColor": "#0f172a",
       "backgroundColor": "#0f172a",
       "display": "standalone",
       "lang": "es",
-      "name": "Easy-Pay Mobile Web",
-      "shortName": "Easy-Pay"
+      "name": "Easy-Pay: Divide Gastos",
+      "shortName": "Easy-Pay",
+      "startUrl": "/",
+      "scope": "/",
+      "manifest": {
+        "name": "Easy-Pay: Divide Gastos Inteligente",
+        "short_name": "Easy-Pay",
+        "description": "La mejor forma de dividir cuentas y gastos con amigos.",
+        "start_url": "/",
+        "display": "standalone",
+        "orientation": "portrait",
+        "background_color": "#0f172a",
+        "theme_color": "#3b82f6",
+        "icons": [
+          {
+            "src": "./assets/images/icon.png",
+            "sizes": "512x512",
+            "type": "image/png"
+          }
+        ]
+      }
     },
     "plugins": [
       "expo-router",
