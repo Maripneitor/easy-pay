@@ -110,7 +110,7 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const newGrupo: Grupo = {
                 id: group.id,
                 codigo: group.code,
-                nombre: group.name,
+                nombre: group.name ?? "",
                 liderId: group.leaderId,
                 participantes: [], 
                 items: [],
@@ -118,7 +118,7 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 propina: group.tip,
                 total: group.total,
                 status: 'ACTIVA' as GrupoStatus,
-                creadaEn: group.createdAt
+                creadaEn: group.createdAt ?? new Date().toISOString()
             };
             
             setActiveGrupo(newGrupo);
@@ -137,7 +137,7 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const newGrupo: Grupo = {
                 id: group.id,
                 codigo: group.code,
-                nombre: group.name,
+                nombre: group.name ?? "",
                 liderId: group.leaderId,
                 participantes: [], 
                 items: [],
@@ -145,7 +145,7 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 propina: group.tip,
                 total: group.total,
                 status: 'ACTIVA' as GrupoStatus,
-                creadaEn: group.createdAt
+                creadaEn: group.createdAt ?? new Date().toISOString()
             };
             
             setActiveGrupo(newGrupo);
@@ -232,7 +232,7 @@ export const GrupoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             status: 'CERRADA' as GrupoStatus
         });
 
-        addToQueue('CLOSE_Grupo', { GrupoId: activeGrupo.id });
+        addToQueue('CLOSE_GRUPO', { GrupoId: activeGrupo.id });
     };
 
     const clearGrupo = async () => {

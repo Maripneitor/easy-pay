@@ -24,7 +24,7 @@
 
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["nativewind/types"]
+    "types": ["nativewind/types", "node"]
   },
   "include": [
     "**/*.ts",

@@ -222,13 +222,15 @@ export default function GroupDetailScreen() {
                             <VirtualTicketCard 
                                 groupId={id}
                                 items={(groupItems).map((i: any) => ({
+                                    detail: i.description || i.name,
+                                    participants: i.assignedTo || [],
                                   id: i.id,
                                   description: i.description,
                                   name: i.description ?? i.name ?? '',
                                   amount: i.amount,
                                   assignedTo: i.assignedTo ?? [],
                                   avatars: i.avatars ?? [],
-                                  addedBy: i.addedBy ?? '',
+                                  autorId: i.addedBy ?? '',
                                 }))}
                                 serviceFee={0} 
                             />
@@ -314,12 +316,12 @@ export default function GroupDetailScreen() {
                     for (const item of data.items) {
                         for (let i = 0; i < item.quantity; i++) {
                             console.log('Agregando item:', item.name, item.price);
-                            setGroupItems(prev => [...prev, { name: item.name, id: Date.now().toString() + Math.random().toString(36).slice(2), description: item.name, amount: item.price, assignedTo: [], avatars: [], addedBy: user?.id ?? '' }]);
+                            setGroupItems(prev => [...prev, { name: item.name, id: Date.now().toString() + Math.random().toString(36).slice(2), nombre: item.name, precio: item.price, asignadoA: [], avatars: [], autorId: user?.id ?? '', cantidad: 1 }]);
                             await addItem({
-                                description: item.name,
-                                amount: item.price,
-                                assignedTo: [],
-                                addedBy: user?.id ?? 'unknown',
+                                nombre: item.name,
+                                precio: item.price,
+                                asignadoA: [],
+                                autorId: user?.id ?? 'unknown', cantidad: 1,
                             });
                         }
                     }

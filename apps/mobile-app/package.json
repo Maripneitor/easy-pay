@@ -20,6 +20,7 @@
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-masked-view/masked-view": "^0.3.2",
     "@react-navigation/native": "^7.0.0",
+    "@tanstack/react-query": "^5.100.9",
     "ajv": "^8.18.0",
     "ajv-keywords": "^5.1.0",
     "axios": "^1.13.0",
@@ -58,6 +59,7 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
+    "@types/node": "^24.12.2",
     "@types/react": "~19.1.10",
     "babel-plugin-module-resolver": "^5.0.3",
     "eslint-config-expo": "~10.0.0",

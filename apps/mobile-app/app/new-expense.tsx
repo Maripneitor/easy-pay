@@ -47,7 +47,7 @@ export default function NewExpenseScreen() {
             }
             try {
                 const groupData = await groupRepository.getGroup(groupId);
-                const integrantes = groupData.integrantes || [];
+                const integrantes = groupData.members || [];
                 
                 const sorted = [...integrantes].sort((a, b) => {
                     const idA = a.id || a;
