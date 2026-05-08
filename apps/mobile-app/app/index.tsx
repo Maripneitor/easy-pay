@@ -73,91 +73,119 @@ export default function LandingScreen() {
         end={{ x: 0.5, y: 1 }}
       />
 
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.backgroundDark }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <ScrollView 
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
         >
-          
-          {/* Navbar */}
-          <View className="px-6 py-6 flex-row justify-between items-center z-50">
-            <View className="flex-row items-center gap-2">
-              <RNImage 
-                source={require('../assets/images/logo-ep.png')} 
-                style={{ width: 40, height: 40 }}
-                resizeMode="contain"
-              />
-              <Text className="text-2xl font-bold text-white tracking-tight">Easy-Pay</Text>
-            </View>
-            <TouchableOpacity 
-              onPress={handleProfilePress}
-              className="bg-white/10 px-6 py-2 rounded-full border border-white/20"
-            >
-              <Text className="text-white font-bold text-sm">{user ? 'Mi Perfil' : 'Iniciar Sesión'}</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Hero Section */}
-          <View className="px-6 pt-12 pb-16 relative overflow-hidden">
-            {/* Elementos Decorativos Flotantes */}
-            <View
-              style={{ position: 'absolute', top: 40, right: -20, opacity: 0.2 }}
-            >
-              <MaterialCommunityIcons name="currency-usd" size={100} color="white" />
-            </View>
-            <View
-              style={{ position: 'absolute', bottom: 100, left: -30, opacity: 0.15 }}
-            >
-              <Ionicons name="restaurant" size={80} color="white" />
+          <ResponsiveContainer maxWidth={1200}>
+            {/* Navbar */}
+            <View className="px-6 py-6 flex-row justify-between items-center z-50">
+              <View className="flex-row items-center gap-2">
+                <RNImage 
+                  source={require('../assets/images/logo-ep.png')} 
+                  style={{ width: 40, height: 40 }}
+                  resizeMode="contain"
+                />
+                <Text className="text-2xl font-bold text-white tracking-tight">Easy-Pay</Text>
+              </View>
+              <TouchableOpacity 
+                onPress={handleProfilePress}
+                className="bg-white/10 px-6 py-2 rounded-full border border-white/20 hover:bg-white/20 transition-colors"
+              >
+                <Text className="text-white font-bold text-sm">{user ? 'Mi Perfil' : 'Iniciar Sesión'}</Text>
+              </TouchableOpacity>
             </View>
 
-            <Text
-              className="text-5xl font-black text-white leading-[55px] mb-6 shadow-sm"
-            >
-              La cuenta,{'\n'}
-              dividida en{'\n'}
-              <Text style={{ color: COLORS.coolSky }}>segundos.</Text>
-            </Text>
-            <Text
-              className="text-lg text-white/80 font-light leading-7 mb-10 max-w-[90%]"
-            >
-              Cero estrés. Escanea, asigna y paga tu parte. Olvídate de las calculadoras y disfruta de la sobreGrupo.
-            </Text>
+            {/* Hero Section */}
+            <View className="px-6 pt-12 pb-16 md:pt-24 md:pb-32 flex-col md:flex-row items-center justify-between relative overflow-hidden">
+              <View className="md:w-1/2">
+                {/* Elementos Decorativos Flotantes (Solo en movil o ajustados) */}
+                <View
+                  style={{ position: 'absolute', top: -20, right: 0, opacity: 0.1 }}
+                  className="hidden md:flex"
+                >
+                  <MaterialCommunityIcons name="currency-usd" size={300} color="white" />
+                </View>
 
-            {/* Availability Badge */}
-            <View
-              className="bg-sky-400/10 border border-sky-400/20 px-5 py-2.5 rounded-full flex-row items-center gap-3 self-start mb-8"
-            >
-              <Text className="text-base">✨</Text>
-              <Text style={{ color: COLORS.coolSky }} className="font-bold tracking-wide uppercase text-[10px]">Ahora disponible en Android</Text>
+                <Text
+                  className="text-5xl md:text-7xl font-black text-white leading-[55px] md:leading-[80px] mb-6 shadow-sm"
+                >
+                  La cuenta,{'\n'}
+                  dividida en{'\n'}
+                  <Text style={{ color: COLORS.coolSky }}>segundos.</Text>
+                </Text>
+                <Text
+                  className="text-lg md:text-xl text-white/80 font-light leading-7 mb-10 max-w-[90%] md:max-w-md"
+                >
+                  Cero estrés. Escanea, asigna y paga tu parte. Olvídate de las calculadoras y disfruta de la sobremesa.
+                </Text>
+
+                {/* Availability Badge */}
+                <View
+                  className="bg-sky-400/10 border border-sky-400/20 px-5 py-2.5 rounded-full flex-row items-center gap-3 self-start mb-8"
+                >
+                  <Text className="text-base">✨</Text>
+                  <Text style={{ color: COLORS.coolSky }} className="font-bold tracking-wide uppercase text-[10px]">Multiplataforma: iOS, Android & PWA</Text>
+                </View>
+
+                <TouchableOpacity 
+                  onPress={handleActionPress}
+                  className="bg-dodger-blue px-10 py-5 rounded-full shadow-xl shadow-blue-500/40 self-start hidden md:flex"
+                >
+                  <Text className="text-white font-black text-lg">EMPEZAR AHORA</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Mockup de la App en Desktop */}
+              <View className="hidden md:flex md:w-1/2 items-center justify-center">
+                <View className="w-[300px] h-[600px] bg-slate-900 rounded-[50px] border-[8px] border-slate-800 shadow-2xl relative overflow-hidden">
+                   <LinearGradient colors={['#1e293b', '#0f172a']} style={StyleSheet.absoluteFill} />
+                   <View className="absolute top-0 w-full h-8 bg-black/20 flex-row justify-center items-center">
+                      <View className="w-20 h-4 bg-black rounded-full" />
+                   </View>
+                   <View className="p-6 pt-12">
+                      <View className="w-full h-40 bg-blue-500/20 rounded-2xl mb-4 animate-pulse" />
+                      <View className="w-2/3 h-6 bg-white/10 rounded-full mb-2" />
+                      <View className="w-full h-4 bg-white/5 rounded-full mb-1" />
+                      <View className="w-full h-4 bg-white/5 rounded-full mb-4" />
+                      <View className="flex-row gap-2">
+                        <View className="flex-1 h-20 bg-purple-500/20 rounded-xl" />
+                        <View className="flex-1 h-20 bg-emerald/20 rounded-xl" />
+                      </View>
+                   </View>
+                </View>
+              </View>
             </View>
-          </View>
+          </ResponsiveContainer>
 
           {/* Pain Points Section */}
-          <View className="px-6 py-20 bg-[#0D47A1]">
-            <Text className="text-3xl font-bold text-white text-center mb-4">
-              El dolor de cabeza de la cuenta
-            </Text>
-            <Text className="text-3xl font-bold text-cool-sky/60 text-center mb-12">
-              ya es historia
-            </Text>
+          <View className="bg-[#0D47A1]">
+            <ResponsiveContainer maxWidth={1200} className="px-6 py-20">
+              <Text className="text-3xl md:text-5xl font-bold text-white text-center mb-4">
+                El dolor de cabeza de la cuenta
+              </Text>
+              <Text className="text-3xl md:text-5xl font-bold text-cool-sky/60 text-center mb-12">
+                ya es historia
+              </Text>
 
-            <View className="gap-4">
-              {[
-                { icon: 'calculate', title: 'Calculadora infernal', desc: '¿Quién pidió qué? Deja de hacer sumas en servilletas.' },
-                { icon: 'forum', title: 'Discusiones incómodas', desc: '"Yo solo comí una ensalada". Evita el drama de pagar lo justo.' },
-                { icon: 'payments', title: 'Problemas de Propina', desc: 'Calcula la propina justa automáticamente, sin regatear.' },
-                { icon: 'timer-off', title: 'Tiempo perdido', desc: 'Pagar debería tomar segundos, no 20 minutos esperando.' }
-              ].map((item, index) => (
-                <View key={index} className="bg-white/5 p-6 rounded-2xl border-l-4 border-l-purple-500 border border-white/10">
-                  <View className="w-12 h-12 bg-purple-500/20 rounded-full items-center justify-center mb-4">
-                    <MaterialIcons name={item.icon as any} size={24} color="#a855f7" />
+              <View className="flex-row flex-wrap gap-4 justify-center">
+                {[
+                  { icon: 'calculate', title: 'Calculadora infernal', desc: '¿Quién pidió qué? Deja de hacer sumas en servilletas.' },
+                  { icon: 'forum', title: 'Discusiones incómodas', desc: '"Yo solo comí una ensalada". Evita el drama de pagar lo justo.' },
+                  { icon: 'payments', title: 'Problemas de Propina', desc: 'Calcula la propina justa automáticamente, sin regatear.' },
+                  { icon: 'timer-off', title: 'Tiempo perdido', desc: 'Pagar debería tomar segundos, no 20 minutos esperando.' }
+                ].map((item, index) => (
+                  <View key={index} className="bg-white/5 p-6 rounded-2xl border-l-4 border-l-purple-500 border border-white/10 w-full md:w-[48%] lg:w-[23%]">
+                    <View className="w-12 h-12 bg-purple-500/20 rounded-full items-center justify-center mb-4">
+                      <MaterialIcons name={item.icon as any} size={24} color="#a855f7" />
+                    </View>
+                    <Text className="text-white font-bold text-xl mb-1">{item.title}</Text>
+                    <Text className="text-white/70 leading-5">{item.desc}</Text>
                   </View>
-                  <Text className="text-white font-bold text-xl mb-1">{item.title}</Text>
-                  <Text className="text-white/70 leading-5">{item.desc}</Text>
-                </View>
-              ))}
-            </View>
+                ))}
+              </View>
+            </ResponsiveContainer>
           </View>
 
           {/* How it Works Section */}

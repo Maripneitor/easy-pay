@@ -24,8 +24,9 @@
     "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:web\" \"npm run dev:mobile\"",
     "dev": "npm run dev:all",
     "build:web": "npm run build:web --workspace=apps/mobile-app",
-    "clean": "rimraf node_modules apps/web-app/node_modules apps/mobile-app/node_modules apps/api-backend/node_modules packages/domain/node_modules packages/ui/node_modules package-lock.json && npm install --legacy-peer-deps",
-    "nuke": "docker compose down -v --remove-orphans && rimraf node_modules apps/web-app/node_modules apps/mobile-app/node_modules apps/api-backend/node_modules packages/domain/node_modules packages/ui/node_modules package-lock.json && npm cache clean --force && npm install --legacy-peer-deps && npm run dev:backend"
+    "setup": "npm install --legacy-peer-deps && cd apps/mobile-app && npx expo install --fix",
+    "clean": "rimraf node_modules apps/web-app/node_modules apps/mobile-app/node_modules apps/api-backend/node_modules packages/domain/node_modules packages/ui/node_modules package-lock.json && npm run setup",
+    "nuke": "docker compose down -v --remove-orphans && npm run clean && npm run dev:backend"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
