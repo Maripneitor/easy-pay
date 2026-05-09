@@ -19,6 +19,7 @@
     "dev:backend:manual": "concurrently -n \"AUTH,GRP,STAT,OCR,NOT\" -c \"magenta,blue,cyan,green,yellow\" \"uvicorn main:app --app-dir apps/api-backend --host 0.0.0.0 --port 8001 --reload\" \"uvicorn main_groups:app --app-dir apps/api-backend --host 0.0.0.0 --port 8002 --reload\" \"uvicorn main_stats:app --app-dir apps/api-backend --host 0.0.0.0 --port 8003 --reload\" \"uvicorn main_ocr:app --app-dir apps/api-backend --host 0.0.0.0 --port 8004 --reload\" \"uvicorn main_notification:app --app-dir apps/api-backend --host 0.0.0.0 --port 8005 --reload\"",
     "dev:api": "npm run dev:backend",
     "dev:frontend": "npm run dev:web",
+    "dev:mobile": "cd apps/mobile-app && EXPO_ROUTER_APP_ROOT=./app npx expo start -c --lan",
     "dev:web": "npm run dev --workspace=apps/web-app -- --port 5173 --host",
     "dev:pwa": "cd apps/mobile-app && npm run web",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:web\" \"npm run dev:pwa\"",
@@ -46,6 +47,15 @@
     "react-router-dom": "^6.22.0",
     "tailwind-merge": "^3.0.0",
     "tailwindcss": "3.4.1"
+  },
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "@types/react": "19.1.10",
+    "@types/react-dom": "19.1.10",
+    "ajv": "^8.12.0",
+    "ajv-keywords": "^5.1.0",
+    "react-native-reanimated": "~3.16.0"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
