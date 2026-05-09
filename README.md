@@ -4,6 +4,16 @@
 
 ---
 
+## 🚀 0. Ejecución Rápida (Cleanup & Run)
+Si ya tienes el proyecto y quieres asegurar una ejecución limpia, usa el comando unificado:
+
+```bash
+# Limpia, instala y levanta todo (Backend, Web y Mobile)
+npm run nuke && npm run dev
+```
+
+---
+
 ## 🛠️ 1. Requisitos Previos
 - **Node.js:** Versión 20 (Usa `nvm use` si tienes `.nvmrc` activo).
 - **Docker & Docker Compose:** Para servicios de backend y bases de datos.
