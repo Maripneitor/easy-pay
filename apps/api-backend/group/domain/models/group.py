@@ -19,6 +19,7 @@ class GroupCreate(BaseModel):
     nombre: str
     descripcion: Optional[str] = None
     admin_id: str
+    items: Optional[List[dict]] = None
 
 # Modelo para unirse
 class GroupJoin(BaseModel):

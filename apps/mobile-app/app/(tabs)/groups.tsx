@@ -75,9 +75,15 @@ export default function GroupListScreen() {
                         <TouchableOpacity 
                             onPress={() => router.push('/profile' as any)}
                             style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
-                            className="w-10 h-10 rounded-full items-center justify-center border"
+                            className="w-10 h-10 rounded-full items-center justify-center border overflow-hidden"
                         >
-                            <Ionicons name="person-outline" size={20} color={theme.textSecondary} />
+                            {user?.nombre ? (
+                                <View style={{ backgroundColor: theme.primary }} className="w-full h-full items-center justify-center">
+                                    <Text className="text-white font-black text-xs">{user.nombre.charAt(0).toUpperCase()}</Text>
+                                </View>
+                            ) : (
+                                <Ionicons name="person-outline" size={20} color={theme.textSecondary} />
+                            )}
                         </TouchableOpacity>
                     </View>
 

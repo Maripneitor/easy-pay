@@ -15,6 +15,10 @@ app.add_middleware(
 
 app.include_router(stats_router)
 
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "system": "Easy Pay Statistics Service"}
+
 @app.get("/")
 def root():
     return {"service": "Statistics Service", "status": "online"}

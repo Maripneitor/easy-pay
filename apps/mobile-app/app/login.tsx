@@ -113,6 +113,14 @@ export default function AuthScreen() {
                     }}
                     showsVerticalScrollIndicator={false}
                 >
+                    {/* Back Button to Landing */}
+                    <TouchableOpacity 
+                        onPress={() => router.replace('/')}
+                        style={{ position: 'absolute', top: 20, left: 24, zIndex: 10, flexDirection: 'row', alignItems: 'center' }}
+                    >
+                        <MaterialIcons name="arrow-back" size={20} color="#94a3b8" />
+                        <Text style={{ color: '#94a3b8', marginLeft: 8, fontSize: 14, fontWeight: 'bold' }}>Regresar</Text>
+                    </TouchableOpacity>
                     {/* Header */}
                     <View className="items-center mb-10">
                         <View className="w-24 h-24 mb-4 items-center justify-center">

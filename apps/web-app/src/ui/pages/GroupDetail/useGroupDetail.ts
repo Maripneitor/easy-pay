@@ -49,7 +49,8 @@ export const useGroupDetail = (groupId: string) => {
                     ...item,
                     id: normalizeId(item.id || item._id),
                     comprador_id: normalizeId(item.comprador_id),
-                    monto: Number(item.monto || item.precio || 0)
+                    monto: Number(item.monto || item.precio || 0),
+                    participantes_ids: (item.participantes_ids || []).map((pid: any) => normalizeId(pid))
                 }));
 
             const rawMembers = gData.integrantes || gData.participantes || [];

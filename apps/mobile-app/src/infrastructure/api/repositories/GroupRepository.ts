@@ -12,10 +12,11 @@ export class ApiMobileGroupRepository implements GroupRepository {
         return response.data;
     }
 
-    async createGroup(leader: Member, name?: string): Promise<Group> {
+    async createGroup(leader: Member, name?: string, items: any[] = []): Promise<Group> {
         const response = await httpClient.post('/groups/create', { 
             admin_id: leader.id, 
-            nombre: name || 'Nuevo Grupo'
+            nombre: name || 'Nuevo Grupo',
+            items: items
         });
         
         // Manual mapping from create response

@@ -10,7 +10,7 @@ class JoinGroupUseCase:
 
         # 2. Verificar si ya es miembro o admin
         if user_id == group.get("admin_id") or user_id in group.get("integrantes", []):
-            return {"status": "success", "message": "Ya eres parte de este grupo", "group_id": group["id"]}
+            return {"status": "error", "message": "Ya eres parte de este grupo", "group_id": group["id"]}
 
         # 3. Agregar al nuevo integrante
         success = await self.group_repo.add_member(group["id"], user_id)

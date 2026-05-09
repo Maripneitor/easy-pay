@@ -5,6 +5,7 @@ from group.infrastructure.routes.route_group import group_router
 from stats.infrastructure.routes.routes_stats import router as stats_router
 from ocr.infrastructure.routes.route_ocr import router as ocr_router
 from notification.infrastructure.routes.route_notification import router as notification_router, reminder_worker
+from wallet.infrastructure.routes.route_wallet import wallet_router
 import asyncio
 
 app = FastAPI(
@@ -36,6 +37,7 @@ app.include_router(group_router)
 app.include_router(stats_router)
 app.include_router(ocr_router)
 app.include_router(notification_router)
+app.include_router(wallet_router)
 
 
 @app.on_event("startup")

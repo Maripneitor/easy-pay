@@ -13,10 +13,20 @@ interface TotalsSummaryProps {
     total: number;
     paidAmount: number;
     pendingAmount: number;
+    items?: any[];
+    members?: any[];
 }
 
 export const TotalsSummary: React.FC<TotalsSummaryProps> = ({ 
-    subtotal = 0, tax = 0, service = 0, tip = 0, total = 0, paidAmount = 0, pendingAmount = 0 
+    subtotal = 0, 
+    tax = 0, 
+    service = 0, 
+    tip = 0, 
+    total = 0, 
+    paidAmount = 0, 
+    pendingAmount = 0,
+    items = [],
+    members = []
 }) => {
     const { theme, fontScale } = useTheme();
     
@@ -74,7 +84,7 @@ export const TotalsSummary: React.FC<TotalsSummaryProps> = ({
             {/* Aportes Section */}
             <View>
                 <Text style={{ color: theme.text, fontSize: 18 * fontScale, fontFamily: 'Manrope' }} className="font-extrabold mb-4 tracking-tight px-1">Aportes de Miembros</Text>
-                <View className="flex-row gap-x-4">
+                <View className="flex-row gap-x-4 mb-8">
                     {/* Pagado Card */}
                     <View 
                         style={{ backgroundColor: theme.card }} 
@@ -112,6 +122,61 @@ export const TotalsSummary: React.FC<TotalsSummaryProps> = ({
                             />
                         </View>
                     </View>
+                </View>
+
+                {/* Shared Items Breakdown */}
+                <Text style={{ color: theme.text, fontSize: 18 * fontScale, fontFamily: 'Manrope' }} className="font-extrabold mb-4 tracking-tight px-1">Desglose por Ítem</Text>
+                <View className="gap-y-3">
+                    {items.map((item, idx) => {
+                        const assignedIds = item.asignadoA || item.participantes_ids || [];
+                        const itemParticipants = members.filter(m => assignedIds.includes(m.id));
+                        const price = item.precio || item.monto || 0;
+                        const qty = item.cantidad || 1;
+                        const itemTotal = price * qty;
+                        const sharePerPerson = itemParticipants.length > 0 ? itemTotal / itemParticipants.length : 0;
+
+                        return (
+                            <View 
+                                key={item.id || idx}
+                                style={{ backgroundColor: theme.card }}
+                                className="p-4 rounded-2xl border border-white/5 flex-row justify-between items-center"
+                            >
+                                <View className="flex-1 pr-4">
+                                    <Text style={{ color: theme.text }} className="font-bold text-sm mb-1">{item.nombre || item.descripcion}</Text>
+                                    <View className="flex-row items-center gap-1.5">
+                                        <View className="flex-row -space-x-2 mr-1">
+                                            {itemParticipants.slice(0, 3).map((p, pIdx) => (
+                                                <View 
+                                                    key={p.id || pIdx}
+                                                    style={{ backgroundColor: p.color || theme.primary, borderColor: theme.card }}
+                                                    className="w-5 h-5 rounded-full border-2 items-center justify-center"
+                                                >
+                                                    <Text className="text-[8px] font-black text-white">
+                                                        {(p.nombre || 'U').charAt(0).toUpperCase()}
+                                                    </Text>
+                                                </View>
+                                            ))}
+                                            {itemParticipants.length > 3 && (
+                                                <View 
+                                                    style={{ backgroundColor: '#333', borderColor: theme.card }}
+                                                    className="w-5 h-5 rounded-full border-2 items-center justify-center"
+                                                >
+                                                    <Text className="text-[6px] font-black text-white">+{itemParticipants.length - 3}</Text>
+                                                </View>
+                                            )}
+                                        </View>
+                                        <Text style={{ color: theme.textSecondary }} className="text-[10px] font-medium">
+                                            {itemParticipants.length} {itemParticipants.length === 1 ? 'persona' : 'personas'} • ${sharePerPerson.toFixed(2)} c/u
+                                        </Text>
+                                    </View>
+                                </View>
+                                <View className="items-end">
+                                    <Text style={{ color: theme.text }} className="font-black text-base">${itemTotal.toFixed(2)}</Text>
+                                    <Text style={{ color: theme.textSecondary }} className="text-[10px] opacity-50">{qty} x ${price.toFixed(2)}</Text>
+                                </View>
+                            </View>
+                        );
+                    })}
                 </View>
             </View>
         </MotiView>

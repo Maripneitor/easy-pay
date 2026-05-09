@@ -131,7 +131,10 @@ export default function OCRScannerScreen() {
                         </View>
 
                         <View className="items-center w-full px-10">
-                            <View className="w-full aspect-[3/4] max-w-sm border-2 border-white/20 rounded-[40px] items-center justify-center relative bg-white/5">
+                            <View 
+                                style={{ aspectRatio: 3/4 }}
+                                className="w-full max-w-sm border-2 border-white/20 rounded-[40px] items-center justify-center relative bg-white/5"
+                            >
                                 <View className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-blue-500 rounded-tl-[30px]" />
                                 <View className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-blue-500 rounded-tr-[30px]" />
                                 <View className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-blue-500 rounded-bl-[30px]" />

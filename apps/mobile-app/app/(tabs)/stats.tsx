@@ -89,18 +89,33 @@ export default function StatsScreen() {
         <SafeAreaView className="flex-1" style={{ backgroundColor: theme.bg }}>
             <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
                 {/* Header */}
-                <View className="mb-8 flex-row justify-between items-start">
+                <View className="mb-8 flex-row justify-between items-center">
                     <View className="flex-1">
-                        <Text style={{ color: theme.text, fontSize: 32 * fontScale }} className="font-black tracking-tight">Estadísticas</Text>
-                        <Text style={{ color: theme.textSecondary, fontSize: 14 * fontScale }} className="font-medium opacity-60">Visualiza tu actividad y balance</Text>
+                        <Text style={{ color: theme.text, fontSize: 32 * fontScale }} className="font-black tracking-tight leading-none uppercase">Estadísticas</Text>
+                        <Text style={{ color: theme.primary, fontSize: 9 * fontScale }} className="font-black uppercase tracking-[3px] mt-2">Resumen Financiero</Text>
                     </View>
-                    <TouchableOpacity 
-                        onPress={handleExportPDF}
-                        style={{ backgroundColor: theme.primary + '20' }} 
-                        className="p-3 rounded-2xl border border-white/5"
-                    >
-                        <MaterialIcons name="picture-as-pdf" size={24} color={theme.primary} />
-                    </TouchableOpacity>
+                    <View className="flex-row gap-3">
+                        <TouchableOpacity 
+                            onPress={() => router.push('/profile' as any)}
+                            style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
+                            className="w-10 h-10 rounded-full items-center justify-center border overflow-hidden"
+                        >
+                            {user?.nombre ? (
+                                <View style={{ backgroundColor: theme.primary }} className="w-full h-full items-center justify-center">
+                                    <Text className="text-white font-black text-xs">{user.nombre.charAt(0).toUpperCase()}</Text>
+                                </View>
+                            ) : (
+                                <Ionicons name="person-outline" size={20} color={theme.textSecondary} />
+                            )}
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                            onPress={handleExportPDF}
+                            style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} 
+                            className="w-10 h-10 rounded-xl items-center justify-center border"
+                        >
+                            <MaterialIcons name="picture-as-pdf" size={20} color={theme.primary} />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 {/* Summary Cards */}

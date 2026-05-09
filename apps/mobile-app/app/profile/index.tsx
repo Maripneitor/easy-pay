@@ -130,13 +130,6 @@ export default function ProfileScreen() {
                         >
                             <Text style={{ color: 'white', fontSize: 11 * fontScale }} className="font-black uppercase tracking-wider">Editar Perfil</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity 
-                            onPress={() => router.push('/profile/change-password' as any)}
-                            style={{ backgroundColor: theme.glassBg, borderColor: theme.border }}
-                            className="px-6 py-3 rounded-full border"
-                        >
-                            <Text style={{ color: theme.text, fontSize: 11 * fontScale }} className="font-black uppercase tracking-wider">Contraseña</Text>
-                        </TouchableOpacity>
                     </View>
                 </View>
 

@@ -138,7 +138,7 @@ export const CreateGroup = () => {
                             <div className="relative flex justify-center text-[10px] uppercase tracking-widest"><span className="bg-[var(--bg-body)] px-4 font-bold text-[var(--text-secondary)] opacity-40">O escanea</span></div>
                         </div>
 
-                        <button className="w-full aspect-video bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-color)] rounded-3xl flex flex-col items-center justify-center gap-3 hover:border-[var(--primary)] transition-colors group">
+                        <button className="w-full h-48 bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-color)] rounded-3xl flex flex-col items-center justify-center gap-3 hover:border-[var(--primary)] transition-colors group">
                             <div className="p-4 bg-[var(--bg-body)] rounded-2xl group-hover:scale-110 transition-transform">
                                 <QrCode size={48} className="text-[var(--primary)]" />
                             </div>

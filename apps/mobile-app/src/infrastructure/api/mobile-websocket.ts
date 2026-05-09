@@ -9,8 +9,11 @@ class MobileWebSocketClient {
     private currentToken: string | null = null;
 
     constructor() {
-        let apiBase = getApiBaseUrl();
-        if (apiBase.endsWith('/api')) {
+        // Obtenemos la base pero sin el /api/ final para construir la ruta manual
+        let apiBase = getApiBaseUrl(8002); // El microservicio de grupos está en el 8002
+        if (apiBase.endsWith('/api/')) {
+            apiBase = apiBase.slice(0, -5);
+        } else if (apiBase.endsWith('/api')) {
             apiBase = apiBase.slice(0, -4);
         }
         this.baseURL = apiBase.replace(/^http/, 'ws');
@@ -21,6 +24,7 @@ class MobileWebSocketClient {
         this.currentGroupId = groupId;
         this.currentToken = token;
 
+        // La ruta completa debe ser /api/groups/ws/ID
         const wsUrl = `${this.baseURL}/api/groups/ws/${groupId}?token=${token}`;
         console.info(`[WS-Mobile] Conectando a: ${wsUrl}`);
         

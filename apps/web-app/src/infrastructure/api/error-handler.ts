@@ -26,6 +26,7 @@ export function handleApiError(error: unknown): never {
             case 403:
                 throw new UnauthorizedException(message);
             case 400:
+            case 409:
             case 422:
                 throw new ValidationException(message);
             default:

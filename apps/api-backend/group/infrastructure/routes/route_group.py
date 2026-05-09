@@ -188,8 +188,12 @@ async def join_group(data: GroupJoin, current_user_id: str = Depends(get_current
         
     result = await join_group_uc.execute(data.codigo, data.user_id)
     if result["status"] == "error":
-        status_code = 404 if "Código" in result["message"] else 400
-        raise HTTPException(status_code=status_code, detail=result["message"])
+        msg = result["message"]
+        if "Código" in msg:
+            raise HTTPException(status_code=404, detail=msg)
+        if "Ya eres parte" in msg:
+            raise HTTPException(status_code=409, detail=msg)
+        raise HTTPException(status_code=400, detail=msg)
     return result
 
 @group_router.get("/{group_id}/items")

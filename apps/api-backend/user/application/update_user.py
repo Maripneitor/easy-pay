@@ -23,7 +23,20 @@ class UpdateUserUseCase:
             # Opcional: validación de duplicados de teléfono
             pass
 
-        # 4. Prohibir cambio de contraseña en este flujo
+        # 4. Validar colisiones de cuentas bancarias
+        new_accounts = new_data.get("bank_accounts")
+        if new_accounts:
+            for acc in new_accounts:
+                clabe = acc.get("clabe") if isinstance(acc, dict) else acc.clabe
+                if clabe:
+                    existing_user_with_bank = await self.repository.find_by_bank_account(clabe)
+                    if existing_user_with_bank and str(existing_user_with_bank["_id"]) != user_id:
+                        return {
+                            "status": "error", 
+                            "message": f"La CLABE {clabe} ya está registrada por otro usuario."
+                        }
+
+        # 5. Prohibir cambio de contraseña en este flujo
         if "password" in new_data:
             del new_data["password"]
 

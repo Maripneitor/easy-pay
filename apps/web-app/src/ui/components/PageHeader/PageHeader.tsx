@@ -5,6 +5,7 @@ import { ROUTES } from '../../../infrastructure/routes';
 import { useAuthContext } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../../infrastructure/utils';
+import { httpClient } from '../../../infrastructure/api/http-client';
 import styles from './PageHeader.module.css';
 
 const USER_AVATAR_URL = 'https://ui-avatars.com/api/?name=Juan&background=3b82f6&color=fff&bold=true';
@@ -50,11 +51,11 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             const userId = user?.id || user?._id;
             if (!userId) return;
             try {
-                const response = await fetch(`${import.meta.env.VITE_NOTIFICATION_API}/api/notifications/${userId}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setNotifications(data.notifications || []);
-                    setUnreadCount(data.unread_count || 0);
+                // Usamos httpClient para aprovechar el baseURL (/api) y el proxy de Vite
+                const response = await httpClient.get(`/notifications/${userId}`);
+                if (response.data) {
+                    setNotifications(response.data.notifications || []);
+                    setUnreadCount(response.data.unread_count || 0);
                 }
             } catch (error) {
                 console.error("Error fetching notifications:", error);
@@ -68,7 +69,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
     const markAsRead = async (id: string) => {
         try {
-            await fetch(`${import.meta.env.VITE_NOTIFICATION_API}/api/notifications/${id}/read`, { method: 'PATCH' });
+            await httpClient.patch(`/notifications/${id}/read`);
             setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
             setUnreadCount(prev => Math.max(0, prev - 1));
         } catch (error) {

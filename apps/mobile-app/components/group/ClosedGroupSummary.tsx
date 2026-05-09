@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Share } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Share } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 

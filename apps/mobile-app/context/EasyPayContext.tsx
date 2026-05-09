@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { TokenStorage } from '../src/infrastructure/security/TokenStorage';
@@ -151,6 +152,7 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const [debts, setDebts] = useState<Debt[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
     const [cards, setCards] = useState<SavedCard[]>([]);
+    const router = useRouter();
     const { notifyUserJoined, notifyGroupClosed, notifyItemAssigned } = useNotifications();
     const [realStats, setRealStats] = useState({ totalOwed: 0, totalToReceive: 0 });
 
@@ -303,8 +305,9 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
             setToken(null);
             setUser(null);
             setActiveGrupo(null);
-            // Opcional: Limpiar cache de React Query si se usa
-            // queryClient.clear(); 
+            
+            // Redirigir a login
+            router.replace('/login');
         } catch (e) {
             console.error("Error during logout:", e);
         }
@@ -326,7 +329,7 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
         };
     };
 
-    const createGrupo = async (nombre: string, liderId: string) => {
+    const createGrupo = async (nombre: string, liderId: string, items: any[] = []) => {
         if (isOnline) {
             try {
                 const leader = { 
@@ -335,7 +338,7 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
                     avatar: user?.avatar || '',
                     color: '#2196F3'
                 };
-                const newGroupResp = await groupRepository.createGroup(leader as any, nombre);
+                const newGroupResp = await groupRepository.createGroup(leader as any, nombre, items);
                 const normalized = normalizeGrupo(newGroupResp);
                 setActiveGrupo(normalized);
                 
@@ -396,11 +399,18 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
             return false;
         } catch (error: any) {
             console.error("Error joining group:", error);
-            const detail = error.response?.data?.detail || "";
+            const detail = error.response?.data?.detail || error.message || "";
+            
             if (detail.includes("settling")) throw new Error("El grupo está en fase de liquidación, no acepta nuevos miembros");
             if (detail.includes("closed")) throw new Error("El grupo ya está cerrado");
-            if (detail.includes("already a member")) throw new Error("Ya eres parte de este grupo");
-            throw new Error(detail || "Código inválido");
+            if (detail.includes("parte de este grupo") || error.response?.status === 409) {
+                throw new Error("Ya eres parte de este grupo");
+            }
+            if (detail.includes("Código") || error.response?.status === 404) {
+                throw new Error("El código ingresado no existe o es inválido");
+            }
+            
+            throw new Error(detail || "No se pudo unir al grupo. Verifica tu conexión.");
         }
     };
 
@@ -519,7 +529,7 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
             cantidad: parseFloat(i.cantidad || i.quantity || '1'),
             categoria: i.categoria || i.category || 'Otros',
             autorId: i.autorId || i.addedBy || i.comprador_id || '',
-            asignadoA: i.asignadoA || i.assignedTo || i.participantes_ids || []
+            asignadoA: (i.asignadoA || i.assignedTo || i.participantes_ids || []).map((id: any) => String(id))
         }));
 
         // Recálculo local para consistencia absoluta en la UI
@@ -533,7 +543,8 @@ export const EasyPayProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const groupSubtotal = subtotalValue || 1;
 
         const participantes = (raw.participantes || raw.members || raw.integrantes || []).map((p: any) => {
-            const pId = p.id || p._id || (typeof p === 'string' ? p : makeId('usr'));
+            const rawId = p.id || p._id || (typeof p === 'string' ? p : makeId('usr'));
+            const pId = String(rawId);
             const pName = p.nombre || p.name || (typeof p === 'string' ? 'Usuario' : 'Usuario Desconocido');
             
             // Calcular deuda individual proporcional

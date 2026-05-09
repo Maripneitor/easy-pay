@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Lock, Sun, Moon, Loader2 } from 'lucide-react';
+import { Mail, Lock, Sun, Moon, Loader2, ArrowLeft } from 'lucide-react';
 import styles from './Auth.module.css';
 import { useAuth } from './useAuth';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
@@ -58,6 +58,11 @@ export const Auth = () => {
     return (
         <div className={styles.authPage}>
             
+            <button className={styles.backBtn} onClick={() => navigate(ROUTES.LANDING)}>
+                <ArrowLeft size={18} />
+                <span>Regresar al inicio</span>
+            </button>
+
             <button className={styles.themeToggle} onClick={toggleTheme}>
                 {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>

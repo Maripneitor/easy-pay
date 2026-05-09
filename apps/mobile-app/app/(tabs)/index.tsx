@@ -24,9 +24,8 @@ import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 
 
 import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
-import { NETWORK_CONFIG } from '../../src/infrastructure/api/network.config';
+import { statsRepository } from '../../src/infrastructure/api/repositories/StatsRepository';
 import { toTitleCase } from '../../src/infrastructure/utils/format';
-import { getApiBaseUrl } from '../../src/infrastructure/api/network.config';
 import Toast from 'react-native-toast-message';
 
 const { width: windowWidth } = Dimensions.get('window');
@@ -56,7 +55,7 @@ export default function DashboardScreen() {
         try {
             const [rawGroups, statsRes] = await Promise.all([
                 groupRepository.findByUser(user.id),
-                fetch(`${NETWORK_CONFIG.BASE_URL}/stats/user/${user.id}`).then(r => r.json())
+                statsRepository.getUserStats(user.id)
             ]);
             
             const groups = Array.isArray(rawGroups) ? rawGroups : [];

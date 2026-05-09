@@ -127,8 +127,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             localStorage.removeItem('userEmail');
             setUser(null);
             setGuest(null);
-            // Redirigir a la Landing Page (ruta raíz)
-            window.location.href = '/';
+            // Redirigir a la página de autenticación
+            window.location.href = '/autenticacion';
         } finally {
             setIsAuthenticating(false);
         }

@@ -130,29 +130,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="groups"
-        options={{
-          title: 'Grupos',
-          tabBarIcon: ({ color, focused }) => (
-            <View>
-              <MaterialIcons name="diversity-3" size={26} color={color} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="qr"
-        options={{
-          tabBarLabel: '',
-          tabBarButton: (props) => (
-            <CustomTabBarButton theme={theme} isOnline={isOnline} {...props}>
-              <MaterialIcons name="qr-code-scanner" size={32} color="white" />
-            </CustomTabBarButton>
-          ),
-        }}
-      />
-      <Tabs.Screen name="stats" options={{ href: null }} />
-      <Tabs.Screen
         name="notifications"
         options={{
           title: 'Alertas',
@@ -168,6 +145,29 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="qr"
+        options={{
+          tabBarLabel: '',
+          tabBarButton: (props) => (
+            <CustomTabBarButton theme={theme} isOnline={isOnline} {...props}>
+              <MaterialIcons name="qr-code-scanner" size={32} color="white" />
+            </CustomTabBarButton>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="stats"
+        options={{
+          title: 'Estadísticas',
+          tabBarIcon: ({ color, focused }) => (
+            <View>
+              <MaterialIcons name="bar-chart" size={26} color={color} />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen name="groups" options={{ href: null }} />
       <Tabs.Screen name="payments" options={{ href: null }} />
     </Tabs>
     </View>

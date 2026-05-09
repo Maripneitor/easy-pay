@@ -36,7 +36,14 @@ export default function CreateGroupScreen() {
 
         setIsLoading(true);
         try {
-            const groupId = await createGrupo(groupName, user.id);
+            const items = scannedTicket?.items.map(it => ({
+                nombre: it.name,
+                precio: it.price,
+                cantidad: it.quantity,
+                categoria: 'Comida'
+            })) || [];
+
+            const groupId = await createGrupo(groupName, user.id, items);
             // Solución: Deferir la navegación para evitar race conditions y asegurar persistencia en backend
             setTimeout(() => {
                 router.replace({ pathname: '/detalle-grupo', params: { id: groupId } });

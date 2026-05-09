@@ -16,6 +16,7 @@
     "gama:usb": "node setup-gama.js --usb",
     "dev:backend": "docker compose up --build user-service group-service stats-service ocr-service notification-service wallet-service",
     "dev:backend:unified": "uvicorn main:app --app-dir apps/api-backend --host 0.0.0.0 --port 8001 --reload",
+    "dev:backend:micro": "docker compose up --build user-service group-service stats-service ocr-service notification-service wallet-service",
     "dev:backend:manual": "concurrently -n \"AUTH,GRP,STAT,OCR,NOT\" -c \"magenta,blue,cyan,green,yellow\" \"uvicorn main:app --app-dir apps/api-backend --host 0.0.0.0 --port 8001 --reload\" \"uvicorn main_groups:app --app-dir apps/api-backend --host 0.0.0.0 --port 8002 --reload\" \"uvicorn main_stats:app --app-dir apps/api-backend --host 0.0.0.0 --port 8003 --reload\" \"uvicorn main_ocr:app --app-dir apps/api-backend --host 0.0.0.0 --port 8004 --reload\" \"uvicorn main_notification:app --app-dir apps/api-backend --host 0.0.0.0 --port 8005 --reload\"",
     "dev:api": "npm run dev:backend",
     "dev:frontend": "npm run dev:web",
@@ -55,7 +56,9 @@
     "@types/react-dom": "19.1.10",
     "ajv": "^8.12.0",
     "ajv-keywords": "^5.1.0",
-    "react-native-reanimated": "~3.16.0"
+    "react-native-reanimated": "4.1.1",
+    "react-native-safe-area-context": "5.6.0",
+    "react-native-screens": "4.16.0"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
@@ -63,6 +66,7 @@
     "localtunnel": "^2.0.2",
     "metro-runtime": "^0.84.3",
     "rimraf": "^5.0.0",
+    "stacktrace-parser": "^0.1.11",
     "tsx": "^4.21.0"
   }
 }

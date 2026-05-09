@@ -1,5 +1,11 @@
 {
   "android": {
     "package": "com.anonymous.easypaymonorepo"
-  }
+  },
+  "extra": {
+    "eas": {
+      "projectId": "faab094b-5d4f-4f86-910b-f2b75a1fc57b"
+    }
+  },
+  "owner": "maripneitor"
 }

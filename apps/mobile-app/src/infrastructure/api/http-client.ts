@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { TokenStorage } from '../security/TokenStorage';
 
-import { NETWORK_CONFIG } from './network.config';
+import { NETWORK_CONFIG, getApiBaseUrl } from './network.config';
 
 const getAuthToken = async (): Promise<string | null> => {
     return await TokenStorage.getToken();
@@ -24,8 +24,35 @@ export const httpClient: AxiosInstance = axios.create({
 
 httpClient.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
+        let url = config.url || '';
+        
+        // Normalize URL to not start with / (avoids Axios ignoring baseURL path)
+        if (url.startsWith('/')) {
+            url = url.substring(1);
+            config.url = url;
+        }
+
+        // --- Microservices Logic: Route to correct port based on path ---
+        let port = NETWORK_CONFIG.SERVICE_PORTS.AUTH; // Default 8001
+
+        const path = url.toLowerCase();
+        if (path.startsWith('groups')) port = NETWORK_CONFIG.SERVICE_PORTS.GROUPS;
+        else if (path.startsWith('stats')) port = NETWORK_CONFIG.SERVICE_PORTS.STATS;
+        else if (path.startsWith('ocr')) port = NETWORK_CONFIG.SERVICE_PORTS.OCR;
+        else if (path.startsWith('notifications')) port = NETWORK_CONFIG.SERVICE_PORTS.NOTIFICATIONS;
+        else if (path.startsWith('wallet')) port = NETWORK_CONFIG.SERVICE_PORTS.WALLET;
+        else if (path.startsWith('auth')) port = NETWORK_CONFIG.SERVICE_PORTS.AUTH;
+
+        // Update baseURL dynamically
+        const dynamicBaseURL = getApiBaseUrl(port);
+        config.baseURL = dynamicBaseURL;
+        
+        if (__DEV__) {
+            console.log(`[HTTP] ${config.method?.toUpperCase()} ${url} -> Port: ${port} (Base: ${dynamicBaseURL})`);
+        }
+
         // No enviar token en peticiones de login o registro
-        const isAuthPath = config.url?.includes('/auth/login') || config.url?.includes('/auth/register');
+        const isAuthPath = url.includes('auth/login') || url.includes('auth/register');
         
         if (!isAuthPath) {
             const token = await getAuthToken();

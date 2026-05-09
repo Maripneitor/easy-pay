@@ -163,4 +163,9 @@ class MongoUserRepository:
     async def delete_user_by_email(self, email: str):
         """Elimina un usuario por su email. Útil para re-intentar registros no verificados."""
         result = await self.collection.delete_one({"email": email})
-        return result.deleted_count > 0
+        return result.deleted_count > 0
+
+    async def find_by_bank_account(self, clabe: str):
+        """Busca un usuario que posea la CLABE especificada en su lista de bank_accounts"""
+        user = await self.collection.find_one({"bank_accounts.clabe": clabe})
+        return user

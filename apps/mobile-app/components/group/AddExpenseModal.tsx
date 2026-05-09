@@ -1,4 +1,5 @@
 import { useEasyPay } from '../../context/EasyPayContext';
+import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
 import React, { useState } from 'react';
 import { 
     View, 
@@ -60,36 +61,25 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
         setLoading(true);
         try {
-            const API_URL = getApiBaseUrl();
-
-            const payload = {
-                group_id: groupId,
+            const itemData = {
                 nombre: nombre.trim(),
                 precio: parseFloat(precio),
                 cantidad: 1,
                 categoria: categoria,
-                comprador_id: user?.id || 'me', 
-                participantes_ids: selectedMembers
+                autorId: user?.id || 'me', 
+                asignadoA: selectedMembers
             };
 
-            const response = await fetch(`${API_URL}/groups/add-item`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (response.ok) {
-                onSuccess();
-                onClose();
-                setNombre('');
-                setPrecio('');
-                setCategoria('Comida');
-            } else {
-                alert('Error al registrar gasto');
-            }
+            await groupRepository.addItem(groupId, itemData);
+            
+            onSuccess();
+            onClose();
+            setNombre('');
+            setPrecio('');
+            setCategoria('Comida');
         } catch (error) {
             console.error(error);
-            alert('Error de conexión');
+            alert('Error al registrar gasto');
         } finally {
             setLoading(false);
         }

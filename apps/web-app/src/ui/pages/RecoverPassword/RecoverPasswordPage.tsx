@@ -137,6 +137,10 @@ export const RecoverPasswordPage = () => {
 
     return (
         <div className={styles.authPage}>
+            <button className={styles.backBtn} onClick={() => navigate(ROUTES.LANDING)}>
+                <ArrowLeft size={18} />
+                <span>Regresar al inicio</span>
+            </button>
             <button className={styles.themeToggle} onClick={toggleTheme} aria-label="Toggle theme">
                 {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>

@@ -11,6 +11,7 @@ import {
     Copy,
     Zap,
     AlertTriangle,
+    AlertCircle,
     Save
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -628,7 +629,7 @@ export const GroupDetail = () => {
                                             className="p-6 bg-[var(--bg-body)] rounded-[2rem] border border-[var(--border-color)] flex items-center justify-between group hover:border-[var(--primary)]/30 transition-all shadow-sm"
                                         >
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center border border-[var(--border-color)] shadow-sm text-[var(--primary)]">
+                                                <div className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center border border-[var(--border-color)] shadow-sm text-[var(--primary)]">
                                                     <UserCircle size={24} />
                                                 </div>
                                                 <div>
@@ -656,6 +657,66 @@ export const GroupDetail = () => {
                                             </div>
                                         </motion.div>
                                     ))}
+                                </div>
+
+                                {/* Shared Items Breakdown (Web) */}
+                                <div className="mt-12 space-y-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                                            <Receipt size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-black uppercase tracking-tight">Desglose Detallado</h3>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Cómo se divide cada ítem entre los participantes</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                        {activities.map((item, idx) => {
+                                            const itemParticipants = membersData.filter(m => item.participantes_ids?.includes(m.id));
+                                            const price = Number(item.monto || item.precio || 0);
+                                            const sharePerPerson = itemParticipants.length > 0 ? price / itemParticipants.length : 0;
+
+                                            return (
+                                                <div 
+                                                    key={item.id || idx}
+                                                    className="p-6 bg-white/50 dark:bg-white/[0.02] border border-[var(--border-color)] rounded-[2rem] flex flex-col gap-4 hover:border-[var(--primary)]/20 transition-all group"
+                                                >
+                                                    <div className="flex justify-between items-start">
+                                                        <div className="flex gap-4">
+                                                            <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-[var(--primary)] transition-colors">
+                                                                <Receipt size={20} />
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-black text-slate-800 dark:text-white uppercase tracking-tight text-base">{item.nombre}</p>
+                                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Total: ${price.toFixed(2)}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="px-3 py-1.5 bg-[var(--primary)]/10 text-[var(--primary)] rounded-lg text-[10px] font-black uppercase shadow-sm">
+                                                            ${sharePerPerson.toFixed(2)} c/u
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex flex-wrap gap-2 pt-4 border-t border-[var(--border-color)]">
+                                                        {itemParticipants.map(p => (
+                                                            <div key={p.id} className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl border border-transparent hover:border-[var(--primary)]/30 transition-all">
+                                                                <div className="w-5 h-5 rounded-full bg-[var(--primary)] text-[8px] font-black text-white flex items-center justify-center">
+                                                                    {p.nombre.charAt(0)}
+                                                                </div>
+                                                                <span className="text-[9px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider">{p.nombre.split(' ')[0]}</span>
+                                                            </div>
+                                                        ))}
+                                                        {itemParticipants.length === 0 && (
+                                                            <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-500/5 rounded-xl border border-rose-500/20">
+                                                                <AlertCircle size={12} className="text-rose-500" />
+                                                                <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest">Sin participantes asignados</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
 
                             </motion.div>

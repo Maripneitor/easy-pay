@@ -104,6 +104,62 @@ export default function AppSettingsScreen() {
                     </View>
                 </View>
 
+                {/* Security & Features */}
+                <SectionHeader title="Seguridad y Funciones" />
+                <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="p-2 rounded-[40px] border mb-10 overflow-hidden">
+                    <TouchableOpacity 
+                        onPress={() => router.push('/profile/change-password' as any)}
+                        className="flex-row items-center justify-between p-6 border-b border-white/5"
+                    >
+                        <View className="flex-row items-center gap-4">
+                            <View style={{ backgroundColor: theme.primary + '15' }} className="w-12 h-12 rounded-2xl items-center justify-center">
+                                <MaterialIcons name="lock" size={24} color={theme.primary} />
+                            </View>
+                            <View>
+                                <Text style={{ color: theme.text }} className="font-black text-sm uppercase tracking-wider">Cambiar Contraseña</Text>
+                                <Text style={{ color: theme.textSecondary }} className="text-[10px] font-bold uppercase opacity-60">Actualiza tus credenciales</Text>
+                            </View>
+                        </View>
+                        <MaterialIcons name="chevron-right" size={24} color={theme.textSecondary} />
+                    </TouchableOpacity>
+
+                    <View className="flex-row justify-between items-center p-6 border-b border-white/5">
+                        <View className="flex-row items-center gap-4">
+                            <View style={{ backgroundColor: '#10b98115' }} className="w-12 h-12 rounded-2xl items-center justify-center">
+                                <MaterialIcons name="security" size={24} color="#10b981" />
+                            </View>
+                            <View>
+                                <Text style={{ color: theme.text }} className="font-black text-sm uppercase tracking-wider">Verificación 2FA</Text>
+                                <Text style={{ color: theme.textSecondary }} className="text-[10px] font-bold uppercase opacity-60">Seguridad en dos pasos</Text>
+                            </View>
+                        </View>
+                        <Switch 
+                            value={true} 
+                            onValueChange={() => {}}
+                            trackColor={{ false: "#767577", true: theme.primary }}
+                            thumbColor={"#fff"}
+                        />
+                    </View>
+
+                    <TouchableOpacity 
+                        onPress={() => {
+                            Alert.alert("Reporte PDF", "Generando reporte mensual de gastos... Esta función estará disponible en la próxima actualización móvil.");
+                        }}
+                        className="flex-row items-center justify-between p-6"
+                    >
+                        <View className="flex-row items-center gap-4">
+                            <View style={{ backgroundColor: '#f59e0b15' }} className="w-12 h-12 rounded-2xl items-center justify-center">
+                                <MaterialIcons name="picture-as-pdf" size={24} color="#f59e0b" />
+                            </View>
+                            <View>
+                                <Text style={{ color: theme.text }} className="font-black text-sm uppercase tracking-wider">Reporte de Gastos</Text>
+                                <Text style={{ color: theme.textSecondary }} className="text-[10px] font-bold uppercase opacity-60">Generar PDF del mes</Text>
+                            </View>
+                        </View>
+                        <MaterialIcons name="download" size={24} color={theme.textSecondary} />
+                    </TouchableOpacity>
+                </View>
+
                 {/* Notifications */}
                 <SectionHeader title="Preferencias" />
                 <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="p-6 rounded-[40px] border mb-10">
