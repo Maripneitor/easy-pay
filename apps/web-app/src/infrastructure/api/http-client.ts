@@ -1,7 +1,8 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import { STORAGE_KEYS } from '../localStorage/storage-keys';
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
-const AUTH_TOKEN_KEY = 'ep_auth_token';
+const AUTH_TOKEN_KEY = STORAGE_KEYS.AUTH_TOKEN;
 
 export const setAuthToken = (token: string): void => {
     localStorage.setItem(AUTH_TOKEN_KEY, token);
@@ -56,8 +57,10 @@ httpClient.interceptors.response.use(
         const isAuthEndpoint = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/register');
         
         if (error.response?.status === 401 && !isAuthEndpoint) {
-            // Token expired or invalid — clear and redirect to auth
-            clearAuthToken();
+            // Token expired or invalid — clear full session and redirect to auth
+            localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+            localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
+            localStorage.removeItem(STORAGE_KEYS.GUEST_SESSION);
             window.location.href = '/autenticacion';
         }
 

@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient as useTanstackQueryClient } from '@tanstack/react-query';
 import { httpClient } from '../../../infrastructure/api/http-client';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
 
 export const useRegisterExpense = () => {
     const { groupId, itemId } = useParams<{ groupId: string, itemId: string }>();
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
+    const queryClient = useTanstackQueryClient();
     const [loading, setLoading] = useState(false);
     const [members, setMembers] = useState<{ id: string, nombre: string }[]>([]);
 

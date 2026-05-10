@@ -10,6 +10,7 @@
     "packages/*"
   ],
   "scripts": {
+    "postinstall": "patch-package",
     "install:all": "npm install",
     "gama": "node setup-gama.js",
     "gama:unach": "node setup-gama.js --unach",
@@ -30,6 +31,7 @@
     "nuke": "docker compose down -v --remove-orphans && npm run clean && npm run dev:backend"
   },
   "dependencies": {
+    "@expo/cli": "^55.0.29",
     "@expo/metro-runtime": "~6.1.2",
     "@tanstack/react-query": "^5.0.0",
     "autoprefixer": "^10.4.19",
@@ -45,6 +47,11 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
+    "react-native-gesture-handler": "^2.31.2",
+    "react-native-reanimated": "^4.1.1",
+    "react-native-safe-area-context": "^5.6.0",
+    "react-native-screens": "^4.16.0",
+    "react-native-svg": "^15.15.4",
     "react-router-dom": "^6.22.0",
     "tailwind-merge": "^3.0.0",
     "tailwindcss": "3.4.1"
@@ -65,6 +72,7 @@
     "cross-env": "^7.0.3",
     "localtunnel": "^2.0.2",
     "metro-runtime": "^0.84.3",
+    "patch-package": "^8.0.1",
     "rimraf": "^5.0.0",
     "stacktrace-parser": "^0.1.11",
     "tsx": "^4.21.0"
