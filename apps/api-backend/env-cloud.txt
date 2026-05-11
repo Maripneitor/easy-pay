@@ -1,0 +1,19 @@
+# --- CONFIGURACIÓN DE ATLAS (Nube) ---
+MONGO_USER=Gafero_db_user
+MONGO_PASS=Hongodb2026
+MONGO_CLUSTER=easy-pay.on6eyit.mongodb.net
+MONGO_URL=mongodb+srv://Gafero_db_user:Hongodb2026@easy-pay.on6eyit.mongodb.net/?retryWrites=true&w=majority&appName=easy-pay
+
+# OPCIÓN B: Docker Local (Usa esta en la Red publica o cuando falle el internet)
+# MONGO_URI=mongodb://mongodb:27017/easypay
+
+# Configuración de Correo para Easy-Pay
+MAIL_USERNAME=easypaygp@gmail.com
+MAIL_PASSWORD=kllc pbmt iamd uypi
+MAIL_FROM=easypaygp@gmail.com
+MAIL_PORT=587
+MAIL_SERVER=smtp.gmail.com
+
+# --- SEGURIDAD ---
+DB_NAME_AUTH=EasyPay_Auth
+JWT_SECRET=Tequieroparavolvernoslocosderisaebriosdenadaypasearsinprisaporlascallesesositomadosdelamanomejordichodelcorazon

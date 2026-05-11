@@ -1,0 +1,171 @@
+from database import db_instance
+from bson import ObjectId
+from user.domain.models.user import User
+
+class MongoUserRepository:
+    def __init__(self):
+        # Conexión a la base de datos y colección
+        self.db = db_instance.get_db("EasyPay_Auth") 
+        self.collection = self.db.get_collection("Users")
+        # Crear índice único en email para prevenir duplicados a nivel de BD
+        self._indexes_created = False
+
+    async def _ensure_indexes(self):
+        """Crea índices únicos si aún no se han creado en esta instancia."""
+        if not self._indexes_created:
+            try:
+                await self.collection.create_index("email", unique=True, sparse=True)
+                self._indexes_created = True
+            except Exception as e:
+                print(f"⚠️ Índice de email ya existe o error: {e}")
+
+    # --- MÉTODO PARA GUARDAR EL USUARIO (REGISTRO) ---
+    async def save_user(self, user_data: dict):
+        """Inserta el JSON del usuario en MongoDB"""
+        await self._ensure_indexes()
+        result = await self.collection.insert_one(user_data)
+        return str(result.inserted_id)
+
+    # --- MÉTODO PARA LOGIN (BÚSQUEDA POR EMAIL O NOMBRE) ---
+    async def find_by_identifier(self, identifier: str):
+        """Busca un usuario que coincida con el email o el nombre de usuario"""
+        user = await self.collection.find_one({
+            "$or":[
+                {"email": identifier},
+                {"nombre": identifier}
+            ]
+        })
+        return user
+
+    # --- MÉTODO PARA BÚSQUEDA DE USUARIOS (AUTOCOMPLETE) ---
+    async def search_users(self, query: str, limit: int = 5):
+        """Busca usuarios por nombre o email que coincidan parcialmente con la query"""
+        cursor = self.collection.find({
+            "$or": [
+                {"nombre": {"$regex": query, "$options": "i"}},
+                {"email": {"$regex": query, "$options": "i"}}
+            ]
+        }, {"password": 0}).limit(limit)
+        
+        users = await cursor.to_list(length=limit)
+        for u in users:
+            u["id"] = str(u["_id"])
+            del u["_id"]
+        return users
+
+    # --- MÉTODO PARA ACTUALIZACIONES GENERALES ---
+    async def update_user(self, user_id: str, update_data: dict):
+        """Actualiza campos específicos de un usuario por su ID"""
+        if not ObjectId.is_valid(user_id):
+            return False
+        result = await self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": update_data}
+        )
+        return result.matched_count > 0
+    
+    # --- MÉTODO PARA BUSCAR POR ID ---
+    async def get_user_by_id(self, user_id: str):
+        """Recupera un usuario completo validando el formato del ObjectId"""
+        if not ObjectId.is_valid(user_id):
+            return None
+        user = await self.collection.find_one({"_id": ObjectId(user_id)})
+        return user
+
+    # --- GESTIÓN DE CÓDIGOS OTP (2FA) ---
+    async def save_otp_code(self, user_id: str, code: str, expires_at):
+        """Guarda el código de 6 dígitos y su fecha de expiración"""
+        if not ObjectId.is_valid(user_id):
+            return # Bypass para modo demo
+            
+        await self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {
+                "two_factor.otp_code": code,
+                "two_factor.otp_expires": expires_at
+            }}
+        )
+
+    async def get_otp_data(self, user_id: str):
+        """Obtiene la sección de two_factor para comparar el código"""
+        user = await self.get_user_by_id(user_id)
+        if user and "two_factor" in user:
+            return user["two_factor"]
+        return None
+    
+    async def enable_2fa(self, user_id: str):
+        """Activa la cuenta marcándola como verificada y limpia los códigos OTP"""
+        if not ObjectId.is_valid(user_id):
+            return False
+        await self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {
+                "is_verified": True,
+                "two_factor.otp_code": None,
+                "two_factor.otp_expires": None
+            }}
+        )
+        return True
+    
+    # --- ACTIVACIÓN FINAL Y VERIFICACIÓN ---
+    # --- GESTIÓN DE TARJETAS (PAYMENT METHODS) ---
+    async def get_cards(self, user_id: str):
+        """Recupera la lista de tarjetas guardadas del usuario"""
+        user = await self.get_user_by_id(user_id)
+        if user and "cards" in user:
+            return user["cards"]
+        return []
+
+    async def add_card(self, user_id: str, card_data: dict):
+        """Agrega una nueva tarjeta al perfil del usuario"""
+        if not ObjectId.is_valid(user_id):
+            return False
+            
+        # Si es la primera, la marcamos como default
+        cards = await self.get_cards(user_id)
+        if len(cards) == 0:
+            card_data["is_default"] = True
+        
+        result = await self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$push": {"cards": card_data}}
+        )
+        return result.modified_count > 0
+
+    async def remove_card(self, user_id: str, card_id: str):
+        """Elimina una tarjeta por su ID interno"""
+        if not ObjectId.is_valid(user_id):
+            return False
+            
+        result = await self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$pull": {"cards": {"id": card_id}}}
+        )
+        return result.modified_count > 0
+
+    async def set_default_card(self, user_id: str, card_id: str):
+        """Cambia la tarjeta predeterminada"""
+        if not ObjectId.is_valid(user_id):
+            return False
+            
+        # 1. Quitamos default a todas
+        await self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"cards.$[].is_default": False}}
+        )
+        # 2. Ponemos default a la elegida
+        result = await self.collection.update_one(
+            {"_id": ObjectId(user_id), "cards.id": card_id},
+            {"$set": {"cards.$.is_default": True}}
+        )
+        return result.modified_count > 0
+
+    async def delete_user_by_email(self, email: str):
+        """Elimina un usuario por su email. Útil para re-intentar registros no verificados."""
+        result = await self.collection.delete_one({"email": email})
+        return result.deleted_count > 0
+
+    async def find_by_bank_account(self, clabe: str):
+        """Busca un usuario que posea la CLABE especificada en su lista de bank_accounts"""
+        user = await self.collection.find_one({"bank_accounts.clabe": clabe})
+        return user

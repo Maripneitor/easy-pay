@@ -1,0 +1,43 @@
+import os
+import logging
+from motor.motor_asyncio import AsyncIOMotorClient
+from dotenv import load_dotenv
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Intentar cargar .env desde el directorio actual y desde la raíz del proyecto
+load_dotenv() # Carga .env local si existe
+load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env")) # Carga .env de la raíz
+
+# Check multiple possible env var names for robustness (Atlas vs Local)
+MONGO_URL = os.getenv("MONGO_URL") or os.getenv("MONGO_URI") or "mongodb://localhost:27017"
+
+if "mongodb+srv" not in MONGO_URL:
+    logger.warning("⚠️ ALERTA: No se detectó una conexión a MongoDB Atlas (Nube). Usando conexión local o fallback.")
+else:
+    logger.info("✅ Conexión a MongoDB Atlas detectada.")
+
+class DatabaseConnector:
+    def __init__(self):
+        try:
+            logger.info(f"Conectando a MongoDB en: {MONGO_URL.split('@')[-1] if '@' in MONGO_URL else MONGO_URL}")
+            self.client = AsyncIOMotorClient(
+                MONGO_URL,
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=5000,
+                retryWrites=True
+            )
+        except Exception as e:
+            logger.error(f"❌ Error crítico al inicializar el cliente de MongoDB: {str(e)}")
+            self.client = None
+
+    def get_db(self, db_name: str = "EasyPay"):
+        if self.client is None:
+            logger.warning("Intentando acceder a DB con cliente no inicializado")
+            return None
+        return self.client[db_name]
+
+# Singleton instance
+db_instance = DatabaseConnector()
