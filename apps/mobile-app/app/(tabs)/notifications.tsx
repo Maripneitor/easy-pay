@@ -100,7 +100,7 @@ function NotificationCard({
     onRemove,
     onAccept,
     accepting,
-    accepted,
+    accepted, onReject, rejecting,
 }: {
     n: AppNotification;
     theme: any;

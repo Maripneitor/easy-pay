@@ -112,7 +112,7 @@ export default function StatsScreen() {
                                 data={barData}
                                 width={SCREEN_WIDTH - 100}
                                 height={220}
-                                yAxisLabel="$"
+                                yAxisLabel="$" yAxisSuffix=""
                                 chartConfig={{...chartConfig, backgroundGradientFrom: 'transparent', backgroundGradientTo: 'transparent'}}
                                 verticalLabelRotation={0}
                                 fromZero

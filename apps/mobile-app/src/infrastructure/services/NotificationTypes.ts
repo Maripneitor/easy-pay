@@ -4,7 +4,8 @@ export type NotificationType =
     | 'item_assigned'
     | 'payment_due'
     | 'payment_received'
-    | 'invitation';
+    | 'invitation'
+    | 'alert';
 
 export interface AppNotification {
     id: string;

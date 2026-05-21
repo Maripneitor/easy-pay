@@ -240,7 +240,7 @@ export default function ItemAssignModal({ visible, onClose, item, members, theme
                                             >
                                                 {/* Avatar */}
                                                 <View 
-                                                    style={{ backgroundColor: color, width: 44, height: 44, borderRadius: 22, marginRight: 16, alignItems: 'center', justifyCenter: 'center', shadowColor: color, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 }}
+                                                    style={{ backgroundColor: color, width: 44, height: 44, borderRadius: 22, marginRight: 16, alignItems: 'center', justifyContent: 'center', shadowColor: color, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 }}
                                                     className="items-center justify-center"
                                                 >
                                                     <Text className="text-white font-black text-base">

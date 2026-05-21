@@ -1,3 +1,4 @@
+import { Alert } from 'react-native';
 import { useEasyPay } from '../context/EasyPayContext';
 import React, { useState } from 'react';
 import { 

@@ -1,3 +1,4 @@
+import { MercadoPagoService } from '../../../src/infrastructure/services/MercadoPagoService';
 import { useEasyPay } from '../../../context/EasyPayContext';
 import React, { useState } from 'react';
 import {

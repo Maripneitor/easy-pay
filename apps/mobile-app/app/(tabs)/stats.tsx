@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useEasyPay, PaymentMethod } from '../../context/EasyPayContext';
 import React, { useEffect, useState } from 'react';
 import { PieChart } from 'react-native-chart-kit';
@@ -33,6 +34,7 @@ const STATUS_META = {
 };
 
 export default function StatsScreen() {
+    const router = useRouter();
     const { theme, fontScale } = useTheme();
     const { user  } = useEasyPay();
     const { payments  } = useEasyPay();

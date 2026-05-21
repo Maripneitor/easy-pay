@@ -1,3 +1,4 @@
+import { Alert } from 'react-native';
 import { useEasyPay } from '../../context/EasyPayContext';
 import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
 import React, { useState } from 'react';
@@ -79,7 +80,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
             setCategoria('Comida');
         } catch (error) {
             console.error(error);
-            alert('Error al registrar gasto');
+            Alert.alert('Error al registrar gasto');
         } finally {
             setLoading(false);
         }

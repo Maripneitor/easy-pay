@@ -107,7 +107,7 @@ export default function GroupDetailScreen() {
 
     const isLeader = activeGrupo.liderId === user?.id || activeGrupo.admin_id === user?.id;
     const isSettling = activeGrupo.status === 'settling';
-    const isClosed = activeGrupo.status === 'closed' || activeGrupo.status === 'liquidated';
+    const isClosed = activeGrupo.status === 'closed';
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
