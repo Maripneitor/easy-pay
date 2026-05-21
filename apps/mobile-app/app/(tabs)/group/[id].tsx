@@ -250,7 +250,7 @@ export default function GroupDetailScreen() {
             </ScrollView>
 
             {/* Botón de acción final (Solo para líderes) */}
-            {isLeader && activeGrupo.status !== 'CERRADA' && activeGrupo.status !== 'closed' && activeGrupo.status !== 'liquidated' && (
+            {isLeader && (activeGrupo.status === 'active' || activeGrupo.status === 'settling') && (
                 <View className="absolute bottom-10 left-6 right-6">
                     <TouchableOpacity 
                         onPress={handleCloseGroup} 
