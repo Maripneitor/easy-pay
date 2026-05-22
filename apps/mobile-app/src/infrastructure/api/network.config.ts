@@ -10,8 +10,8 @@ export function getApiBaseUrl(servicePort: number = 8001) {
         baseUrl = process.env.EXPO_PUBLIC_API_URL;
     } 
     // 2. Detección automática en Browser/PWA
-    else if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost') {
-        baseUrl = `http://${window.location.hostname}:8001`;
+    else if (typeof globalThis !== 'undefined' && 'window' in globalThis && (globalThis as any).window?.location?.hostname && (globalThis as any).window.location.hostname !== 'localhost') {
+        baseUrl = `http://${(globalThis as any).window.location.hostname}:8001`;
     }
     // 3. Detección automática en LAN
     else {
