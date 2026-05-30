@@ -33,7 +33,52 @@ const width = Platform.OS === 'web' ? Math.min(windowWidth, 480) : windowWidth;
 const CARD_WIDTH = width * 0.82;
 const CARD_SPACING = (width - CARD_WIDTH) / 2;
 
+
+const GroupCard = React.memo(({ item, theme, fontScale, isBalanceVisible }: { item: any, theme: any, fontScale: number, isBalanceVisible: boolean }) => {
+    const router = useRouter();
+
+    return (
+        <Pressable onPress={() => router.push({ pathname: '/detalle-grupo', params: { id: item.id } })}>
+            <View
+                style={{
+                    backgroundColor: theme.cardSecondary,
+                    borderColor: theme.border,
+                    borderWidth: 1,
+                    borderRadius: 24,
+                    padding: 20,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginBottom: 12
+                }}
+            >
+                <View style={{ backgroundColor: theme.glassBg }} className="w-14 h-14 rounded-[20px] items-center justify-center">
+                    <MaterialIcons name="restaurant" size={26} color={theme.primary} />
+                </View>
+                <View className="flex-1">
+                    <Text style={{ fontSize: 15 * fontScale, color: theme.text }} className="font-black tracking-tight">{item.nombre || 'Sin nombre'}</Text>
+                    <View className="flex-row items-center gap-2 mt-1">
+                        <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-widest">{item.codigo_invitacion}</Text>
+                        <Text style={{ fontSize: 10 * fontScale }} className="text-slate-500 font-medium">• {new Date(item.fecha_creacion).toLocaleDateString()}</Text>
+                    </View>
+                </View>
+                <View className="items-end">
+                    <Text style={{
+                        fontSize: 15 * fontScale,
+                        color: theme.text
+                    }} className="font-black">
+                        {isBalanceVisible ? `$${(item.total_gastado || 0).toFixed(2)}` : `$ ***.**`}
+                    </Text>
+                    <View style={{ backgroundColor: item.is_settled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
+                        <Text style={{ fontSize: 8 * fontScale, color: item.is_settled ? '#10b981' : '#f59e0b' }} className="font-black uppercase">{item.is_settled ? 'Saldado' : 'Activo'}</Text>
+                    </View>
+                </View>
+            </View>
+        </Pressable>
+    );
+});
+
 // --- Dashboard Component ---
+
 export default function DashboardScreen() {
     const { theme, fontScale, cycleTheme } = useTheme();
     const { user  } = useEasyPay();
@@ -337,45 +382,13 @@ export default function DashboardScreen() {
                             <ActivityIndicator size="large" color={theme.primary} />
                         ) : userGroups.length > 0 ? (
                             userGroups.map(item => (
-                                <Pressable 
+                                <GroupCard
                                     key={item.id}
-                                    onPress={() => router.push({ pathname: '/detalle-grupo', params: { id: item.id } })}
-                                >
-                                    <View 
-                                        style={{ 
-                                            backgroundColor: theme.cardSecondary, 
-                                            borderColor: theme.border,
-                                            borderWidth: 1,
-                                            borderRadius: 24,
-                                            padding: 20,
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            marginBottom: 12
-                                        }}
-                                    >
-                                        <View style={{ backgroundColor: theme.glassBg }} className="w-14 h-14 rounded-[20px] items-center justify-center">
-                                            <MaterialIcons name="restaurant" size={26} color={theme.primary} />
-                                        </View>
-                                        <View className="flex-1">
-                                            <Text style={{ fontSize: 15 * fontScale, color: theme.text }} className="font-black tracking-tight">{item.nombre || 'Sin nombre'}</Text>
-                                            <View className="flex-row items-center gap-2 mt-1">
-                                                <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-widest">{item.codigo_invitacion}</Text>
-                                                <Text style={{ fontSize: 10 * fontScale }} className="text-slate-500 font-medium">• {new Date(item.fecha_creacion).toLocaleDateString()}</Text>
-                                            </View>
-                                        </View>
-                                        <View className="items-end">
-                                            <Text style={{ 
-                                                fontSize: 15 * fontScale, 
-                                                color: theme.text 
-                                            }} className="font-black">
-                                                {isBalanceVisible ? `$${(item.total_gastado || 0).toFixed(2)}` : `$ ***.**`}
-                                            </Text>
-                                            <View style={{ backgroundColor: item.is_settled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
-                                                <Text style={{ fontSize: 8 * fontScale, color: item.is_settled ? '#10b981' : '#f59e0b' }} className="font-black uppercase">{item.is_settled ? 'Saldado' : 'Activo'}</Text>
-                                            </View>
-                                        </View>
-                                    </View>
-                                </Pressable>
+                                    item={item}
+                                    theme={theme}
+                                    fontScale={fontScale}
+                                    isBalanceVisible={isBalanceVisible}
+                                />
                             ))
                         ) : (
                             <View className="items-center py-12 px-6">
