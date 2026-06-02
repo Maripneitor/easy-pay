@@ -33,8 +33,80 @@ const width = Platform.OS === 'web' ? Math.min(windowWidth, 480) : windowWidth;
 const CARD_WIDTH = width * 0.82;
 const CARD_SPACING = (width - CARD_WIDTH) / 2;
 
+
+const GroupItem = React.memo(({ item, isBalanceVisible, theme, fontScale, router }) => (
+    <Pressable
+        onPress={() => router.push({ pathname: '/detalle-grupo', params: { id: item.id } })}
+    >
+        <View
+            style={{
+                backgroundColor: theme.cardSecondary,
+                borderColor: theme.border,
+                borderWidth: 1,
+                borderRadius: 24,
+                padding: 20,
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 12
+            }}
+        >
+            <View style={{ backgroundColor: theme.glassBg }} className="w-14 h-14 rounded-[20px] items-center justify-center">
+                <MaterialIcons name="restaurant" size={26} color={theme.primary} />
+            </View>
+            <View className="flex-1">
+                <Text style={{ fontSize: 15 * fontScale, color: theme.text }} className="font-black tracking-tight">{item.nombre || 'Sin nombre'}</Text>
+                <View className="flex-row items-center gap-2 mt-1">
+                    <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-widest">{item.codigo_invitacion}</Text>
+                    <Text style={{ fontSize: 10 * fontScale }} className="text-slate-500 font-medium">• {new Date(item.fecha_creacion).toLocaleDateString()}</Text>
+                </View>
+            </View>
+            <View className="items-end">
+                <Text style={{
+                    fontSize: 15 * fontScale,
+                    color: theme.text
+                }} className="font-black">
+                    {isBalanceVisible ? `${(item.total_gastado || 0).toFixed(2)}` : `$ ***.**`}
+                </Text>
+                <View style={{ backgroundColor: item.is_settled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
+                    <Text style={{ fontSize: 8 * fontScale, color: item.is_settled ? '#10b981' : '#f59e0b' }} className="font-black uppercase">{item.is_settled ? 'Saldado' : 'Activo'}</Text>
+                </View>
+            </View>
+        </View>
+    </Pressable>
+));
+
+const DebtItem = React.memo(({ debt, theme, router, setShowDebtSelector }) => (
+    <TouchableOpacity
+        onPress={() => {
+            setShowDebtSelector(false);
+            router.push({
+                pathname: '/settle-up',
+                params: {
+                    groupId: debt.groupId,
+                    creditorId: debt.creditorId,
+                    amount: debt.amount.toString(),
+                    groupName: debt.groupName,
+                    creditorName: debt.creditorName
+                }
+            });
+        }}
+        style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
+        className="p-6 rounded-[32px] border flex-row items-center gap-4 mb-4"
+    >
+        <View style={{ backgroundColor: theme.primary + '20' }} className="w-12 h-12 rounded-2xl items-center justify-center">
+            <MaterialIcons name="account-balance-wallet" size={24} color={theme.primary} />
+        </View>
+        <View className="flex-1">
+            <Text style={{ color: theme.text }} className="font-black text-base">{debt.groupName}</Text>
+            <Text style={{ color: theme.textSecondary }} className="text-xs font-bold uppercase tracking-widest opacity-60">Pagas a {debt.creditorName}</Text>
+        </View>
+        <Text style={{ color: theme.primary }} className="font-black text-lg">${debt.amount.toFixed(2)}</Text>
+    </TouchableOpacity>
+));
+
 // --- Dashboard Component ---
 export default function DashboardScreen() {
+
     const { theme, fontScale, cycleTheme } = useTheme();
     const { user  } = useEasyPay();
     const insets = useSafeAreaInsets();
@@ -336,47 +408,18 @@ export default function DashboardScreen() {
                         {isLoading ? (
                             <ActivityIndicator size="large" color={theme.primary} />
                         ) : userGroups.length > 0 ? (
-                            userGroups.map(item => (
-                                <Pressable 
-                                    key={item.id}
-                                    onPress={() => router.push({ pathname: '/detalle-grupo', params: { id: item.id } })}
-                                >
-                                    <View 
-                                        style={{ 
-                                            backgroundColor: theme.cardSecondary, 
-                                            borderColor: theme.border,
-                                            borderWidth: 1,
-                                            borderRadius: 24,
-                                            padding: 20,
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            marginBottom: 12
-                                        }}
-                                    >
-                                        <View style={{ backgroundColor: theme.glassBg }} className="w-14 h-14 rounded-[20px] items-center justify-center">
-                                            <MaterialIcons name="restaurant" size={26} color={theme.primary} />
-                                        </View>
-                                        <View className="flex-1">
-                                            <Text style={{ fontSize: 15 * fontScale, color: theme.text }} className="font-black tracking-tight">{item.nombre || 'Sin nombre'}</Text>
-                                            <View className="flex-row items-center gap-2 mt-1">
-                                                <Text style={{ fontSize: 9 * fontScale, color: theme.primary }} className="font-black uppercase tracking-widest">{item.codigo_invitacion}</Text>
-                                                <Text style={{ fontSize: 10 * fontScale }} className="text-slate-500 font-medium">• {new Date(item.fecha_creacion).toLocaleDateString()}</Text>
-                                            </View>
-                                        </View>
-                                        <View className="items-end">
-                                            <Text style={{ 
-                                                fontSize: 15 * fontScale, 
-                                                color: theme.text 
-                                            }} className="font-black">
-                                                {isBalanceVisible ? `$${(item.total_gastado || 0).toFixed(2)}` : `$ ***.**`}
-                                            </Text>
-                                            <View style={{ backgroundColor: item.is_settled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
-                                                <Text style={{ fontSize: 8 * fontScale, color: item.is_settled ? '#10b981' : '#f59e0b' }} className="font-black uppercase">{item.is_settled ? 'Saldado' : 'Activo'}</Text>
-                                            </View>
-                                        </View>
-                                    </View>
-                                </Pressable>
-                            ))
+                            <View className="gap-4">
+                                {userGroups.map((item) => (
+                                    <GroupItem
+                                        key={item.id.toString()}
+                                        item={item}
+                                        isBalanceVisible={isBalanceVisible}
+                                        theme={theme}
+                                        fontScale={fontScale}
+                                        router={router}
+                                    />
+                                ))}
+                            </View>
                         ) : (
                             <View className="items-center py-12 px-6">
                                 <View style={{ backgroundColor: theme.glassBg }} className="w-20 h-20 rounded-full items-center justify-center mb-4 border border-white/5">
@@ -408,39 +451,21 @@ export default function DashboardScreen() {
                         <Text style={{ color: theme.text }} className="text-2xl font-black mb-2">Liquidar Deuda</Text>
                         <Text style={{ color: theme.textSecondary }} className="text-sm font-medium mb-8">Selecciona qué cuenta deseas saldar ahora:</Text>
 
-                        <ScrollView className="max-h-96" showsVerticalScrollIndicator={false}>
+                        <View className="max-h-96">
+                            <ScrollView className="max-h-96" showsVerticalScrollIndicator={false}>
                             <View className="gap-4">
-                                {activeDebts.map((debt) => (
-                                    <TouchableOpacity 
-                                        key={debt.groupId}
-                                        onPress={() => {
-                                            setShowDebtSelector(false);
-                                            router.push({
-                                                pathname: '/settle-up',
-                                                params: {
-                                                    groupId: debt.groupId,
-                                                    creditorId: debt.creditorId,
-                                                    amount: debt.amount.toString(),
-                                                    groupName: debt.groupName,
-                                                    creditorName: debt.creditorName
-                                                }
-                                            });
-                                        }}
-                                        style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
-                                        className="p-6 rounded-[32px] border flex-row items-center gap-4"
-                                    >
-                                        <View style={{ backgroundColor: theme.primary + '20' }} className="w-12 h-12 rounded-2xl items-center justify-center">
-                                            <MaterialIcons name="account-balance-wallet" size={24} color={theme.primary} />
-                                        </View>
-                                        <View className="flex-1">
-                                            <Text style={{ color: theme.text }} className="font-black text-base">{debt.groupName}</Text>
-                                            <Text style={{ color: theme.textSecondary }} className="text-xs font-bold uppercase tracking-widest opacity-60">Pagas a {debt.creditorName}</Text>
-                                        </View>
-                                        <Text style={{ color: theme.primary }} className="font-black text-lg">${debt.amount.toFixed(2)}</Text>
-                                    </TouchableOpacity>
+                                {activeDebts.map((item) => (
+                                    <DebtItem
+                                        key={item.groupId.toString() + item.creditorId.toString()}
+                                        debt={item}
+                                        theme={theme}
+                                        router={router}
+                                        setShowDebtSelector={setShowDebtSelector}
+                                    />
                                 ))}
                             </View>
                         </ScrollView>
+                        </View>
 
                         <TouchableOpacity 
                             onPress={() => setShowDebtSelector(false)}
