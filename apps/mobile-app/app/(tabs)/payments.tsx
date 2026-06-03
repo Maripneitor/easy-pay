@@ -315,7 +315,103 @@ function ConfirmationModal({
 }
 
 // ── Pantalla principal ────────────────────────────────────────────────────────
+
+// --- Memoized List Items ---
+
+const PendingItem = React.memo(({ item: p, theme, onConfirm }: { item: any, theme: any, onConfirm: (p: any) => void }) => {
+    return (
+        <TouchableOpacity
+            onPress={() => onConfirm(p)}
+            style={{ backgroundColor: '#f59e0b10', borderColor: '#f59e0b40' }}
+            className="flex-row items-center p-4 rounded-[24px] border mb-3"
+        >
+            <View className="w-12 h-12 bg-yellow-500/20 rounded-2xl items-center justify-center mr-3">
+                <MaterialIcons name="pending-actions" size={24} color="#f59e0b" />
+            </View>
+            <View className="flex-1">
+                <Text style={{ color: theme.text }} className="font-black text-sm">{p.fromUserName} pagó ${p.amount.toFixed(2)}</Text>
+                <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">{p.groupName} · {METHOD_META[p.method]?.label || 'Otro'}</Text>
+            </View>
+            <Text className="text-yellow-400 font-black text-xs">Confirmar →</Text>
+        </TouchableOpacity>
+    );
+});
+PendingItem.displayName = 'PendingItem';
+
+const DebtItem = React.memo(({ debt, theme, onPay }: { debt: any, theme: any, onPay: (debt: any) => void }) => {
+    return (
+        <MotiView
+            from={{ opacity: 0, translateX: -10 }}
+            animate={{ opacity: 1, translateX: 0 }}
+            style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
+            className="border rounded-[24px] p-5 mb-3 flex-row items-center"
+        >
+            <View className="w-12 h-12 bg-red-500/10 rounded-2xl items-center justify-center mr-3">
+                <MaterialIcons name="payment" size={24} color="#ef4444" />
+            </View>
+            <View className="flex-1">
+                <Text style={{ color: theme.text }} className="font-black text-sm">{debt.groupName}</Text>
+                <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">A: {toTitleCase(debt.toUserName)} · {debt.concept}</Text>
+            </View>
+            <View className="items-end ml-3">
+                <Text className="text-red-400 font-black text-lg">${debt.amount.toFixed(2)}</Text>
+                <TouchableOpacity
+                    onPress={() => onPay(debt)}
+                    style={{ backgroundColor: theme.primary }}
+                    className="mt-2 px-3 py-1.5 rounded-full"
+                >
+                    <Text className="text-white font-black text-[10px]">PAGAR AHORA</Text>
+                </TouchableOpacity>
+            </View>
+        </MotiView>
+    );
+});
+DebtItem.displayName = 'DebtItem';
+
+const PaymentItem = React.memo(({ tx, index, theme, userId, fontScale, onConfirm }: { tx: any, index: number, theme: any, userId: string, fontScale: number, onConfirm: (tx: any) => void }) => {
+    const method = METHOD_META[tx.method] || METHOD_META['unknown'];
+    const status = STATUS_META[tx.status] || STATUS_META['pending'];
+    const isOutgoing = tx.fromUserId === userId;
+
+    return (
+        <TouchableOpacity
+            onPress={() => {
+                if (tx.status === 'waiting_confirmation' && (tx.toUserId === userId || tx.witnessId === userId)) {
+                    onConfirm(tx);
+                }
+            }}
+            className={`p-5 flex-row items-center justify-between mb-2 rounded-[32px] ${index % 2 === 0 ? 'bg-white/5' : ''}`}
+        >
+            <View className="flex-row items-center gap-4 flex-1">
+                <View style={{ backgroundColor: method.color + '15' }} className="w-14 h-14 rounded-[20px] items-center justify-center">
+                    <MaterialIcons name={method.icon as any} size={24} color={method.color} />
+                </View>
+                <View className="flex-1">
+                    <Text style={{ fontSize: 14 * fontScale, color: theme.text }} className="font-black" numberOfLines={1}>
+                        {isOutgoing ? `→ ${toTitleCase(tx.toUserName)}` : `← ${toTitleCase(tx.fromUserName)}`}
+                    </Text>
+                    <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">{tx.groupName}</Text>
+                    <View className="flex-row items-center gap-2 mt-1">
+                        <View style={{ backgroundColor: status.color + '20' }} className="px-2 py-0.5 rounded-full">
+                            <Text style={{ color: status.color, fontSize: 9 * fontScale }} className="font-bold">
+                                {status.label}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+            </View>
+            <View className="items-end pl-2">
+                <Text style={{ fontSize: 16 * fontScale, color: isOutgoing ? theme.text : '#10b981' }} className="font-black">
+                    {isOutgoing ? '-' : '+'}${tx.amount.toFixed(2)}
+                </Text>
+            </View>
+        </TouchableOpacity>
+    );
+});
+PaymentItem.displayName = 'PaymentItem';
+
 export default function PaymentsScreen() {
+
     const { theme, fontScale } = useTheme();
     const { user } = useEasyPay();
     const { debts, payments, cards,
@@ -439,21 +535,7 @@ export default function PaymentsScreen() {
                             Requieren tu confirmación ({pending.length})
                         </Text>
                         {pending.map(p => (
-                            <TouchableOpacity
-                                key={p.id}
-                                onPress={() => setConfirmModal({ visible: true, payment: p })}
-                                style={{ backgroundColor: '#f59e0b10', borderColor: '#f59e0b40' }}
-                                className="flex-row items-center p-4 rounded-[24px] border mb-3"
-                            >
-                                <View className="w-12 h-12 bg-yellow-500/20 rounded-2xl items-center justify-center mr-3">
-                                    <MaterialIcons name="pending-actions" size={24} color="#f59e0b" />
-                                </View>
-                                <View className="flex-1">
-                                    <Text style={{ color: theme.text }} className="font-black text-sm">{p.fromUserName} pagó ${p.amount.toFixed(2)}</Text>
-                                    <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">{p.groupName} · {METHOD_META[p.method].label}</Text>
-                                </View>
-                                <Text className="text-yellow-400 font-black text-xs">Confirmar →</Text>
-                            </TouchableOpacity>
+                            <PendingItem key={p.id} item={p} theme={theme} onConfirm={handleItemConfirm} />
                         ))}
                     </View>
                 )}
