@@ -1,9 +1,31 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { ScrollView, View, Text, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
+
+const StepItem = memo(({ step }: { step: { n: number, title: string, desc: string, icon: string } }) => (
+  <View className="flex-row items-start gap-4 bg-cobalt-blue/80 p-6 rounded-2xl border border-sky-blue/30">
+    <View className="w-12 h-12 bg-dodger-blue rounded-full items-center justify-center border-2 border-sky-blue">
+      <Text className="font-bold text-white text-xl">{step.n}</Text>
+    </View>
+    <View className="flex-1">
+      <Text className="text-xl font-bold text-white mb-1">{step.title}</Text>
+      <Text className="text-alice-blue/80 leading-5">{step.desc}</Text>
+    </View>
+    <View className="w-10 h-10 items-center justify-center rounded-full bg-white/5">
+      <MaterialIcons name={step.icon as any} size={20} color="#E3F2FD" />
+    </View>
+  </View>
+));
+
+const steps = [
+  { n: 1, title: 'Escanear', desc: 'Sube una foto del ticket o introduce el código QR de la Grupo.', icon: 'qr-code-scanner' },
+  { n: 2, title: 'Asignar', desc: 'Toca tus platos o divídelos entre varios comensales.', icon: 'touch-app' },
+  { n: 3, title: 'Calcular', desc: 'Impuestos y propinas se calculan al instante.', icon: 'calculate' },
+  { n: 4, title: 'Pagar', desc: 'Paga tu parte con un click desde tu móvil.', icon: 'payments' }
+];
 
 export default function LandingScreen() {
   return (
@@ -99,32 +121,10 @@ export default function LandingScreen() {
         <View className="px-6 py-12 bg-ocean-deep/50 mt-10">
           <Text className="text-alice-blue/80 font-bold tracking-widest uppercase text-sm mb-2 text-center">Paso a paso</Text>
           <Text className="text-3xl font-bold text-white text-center mb-10">Cómo funciona</Text>
-          
+
           <View className="gap-8">
-             {[{
-               n: 1, title: 'Escanear', desc: 'Sube una foto del ticket o introduce el código QR de la Grupo.', icon: 'qr-code-scanner'
-             },
-             {
-               n: 2, title: 'Asignar', desc: 'Toca tus platos o divídelos entre varios comensales.', icon: 'touch-app'
-             },
-             {
-               n: 3, title: 'Calcular', desc: 'Impuestos y propinas se calculan al instante.', icon: 'calculate'
-             },
-             {
-               n: 4, title: 'Pagar', desc: 'Paga tu parte con un click desde tu móvil.', icon: 'payments'
-             }].map((step, idx) => (
-               <View key={idx} className="flex-row items-start gap-4 bg-cobalt-blue/80 p-6 rounded-2xl border border-sky-blue/30">
-                  <View className="w-12 h-12 bg-dodger-blue rounded-full items-center justify-center border-2 border-sky-blue">
-                     <Text className="font-bold text-white text-xl">{step.n}</Text>
-                  </View>
-                  <View className="flex-1">
-                     <Text className="text-xl font-bold text-white mb-1">{step.title}</Text>
-                     <Text className="text-alice-blue/80 leading-5">{step.desc}</Text>
-                  </View>
-                  <View className="w-10 h-10 items-center justify-center rounded-full bg-white/5">
-                     <MaterialIcons name={step.icon as any} size={20} color="#E3F2FD" />
-                  </View>
-               </View>
+             {steps.map((step, idx) => (
+               <StepItem key={idx} step={step} />
              ))}
           </View>
         </View>

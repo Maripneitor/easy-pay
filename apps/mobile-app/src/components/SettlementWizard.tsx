@@ -28,6 +28,106 @@ interface SettlementWizardProps {
     onComplete?: () => void;
 }
 
+
+const WizardItemRow = React.memo(({ item, index, theme, members, onAssignItem, isProcessing }: { item: any, index: number, theme: any, members: any[], onAssignItem: (item: any) => void, isProcessing: boolean }) => {
+    const isAssigned = item.asignadoA && item.asignadoA.length > 0;
+    return (
+        <TouchableOpacity
+            disabled={isProcessing}
+            onPress={() => onAssignItem(item)}
+            style={{ backgroundColor: theme.cardSecondary, borderColor: isAssigned ? theme.primary : 'transparent', borderWidth: 1 }}
+            className="p-5 rounded-[24px] mb-3 flex-row justify-between items-center"
+        >
+            <View className="flex-1">
+                <View className="flex-row items-center gap-2 mb-1">
+                    <View className="w-8 h-8 rounded-full bg-white/5 items-center justify-center">
+                        <MaterialIcons name="fastfood" size={16} color={theme.textSecondary} />
+                    </View>
+                    <Text style={{ color: theme.text }} className="font-bold text-sm" numberOfLines={1}>{item.nombre}</Text>
+                </View>
+                <Text style={{ color: theme.textSecondary }} className="text-xs font-medium ml-10">
+                    ${(item.precio * item.cantidad).toFixed(2)} ({item.cantidad}x)
+                </Text>
+            </View>
+
+            <View className="flex-row items-center gap-2">
+                {isAssigned ? (
+                    <View className="flex-row -space-x-2">
+                        {item.asignadoA.slice(0, 3).map((id: string, j: number) => {
+                            const m = members.find(x => x.id === id);
+                            return (
+                                <View key={j} className="w-8 h-8 rounded-full items-center justify-center border-2" style={{ backgroundColor: m?.color || theme.primary, borderColor: theme.cardSecondary }}>
+                                    <Text className="text-white font-black text-[10px]">{m?.nombre.substring(0, 2).toUpperCase()}</Text>
+                                </View>
+                            )
+                        })}
+                        {item.asignadoA.length > 3 && (
+                            <View className="w-8 h-8 rounded-full items-center justify-center border-2 bg-white/10" style={{ borderColor: theme.cardSecondary }}>
+                                <Text className="text-white font-black text-[10px]">+{item.asignadoA.length - 3}</Text>
+                            </View>
+                        )}
+                    </View>
+                ) : (
+                    <View className="px-4 py-2 rounded-full border border-dashed border-white/20">
+                        <Text style={{ color: theme.textSecondary }} className="text-[10px] font-bold uppercase tracking-wider">Asignar</Text>
+                    </View>
+                )}
+            </View>
+        </TouchableOpacity>
+    );
+});
+
+const TipOption = React.memo(({ val, selectedTip, onSelect, theme }: { val: number, selectedTip: number, onSelect: (val: number) => void, theme: any }) => (
+    <TouchableOpacity
+        onPress={() => onSelect(val)}
+        style={{
+            backgroundColor: selectedTip === val ? theme.primary : theme.cardSecondary,
+            borderColor: selectedTip === val ? theme.primary : 'transparent',
+            borderWidth: 2
+        }}
+        className="flex-1 py-4 rounded-2xl items-center"
+    >
+        <Text style={{ color: selectedTip === val ? 'black' : theme.text }} className="font-black text-sm">
+            {val === -1 ? 'Otro' : `${val}%`}
+        </Text>
+    </TouchableOpacity>
+));
+
+const BankAccountItem = React.memo(({ acc, isSelected, onToggle, theme }: { acc: any, isSelected: boolean, onToggle: (id: string) => void, theme: any }) => (
+    <TouchableOpacity
+        onPress={() => onToggle(acc.id)}
+        style={{
+            backgroundColor: theme.cardSecondary,
+            borderColor: isSelected ? theme.primary : 'transparent',
+            borderWidth: 2
+        }}
+        className="p-6 rounded-[30px] flex-row items-center justify-between"
+    >
+        <View className="flex-row items-center gap-4">
+            <View className="w-10 h-10 rounded-xl bg-white/5 items-center justify-center">
+                <MaterialIcons name="account-balance" size={20} color={theme.textSecondary} />
+            </View>
+            <View>
+                <Text style={{ color: theme.text }} className="font-black text-sm uppercase">{acc.entidad_financiera}</Text>
+                <Text style={{ color: theme.textSecondary }} className="font-mono text-[10px]">{acc.clabe}</Text>
+            </View>
+        </View>
+        <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-white/10'}`}>
+            {isSelected && <MaterialIcons name="check" size={14} color="white" />}
+        </View>
+    </TouchableOpacity>
+));
+
+const SummaryRow = React.memo(({ row, theme, isLast }: { row: any, theme: any, isLast: boolean }) => (
+    <View className={`p-6 flex-row justify-between items-center ${!isLast ? 'border-b border-white/5' : ''}`}>
+        <View>
+            <Text style={{ color: theme.text }} className="font-black text-xs uppercase">{row.name}</Text>
+            <Text style={{ color: theme.textSecondary }} className="text-[8px] font-bold">CON. ${row.subtotal.toFixed(2)} + PROP. ${row.tip.toFixed(2)}</Text>
+        </View>
+        <Text style={{ color: theme.text }} className="font-black font-mono text-sm">${row.total.toFixed(2)}</Text>
+    </View>
+));
+
 export const SettlementWizard: React.FC<SettlementWizardProps> = ({ 
     isOpen, 
     onClose,
@@ -309,35 +409,13 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                                         </View>
                                     ) : (
                                         user.bank_accounts.map((acc: any) => (
-                                            <TouchableOpacity 
+                                            <BankAccountItem
                                                 key={acc.id}
-                                                onPress={() => {
-                                                    if (selectedAccounts.includes(acc.id)) {
-                                                        setSelectedAccounts(selectedAccounts.filter(id => id !== acc.id));
-                                                    } else {
-                                                        setSelectedAccounts([...selectedAccounts, acc.id]);
-                                                    }
-                                                }}
-                                                style={{ 
-                                                    backgroundColor: theme.cardSecondary,
-                                                    borderColor: selectedAccounts.includes(acc.id) ? theme.primary : 'transparent',
-                                                    borderWidth: 2
-                                                }}
-                                                className="p-6 rounded-[30px] flex-row items-center justify-between"
-                                            >
-                                                <View className="flex-row items-center gap-4">
-                                                    <View className="w-10 h-10 rounded-xl bg-white/5 items-center justify-center">
-                                                        <MaterialIcons name="account-balance" size={20} color={theme.textSecondary} />
-                                                    </View>
-                                                    <View>
-                                                        <Text style={{ color: theme.text }} className="font-black text-sm uppercase">{acc.entidad_financiera}</Text>
-                                                        <Text style={{ color: theme.textSecondary }} className="font-mono text-[10px]">{acc.clabe}</Text>
-                                                    </View>
-                                                </View>
-                                                <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${selectedAccounts.includes(acc.id) ? 'bg-blue-500 border-blue-500' : 'border-white/10'}`}>
-                                                    {selectedAccounts.includes(acc.id) && <MaterialIcons name="check" size={14} color="white" />}
-                                                </View>
-                                            </TouchableOpacity>
+                                                acc={acc}
+                                                isSelected={selectedAccounts.includes(acc.id)}
+                                                onToggle={handleToggleAccount}
+                                                theme={theme}
+                                            />
                                         ))
                                     )}
                                 </View>
@@ -355,13 +433,12 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
 
                                 <View style={{ backgroundColor: theme.cardSecondary }} className="rounded-[40px] border border-white/5 overflow-hidden">
                                     {summary.map((row, i) => (
-                                        <View key={i} className={`p-6 flex-row justify-between items-center ${i !== summary.length - 1 ? 'border-b border-white/5' : ''}`}>
-                                            <View>
-                                                <Text style={{ color: theme.text }} className="font-black text-xs uppercase">{row.name}</Text>
-                                                <Text style={{ color: theme.textSecondary }} className="text-[8px] font-bold">CON. ${row.subtotal.toFixed(2)} + PROP. ${row.tip.toFixed(2)}</Text>
-                                            </View>
-                                            <Text style={{ color: theme.text }} className="font-black font-mono text-sm">${row.total.toFixed(2)}</Text>
-                                        </View>
+                                        <SummaryRow
+                                            key={i}
+                                            row={row}
+                                            theme={theme}
+                                            isLast={i === summary.length - 1}
+                                        />
                                     ))}
                                 </View>
 

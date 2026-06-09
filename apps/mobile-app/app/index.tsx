@@ -10,6 +10,7 @@ import { useEasyPay } from '../context/EasyPayContext';
 
 const { width } = Dimensions.get('window');
 
+
 const COLORS = {
   backgroundDark: '#0D47A1',
   oceanDeep: '#1565C0',
@@ -20,6 +21,88 @@ const COLORS = {
   neonViolet: '#a855f7',
   emerald: '#6ee7b7',
 };
+
+const FeatureItem = React.memo(({ item }: { item: any }) => (
+  <View className="flex-1 min-w-[250px] p-6 bg-white/5 rounded-3xl border border-white/10 m-2 items-center text-center">
+    <View className="w-16 h-16 bg-white/10 rounded-2xl items-center justify-center mb-4">
+      <Ionicons name={item.icon as any} size={24} color="#a855f7" />
+    </View>
+    <Text className="text-white font-bold text-xl mb-1">{item.title}</Text>
+    <Text className="text-white/70 leading-5">{item.desc}</Text>
+  </View>
+));
+
+const StepItem = React.memo(({ item }: { item: any }) => (
+  <View className="items-center text-center">
+    <View className="w-16 h-16 bg-[#0D47A1] border-4 border-cool-sky rounded-full items-center justify-center mb-6 shadow-lg">
+      <Text className="text-xl font-black text-white">{item.step}</Text>
+    </View>
+    <Text className="text-2xl font-bold text-white mb-2">{item.title}</Text>
+    <Text className="text-white/70 text-center leading-5 px-8">{item.desc}</Text>
+  </View>
+));
+
+const TestimonialItem = React.memo(({ item }: { item: any }) => (
+  <View style={{ width: width * 0.8 }} className="bg-white/5 p-8 rounded-3xl border border-white/10 mr-4 items-center">
+    <View className="w-16 h-16 bg-gray-400 rounded-full mb-4 border-2 border-cool-sky items-center justify-center overflow-hidden">
+      {item.avatar ? (
+        <RNImage source={{ uri: item.avatar }} style={{ width: '100%', height: '100%' }} />
+      ) : (
+        <Ionicons name="person" size={32} color="white" />
+      )}
+    </View>
+    <View className="flex-row gap-1 mb-4">
+      {[1,2,3,4,5].map(s => <Ionicons key={s} name="star" size={14} color="#facc15" />)}
+    </View>
+    <Text className="text-white/80 italic text-center text-lg mb-6">"{item.quote}"</Text>
+    <Text className="text-white font-bold">{item.name}</Text>
+  </View>
+));
+
+const FeatureRow = React.memo(({ row }: { row: any }) => (
+  <View className="flex-row p-5 border-b border-white/5 items-center">
+    <View className="flex-[1.5]">
+      <Text className="text-white font-medium text-sm">{row.label}</Text>
+    </View>
+    <View className="flex-1 items-center">
+      {typeof row.trad === 'string' ? (
+        <Text className="text-white/60 text-xs">{row.trad}</Text>
+      ) : (
+        <Ionicons name="close-circle" size={20} color="#f87171" />
+      )}
+    </View>
+    <View className="flex-1 items-center bg-blue-500/10 rounded-lg py-2">
+      {typeof row.easy === 'string' ? (
+        <Text className="text-emerald text-xs font-bold">{row.easy}</Text>
+      ) : (
+        <Ionicons name="checkmark-circle" size={20} color={COLORS.emerald} />
+      )}
+    </View>
+  </View>
+));
+
+const FAQItem = React.memo(({ item, isExpanded, onToggle }: { item: any, isExpanded: boolean, onToggle: () => void }) => (
+  <TouchableOpacity
+    onPress={onToggle}
+    className="bg-white/5 p-6 rounded-2xl border border-white/10"
+  >
+    <View className="flex-row justify-between items-center mb-2">
+      <Text className="text-white font-bold text-lg">{item.q}</Text>
+      <View
+        style={{ transform: [{ rotate: isExpanded ? '180deg' : '0deg' }] }}
+      >
+        <Ionicons name="chevron-down" size={20} color={COLORS.coolSky} />
+      </View>
+    </View>
+    {isExpanded && (
+      <View>
+        <Text className="text-white/60 leading-5 pt-2">{item.a}</Text>
+      </View>
+    )}
+  </TouchableOpacity>
+));
+
+
 
 // Componente para manejar el ancho máximo en web/escritorio
 const ResponsiveContainer = ({ children, maxWidth = 1200, className = "" }: { children: React.ReactNode, maxWidth?: number, className?: string }) => (
@@ -216,13 +299,7 @@ export default function LandingScreen() {
                 { step: '3', title: 'Calcular', desc: 'Impuestos y propinas se calculan al instante.', icon: 'auto-graph' },
                 { step: '4', title: 'Pagar', desc: 'Paga tu parte con un click desde tu móvil.', icon: 'check-circle' }
               ].map((item, index) => (
-                <View key={index} className="items-center text-center">
-                  <View className="w-16 h-16 bg-[#0D47A1] border-4 border-cool-sky rounded-full items-center justify-center mb-6 shadow-lg">
-                    <Text className="text-xl font-black text-white">{item.step}</Text>
-                  </View>
-                  <Text className="text-2xl font-bold text-white mb-2">{item.title}</Text>
-                  <Text className="text-white/70 text-center leading-5 px-8">{item.desc}</Text>
-                </View>
+                <StepItem key={index} item={item} />
               ))}
             </View>
           </LinearGradient>
@@ -236,20 +313,7 @@ export default function LandingScreen() {
                 { name: 'Sofia R.', quote: 'La mejor app para salir con amigos. Calculamos la propina en segundos.', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAq9Z-pK4VHG9jpMzu4OF7LWRJ21XplOxmtUFVYf0kwJZShmTajlh8Lz9zcV567aJDXcr1hG8WUPhd12Cwp2Tm-K1pdXamNOMITQ_hRGpQHIQQAWPJJXxIV0dcJSaBxMYOSfj8fIyrVEY5o2wwYlvdCWemXMB_6hIaP1xRC58VbkdAuTDR8tI2GzM2_J3IGxP34by8ULPk2rLiXMrRxNC79ylXrY0ky928t7r1YuQ5nvOKqF--y1jVM6b4bzB72-KhJqZG62BM_r8-U' },
                 { name: 'Javier L.', quote: 'Me encanta pagar solo por lo que consumí. ¡Adiós a dividir en partes iguales!', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBqJjrs0fkwpw2ovn5Cg-2iLba3PLCVoIy5rbhebJ5EbMI7X1eBPqasof8aJR4igDEku9JIXkFh8L81PcMsqM1AMz9KoJznCwwvYWNMVRuRiJS_NdkqLTgA00bxsg1w1joaDUnLRXTS71YmroDPieXUFJwKr5lN-lIhaOaPqcex6eKvnmERpJEG7f9ApEpkAI9IMQU-lSgBQMjonDUSAfb1VYDWQ4PPS9C7CIXUtgSSF2RNZZbc7rqH8iZFNK6B5TlWm7mmRf3OBq9Y' }
               ].map((item, index) => (
-                <View key={index} style={{ width: width * 0.8 }} className="bg-white/5 p-8 rounded-3xl border border-white/10 mr-4 items-center">
-                   <View className="w-16 h-16 bg-gray-400 rounded-full mb-4 border-2 border-cool-sky items-center justify-center overflow-hidden">
-                     {item.avatar ? (
-                       <RNImage source={{ uri: item.avatar }} style={{ width: '100%', height: '100%' }} />
-                     ) : (
-                       <Ionicons name="person" size={32} color="white" />
-                     )}
-                   </View>
-                   <View className="flex-row gap-1 mb-4">
-                     {[1,2,3,4,5].map(s => <Ionicons key={s} name="star" size={14} color="#facc15" />)}
-                   </View>
-                   <Text className="text-white/80 italic text-center text-lg mb-6">"{item.quote}"</Text>
-                   <Text className="text-white font-bold">{item.name}</Text>
-                </View>
+                <TestimonialItem key={index} item={item} />
               ))}
             </ScrollView>
           </View>
@@ -273,25 +337,7 @@ export default function LandingScreen() {
                 { label: 'Pago contactless', trad: false, easy: true },
                 { label: 'Historial', trad: false, easy: true },
               ].map((row, i) => (
-                <View key={i} className="flex-row p-5 border-b border-white/5 items-center">
-                  <View className="flex-[1.5]">
-                    <Text className="text-white font-medium text-sm">{row.label}</Text>
-                  </View>
-                  <View className="flex-1 items-center">
-                    {typeof row.trad === 'string' ? (
-                      <Text className="text-white/60 text-xs">{row.trad}</Text>
-                    ) : (
-                      <Ionicons name="close-circle" size={20} color="#f87171" />
-                    )}
-                  </View>
-                  <View className="flex-1 items-center bg-blue-500/10 rounded-lg py-2">
-                    {typeof row.easy === 'string' ? (
-                      <Text className="text-emerald text-xs font-bold">{row.easy}</Text>
-                    ) : (
-                      <Ionicons name="checkmark-circle" size={20} color={COLORS.emerald} />
-                    )}
-                  </View>
-                </View>
+                <FeatureRow key={i} row={row} />
               ))}
             </View>
           </View>
@@ -305,25 +351,12 @@ export default function LandingScreen() {
                 { q: '¿Necesito la app?', a: 'No necesariamente. Puedes usar nuestra versión web directamente desde tu navegador escaneando el código QR del grupo. Sin embargo, la app ofrece funciones adicionales.' },
                 { q: '¿Puedo dividir desigual?', a: '¡Sí! Puedes asignar items específicos a cada persona o dividir el costo de platos compartidos como prefieras.' }
               ].map((item, index) => (
-                <TouchableOpacity 
+                <FAQItem
                   key={index} 
-                  onPress={() => toggleFaq(index)}
-                  className="bg-white/5 p-6 rounded-2xl border border-white/10"
-                >
-                  <View className="flex-row justify-between items-center mb-2">
-                    <Text className="text-white font-bold text-lg">{item.q}</Text>
-                    <View
-                      style={{ transform: [{ rotate: expandedFaq === index ? '180deg' : '0deg' }] }}
-                    >
-                      <Ionicons name="chevron-down" size={20} color={COLORS.coolSky} />
-                    </View>
-                  </View>
-                  {expandedFaq === index && (
-                    <View>
-                      <Text className="text-white/60 leading-5 pt-2">{item.a}</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
+                  item={item}
+                  isExpanded={expandedFaq === index}
+                  onToggle={() => handleToggleFaq(index)}
+                />
               ))}
             </View>
           </View>
