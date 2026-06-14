@@ -1,0 +1,3 @@
+## 2024-06-14 - [Optimize Lists]
+**Learning:** Found multiple usages of `ScrollView` containing `.map` in the codebase for list rendering. In React Native, `ScrollView` does not implement virtualization, which means mapping over an array to render many items can cause memory spikes and performance degradation since all items are rendered at once.
+**Action:** Replace `ScrollView` + `.map` with `FlatList` or `FlashList` for list screens (e.g. `groups.tsx`, `index.tsx`, `payments.tsx`) to implement item virtualization and reduce memory overhead, resulting in improved frontend performance. Ensure components are wrapped in `React.memo()`.
