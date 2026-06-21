@@ -1,5 +1,5 @@
 import { useEasyPay, Payment, PaymentMethod, timeAgoPayment } from '../../context/EasyPayContext';
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
     ScrollView, View, Text, TouchableOpacity, Animated,
@@ -439,21 +439,12 @@ export default function PaymentsScreen() {
                             Requieren tu confirmación ({pending.length})
                         </Text>
                         {pending.map(p => (
-                            <TouchableOpacity
+                            <PendingConfirmationItem
                                 key={p.id}
+                                payment={p}
+                                theme={theme}
                                 onPress={() => setConfirmModal({ visible: true, payment: p })}
-                                style={{ backgroundColor: '#f59e0b10', borderColor: '#f59e0b40' }}
-                                className="flex-row items-center p-4 rounded-[24px] border mb-3"
-                            >
-                                <View className="w-12 h-12 bg-yellow-500/20 rounded-2xl items-center justify-center mr-3">
-                                    <MaterialIcons name="pending-actions" size={24} color="#f59e0b" />
-                                </View>
-                                <View className="flex-1">
-                                    <Text style={{ color: theme.text }} className="font-black text-sm">{p.fromUserName} pagó ${p.amount.toFixed(2)}</Text>
-                                    <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">{p.groupName} · {METHOD_META[p.method].label}</Text>
-                                </View>
-                                <Text className="text-yellow-400 font-black text-xs">Confirmar →</Text>
-                            </TouchableOpacity>
+                            />
                         ))}
                     </View>
                 )}
@@ -469,32 +460,12 @@ export default function PaymentsScreen() {
                             <Text style={{ color: theme.text }} className="font-black mt-3">¡Sin deudas pendientes!</Text>
                         </View>
                     ) : myDebts.map(debt => (
-                        <MotiView
+                        <MyDebtItem
                             key={debt.id}
-                            from={{ opacity: 0, translateX: -10 }}
-                            animate={{ opacity: 1, translateX: 0 }}
-                            style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
-                            className="border rounded-[24px] p-5 mb-3 flex-row items-center"
-                        >
-                            <View className="w-12 h-12 bg-red-500/10 rounded-2xl items-center justify-center mr-3">
-                                <MaterialIcons name="payment" size={24} color="#ef4444" />
-                            </View>
-                            <View className="flex-1">
-                                <Text style={{ color: theme.text }} className="font-black text-sm">{debt.groupName}</Text>
-                                <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">A: {toTitleCase(debt.toUserName)} · {debt.concept}</Text>
-                            </View>
-                            <View className="items-end ml-3">
-                                <Text className="text-red-400 font-black text-lg">${debt.amount.toFixed(2)}</Text>
-                                {/* BOTÓN PAGAR — abre selector de método */}
-                                <TouchableOpacity
-                                    onPress={() => setSelectorModal({ visible: true, debt })}
-                                    style={{ backgroundColor: theme.primary }}
-                                    className="px-3 py-1.5 rounded-xl mt-1"
-                                >
-                                    <Text className="text-white font-black text-[10px]">PAGAR</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </MotiView>
+                            debt={debt}
+                            theme={theme}
+                            onPressPay={() => setSelectorModal({ visible: true, debt })}
+                        />
                     ))}
                 </View>
 
@@ -511,38 +482,18 @@ export default function PaymentsScreen() {
                         </View>
                     ) : (
                         <View style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }} className="border rounded-[40px] overflow-hidden p-2">
-                            {allPayments.map((tx, i) => {
-                                const method = METHOD_META[tx.method];
-                                const status = STATUS_META[tx.status];
-                                const isOutgoing = tx.fromUserId === userId;
-                                return (
-                                    <TouchableOpacity
-                                        key={tx.id}
-                                        onPress={() => tx.status === 'waiting_confirmation' && (tx.toUserId === userId || tx.witnessId === userId)
-                                            ? setConfirmModal({ visible: true, payment: tx }) : null}
-                                        className={`p-5 flex-row items-center justify-between mb-2 rounded-[32px] ${i % 2 === 0 ? 'bg-white/5' : ''}`}
-                                    >
-                                        <View className="flex-row items-center gap-4 flex-1">
-                                            <View style={{ backgroundColor: method.color + '15' }} className="w-14 h-14 rounded-[20px] items-center justify-center">
-                                                <MaterialIcons name={method.icon as any} size={24} color={method.color} />
-                                            </View>
-                                            <View className="flex-1">
-                                                <Text style={{ fontSize: 14 * fontScale, color: theme.text }} className="font-black" numberOfLines={1}>
-                                                    {isOutgoing ? `→ ${toTitleCase(tx.toUserName)}` : `← ${toTitleCase(tx.fromUserName)}`}
-                                                </Text>
-                                                <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">{tx.groupName}</Text>
-                                                <View className="flex-row items-center gap-2 mt-1">
-                                                    <Text style={{ color: status.color }} className="text-[9px] font-black uppercase">{status.label}</Text>
-                                                    <Text className="text-slate-600 text-[9px]">· {timeAgoPayment(tx.createdAt)}</Text>
-                                                </View>
-                                            </View>
-                                        </View>
-                                        <Text style={{ color: isOutgoing ? '#ef4444' : '#4ade80' }} className="font-black text-base ml-4">
-                                            {isOutgoing ? '-' : '+'}${tx.amount.toFixed(2)}
-                                        </Text>
-                                    </TouchableOpacity>
-                                );
-                            })}
+                            {allPayments.map((tx, i) => (
+                                <PaymentHistoryItem
+                                    key={tx.id}
+                                    tx={tx}
+                                    i={i}
+                                    userId={userId}
+                                    fontScale={fontScale}
+                                    theme={theme}
+                                    onPress={() => tx.status === 'waiting_confirmation' && (tx.toUserId === userId || tx.witnessId === userId)
+                                        ? setConfirmModal({ visible: true, payment: tx }) : null}
+                                />
+                            ))}
                         </View>
                     )}
                 </View>
@@ -628,3 +579,78 @@ export default function PaymentsScreen() {
         </SafeAreaView>
     );
 }
+
+const PendingConfirmationItem = memo(({ payment, theme, onPress }: any) => (
+    <TouchableOpacity
+        onPress={onPress}
+        style={{ backgroundColor: '#f59e0b10', borderColor: '#f59e0b40' }}
+        className="flex-row items-center p-4 rounded-[24px] border mb-3"
+    >
+        <View className="w-12 h-12 bg-yellow-500/20 rounded-2xl items-center justify-center mr-3">
+            <MaterialIcons name="pending-actions" size={24} color="#f59e0b" />
+        </View>
+        <View className="flex-1">
+            <Text style={{ color: theme.text }} className="font-black text-sm">{payment.fromUserName} pagó ${payment.amount.toFixed(2)}</Text>
+            <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">{payment.groupName} · {METHOD_META[payment.method as keyof typeof METHOD_META]?.label}</Text>
+        </View>
+        <Text className="text-yellow-400 font-black text-xs">Confirmar →</Text>
+    </TouchableOpacity>
+));
+
+const MyDebtItem = memo(({ debt, theme, onPressPay }: any) => (
+    <MotiView
+        from={{ opacity: 0, translateX: -10 }}
+        animate={{ opacity: 1, translateX: 0 }}
+        style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
+        className="border rounded-[24px] p-5 mb-3 flex-row items-center"
+    >
+        <View className="w-12 h-12 bg-red-500/10 rounded-2xl items-center justify-center mr-3">
+            <MaterialIcons name="payment" size={24} color="#ef4444" />
+        </View>
+        <View className="flex-1">
+            <Text style={{ color: theme.text }} className="font-black text-sm">{debt.groupName}</Text>
+            <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">A: {toTitleCase(debt.toUserName)} · {debt.concept}</Text>
+        </View>
+        <View className="items-end ml-3">
+            <Text className="text-red-400 font-black text-lg">${debt.amount.toFixed(2)}</Text>
+            <TouchableOpacity
+                onPress={onPressPay}
+                style={{ backgroundColor: theme.primary }}
+                className="px-3 py-1.5 rounded-xl mt-1"
+            >
+                <Text className="text-white font-black text-[10px]">PAGAR</Text>
+            </TouchableOpacity>
+        </View>
+    </MotiView>
+));
+
+const PaymentHistoryItem = memo(({ tx, i, userId, fontScale, theme, onPress }: any) => {
+    const method = METHOD_META[tx.method as keyof typeof METHOD_META] || METHOD_META.cash;
+    const status = STATUS_META[tx.status as keyof typeof STATUS_META] || STATUS_META.completed;
+    const isOutgoing = tx.fromUserId === userId;
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            className={`p-5 flex-row items-center justify-between mb-2 rounded-[32px] ${i % 2 === 0 ? 'bg-white/5' : ''}`}
+        >
+            <View className="flex-row items-center gap-4 flex-1">
+                <View style={{ backgroundColor: method.color + '15' }} className="w-14 h-14 rounded-[20px] items-center justify-center">
+                    <MaterialIcons name={method.icon as any} size={24} color={method.color} />
+                </View>
+                <View className="flex-1">
+                    <Text style={{ fontSize: 14 * fontScale, color: theme.text }} className="font-black" numberOfLines={1}>
+                        {isOutgoing ? `→ ${toTitleCase(tx.toUserName)}` : `← ${toTitleCase(tx.fromUserName)}`}
+                    </Text>
+                    <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">{tx.groupName}</Text>
+                    <View className="flex-row items-center gap-2 mt-1">
+                        <Text style={{ color: status.color }} className="text-[9px] font-black uppercase">{status.label}</Text>
+                        <Text className="text-slate-600 text-[9px]">· {timeAgoPayment(tx.createdAt)}</Text>
+                    </View>
+                </View>
+            </View>
+            <Text style={{ color: isOutgoing ? '#ef4444' : '#4ade80' }} className="font-black text-base ml-4">
+                {isOutgoing ? '-' : '+'}${tx.amount.toFixed(2)}
+            </Text>
+        </TouchableOpacity>
+    );
+});
