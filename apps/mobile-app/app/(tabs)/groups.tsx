@@ -1,5 +1,5 @@
 import { useEasyPay } from '../../context/EasyPayContext';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, memo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -138,44 +138,13 @@ export default function GroupListScreen() {
                     ) : activeTab === 'active' ? (
                         activeGroups.length > 0 ? (
                             activeGroups.map((group) => (
-                                <TouchableOpacity 
+                                <ActiveGroupItem
                                     key={group.id}
+                                    group={group}
+                                    theme={theme}
+                                    fontScale={fontScale}
                                     onPress={() => router.push({ pathname: '/detalle-grupo', params: { id: group.id } })}
-                                    activeOpacity={0.85}
-                                    style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
-                                    className="border rounded-[36px] p-6 flex-row items-center"
-                                >
-                                    <View style={{ backgroundColor: theme.glassBg }} className="w-16 h-16 rounded-[24px] items-center justify-center mr-5 border border-white/5">
-                                        <MaterialIcons name="restaurant" size={32} color={theme.primary} />
-                                    </View>
-                                    <View className="flex-1">
-                                        <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black tracking-tight">{group.nombre || 'Grupo sin nombre'}</Text>
-                                        <View className="flex-row items-center gap-2 mt-1">
-                                            <Text style={{ color: theme.primary, fontSize: 9 * fontScale }} className="font-black uppercase tracking-widest">{group.codigo_invitacion || '---'}</Text>
-                                            <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-medium">• {new Date(group.fecha_creacion).toLocaleDateString()}</Text>
-                                        </View>
-                                    </View>
-                                    <View className="items-end">
-                                        <Text style={{ 
-                                            color: theme.text,
-                                            fontSize: 16 * fontScale
-                                        }} className="font-black">
-                                            ${(group.total_gastado || 0).toFixed(2)}
-                                        </Text>
-                                        
-                                        {/* Badge de Deuda/Cobro (Simulado con total_gastado para demo si no hay balance real) */}
-                                        {group.status === 'active' && (
-                                            <View style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
-                                                <Text style={{ fontSize: 8 * fontScale, color: theme.primary }} className="font-black uppercase">Activo</Text>
-                                            </View>
-                                        )}
-                                        {group.status === 'settling' && (
-                                            <View style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
-                                                <Text style={{ fontSize: 8 * fontScale, color: '#f59e0b' }} className="font-black uppercase">Liquidando</Text>
-                                            </View>
-                                        )}
-                                    </View>
-                                </TouchableOpacity>
+                                />
                             ))
                         ) : (
                             <View className="items-center justify-center py-20">
@@ -191,34 +160,13 @@ export default function GroupListScreen() {
                     ) : (
                         closedGroups.length > 0 ? (
                             closedGroups.map((group) => (
-                                <TouchableOpacity 
+                                <ClosedGroupItem
                                     key={group.id}
+                                    group={group}
+                                    theme={theme}
+                                    fontScale={fontScale}
                                     onPress={() => router.push({ pathname: '/detalle-grupo', params: { id: group.id } })}
-                                    activeOpacity={0.85}
-                                    style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border, opacity: 0.8 }}
-                                    className="border rounded-[36px] p-6 flex-row items-center"
-                                >
-                                    <View style={{ backgroundColor: theme.glassBg }} className="w-16 h-16 rounded-[24px] items-center justify-center mr-5 border border-white/5">
-                                        <MaterialIcons name="history" size={32} color={theme.textSecondary} />
-                                    </View>
-                                    <View className="flex-1">
-                                        <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black tracking-tight">{group.nombre || 'Grupo sin nombre'}</Text>
-                                        <View className="flex-row items-center gap-2 mt-1">
-                                            <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-medium">Finalizado: {new Date(group.fecha_cierre || group.updatedAt || group.fecha_creacion).toLocaleDateString()}</Text>
-                                        </View>
-                                    </View>
-                                    <View className="items-end">
-                                        <Text style={{ 
-                                            color: theme.textSecondary,
-                                            fontSize: 16 * fontScale
-                                        }} className="font-black">
-                                            ${(group.total_gastado || 0).toFixed(2)}
-                                        </Text>
-                                        <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
-                                            <Text style={{ fontSize: 8 * fontScale, color: '#10b981' }} className="font-black uppercase">Cerrado</Text>
-                                        </View>
-                                    </View>
-                                </TouchableOpacity>
+                                />
                             ))
                         ) : (
                             <View className="items-center justify-center py-20">
@@ -257,3 +205,72 @@ export default function GroupListScreen() {
         </SafeAreaView>
     );
 }
+
+const ActiveGroupItem = memo(({ group, theme, fontScale, onPress }: any) => (
+    <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.85}
+        style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
+        className="border rounded-[36px] p-6 flex-row items-center"
+    >
+        <View style={{ backgroundColor: theme.glassBg }} className="w-16 h-16 rounded-[24px] items-center justify-center mr-5 border border-white/5">
+            <MaterialIcons name="restaurant" size={32} color={theme.primary} />
+        </View>
+        <View className="flex-1">
+            <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black tracking-tight">{group.nombre || 'Grupo sin nombre'}</Text>
+            <View className="flex-row items-center gap-2 mt-1">
+                <Text style={{ color: theme.primary, fontSize: 9 * fontScale }} className="font-black uppercase tracking-widest">{group.codigo_invitacion || '---'}</Text>
+                <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-medium">• {new Date(group.fecha_creacion).toLocaleDateString()}</Text>
+            </View>
+        </View>
+        <View className="items-end">
+            <Text style={{
+                color: theme.text,
+                fontSize: 16 * fontScale
+            }} className="font-black">
+                ${(group.total_gastado || 0).toFixed(2)}
+            </Text>
+
+            {group.status === 'active' && (
+                <View style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
+                    <Text style={{ fontSize: 8 * fontScale, color: theme.primary }} className="font-black uppercase">Activo</Text>
+                </View>
+            )}
+            {group.status === 'settling' && (
+                <View style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
+                    <Text style={{ fontSize: 8 * fontScale, color: '#f59e0b' }} className="font-black uppercase">Liquidando</Text>
+                </View>
+            )}
+        </View>
+    </TouchableOpacity>
+));
+
+const ClosedGroupItem = memo(({ group, theme, fontScale, onPress }: any) => (
+    <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.85}
+        style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border, opacity: 0.8 }}
+        className="border rounded-[36px] p-6 flex-row items-center"
+    >
+        <View style={{ backgroundColor: theme.glassBg }} className="w-16 h-16 rounded-[24px] items-center justify-center mr-5 border border-white/5">
+            <MaterialIcons name="history" size={32} color={theme.textSecondary} />
+        </View>
+        <View className="flex-1">
+            <Text style={{ color: theme.text, fontSize: 18 * fontScale }} className="font-black tracking-tight">{group.nombre || 'Grupo sin nombre'}</Text>
+            <View className="flex-row items-center gap-2 mt-1">
+                <Text style={{ color: theme.textSecondary, fontSize: 10 * fontScale }} className="font-medium">Finalizado: {new Date(group.fecha_cierre || group.updatedAt || group.fecha_creacion).toLocaleDateString()}</Text>
+            </View>
+        </View>
+        <View className="items-end">
+            <Text style={{
+                color: theme.textSecondary,
+                fontSize: 16 * fontScale
+            }} className="font-black">
+                ${(group.total_gastado || 0).toFixed(2)}
+            </Text>
+            <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }} className="px-2 py-0.5 rounded-lg mt-1.5 border border-white/5">
+                <Text style={{ fontSize: 8 * fontScale, color: '#10b981' }} className="font-black uppercase">Cerrado</Text>
+            </View>
+        </View>
+    </TouchableOpacity>
+));

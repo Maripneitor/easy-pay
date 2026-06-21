@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, memo, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -34,7 +34,7 @@ export default function GroupDetailScreen() {
         }
     }, [id]);
 
-    const handleRemoveMember = async (memberId: string, memberName: string) => {
+    const handleRemoveMember = useCallback(async (memberId: string, memberName: string) => {
         Alert.alert(
             "Eliminar Miembro",
             `¿Estás seguro de que deseas eliminar a ${memberName} del grupo?`,
@@ -55,7 +55,7 @@ export default function GroupDetailScreen() {
                 }
             ]
         );
-    };
+    }, [activeGrupo?.id]);
 
     const handleCloseGroup = () => {
         if (!activeGrupo) return;
@@ -144,28 +144,12 @@ export default function GroupDetailScreen() {
                     <View className="gap-4 pb-40">
                         {activeGrupo.items?.length > 0 ? (
                             activeGrupo.items.map((item: any) => (
-                                <View 
-                                    key={item.id} 
-                                    style={{ backgroundColor: theme.cardSecondary }} 
-                                    className="p-5 rounded-[40px] border border-white/10 flex-row items-center justify-between"
-                                >
-                                    <View className="flex-1">
-                                        <Text style={{ color: theme.text }} className="text-lg font-black">{item.nombre}</Text>
-                                        <Text style={{ color: theme.textSecondary }} className="text-xs font-bold opacity-60">
-                                            {item.cantidad} x ${item.precio}
-                                        </Text>
-                                    </View>
-                                    <View className="items-end">
-                                        <Text style={{ color: theme.primary }} className="font-black text-lg">
-                                            ${(item.precio * item.cantidad).toFixed(2)}
-                                        </Text>
-                                        {isLeader && (
-                                            <TouchableOpacity className="mt-1">
-                                                <MaterialIcons name="more-vert" size={20} color={theme.textSecondary} />
-                                            </TouchableOpacity>
-                                        )}
-                                    </View>
-                                </View>
+                                <GroupItem
+                                    key={item.id}
+                                    item={item}
+                                    theme={theme}
+                                    isLeader={isLeader}
+                                />
                             ))
                         ) : (
                             <View className="items-center py-20 opacity-40">
@@ -179,39 +163,14 @@ export default function GroupDetailScreen() {
                 {activeTab === 'members' && (
                     <View className="gap-4 pb-40">
                         {activeGrupo.participantes?.map((member: any) => (
-                            <View 
-                                key={member.id} 
-                                style={{ backgroundColor: theme.cardSecondary }} 
-                                className="p-5 rounded-[40px] border border-white/10 flex-row items-center gap-4"
-                            >
-                                <View 
-                                    style={{ backgroundColor: member.color || theme.primary }} 
-                                    className="w-12 h-12 rounded-2xl items-center justify-center"
-                                >
-                                    <Text className="text-white font-black text-lg">
-                                        {(member.nombre || 'U').charAt(0).toUpperCase()}
-                                    </Text>
-                                </View>
-                                <View className="flex-1">
-                                    <Text style={{ color: theme.text }} className="text-base font-black">
-                                        {member.nombre || 'Usuario'}
-                                    </Text>
-                                    <Text style={{ color: theme.textSecondary }} className="text-xs font-bold opacity-60 uppercase">
-                                        {member.role === 'leader' ? 'Líder del grupo' : 'Participante'}
-                                    </Text>
-                                </View>
-                                {member.status === 'online' && (
-                                    <View className="w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-900" />
-                                )}
-                                {isLeader && member.id !== user?.id && (
-                                    <TouchableOpacity 
-                                        onPress={() => handleRemoveMember(member.id, member.nombre)}
-                                        className="p-3 bg-red-500/10 rounded-2xl"
-                                    >
-                                        <MaterialIcons name="person-remove" size={18} color="#ef4444" />
-                                    </TouchableOpacity>
-                                )}
-                            </View>
+                            <GroupMemberItem
+                                key={member.id}
+                                member={member}
+                                theme={theme}
+                                isLeader={isLeader}
+                                userId={user?.id}
+                                onRemove={() => handleRemoveMember(member.id, member.nombre)}
+                            />
                         ))}
                     </View>
                 )}
@@ -266,3 +225,62 @@ export default function GroupDetailScreen() {
         </SafeAreaView>
     );
 }
+
+const GroupItem = memo(({ item, theme, isLeader }: any) => (
+    <View
+        style={{ backgroundColor: theme.cardSecondary }}
+        className="p-5 rounded-[40px] border border-white/10 flex-row items-center justify-between"
+    >
+        <View className="flex-1">
+            <Text style={{ color: theme.text }} className="text-lg font-black">{item.nombre}</Text>
+            <Text style={{ color: theme.textSecondary }} className="text-xs font-bold opacity-60">
+                {item.cantidad} x ${item.precio}
+            </Text>
+        </View>
+        <View className="items-end">
+            <Text style={{ color: theme.primary }} className="font-black text-lg">
+                ${(item.precio * item.cantidad).toFixed(2)}
+            </Text>
+            {isLeader && (
+                <TouchableOpacity className="mt-1">
+                    <MaterialIcons name="more-vert" size={20} color={theme.textSecondary} />
+                </TouchableOpacity>
+            )}
+        </View>
+    </View>
+));
+
+const GroupMemberItem = memo(({ member, theme, isLeader, userId, onRemove }: any) => (
+    <View
+        style={{ backgroundColor: theme.cardSecondary }}
+        className="p-5 rounded-[40px] border border-white/10 flex-row items-center gap-4"
+    >
+        <View
+            style={{ backgroundColor: member.color || theme.primary }}
+            className="w-12 h-12 rounded-2xl items-center justify-center"
+        >
+            <Text className="text-white font-black text-lg">
+                {(member.nombre || 'U').charAt(0).toUpperCase()}
+            </Text>
+        </View>
+        <View className="flex-1">
+            <Text style={{ color: theme.text }} className="text-base font-black">
+                {member.nombre || 'Usuario'}
+            </Text>
+            <Text style={{ color: theme.textSecondary }} className="text-xs font-bold opacity-60 uppercase">
+                {member.role === 'leader' ? 'Líder del grupo' : 'Participante'}
+            </Text>
+        </View>
+        {member.status === 'online' && (
+            <View className="w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-900" />
+        )}
+        {isLeader && member.id !== userId && (
+            <TouchableOpacity
+                onPress={onRemove}
+                className="p-3 bg-red-500/10 rounded-2xl"
+            >
+                <MaterialIcons name="person-remove" size={18} color="#ef4444" />
+            </TouchableOpacity>
+        )}
+    </View>
+));
