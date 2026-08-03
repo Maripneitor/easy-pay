@@ -26,6 +26,7 @@ import { useTheme } from '../../src/infrastructure/context/ThemeContext';
 import { groupRepository } from '../../src/infrastructure/api/repositories/GroupRepository';
 import { statsRepository } from '../../src/infrastructure/api/repositories/StatsRepository';
 import { toTitleCase } from '../../src/infrastructure/utils/format';
+import { DebtItem } from './components/DebtItem';
 import Toast from 'react-native-toast-message';
 
 const { width: windowWidth } = Dimensions.get('window');
@@ -411,33 +412,11 @@ export default function DashboardScreen() {
                         <ScrollView className="max-h-96" showsVerticalScrollIndicator={false}>
                             <View className="gap-4">
                                 {activeDebts.map((debt) => (
-                                    <TouchableOpacity 
+                                    <DebtItem
                                         key={debt.groupId}
-                                        onPress={() => {
-                                            setShowDebtSelector(false);
-                                            router.push({
-                                                pathname: '/settle-up',
-                                                params: {
-                                                    groupId: debt.groupId,
-                                                    creditorId: debt.creditorId,
-                                                    amount: debt.amount.toString(),
-                                                    groupName: debt.groupName,
-                                                    creditorName: debt.creditorName
-                                                }
-                                            });
-                                        }}
-                                        style={{ backgroundColor: theme.cardSecondary, borderColor: theme.border }}
-                                        className="p-6 rounded-[32px] border flex-row items-center gap-4"
-                                    >
-                                        <View style={{ backgroundColor: theme.primary + '20' }} className="w-12 h-12 rounded-2xl items-center justify-center">
-                                            <MaterialIcons name="account-balance-wallet" size={24} color={theme.primary} />
-                                        </View>
-                                        <View className="flex-1">
-                                            <Text style={{ color: theme.text }} className="font-black text-base">{debt.groupName}</Text>
-                                            <Text style={{ color: theme.textSecondary }} className="text-xs font-bold uppercase tracking-widest opacity-60">Pagas a {debt.creditorName}</Text>
-                                        </View>
-                                        <Text style={{ color: theme.primary }} className="font-black text-lg">${debt.amount.toFixed(2)}</Text>
-                                    </TouchableOpacity>
+                                        debt={debt}
+                                        onClose={() => setShowDebtSelector(false)}
+                                    />
                                 ))}
                             </View>
                         </ScrollView>

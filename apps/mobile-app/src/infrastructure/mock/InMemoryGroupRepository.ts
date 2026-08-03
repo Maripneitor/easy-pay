@@ -11,12 +11,12 @@ export class InMemoryGroupRepository implements GroupRepository {
             code: 'ABCD',
             name: 'Cena de Pizza',
             members: [
-                { id: 'm1', name: 'Mario', email: 'mario@example.com' },
-                { id: 'm2', name: 'Juan', email: 'juan@example.com' }
+                { id: 'm1', name: 'Mario', role: 'leader' },
+                { id: 'm2', name: 'Juan', role: 'member' }
             ],
             items: [
-                { id: 'i1', name: 'Pizza Grande', price: 25.50, quantity: 1, assignedMemberIds: ['m1', 'm2'] },
-                { id: 'i2', name: 'Refresco', price: 2.50, quantity: 2, assignedMemberIds: ['m1'] }
+                { id: 'i1', description: 'Pizza Grande', amount: 25.50, assignedTo: ['m1', 'm2'], addedBy: 'm1' },
+                { id: 'i2', description: 'Refresco', amount: 2.50, assignedTo: ['m1'], addedBy: 'm1' }
             ],
             status: 'active',
             subtotal: 30.50,
@@ -27,6 +27,20 @@ export class InMemoryGroupRepository implements GroupRepository {
             createdAt: new Date().toISOString()
         };
         this.groups.set(dummyGroup.id, dummyGroup);
+    }
+
+    async updateGroup(groupId: string, name: string, description?: string): Promise<void> {
+        await this.simulateDelay();
+        const group = this.groups.get(groupId);
+        if (group) {
+            group.name = name;
+            this.notifyObservers(groupId);
+        }
+    }
+
+    async deleteGroup(groupId: string): Promise<void> {
+        await this.simulateDelay();
+        this.groups.delete(groupId);
     }
 
     async getGroup(id: string): Promise<Group> {
@@ -103,7 +117,7 @@ export class InMemoryGroupRepository implements GroupRepository {
         if (group) {
             const item = group.items.find(i => i.id === itemId);
             if (item) {
-                item.assignedMemberIds = memberIds;
+                item.assignedTo = memberIds;
                 this.notifyObservers(groupId);
             }
         }
@@ -145,7 +159,7 @@ export class InMemoryGroupRepository implements GroupRepository {
     }
 
     private updateTotals(group: Group) {
-        group.subtotal = group.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        group.subtotal = group.items.reduce((sum, item) => sum + item.amount, 0);
         group.total = group.subtotal + group.tip;
     }
 }

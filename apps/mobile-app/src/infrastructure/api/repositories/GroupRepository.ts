@@ -80,8 +80,8 @@ export class ApiMobileGroupRepository implements GroupRepository {
         await httpClient.put(`/groups/${groupId}/items/${itemId}`, itemData);
     }
 
-    async updateGroup(groupId: string, data: { nombre?: string, descripcion?: string }): Promise<void> {
-        await httpClient.put(`/groups/${groupId}`, data);
+    async updateGroup(groupId: string, name: string, description?: string): Promise<void> {
+        await httpClient.put(`/groups/${groupId}`, { nombre: name, descripcion: description });
     }
 
 
