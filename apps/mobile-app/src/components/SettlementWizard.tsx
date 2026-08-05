@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../infrastructure/context/ThemeContext';
-import { ItemAssignModal } from '../../components/ItemAssignModal';
+import ItemAssignModal from '../../components/ItemAssignModal';
 
 
 import { Item, Participant } from '../domain/types';
@@ -401,16 +401,19 @@ export const SettlementWizard: React.FC<SettlementWizardProps> = ({
                     </View>
                 </View>
             </View>
-            <ItemAssignModal 
-                isVisible={!!assigningItem}
-                item={assigningItem as any}
-                members={effectiveMembers}
-                onClose={() => setAssigningItem(null)}
-                onAssign={async (itemId, participantIds) => {
-                    await assignItem(itemId, participantIds);
-                    setAssigningItem(null);
-                }}
-            />
+            {assigningItem && (
+                <ItemAssignModal
+                    visible={!!assigningItem}
+                    item={assigningItem as any}
+                    members={effectiveMembers}
+                    theme={theme}
+                    onClose={() => setAssigningItem(null)}
+                    onConfirm={async (itemId: any, participantIds: any) => {
+                        await assignItem(itemId, participantIds);
+                        setAssigningItem(null);
+                    }}
+                />
+            )}
         </Modal>
     );
 };
