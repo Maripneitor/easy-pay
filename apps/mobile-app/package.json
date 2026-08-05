@@ -10,7 +10,8 @@
     "start": "cross-env EXPO_ROUTER_APP_ROOT=app EXPO_METRO_CONFIG=./metro.config.cjs expo start",
     "expo-go": "cross-env EXPO_ROUTER_APP_ROOT=app EXPO_METRO_CONFIG=./metro.config.cjs expo start --lan",
     "web": "cross-env EXPO_ROUTER_APP_ROOT=app EXPO_METRO_CONFIG=./metro.config.cjs expo start --web",
-    "build:web": "cross-env EXPO_ROUTER_APP_ROOT=app EXPO_METRO_CONFIG=./metro.config.cjs npx expo export -p web"
+    "build:web": "cross-env EXPO_ROUTER_APP_ROOT=app EXPO_METRO_CONFIG=./metro.config.cjs npx expo export -p web",
+    "postinstall": "shx mkdir -p node_modules/.cache/nativewind && shx touch node_modules/.cache/nativewind/global.css"
   },
   "dependencies": {
     "@easy-pay/domain": "*",
@@ -71,6 +72,7 @@
     "cross-env": "^10.1.0",
     "eslint-config-expo": "~10.0.0",
     "jiti": "^2.6.1",
+    "shx": "^0.4.0",
     "tsx": "^4.21.0",
     "typescript": "~5.9.2"
   },
