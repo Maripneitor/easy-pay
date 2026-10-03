@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from routers.notification_router import notification_router, reminder_worker
+import asyncio
+import logging
 
-from notification.infrastructure.routes.route_notification import router as notification_router
-
-app = FastAPI(title="Easy-Pay Notification Service", version="1.0.0")
+app = FastAPI(title="Easy-Pay Notification Service (MVC)", version="2.0.0")
 origins = ["*"]
 
 app.add_middleware(
@@ -16,15 +17,18 @@ app.add_middleware(
 
 app.include_router(notification_router)
 
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(reminder_worker())
+
 @app.get("/")
 def read_root():
-    return {"service": "Notification Service", "status": "active"}
+    return {"service": "Notification Service (MVC)", "status": "active"}
 
 @app.get("/api/health")
 def health_check():
     return {"status": "ok"}
 
-import logging
 logger = logging.getLogger(__name__)
 
 @app.exception_handler(Exception)

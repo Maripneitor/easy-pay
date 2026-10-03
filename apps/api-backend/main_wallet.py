@@ -1,16 +1,11 @@
-"""
-main_wallet.py — Microservicio de Wallet (tarjetas bancarias de destino)
-Puerto: 8006
-Base de datos: EasyPay_Wallet → Colección: Cards
-"""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from wallet.infrastructure.routes.route_wallet import wallet_router
+from routers.wallet_router import wallet_router
 
 app = FastAPI(
-    title="Easy-Pay Wallet Service",
-    description="Microservicio para gestión de tarjetas/cuentas bancarias de destino",
-    version="1.0.0"
+    title="Easy-Pay Wallet Service (MVC)",
+    description="Microservicio para gestión de tarjetas/cuentas bancarias en arquitectura MVC",
+    version="2.0.0"
 )
 
 app.add_middleware(
@@ -24,16 +19,14 @@ app.add_middleware(
 
 app.include_router(wallet_router)
 
-
 @app.get("/")
 def read_root():
     return {
-        "mensaje": "Easy-Pay Wallet Service",
+        "mensaje": "Easy-Pay Wallet Service (MVC)",
         "docs": "/docs",
         "status": "active",
         "database": "EasyPay_Wallet"
     }
-
 
 @app.get("/api/health")
 def health_check():

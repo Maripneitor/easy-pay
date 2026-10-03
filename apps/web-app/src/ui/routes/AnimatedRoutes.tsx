@@ -88,6 +88,7 @@ const OCRScanner = lazy(() => import('../pages/OCRScanner').then(m => ({ default
 // 2FA
 const TwoFactorSetup = lazy(() => import('../pages/TwoFactorSetup').then(m => ({ default: m.TwoFactorSetup })));
 const TwoFactorVerify = lazy(() => import('../pages/TwoFactorSetup').then(m => ({ default: m.TwoFactorVerify })));
+const AdminDashboard = lazy(() => import('../pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 
 const PageTransition = ({ children }: { children: ReactNode }) => (
     <motion.div
@@ -155,6 +156,7 @@ export const AnimatedRoutes = () => {
                                     <Route path={ROUTES.PERSONAL_DATA} element={<PageTransition><PersonalData /></PageTransition>} />
                                     <Route path={ROUTES.OCR_SCANNER} element={<PageTransition><OCRScanner /></PageTransition>} />
                                     <Route path={ROUTES.TWO_FACTOR_SETUP} element={<PageTransition><TwoFactorSetup /></PageTransition>} />
+                                    <Route path={ROUTES.ADMIN} element={<PageTransition><AdminDashboard /></PageTransition>} />
                                 </Route>
                                 {/* Verificación fuera del Layout para que no muestre el panel principal tras registro */}
                                 <Route path={ROUTES.TWO_FACTOR_VERIFY} element={<PageTransition><TwoFactorVerify /></PageTransition>} />

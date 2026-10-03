@@ -26,8 +26,10 @@ const I18N_TEXTS = {
 
 const ICON_SIZE = 22;
 
+import { useAuthContext } from '@ui/context/AuthContext';
+
 interface MenuItem {
-    id: 'dashboard' | 'groups' | 'stats';
+    id: 'dashboard' | 'groups' | 'stats' | 'admin';
     icon: React.ReactNode;
     label: string;
     path: string;
@@ -36,7 +38,12 @@ interface MenuItem {
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onLogout, userName }) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { user } = useAuthContext();
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+    const isAdmin = Boolean(
+        user?.roles?.some((r: string) => r.toLowerCase() === 'administrador' || r.toLowerCase() === 'admin')
+    );
 
     const getInitials = (name: string) => {
         if (!name) return 'U';
@@ -53,6 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onLogout, use
         { id: 'dashboard', icon: <Home size={ICON_SIZE} />, label: 'Inicio', path: ROUTES.DASHBOARD },
         { id: 'groups', icon: <PlusSquare size={ICON_SIZE} />, label: 'Mis Grupos', path: ROUTES.GROUPS },
         { id: 'stats', icon: <BarChart3 size={ICON_SIZE} />, label: 'Estadísticas', path: ROUTES.STATS },
+        ...(isAdmin ? [{ id: 'admin' as const, icon: <ShieldAlert size={ICON_SIZE} className="text-amber-500" />, label: 'Administración', path: ROUTES.ADMIN }] : []),
     ];
 
     return (

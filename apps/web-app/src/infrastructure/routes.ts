@@ -25,6 +25,7 @@ export const ROUTES = {
     CHANGE_PASSWORD: '/cambiar-password',
     PERSONAL_DATA: '/perfil/datos-personales',
     OCR_SCANNER: '/escaner-ocr',
+    ADMIN: '/admin',
 } as const;
 
 export type RouteKey = keyof typeof ROUTES;

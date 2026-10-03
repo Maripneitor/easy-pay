@@ -1,10 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from stats.infrastructure.routes.routes_stats import router as stats_router
+from routers.stats_router import stats_router
 
-app = FastAPI(title="Easy-Pay Statistics Service")
+app = FastAPI(title="Easy-Pay Statistics Service (MVC)")
 
-# Configuración de CORS para que tu React (5173) no se bloquee
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,7 +20,7 @@ def health_check():
 
 @app.get("/")
 def root():
-    return {"service": "Statistics Service", "status": "online"}
+    return {"service": "Statistics Service (MVC)", "status": "online"}
 
 import logging
 logger = logging.getLogger(__name__)

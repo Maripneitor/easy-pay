@@ -11,6 +11,8 @@ export interface User {
         clabe?: string;
         entidad_financiera?: string;
     };
+    roles?: string[];
+    permissions?: string[];
     [key: string]: any;
 }
 

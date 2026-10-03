@@ -1,9 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from routers.ocr_router import ocr_router
 
-from ocr.infrastructure.routes.route_ocr import router as ocr_router
-
-app = FastAPI(title="Easy-Pay OCR Service", version="1.0.0")
+app = FastAPI(title="Easy-Pay OCR Service (MVC)", version="2.0.0")
 origins = ["*"]
 
 app.add_middleware(
@@ -18,7 +17,7 @@ app.include_router(ocr_router)
 
 @app.get("/")
 def read_root():
-    return {"service": "OCR Service", "status": "active"}
+    return {"service": "OCR Service (MVC)", "status": "active"}
 
 @app.get("/api/health")
 def health_check():

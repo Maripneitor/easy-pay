@@ -1,2 +1,5 @@
-node_modules
-.expo
+node_modules/
+android/app/build/
+android/.gradle/
+build-*.apk
+.expo/
